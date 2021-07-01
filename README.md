@@ -1,3 +1,5 @@
+**WARNING: Heavily work-in-progress. Currently this is not even in an alpha state.**
+
 Commodore 64 for MEGA65
 =======================
 
