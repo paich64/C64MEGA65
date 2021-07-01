@@ -19,8 +19,8 @@ itself is based on
 
 The core uses the [MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
 framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
-loading the Game Boy's BIOS as well as for the on-screen-menu and for
-loading game roms.
+FAT32 support (loading loading ROMs, mounting disks) and for the
+on-screen-menu.
 
 Features
 --------
