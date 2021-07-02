@@ -24,9 +24,12 @@ entity clk is
       sys_clk_i    : in  std_logic;   -- expects 100 MHz
       sys_rstn_i   : in  std_logic;   -- Asynchronous, asserted low
       
-      main_clk_o   : out std_logic;   -- main's @TODO 40 MHz main clock
+      main_clk_o   : out std_logic;   -- main's 50 MHz main clock
       main_rst_o   : out std_logic;   -- main's reset, synchronized
       
+      audio_clk_o  : out std_logic;   -- audio's 24.576 MHz main clock
+      audio_rst_o  : out std_logic;   -- audio's reset, synchronized
+
       qnice_clk_o  : out std_logic;   -- QNICE's 50 MHz main clock
       qnice_rst_o  : out std_logic;   -- QNICE's reset, synchronized
       
@@ -42,8 +45,9 @@ signal clkfb1          : std_logic;
 signal clkfb1_mmcm     : std_logic;
 signal clkfb2          : std_logic;
 signal clkfb2_mmcm     : std_logic;
-signal main_clk_mmcm   : std_logic;
+signal audio_clk_mmcm  : std_logic;
 signal qnice_clk_mmcm  : std_logic;
+signal main_clk_mmcm   : std_logic;
 signal pixel_clk_mmcm  : std_logic;
 signal pixel_clk5_mmcm : std_logic;
 
@@ -61,23 +65,28 @@ begin
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
          DIVCLK_DIVIDE        => 1,
-         CLKFBOUT_MULT_F      => 8.0,        -- 800 MHz
+         CLKFBOUT_MULT_F      => 9.0,        -- 900 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 20.000,     -- @TODO YOURCORE @ 40 MHz
+         CLKOUT0_DIVIDE_F     => 36.625,     -- Audio @ 24.576 MHz TBD: Current value is 24.573 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 16,         -- QNICE main @ 50 MHz
+         CLKOUT1_DIVIDE       => 18,         -- QNICE @ 50 MHz
          CLKOUT1_PHASE        => 0.000,
          CLKOUT1_DUTY_CYCLE   => 0.500,
-         CLKOUT1_USE_FINE_PS  => FALSE
+         CLKOUT1_USE_FINE_PS  => FALSE,
+         CLKOUT2_DIVIDE       => 18,         -- main @ 50 MHz
+         CLKOUT2_PHASE        => 0.000,
+         CLKOUT2_DUTY_CYCLE   => 0.500,
+         CLKOUT2_USE_FINE_PS  => FALSE
       )
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb1_mmcm,
-         CLKOUT0             => main_clk_mmcm,
+         CLKOUT0             => audio_clk_mmcm,
          CLKOUT1             => qnice_clk_mmcm,
+         CLKOUT2             => main_clk_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb1,
          CLKIN1              => sys_clk_i,
@@ -177,16 +186,22 @@ begin
          O => clkfb2
       );
       
-   main_clk_bufg : BUFG
+   audio_clk_bufg : BUFG
       port map (
-         I => main_clk_mmcm,
-         O => main_clk_o
+         I => audio_clk_mmcm,
+         O => audio_clk_o
       );
       
    qnice_clk_bufg : BUFG
       port map (
          I => qnice_clk_mmcm,
          O => qnice_clk_o
+      );
+
+   main_clk_bufg : BUFG
+      port map (
+         I => main_clk_mmcm,
+         O => main_clk_o
       );
 
    pixel_clk_bufg : BUFG
@@ -205,14 +220,14 @@ begin
    -- Reset generation
    -------------------------------------
 
-   i_xpm_cdc_sync_rst_main : xpm_cdc_sync_rst
+   i_xpm_cdc_sync_rst_audio : xpm_cdc_sync_rst
       generic map (
          INIT_SYNC_FF => 1  -- Enable simulation init values
       )
       port map (
          src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => main_clk_o,       -- 1-bit input: Destination clock.
-         dest_rst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
+         dest_clk => audio_clk_o,      -- 1-bit input: Destination clock.
+         dest_rst => audio_rst_o       -- 1-bit output: src_rst synchronized to the destination clock doaudio.
                                        -- This output is registered.
       );
 
@@ -224,6 +239,17 @@ begin
          src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
          dest_clk => qnice_clk_o,      -- 1-bit input: Destination clock.
          dest_rst => qnice_rst_o       -- 1-bit output: src_rst synchronized to the destination clock domain.
+                                       -- This output is registered.
+      );
+
+   i_xpm_cdc_sync_rst_main : xpm_cdc_sync_rst
+      generic map (
+         INIT_SYNC_FF => 1  -- Enable simulation init values
+      )
+      port map (
+         src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
+         dest_clk => main_clk_o,       -- 1-bit input: Destination clock.
+         dest_rst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
 

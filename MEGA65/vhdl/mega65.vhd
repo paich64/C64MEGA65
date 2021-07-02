@@ -131,13 +131,14 @@ constant SHELL_O_DY           : integer := 20;
 -- Clocks and active high reset signals for each clock domain
 ---------------------------------------------------------------------------------------------
 
-signal clk_main               : std_logic;               -- @TODO YOUR CORE's main clock @ 40.00 MHz
+signal clk_audio              : std_logic;               -- Audio clock @ 24.576 MHz
 signal clk_qnice              : std_logic;               -- QNICE main clock @ 50 MHz
+signal clk_main               : std_logic;               -- C64 main clock @ 50.00 MHz
 signal clk_pixel_1x           : std_logic;               -- pixel clock at normal speed (default: 720p @ 60 Hz = 74.25 MHz)
 signal clk_pixel_5x           : std_logic;               -- pixel clock at 5x speed for HDMI (default: 720p @ 60 Hz = 371.25 MHz)
 
-signal main_rst               : std_logic;
 signal qnice_rst              : std_logic;
+signal main_rst               : std_logic;
 signal pixel_rst              : std_logic;
 
 ---------------------------------------------------------------------------------------------
@@ -202,12 +203,15 @@ begin
          sys_clk_i    => CLK,             -- expects 100 MHz
          sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
          
-         main_clk_o   => clk_main,        -- main's @TODO 40 MHz main clock
-         main_rst_o   => main_rst,        -- main's reset, synchronized
+         audio_clk_o  => clk_audio,       -- main's @TODO 40 MHz main clock
+         audio_rst_o  => open,            -- main's reset, synchronized
          
          qnice_clk_o  => clk_qnice,       -- QNICE's 50 MHz main clock
          qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
          
+         main_clk_o   => clk_main,        -- main's @TODO 40 MHz main clock
+         main_rst_o   => main_rst,        -- main's reset, synchronized
+
          pixel_clk_o  => clk_pixel_1x,    -- VGA 74.25 MHz pixelclock for 720p @ 60 Hz
          pixel_rst_o  => pixel_rst,       -- VGA's reset, synchronized
          pixel_clk5_o => clk_pixel_5x     -- VGA's 371.25 MHz pixelclock (74.25 MHz x 5) for HDMI         
@@ -232,6 +236,7 @@ begin
       )
       port map (
          main_clk               => clk_main,
+         clk_audio              => clk_audio,
          reset_n                => not main_rst,
          kb_io0                 => kb_io0,
          kb_io1                 => kb_io1,
