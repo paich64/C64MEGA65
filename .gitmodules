@@ -1,3 +1,6 @@
 [submodule "QNICE"]
 	path = QNICE
 	url = https://github.com/sy2002/QNICE-FPGA
+[submodule "C64_MiSTerMEGA65"]
+	path = C64_MiSTerMEGA65
+	url = git@github.com:MJoergen/C64_MiSTerMEGA65.git
