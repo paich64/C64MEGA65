@@ -279,7 +279,7 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../C64_MiSTerMEGA65/rtl/reu.v">
-        <FileInfo>
+        <FileInfo SFType="SVerilog">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -363,7 +363,7 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../C64_MiSTerMEGA65/rtl/opl3/NextZ80Reg.v">
-        <FileInfo>
+        <FileInfo SFType="SVerilog">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
