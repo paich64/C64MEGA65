@@ -14,8 +14,9 @@ create_clock -period 10.000 -name CLK [get_ports CLK]
 ## Important: Using them in subsequent statements, e.g. clock dividers requries that they
 ## have been named/defined here before
 ## otherwise Vivado does not find the pins)
-create_generated_clock -name mainclk   [get_pins */clk_gen/i_clk_main_qnice/CLKOUT0]
+create_generated_clock -name audioclk   [get_pins */clk_gen/i_clk_main_qnice/CLKOUT0]
 create_generated_clock -name qniceclk  [get_pins */clk_gen/i_clk_main_qnice/CLKOUT1]
+create_generated_clock -name mainclk   [get_pins */clk_gen/i_clk_main_qnice/CLKOUT2]
 create_generated_clock -name pixelclk  [get_pins */clk_gen/i_clk_720p_hdmi/CLKOUT1]
 create_generated_clock -name pixelclk5 [get_pins */clk_gen/i_clk_720p_hdmi/CLKOUT0]
 
