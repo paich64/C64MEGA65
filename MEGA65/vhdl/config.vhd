@@ -41,11 +41,13 @@ constant SCR_WELCOME : string :=
 
    "Commodore 64 for MEGA65 V0.1 [WIP]\n" &
    "MiSTer port by MJoergen & sy2002 in 2021\n\n" &
-   "Powered by MiSTer2MEGA65 Version [WIP]\n" &
+   
+   "Powered by MiSTer2MEGA65 V0.1 [WIP]\n" &
    
    "\n\nPLACEHOLDER FOR CORE DOCUMENTATION\n\n" &
+   
    "You can for example show the keyboard map.\n" &
-   "And Explain how the help menu works.\n" & 
+   "And explain how the help menu works.\n" & 
    
    "\n\nPress Space to continue.\n\n\n";
 
