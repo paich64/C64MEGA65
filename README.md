@@ -32,14 +32,16 @@ We are striving for a retro C64 PAL experience in step #1:
 - C64 modes
 - Similar to 6581 and 8580 SID filters.
 - C1541 read/write/format support in raw GCR mode (*.D64, *.G64)
-- C1581 read/write support (*.D81)
 - Pause option when OSD is opened.
 - Loadable Kernal/C1541 ROMs.
 
 In step #2 we might want to add the MEGA65 SID and cartridge support:
 
+- (SOON?) C1581 read/write support (*.D81 disk images on the SD card)
+- (SOON?) C1581 support via MEGA65's hardware disk drive
 - (SOON?) Add MEGA65 SID which sounds better and more realistic than MiSTeR's SID
-- (SOON?) Amost all cartridge formats (*.CRT)
+- (SOON?) Amost all cartridge formats (*.CRT as images on the SD card)
+- (SOON?) Real Cartridges using the MEGA65's cartridge port
 - (LATER?) Dual SID with several degree of mixing 6581/8580 from stereo to mono.
 
 Unclear, what a step #3 might look like:
