@@ -5,7 +5,7 @@
 --
 --   Commodore 64 expects 32 MHz
 --   QNICE expects 50 MHz
---   HDMI 720p 60 Hz expects 74.25 MHz (VGA) and 371.25 MHz (HDMI)
+--   PAL @ 50 Hz expects 27 MHz (VGA) and 135 MHz (HDMI)
 --
 -- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
 ----------------------------------------------------------------------------------
@@ -33,9 +33,9 @@ entity clk is
       qnice_clk_o  : out std_logic;   -- QNICE's 50 MHz main clock
       qnice_rst_o  : out std_logic;   -- QNICE's reset, synchronized
       
-      pixel_clk_o  : out std_logic;   -- VGA 74.25 MHz pixelclock for 720p @ 60 Hz
+      pixel_clk_o  : out std_logic;   -- VGA 27 MHz pixelclock for PAL @ 50 Hz
       pixel_rst_o  : out std_logic;   -- VGA's reset, synchronized
-      pixel_clk5_o : out std_logic    -- VGA's 371.25 MHz pixelclock (74.25 MHz x 5) for HDMI
+      pixel_clk5_o : out std_logic    -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
    );
 end clk;
 
@@ -114,10 +114,10 @@ begin
          RST                 => '0'
       );
 
-   -- generate 74.25 MHz for 720p @ 60 Hz and 5x74.25 MHz = 371.25 MHz for HDMI
+   -- generate 27 MHz for PAL 720 x 576 @ 50 Hz and 5x27 MHz = 135 MHz for HDMI
    -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
    -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE   
-   i_clk_720p_hdmi : MMCME2_ADV
+   i_clk_pal_hdmi : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
          CLKOUT4_CASCADE      => FALSE,
@@ -125,15 +125,15 @@ begin
          STARTUP_WAIT         => FALSE,
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
-         DIVCLK_DIVIDE        => 5,
-         CLKFBOUT_MULT_F      => 37.125,     -- f_VCO = (100 MHz / 5) x 37.125 = 742.5 MHz
+         DIVCLK_DIVIDE        => 1,
+         CLKFBOUT_MULT_F      => 6.750,      -- f_VCO = 675 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 2.000,      -- 371.25 MHz
+         CLKOUT0_DIVIDE_F     => 25.00,      -- 27 MHz for PAL 720 x 576 @ 50 Hz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 10,         -- 74.25 MHz
+         CLKOUT1_DIVIDE       => 5,          -- 135 MHz = 27 MHz x 5 for HDMI
          CLKOUT1_PHASE        => 0.000,
          CLKOUT1_DUTY_CYCLE   => 0.500,
          CLKOUT1_USE_FINE_PS  => FALSE
@@ -141,8 +141,8 @@ begin
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb2_mmcm,
-         CLKOUT0             => pixel_clk5_mmcm,
-         CLKOUT1             => pixel_clk_mmcm,
+         CLKOUT0             => pixel_clk_mmcm,
+         CLKOUT1             => pixel_clk5_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb2,
          CLKIN1              => sys_clk_i,

@@ -39,36 +39,15 @@ constant CHR_LINE_50 : string := CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_L
 constant SEL_WELCOME : std_logic_vector(15 downto 0) := x"0000";
 constant SCR_WELCOME : string :=
 
-   "Name of the Demo Core Version 1.0\n" &
-   "MiSTer port done by Demo Author and Another One in 2021\n\n" &
+   "Commodore 64 for MEGA65 V0.1 [WIP]\n" &
+   "MiSTer port by MJoergen & sy2002 in 2021\n\n" &
+   "Powered by MiSTer2MEGA65 Version [WIP]\n" &
    
-   -- We are not insisting. But it would be nice if you gave us credit for MiSTer2MEGA65 by leaving this line in
-   "Powered by MiSTer2MEGA65 Version [WIP], done by sy2002 and MJoergen in 2021\n" &
-   
-   "\n\nEdit config.vhd to modify the welcome screen.\n\n" &
+   "\n\nPLACEHOLDER FOR CORE DOCUMENTATION\n\n" &
    "You can for example show the keyboard map.\n" &
-   "Look at this example from Game Boy Color for MEGA65 (gbc4mega65):\n\n\n" &
+   "And Explain how the help menu works.\n" & 
    
-   "    MEGA65               Game Boy\n" & 
-   "    " & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_5 & CHR_LINE_1 & CHR_LINE_1 & "\n" &
-   "    Cursor keys          Joypad\n" &
-   "    Space                Start\n" &
-   "    Enter                Select\n" &
-   "    Left Shift           A\n" &
-   "    MEGA65 key           B\n" &
-   "    Help                 Options menu\n\n\n" &
-   
-   "    File Browser\n" &
-   "    " & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_5 & CHR_LINE_1 & CHR_LINE_1 & "\n" &
-   "    Run/Stop             Enter/leave file browser\n" &
-   "    Up/Down cursor key   Navigate one file up/down\n" &
-   "    Left/Right cursor    One page forward/backward\n" &
-   "    Enter                Start game/change folder\n" &
-   "\n\n    Press Space to continue.\n\n\n";
-
--- @TODO: We want to support multiple help/screens more screens that can be browsed, maybe even linked
--- Logic to be thought-trough. We might think of a double-linked-list structure beginning from 0x0001 on:
--- forward/backward/data and arrow keys for navigation, SPACE to end the help mode and to continue
+   "\n\nPress Space to continue.\n\n\n";
 
 --------------------------------------------------------------------------------------------------------------------
 -- Set start folder for file browser (Selector 0x0100) 

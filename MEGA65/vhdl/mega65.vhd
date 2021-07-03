@@ -84,8 +84,8 @@ architecture beh of MEGA65_Core is
 constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 --constant QNICE_FIRMWARE       : string  := "../m2m-rom/m2m-rom.rom";
 
--- MiSTer2MEGA65 default resolution is HDMI 720p @ 60 Hz
-constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_60;  
+-- PAL 720x576 @ 50 Hz resolution
+constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;  
 
 -- Clock speeds
 constant CORE_CLK_SPEED       : natural := 32_000_000;   -- C64 main clock @ 32 MHz
@@ -128,8 +128,8 @@ constant SHELL_O_DY           : integer := 20;
 signal clk_audio              : std_logic;               -- Audio clock @ 24.576 MHz
 signal clk_qnice              : std_logic;               -- QNICE main clock @ 50 MHz
 signal clk_main               : std_logic;               -- C64 main clock @ 32 MHz
-signal clk_pixel_1x           : std_logic;               -- pixel clock at normal speed (default: 720p @ 60 Hz = 74.25 MHz)
-signal clk_pixel_5x           : std_logic;               -- pixel clock at 5x speed for HDMI (default: 720p @ 60 Hz = 371.25 MHz)
+signal clk_pixel_1x           : std_logic;               -- pixel clock at normal speed (default: PAL @ 50 Hz = 27 MHz)
+signal clk_pixel_5x           : std_logic;               -- pixel clock at 5x speed for HDMI (default: Pal @ 50 Hz = 135 MHz)
 
 signal main_rst               : std_logic;
 signal qnice_rst              : std_logic;
@@ -199,7 +199,7 @@ begin
    -- MMCME2_ADV clock generators:
    --   C64:                  32 MHz
    --   QNICE:                50 MHz
-   --   HDMI 720p 60 Hz:      74.25 MHz (VGA) and 371.25 MHz (HDMI)
+   --   PAL @ 50 Hz:          27 MHz (VGA) and 135 MHz (HDMI)
    clk_gen : entity work.clk
       port map (
          sys_clk_i    => CLK,             -- expects 100 MHz
@@ -214,9 +214,9 @@ begin
          main_clk_o   => clk_main,        -- main's 32 MHz clock
          main_rst_o   => main_rst,        -- main's reset, synchronized
 
-         pixel_clk_o  => clk_pixel_1x,    -- VGA 74.25 MHz pixelclock for 720p @ 60 Hz
+         pixel_clk_o  => clk_pixel_1x,    -- VGA 27 MHz pixelclock for PAL @ 50 Hz
          pixel_rst_o  => pixel_rst,       -- VGA's reset, synchronized
-         pixel_clk5_o => clk_pixel_5x     -- VGA's 371.25 MHz pixelclock (74.25 MHz x 5) for HDMI         
+         pixel_clk5_o => clk_pixel_5x     -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI         
       );
    
    ---------------------------------------------------------------------------------------------
@@ -407,9 +407,9 @@ begin
       port map (
          select_44100 => '0',
          dvi          => '0',                         -- DVI mode: if activated, HDMI extensions like sound are deactivated
-         vic          => std_logic_vector(to_unsigned(VIDEO_MODE.CEA_CTA_VIC, 8)),  -- CEA/CTA VIC 4=720p @ 60 Hz
-         aspect       => VIDEO_MODE.ASPECT,           -- "10" which means 16:9 at fits for 720p
-         pix_rep      => VIDEO_MODE.PIXEL_REP,        -- no pixel repetition for 720p
+         vic          => std_logic_vector(to_unsigned(VIDEO_MODE.CEA_CTA_VIC, 8)),  -- CEA/CTA VIC 17=PAL @ 50 Hz 4:3
+         aspect       => VIDEO_MODE.ASPECT,           -- "01" which means 4:3 which fits for PAL
+         pix_rep      => VIDEO_MODE.PIXEL_REP,        -- no pixel repetition for PAL
          vs_pol       => VIDEO_MODE.V_POL,            -- horizontal polarity: negative
          hs_pol       => VIDEO_MODE.H_POL,            -- vertaical polarity: negative
 
