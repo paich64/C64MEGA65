@@ -27,25 +27,29 @@ on-screen-menu.
 Features
 --------
 
-TODO @MJoergen and @sy2002: We want to have an authentic retro C64 experience,
-so we might want to strip away features such as C64GS, OPL2, REU (well we
-cannot do REU due to memory limitations ;-)), and so on
+We are striving for a retro C64 PAL experience in step #1:
 
 - C64 modes
+- Similar to 6581 and 8580 SID filters.
 - C1541 read/write/format support in raw GCR mode (*.D64, *.G64)
 - C1581 read/write support (*.D81)
-- (LATER?) Parallel C1541 port for faster (~20x) loading time using DolphinDOS.
-- (LATER?) External IEC through USER_IO port.
+- Pause option when OSD is opened.
+- Loadable Kernal/C1541 ROMs.
+
+In step #2 we might want to add the MEGA65 SID and cartridge support:
+
+- (SOON?) Add MEGA65 SID which sounds better and more realistic than MiSTeR's SID
 - (SOON?) Amost all cartridge formats (*.CRT)
 - (LATER?) Dual SID with several degree of mixing 6581/8580 from stereo to mono.
-- Similar to 6581 and 8580 SID filters.
-- (SOON?) Add MEGA65 SID which sounds better and more realistic than MiSTeR's SID
+
+Unclear, what a step #3 might look like:
+
+- (LATER?) Parallel C1541 port for faster (~20x) loading time using DolphinDOS.
+- (LATER?) External IEC through USER_IO port.
 - (LATER?) REU 16MB and GeoRAM 4MB memory expanders.
 - (LATER?) OPL2 sound expander.
-- Pause option when OSD is opened.
 - (LATER?) 4 joysticks mode.
 - (LATER?) RS232 with VIC-1011 and UP9600 modes either internal or through USER_IO.
-- Loadable Kernal/C1541 ROMs.
 - (LATER?) Special reduced border mode for 16:9 display.
 - (LATER?) C128/Smart Turbo mode up to 4x.
 - (LATER?) Real-time clock
