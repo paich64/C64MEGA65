@@ -1,9 +1,10 @@
 ----------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework  
+-- Commodore 64 for MEGA65  
 --
 -- MEGA65 main file that contains the whole machine
 --
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- based on C64_MiSTer by the MiSTer development team
+-- port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -19,13 +20,6 @@ library xpm;
 use xpm.vcomponents.all;
 
 entity MEGA65_Core is
-generic (
-   -- @TODO: Add your machine dependent generics of this core here or delete them, if there
-   -- are no machine dependencies
-   YOUR_GENERIC1  : natural;
-   YOUR_GENERIC2  : string; 
-   YOUR_GENERICN  : integer
-);
 port (
    CLK            : in std_logic;                  -- 100 MHz clock
    RESET_N        : in std_logic;                  -- CPU reset button
@@ -94,8 +88,8 @@ constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_60;  
 
 -- Clock speeds
-constant CORE_CLK_SPEED       : natural := 40_000_000;   -- @TODO YOURCORE expects 40 MHz
-constant QNICE_CLK_SPEED      : natural := 50_000_000;
+constant CORE_CLK_SPEED       : natural := 50_000_000;   -- C64 main clock @ 50.00 MHz
+constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
 constant PIXEL_CLK_SPEED      : natural := VIDEO_MODE.CLK_KHZ * 1000;
 
 -- Rendering constants (in pixels)
@@ -236,15 +230,11 @@ begin
          
          -- Demo core specific generics @TODO not sure if you need them, too
          G_OUTPUT_DX          => VGA_DX,
-         G_OUTPUT_DY          => VGA_DY,  
-         
-         -- @TODO feel free to add as many generics as your core needs
-         -- you might also pass MEGA65 model specifics to your core, if needed (e.g. R2 vs. R3 differences) 
-         G_YOUR_GENERIC1      => false,
-         G_ANOTHER_THING      => 123456
+         G_OUTPUT_DY          => VGA_DY         
       )
       port map (
          clk_main_i           => clk_main,
+         clk_audio_i          => clk_audio,
          reset_i              => main_rst,
          
          -- M2M Keyboard interface

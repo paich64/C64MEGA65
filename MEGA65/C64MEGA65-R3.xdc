@@ -1,10 +1,10 @@
-## NAME-OF-YOUR-PROJECT for MEGA65 (NAME-OF-THE-GITHUB-REPO)
+## Commodore 64 for MEGA65 (C64MEGA65)
 ##
-## Signal mapping für MEGA65-R2
+## Signal mapping für MEGA65-R3
 ##
-## This machine is based on EXACT GITHUB REPO NAME OF THE MiSTer REPO
+## This machine is based on C64_MiSTer
 ## Powered by MiSTer2MEGA65
-## MEGA65 port done by YOURNAME in YEAR and licensed under GPL v3
+## MEGA65 port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
 
 ## External clock signal (100 MHz)
 set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVCMOS33} [get_ports CLK]

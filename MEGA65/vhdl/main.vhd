@@ -1,9 +1,10 @@
 ----------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework  
+-- Commodore 64 for MEGA65  
 --
 -- Wrapper for the MiSTer core that runs exclusively in the core's clock domanin
 --
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- based on C64_MiSTer by the MiSTer development team
+-- port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -12,17 +13,14 @@ use ieee.numeric_std.all;
 
 entity main is
    generic (
-      G_CORE_CLK_SPEED        : natural;
-      
-      -- @TODO adjust this to your needs
+      G_CORE_CLK_SPEED        : natural;      
       G_OUTPUT_DX             : natural;
-      G_OUTPUT_DY             : natural;     
-      G_YOUR_GENERIC1         : boolean;
-      G_ANOTHER_THING         : natural
+      G_OUTPUT_DY             : natural     
    );
    port (
-      clk_main_i             : in std_logic;
-      reset_i                : in std_logic;
+      clk_main_i              : in std_logic;
+      clk_audio_i             : in std_logic;
+      reset_i                 : in std_logic;
 
       -- M2M Keyboard interface
       kb_key_num_i           : in integer range 0 to 79;    -- cycles through all MEGA65 keys
@@ -48,6 +46,8 @@ entity main is
 end main;
 
 architecture synthesis of main is
+
+signal kb_ps2 : std_logic_vector(10 downto 0);
 
 -- Component declaration for the module in c64.sv
 component emu is
@@ -210,8 +210,8 @@ begin
    -- Component instantiation for the module in c64.sv
    i_emu : emu
       port map (
-         CLK_50M          => main_clk,          -- input
-         RESET            => not reset_n,       -- input
+         CLK_50M          => clk_main_i,        -- input
+         RESET            => reset_i,           -- input
          HPS_BUS          => open,              -- input/output
          CLK_VIDEO        => open,              -- output
          CE_PIXEL         => open,              -- output
@@ -247,7 +247,7 @@ begin
          LED_POWER        => open,              -- output
          LED_DISK         => open,              -- output
          BUTTONS          => open,              -- output
-         CLK_AUDIO        => clk_audio,         -- input
+         CLK_AUDIO        => clk_audio_i,       -- input
          AUDIO_L          => open,              -- output
          AUDIO_R          => open,              -- output
          AUDIO_S          => open,              -- output
@@ -298,6 +298,20 @@ begin
          USER_OUT         => open,              -- output
          OSD_STATUS       => '0'                -- input
       ); -- i_emu : emu is
+      
+   -- The C64 core expects an own variant of PS/2 scancodes including make/break codes
+   i_m65_to_ps2 : entity work.keyboard
+      port map (
+         clk_main_i           => clk_main_i,
+            
+         -- interface to the MEGA65 keyboard
+         key_num_i            => kb_key_num_i,
+         key_pressed_n_i      => kb_key_pressed_n_i,
+
+         -- PS/2 interface to the MiSTer C64 core         
+         ps2_o                => kb_ps2
+      );
+      
 
 end synthesis;
 

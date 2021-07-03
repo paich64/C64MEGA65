@@ -1,9 +1,10 @@
 ----------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework  
+-- Commodore 64 for MEGA65  
 --
--- R3-Version: Top Module for synthesizing the whole machine
+-- MEGA65 main file that contains the whole machine
 --
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- based on C64_MiSTer by the MiSTer development team
+-- port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -85,14 +86,6 @@ architecture beh of MEGA65_R3 is
 begin
 
    MEGA65 : entity work.MEGA65_Core
-      generic map
-      (
-         -- @TODO: Add your MEGA65 revision machine dependent generics (MEGA65 R2, R3, ...) here
-         -- or delete them if your core does not have machine dependencies
-         YOUR_GENERIC1  => 1,
-         YOUR_GENERIC2  => "MiSTer2MEGA65", 
-         YOUR_GENERICN  => 1234
-      )
       port map
       (
          CLK            => CLK,

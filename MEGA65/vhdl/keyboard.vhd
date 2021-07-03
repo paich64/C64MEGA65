@@ -32,12 +32,8 @@ entity keyboard is
       key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
       key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
-      -- @TODO: Create the kind of keyboard output that your core needs
-      -- "example_n_o" is a low active register and used by the demo core:
-      --    bit 0: Space
-      --    bit 1: Return
-      --    bit 2: Run/Stop
-      example_n_o          : out std_logic_vector(2 downto 0)
+      -- PS/2 interface to the MiSTer C64 core         
+      ps2_o                : std_logic_vector(10 downto 0)
    );
 end keyboard;
 
@@ -47,8 +43,6 @@ architecture beh of keyboard is
 signal   keys_n: std_logic_vector(2 downto 0) := "111"; -- low active: no key pressed
 
 begin
-
-   example_n_o <= keys_n;
 
 -- MEGA65 key codes that kb_key_num_i is using while
 -- kb_key_pressed_n_i is signalling (low active) which key is pressed
@@ -134,16 +128,4 @@ begin
 --    78  (again: CAPS LOCK, but hi active  unclear why,do not use)
 --    79  ???
 
-   -- @TODO: Replace this demo keyboard handler (which is used by the M2M demo core) by your actual keyboard logic
-   demo_core_handle_keys : process(clk_main_i)
-   begin
-      if rising_edge(clk_main_i) then      
-         case key_num_i is
-            when 1         => keys_n(1) <= key_pressed_n_i;   -- Return
-            when 60        => keys_n(0) <= key_pressed_n_i;   -- Space
-            when 63        => keys_n(2) <= key_pressed_n_i;   -- Run/Stop
-            when others    => null;
-         end case;
-      end if;
-   end process;      
 end beh;
