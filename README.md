@@ -39,7 +39,7 @@ In step #2 we might want to add the MEGA65 SID and cartridge support:
 
 - (SOON?) C1581 read/write support (*.D81 disk images on the SD card)
 - (SOON?) C1581 support via MEGA65's hardware disk drive
-- (SOON?) Add MEGA65 SID which sounds better and more realistic than MiSTeR's SID
+- (SOON?) Add MEGA65 SID which sounds better and more realistic than MiSTer's SID
 - (SOON?) Amost all cartridge formats (*.CRT as images on the SD card)
 - (SOON?) Real Cartridges using the MEGA65's cartridge port
 - (LATER?) Dual SID with several degree of mixing 6581/8580 from stereo to mono.
