@@ -3,7 +3,7 @@
 --
 -- Main clock, pixel clock and QNICE-clock generator using the Xilinx specific MMCME2_ADV:
 --
---   @TODO YOURCORE expects 40 MHz
+--   Commodore 64 expects 32 MHz
 --   QNICE expects 50 MHz
 --   HDMI 720p 60 Hz expects 74.25 MHz (VGA) and 371.25 MHz (HDMI)
 --
@@ -24,7 +24,7 @@ entity clk is
       sys_clk_i    : in  std_logic;   -- expects 100 MHz
       sys_rstn_i   : in  std_logic;   -- Asynchronous, asserted low
       
-      main_clk_o   : out std_logic;   -- main's 50 MHz main clock
+      main_clk_o   : out std_logic;   -- main's 32 MHz clock
       main_rst_o   : out std_logic;   -- main's reset, synchronized
       
       audio_clk_o  : out std_logic;   -- audio's 24.576 MHz main clock
@@ -53,7 +53,7 @@ signal pixel_clk5_mmcm : std_logic;
 
 begin
 
-   -- generate @TODO-YOUR-CORE and QNICE clock
+   -- generate Commodore 64 and QNICE clock
    -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
    -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE   
    i_clk_main_qnice : MMCME2_ADV
@@ -65,18 +65,18 @@ begin
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
          DIVCLK_DIVIDE        => 1,
-         CLKFBOUT_MULT_F      => 9.0,        -- 900 MHz
+         CLKFBOUT_MULT_F      => 8.0,        -- 800 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 36.625,     -- Audio @ 24.576 MHz TBD: Current value is 24.573 MHz
+         CLKOUT0_DIVIDE_F     => 32.552,     -- Audio @ 24.576 MHz TBD: Current value is ??? @TODO
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 18,         -- QNICE @ 50 MHz
+         CLKOUT1_DIVIDE       => 16,         -- QNICE @ 50 MHz
          CLKOUT1_PHASE        => 0.000,
          CLKOUT1_DUTY_CYCLE   => 0.500,
          CLKOUT1_USE_FINE_PS  => FALSE,
-         CLKOUT2_DIVIDE       => 18,         -- main @ 50 MHz
+         CLKOUT2_DIVIDE       => 25,         -- main @ 32 MHz
          CLKOUT2_PHASE        => 0.000,
          CLKOUT2_DUTY_CYCLE   => 0.500,
          CLKOUT2_USE_FINE_PS  => FALSE

@@ -88,7 +88,7 @@ constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_60;  
 
 -- Clock speeds
-constant CORE_CLK_SPEED       : natural := 50_000_000;   -- C64 main clock @ 50.00 MHz
+constant CORE_CLK_SPEED       : natural := 32_000_000;   -- C64 main clock @ 32 MHz
 constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
 constant PIXEL_CLK_SPEED      : natural := VIDEO_MODE.CLK_KHZ * 1000;
 
@@ -127,7 +127,7 @@ constant SHELL_O_DY           : integer := 20;
 
 signal clk_audio              : std_logic;               -- Audio clock @ 24.576 MHz
 signal clk_qnice              : std_logic;               -- QNICE main clock @ 50 MHz
-signal clk_main               : std_logic;               -- C64 main clock @ 50.00 MHz
+signal clk_main               : std_logic;               -- C64 main clock @ 32 MHz
 signal clk_pixel_1x           : std_logic;               -- pixel clock at normal speed (default: 720p @ 60 Hz = 74.25 MHz)
 signal clk_pixel_5x           : std_logic;               -- pixel clock at 5x speed for HDMI (default: 720p @ 60 Hz = 371.25 MHz)
 
@@ -197,7 +197,7 @@ signal vga_osm_vram_attr      : std_logic_vector(7 downto 0);
 begin
 
    -- MMCME2_ADV clock generators:
-   --   @TODO YOURCORE:       40 MHz
+   --   C64:                  32 MHz
    --   QNICE:                50 MHz
    --   HDMI 720p 60 Hz:      74.25 MHz (VGA) and 371.25 MHz (HDMI)
    clk_gen : entity work.clk
@@ -205,13 +205,13 @@ begin
          sys_clk_i    => CLK,             -- expects 100 MHz
          sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
          
-         audio_clk_o  => clk_audio,       -- main's @TODO 40 MHz main clock
-         audio_rst_o  => open,            -- main's reset, synchronized
+         audio_clk_o  => clk_audio,       -- @TODO
+         audio_rst_o  => open,            -- @TODO
          
          qnice_clk_o  => clk_qnice,       -- QNICE's 50 MHz main clock
          qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
          
-         main_clk_o   => clk_main,        -- main's @TODO 40 MHz main clock
+         main_clk_o   => clk_main,        -- main's 32 MHz clock
          main_rst_o   => main_rst,        -- main's reset, synchronized
 
          pixel_clk_o  => clk_pixel_1x,    -- VGA 74.25 MHz pixelclock for 720p @ 60 Hz
