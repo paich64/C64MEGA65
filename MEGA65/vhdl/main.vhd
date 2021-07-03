@@ -21,14 +21,12 @@ entity main is
       G_ANOTHER_THING         : natural
    );
    port (
-      main_clk               : in  std_logic;
-      clk_audio              : in  std_logic;
-      reset_n                : in  std_logic;
+      clk_main_i             : in std_logic;
+      reset_i                : in std_logic;
 
-      -- MEGA65 smart keyboard controller
-      kb_io0                 : out std_logic;
-      kb_io1                 : out std_logic;
-      kb_io2                 : in  std_logic
+      -- M2M Keyboard interface
+      kb_key_num_i           : in integer range 0 to 79;    -- cycles through all MEGA65 keys
+      kb_key_pressed_n_i     : in std_logic                 -- low active: debounced feedback: is kb_key_num_i pressed right now?   
 
       -- MEGA65 audio
 --      pwm_l                  : out std_logic;
