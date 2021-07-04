@@ -39,10 +39,19 @@ end keyboard;
 
 architecture beh of keyboard is
 
--- @TODO remove this demo signal
-signal   keys_n: std_logic_vector(2 downto 0) := "111"; -- low active: no key pressed
-
 begin
+
+   /* Some first thoughts:
+   
+   * The C64 core only takes one PS/2 keypress per clock cycle.
+   * It decodes make/break codes (and others, to-be-researched)
+   * It stores the currently simultaneously pressed keys in an internal matrix (RAM, registers, ...)
+   
+   We need to implement logic which serializes multi-keypresses and multi-key-releases into
+   a stream of PS2 make/break codes.
+   
+   */
+
 
 -- MEGA65 key codes that kb_key_num_i is using while
 -- kb_key_pressed_n_i is signalling (low active) which key is pressed
