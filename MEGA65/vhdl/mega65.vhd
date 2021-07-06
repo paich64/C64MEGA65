@@ -125,7 +125,7 @@ constant SHELL_O_DY           : integer := 20;
 -- Clocks and active high reset signals for each clock domain
 ---------------------------------------------------------------------------------------------
 
-signal clk_audio              : std_logic;               -- Audio clock @ 24.576 MHz
+signal clk_video              : std_logic;               -- Video clock @ 64 MHz
 signal clk_qnice              : std_logic;               -- QNICE main clock @ 50 MHz
 signal clk_main               : std_logic;               -- C64 main clock @ 32 MHz
 signal clk_pixel_1x           : std_logic;               -- pixel clock at normal speed (default: PAL @ 50 Hz = 27 MHz)
@@ -205,8 +205,8 @@ begin
          sys_clk_i    => CLK,             -- expects 100 MHz
          sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
          
-         audio_clk_o  => clk_audio,       -- @TODO
-         audio_rst_o  => open,            -- @TODO
+         video_clk_o  => clk_video,       -- video's 64 MHz clock
+         video_rst_o  => open,            -- video's reset, synchronized
          
          qnice_clk_o  => clk_qnice,       -- QNICE's 50 MHz main clock
          qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
@@ -234,13 +234,21 @@ begin
       )
       port map (
          clk_main_i           => clk_main,
-         clk_audio_i          => clk_audio,
+         clk_video_i          => clk_video,
          reset_i              => main_rst,
          
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
-         kb_key_pressed_n_i   => main_key_pressed_n         
-      );
+         kb_key_pressed_n_i   => main_key_pressed_n,
+
+         -- MEGA65 video
+         VGA_R                => vga_red,
+         VGA_G                => vga_green,
+         VGA_B                => vga_blue,
+         VGA_VS               => vga_vs,
+         VGA_HS               => vga_hs,
+         VGA_DE               => vga_de
+      ); -- i_main
       
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
@@ -392,12 +400,12 @@ begin
          vga_osm_vram_attr_i  => vga_osm_vram_attr,
          vga_core_vram_addr_o => vga_core_vram_addr,
          vga_core_vram_data_i => vga_core_vram_data,
-         vga_red_o            => vga_red,
-         vga_green_o          => vga_green,
-         vga_blue_o           => vga_blue,
-         vga_hs_o             => vga_hs,
-         vga_vs_o             => vga_vs,
-         vga_de_o             => vga_de,
+         vga_red_o            => open, -- vga_red,
+         vga_green_o          => open, -- vga_green,
+         vga_blue_o           => open, -- vga_blue,
+         vga_hs_o             => open, -- vga_hs,
+         vga_vs_o             => open, -- vga_vs,
+         vga_de_o             => open, -- vga_de,
          vdac_clk_o           => vdac_clk,
          vdac_sync_n_o        => vdac_sync_n,
          vdac_blank_n_o       => vdac_blank_n

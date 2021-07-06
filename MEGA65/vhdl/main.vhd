@@ -18,13 +18,23 @@ entity main is
       G_OUTPUT_DY             : natural     
    );
    port (
-      clk_main_i              : in std_logic;
-      clk_audio_i             : in std_logic;
-      reset_i                 : in std_logic;
+      clk_main_i              : in  std_logic;    -- 32 MHz
+      clk_video_i             : in  std_logic;    -- 64 MHz
+      reset_i                 : in  std_logic;
 
       -- M2M Keyboard interface
-      kb_key_num_i           : in integer range 0 to 79;    -- cycles through all MEGA65 keys
-      kb_key_pressed_n_i     : in std_logic                 -- low active: debounced feedback: is kb_key_num_i pressed right now?   
+      kb_key_num_i            : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
+      kb_key_pressed_n_i      : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+
+      -- MEGA65 video
+      -- Visible resolution 720x576 @ 50 Hz.
+      -- Total pixel counters: 864x623 @ 27 MHz
+      VGA_R                   : out std_logic_vector(7 downto 0);
+      VGA_G                   : out std_logic_vector(7 downto 0);
+      VGA_B                   : out std_logic_vector(7 downto 0);
+      VGA_VS                  : out std_logic;
+      VGA_HS                  : out std_logic;
+      VGA_DE                  : out std_logic
 
       -- MEGA65 audio
 --      pwm_l                  : out std_logic;
@@ -49,17 +59,56 @@ architecture synthesis of main is
 
 signal kb_ps2 : std_logic_vector(10 downto 0);
 
+   component video_mixer is
+      port (
+         CLK_VIDEO   : in  std_logic;
+         CE_PIXEL    : out std_logic;
+         ce_pix      : in  std_logic;
+         scandoubler : in  std_logic;
+         hq2x        : in  std_logic;
+         gamma_bus   : inout std_logic_vector(21 downto 0);
+         R           : in  unsigned(7 downto 0);
+         G           : in  unsigned(7 downto 0);
+         B           : in  unsigned(7 downto 0);
+         HSync       : in  std_logic;
+         VSync       : in  std_logic;
+         HBlank      : in  std_logic;
+         VBlank      : in  std_logic;
+         HDMI_FREEZE : in  std_logic;
+         freeze_sync : out std_logic;
+         VGA_R       : out std_logic_vector(7 downto 0);
+         VGA_G       : out std_logic_vector(7 downto 0);
+         VGA_B       : out std_logic_vector(7 downto 0);
+         VGA_VS      : out std_logic;
+         VGA_HS      : out std_logic;
+         VGA_DE      : out std_logic
+      );
+   end component video_mixer;
+
+   signal c64_pause : std_logic;
+   signal div       : integer range 0 to 7;
+   signal ce_pix    : std_logic;
+   signal c64_hsync : std_logic;
+   signal c64_vsync : std_logic;
+   signal c64_r     : unsigned(7 downto 0);
+   signal c64_g     : unsigned(7 downto 0);
+   signal c64_b     : unsigned(7 downto 0);
+   signal vs_hsync  : std_logic;
+   signal vs_vsync  : std_logic;
+   signal vs_hblank : std_logic;
+   signal vs_vblank : std_logic;
+
 begin
 
    -- MiSTer Commodore 64 core / main machine
-   i_c64 : entity work.fpga64_sid_iec
+   i_fpga64_sid_iec : entity work.fpga64_sid_iec
       port map (
          clk32       => clk_main_i,      
          reset_n     => not reset_i,
          bios        => "01",             -- standard C64, internal ROM
          
          pause       => '0',
-         pause_out   => open,
+         pause_out   => c64_pause,
       
          -- keyboard interface (use any ordinairy PS2 keyboard)
          ps2_key     => kb_ps2,
@@ -82,11 +131,11 @@ begin
       
          -- VGA/SCART interface
          ntscMode    => '0',
-         hsync       => open,
-         vsync       => open,
-         r           => open,
-         g           => open,
-         b           => open,
+         hsync       => c64_hsync,
+         vsync       => c64_vsync,
+         r           => c64_r,
+         g           => c64_g,
+         b           => c64_b,
       
          -- cartridge port
          game        => '0',
@@ -123,7 +172,7 @@ begin
          pot3        => x"00",
          pot4        => x"00",
       
-         --SID
+         -- SID
          audio_l     => open,
          audio_r     => open,
          sid_filter  => "00",
@@ -166,7 +215,7 @@ begin
          cass_write  => open,
          cass_sense  => '0',
          cass_read   => '0'            
-      );
+      ); -- i_fpga64_sid_iec
       
    -- The C64 core expects an own variant of PS/2 scancodes including make/break codes
    i_m65_to_ps2 : entity work.keyboard
@@ -179,7 +228,55 @@ begin
 
          -- PS/2 interface to the MiSTer C64 core         
          ps2_o                => kb_ps2
-      );
+      ); -- i_m65_to_ps2
+
+
+   i_video_sync : entity work.video_sync
+      port map (
+         clk32     => clk_main_i,
+         pause     => c64_pause,
+         hsync     => c64_hsync,
+         vsync     => c64_vsync,
+         ntsc      => '0',
+         wide      => '0',
+         hsync_out => vs_hsync,
+         vsync_out => vs_vsync,
+         hblank    => vs_hblank,
+         vblank    => vs_vblank
+      ); -- i_video_sync
+
+   p_div : process (clk_video_i)
+   begin
+      if rising_edge(clk_video_i) then
+         div <= div + 1;
+      end if;
+   end process p_div;
+   ce_pix <= '1' when div = 0 else '0';
+
+   i_video_mixer : video_mixer
+      port map (
+         CLK_VIDEO   => clk_video_i,   -- 64 MHz
+         CE_PIXEL    => open,
+         ce_pix      => ce_pix,
+         scandoubler => '0',
+         hq2x        => '0',
+         gamma_bus   => open,
+         R           => c64_r,
+         G           => c64_g,
+         B           => c64_b,
+         HSync       => vs_hsync,
+         VSync       => vs_vsync,
+         HBlank      => vs_hblank,
+         VBlank      => vs_vblank,
+         HDMI_FREEZE => '0',
+         freeze_sync => open,
+         VGA_R       => VGA_R,
+         VGA_G       => VGA_G,
+         VGA_B       => VGA_B,
+         VGA_VS      => VGA_VS,
+         VGA_HS      => VGA_HS,
+         VGA_DE      => VGA_DE
+      ); -- i_video_mixer
       
 end synthesis;
 

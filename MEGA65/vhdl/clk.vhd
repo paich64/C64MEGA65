@@ -27,8 +27,8 @@ entity clk is
       main_clk_o   : out std_logic;   -- main's 32 MHz clock
       main_rst_o   : out std_logic;   -- main's reset, synchronized
       
-      audio_clk_o  : out std_logic;   -- audio's 24.576 MHz main clock
-      audio_rst_o  : out std_logic;   -- audio's reset, synchronized
+      video_clk_o  : out std_logic;   -- video's 64 MHz clock
+      video_rst_o  : out std_logic;   -- video's reset, synchronized
 
       qnice_clk_o  : out std_logic;   -- QNICE's 50 MHz main clock
       qnice_rst_o  : out std_logic;   -- QNICE's reset, synchronized
@@ -45,7 +45,7 @@ signal clkfb1          : std_logic;
 signal clkfb1_mmcm     : std_logic;
 signal clkfb2          : std_logic;
 signal clkfb2_mmcm     : std_logic;
-signal audio_clk_mmcm  : std_logic;
+signal video_clk_mmcm  : std_logic;
 signal qnice_clk_mmcm  : std_logic;
 signal main_clk_mmcm   : std_logic;
 signal pixel_clk_mmcm  : std_logic;
@@ -68,7 +68,7 @@ begin
          CLKFBOUT_MULT_F      => 8.0,        -- 800 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 32.552,     -- Audio @ 24.576 MHz TBD: Current value is ??? @TODO
+         CLKOUT0_DIVIDE_F     => 12.500,     -- video @ 64 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE,
@@ -84,7 +84,7 @@ begin
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb1_mmcm,
-         CLKOUT0             => audio_clk_mmcm,
+         CLKOUT0             => video_clk_mmcm,
          CLKOUT1             => qnice_clk_mmcm,
          CLKOUT2             => main_clk_mmcm,
          -- Input clock control
@@ -186,10 +186,10 @@ begin
          O => clkfb2
       );
       
-   audio_clk_bufg : BUFG
+   video_clk_bufg : BUFG
       port map (
-         I => audio_clk_mmcm,
-         O => audio_clk_o
+         I => video_clk_mmcm,
+         O => video_clk_o
       );
       
    qnice_clk_bufg : BUFG
@@ -220,14 +220,14 @@ begin
    -- Reset generation
    -------------------------------------
 
-   i_xpm_cdc_sync_rst_audio : xpm_cdc_sync_rst
+   i_xpm_cdc_sync_rst_video : xpm_cdc_sync_rst
       generic map (
          INIT_SYNC_FF => 1  -- Enable simulation init values
       )
       port map (
          src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => audio_clk_o,      -- 1-bit input: Destination clock.
-         dest_rst => audio_rst_o       -- 1-bit output: src_rst synchronized to the destination clock doaudio.
+         dest_clk => video_clk_o,      -- 1-bit input: Destination clock.
+         dest_rst => video_rst_o       -- 1-bit output: src_rst synchronized to the destination clock dovideo.
                                        -- This output is registered.
       );
 
