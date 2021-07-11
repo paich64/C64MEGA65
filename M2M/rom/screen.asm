@@ -57,6 +57,9 @@ SCR$INIT        INCRB
                 MOVE    @R0, @R1
                 AND     0x00FF, @R1
 
+                MOVE    SCR$ILX, R0             ; inner left x coordinate
+                MOVE    0, @R0
+
                 XOR     R8, R8                  ; init cursor variables
                 XOR     R9, R9
                 RSUB    SCR$GOTOXY, 1
@@ -234,7 +237,8 @@ _PS_L2          MOVE    R4, R7                  ; remember original char
                 RSUB    _PS_POST, 1
                 RBRA    _PS_L1, 1
 
-_PS_L3          MOVE    1, @R1                  ; inner-left start x-coord
+_PS_L3          MOVE    SCR$ILX, R12
+                MOVE    @R12, @R1               ; inner-left start x-coord
                 ADD     1, @R2                  ; new line
                 RSUB    CALC_VRAM, 1
                 RBRA    _PS_L1, 1
@@ -265,13 +269,43 @@ _PS_POST        INCRB
                 DECRB
                 RET
 
+; ----------------------------------------------------------------------------
+; Print the string using SCR$PRINTSTR
+; Input:  x|y coords in R9|R10
+; Output: None; all registers stay unmodified
+; ----------------------------------------------------------------------------            
+
+SCR$PRINTSTRXY  INCRB
+
+                MOVE    SCR$CUR_X, R0           ; remember original cursor
+                MOVE    @R0, R1
+                MOVE    SCR$CUR_Y, R2
+                MOVE    @R2, R3
+
+                MOVE    R9, @R0                 ; print at actual position
+                MOVE    R10, @R2
+                RSUB    SCR$PRINTSTR, 1
+
+                MOVE    R1, @R0                 ; restore original cursor
+                MOVE    R3, @R2
+
+                DECRB
+                RET
+
 ; ----------------------------------------------------------------------------            
 ; Draws a frame
 ; Input:  R8/R9:   start x/y coordinates
 ;         R10/R11: dx/dy sizes, both need to be larger than 3
 ; Output: None; all registers stay unmodified
-; ----------------------------------------------------------------------------            
+; ----------------------------------------------------------------------------
+
 SCR$PRINTFRAME  RSUB    ENTER, 1
+
+                ; modify global inner left x coordinate for SCR$PRINTSCR
+                ; so that \n stays inside the frame
+                MOVE    SCR$ILX, R0
+                MOVE    R8, @R0
+                ADD     1, @R0
 
                 MOVE    M2M$RAMROM_DEV, R0      ; switch device to VRAM
                 MOVE    M2M$VRAM_DATA, @R0
