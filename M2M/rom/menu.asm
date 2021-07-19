@@ -10,8 +10,8 @@
 ; Special values for OPTM_IR_GROUPS
 ; ----------------------------------------------------------------------------
 
-OPTM_CLOSE      .EQU 0xEEEE                     ; menu item that closes menu
-OPTM_SINGLESEL  .EQU 0x8000                     ; AND mask: single select itm?
+OPTM_CLOSE      .EQU 0x00FF                     ; menu item that closes menu
+OPTM_SINGLESEL  .EQU 0x8000                     ; AND mask: single select item
 
 ; ----------------------------------------------------------------------------
 ; Option Menu key codes (to be returned by the function in OPTM_FP_GETKEY)
@@ -83,6 +83,9 @@ OPTM_IR_STDSEL  .EQU 13
 
 ; array of 0s and 1s to define horizontal separator lines
 OPTM_IR_LINES   .EQU 14
+
+; size of initialization record in words
+OPTM_STRUCTSIZE .EQU 15
 
 ; ----------------------------------------------------------------------------
 ; Options Menu functions
