@@ -258,7 +258,7 @@ begin
          CLK_VIDEO   => clk_video_i,   -- 64 MHz
          CE_PIXEL    => open,
          ce_pix      => ce_pix,
-         scandoubler => '0',
+         scandoubler => '1',
          hq2x        => '0',
          gamma_bus   => open,
          R           => c64_r,
