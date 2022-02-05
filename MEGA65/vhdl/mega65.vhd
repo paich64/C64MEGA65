@@ -4,7 +4,7 @@
 -- MEGA65 main file that contains the whole machine
 --
 -- based on C64_MiSTer by the MiSTer development team
--- port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
+-- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -223,7 +223,7 @@ begin
    -- clk_main (MiSTer core's clock)
    ---------------------------------------------------------------------------------------------
 
-   -- main.vhd contains the actual MiSTer core
+   -- main.vhd contains the actual Commodore 64 MiSTer core
    i_main : entity work.main
       generic map (
          G_CORE_CLK_SPEED     => CORE_CLK_SPEED,
@@ -423,12 +423,12 @@ begin
 
          vga_rst      => pixel_rst,                   -- active high reset
          vga_clk      => clk_pixel_1x,                -- VGA pixel clock
-         vga_vs       => vga_vs,
-         vga_hs       => vga_hs,
-         vga_de       => vga_de,
-         vga_r        => vga_red,
-         vga_g        => vga_green,
-         vga_b        => vga_blue,
+         vga_vs       => '0', --vga_vs,
+         vga_hs       => '0', --vga_hs,
+         vga_de       => '0', --vga_de,
+         vga_r        => (others => '0'), --vga_red,
+         vga_g        => (others => '0'), --vga_green,
+         vga_b        => (others => '0'), --vga_blue,
 
          -- PCM audio
          pcm_rst      => main_rst,
