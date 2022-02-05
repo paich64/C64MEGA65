@@ -1,18 +1,18 @@
 ---------------------------------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework  
+-- Convert MEGA65 keystrokes to the C64 keyboard matrix that the CIA1 can scan
 --
--- Custom keyboard controller for your core
+-- Runs in the clock domain of the C64 core
 --
--- Runs in the clock domain of the core.
+-- Interface to the MiSTer C64 core that directly connects to the C64's CIA1 instead of
+-- going the detour of converting the MEGA65 keystrokes into PS/2 keystrokes first. 
+-- This means, that the "fpga64_keyboard" entity of the original core is not used. Instead,
+-- we are modifying the "fpga64_sid_iec" entity so that we can route the CIA1's ports
+-- A and B into this keyboard driver which then emulates the behavior of the physical
+-- C64 keyboard including the possibility to "scan" via the row, i.e. pull one or more bits of 
+-- port A to zero (one by one) and read via the "column" (i.e. from port B) or vice versa.
 --
--- Basic philosophy of keyboard handling in MiSTer2MEGA: 
+-- This is how MiSTer2MEGA65 provides access to the MEGA65 keyboard: 
 --
--- Each core is treating the keyboard in a different way: Some need low-active "matrices", some
--- might need small high-active keyboard memories, etc. This is why the MiSTer2MEGA65 framework
--- lets you define literally everything and only provides a minimal abstraction layer to the keyboard.
--- You need to adjust this module to your needs.
---
--- MiSTer2MEGA65 provides a very simple and generic interface to the MEGA65 keyboard:
 -- kb_key_num_i is running through the key numbers 0 to 79 with a frequency of 1 kHz, i.e. the whole
 -- keyboard is scanned 1000 times per second. kb_key_pressed_n_i is already debounced and signals
 -- low active, if a certain key is being pressed right now.
@@ -28,113 +28,266 @@ entity keyboard is
    port (
       clk_main_i           : in std_logic;                     -- core clock
          
-      -- interface to the MEGA65 keyboard
+      -- Interface to the MEGA65 keyboard
       key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
       key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
-      -- PS/2 interface to the MiSTer C64 core         
-      ps2_o                : std_logic_vector(10 downto 0)
+      -- Interface to the C64's CIA1         
+      cia1_pai_o           : out std_logic_vector(7 downto 0);
+      cia1_pao_i           : in std_logic_vector(7 downto 0);
+      cia1_pbi_o           : out std_logic_vector(7 downto 0);
+      cia1_pbo_i           : in std_logic_vector(7 downto 0)
    );
 end keyboard;
 
 architecture beh of keyboard is
 
-begin
-
-   /* Some first thoughts:
-   
-   * The C64 core only takes one PS/2 keypress per clock cycle.
-   * It decodes make/break codes (and others, to-be-researched)
-   * It stores the currently simultaneously pressed keys in an internal matrix (RAM, registers, ...)
-   
-   We need to implement logic which serializes multi-keypresses and multi-key-releases into
-   a stream of PS2 make/break codes.
-   
-   */
-
-
 -- MEGA65 key codes that kb_key_num_i is using while
 -- kb_key_pressed_n_i is signalling (low active) which key is pressed
---
---    0   INS/DEL
---    1   RETURN
---    2   HORZ/CRSR
---    3   F8/F7
---    4   F2/F1
---    5   F4/F3
---    6   F6/F5
---    7   VERT/CRSR
---    8   #/3
---    9   W/w
---    10  A/a
---    11  $/4
---    12  Z/z
---    13  S/s
---    14  E/e
---    15  LEFT SHIFT (SHIFT LOCK is locking LEFT SHIFT)
---    16  %/5
---    17  R/r
---    18  D/d
---    19  &/6
---    20  C/c
---    21  F/f
---    22  T/t
---    23  X/x
---    24  '/7
---    25  Y/y
---    26  G/g
---    27  (/8
---    28  B/b
---    29  H/h
---    30  U/u
---    31  V/v
---    32  )/9
---    33  I/i
---    34  J/j
---    35  0/0
---    36  M/m
---    37  K/k
---    38  O/o
---    39  N/n
---    40  +
---    41  P/p
---    42  L/l
---    43  -
---    44  >/.
---    45  [/:
---    46  @
---    47  </,
---    48  British pound
---    49  *
---    50  ]/;
---    51  CLR/HOME
---    52  RIGHT SHIFT
---    53  }/=
---    54  ARROW UP KEY
---    55  ?//
---    56  !/1
---    57  ARROW LEFT KEY
---    58  CTRL
---    59  "/2
---    60  SPACE/BAR
---    61  MEGA65 KEY
---    62  Q/q
---    63  RUN/STOP
---    64  NO SCRL
---    65  TAB
---    66  ALT
---    67  HELP
---    68  F10/F9
---    69  F12/F11
---    70  F14/F13
---    71  ESC/NO KEY
---    72  CAPSLOCK
---    73  CURSOR UP = SHIFT+VERT/CRSR
---    74  CURSOR LEFT = SHIFT+HORZ/CRSR
---    75  RESTORE
---    76  (again: INST/DEL                  unclear why, do not use)
---    77  (again: RETURN                    unclear why,do not use)
---    78  (again: CAPS LOCK, but hi active  unclear why,do not use)
---    79  ???
+constant m65_ins_del       : integer := 0;
+constant m65_return        : integer := 1;
+constant m65_horz_crsr     : integer := 2;   -- means cursor right in C64 terminology
+constant m65_f7            : integer := 3;
+constant m65_f1            : integer := 4;
+constant m65_f3            : integer := 5;
+constant m65_f5            : integer := 6;
+constant m65_vert_crsr     : integer := 7;   -- means cursor down in C64 terminology
+constant m65_3             : integer := 8;
+constant m65_w             : integer := 9;
+constant m65_a             : integer := 10;
+constant m65_4             : integer := 11;
+constant m65_z             : integer := 12;
+constant m65_s             : integer := 13;
+constant m65_e             : integer := 14;
+constant m65_left_shift    : integer := 15;
+constant m65_5             : integer := 16;
+constant m65_r             : integer := 17;
+constant m65_d             : integer := 18;
+constant m65_6             : integer := 19;
+constant m65_c             : integer := 20;
+constant m65_f             : integer := 21;
+constant m65_t             : integer := 22;
+constant m65_x             : integer := 23;
+constant m65_7             : integer := 24;
+constant m65_y             : integer := 25;
+constant m65_g             : integer := 26;
+constant m65_8             : integer := 27;
+constant m65_b             : integer := 28;
+constant m65_h             : integer := 29;
+constant m65_u             : integer := 30;
+constant m65_v             : integer := 31;
+constant m65_9             : integer := 32;
+constant m65_i             : integer := 33;
+constant m65_j             : integer := 34;
+constant m65_0             : integer := 35;
+constant m65_m             : integer := 36;
+constant m65_k             : integer := 37;
+constant m65_o             : integer := 38;
+constant m65_n             : integer := 39;
+constant m65_plus          : integer := 40;
+constant m65_p             : integer := 41; 
+constant m65_l             : integer := 42;
+constant m65_minus         : integer := 43;
+constant m65_dot           : integer := 44;
+constant m65_colon         : integer := 45;
+constant m65_at            : integer := 46;
+constant m65_comma         : integer := 47;
+constant m65_gbp           : integer := 48;
+constant m65_asterisk      : integer := 49;
+constant m65_semicolon     : integer := 50;
+constant m65_clr_home      : integer := 51;
+constant m65_right_shift   : integer := 52;
+constant m65_equal         : integer := 53;
+constant m65_arrow_up      : integer := 54;  -- symbol, not cursor
+constant m65_slash         : integer := 55;
+constant m65_1             : integer := 56;
+constant m65_arrow_left    : integer := 57;  -- symbol, not cursor
+constant m65_ctrl          : integer := 58;
+constant m65_2             : integer := 59;
+constant m65_space         : integer := 60;
+constant m65_mega          : integer := 61;
+constant m65_q             : integer := 62;
+constant m65_run_stop      : integer := 63;
+constant m65_no_scrl       : integer := 64;
+constant m65_tab           : integer := 65;
+constant m65_alt           : integer := 66;
+constant m65_help          : integer := 67;
+constant m65_f9            : integer := 68;
+constant m65_f11           : integer := 69;
+constant m65_f13           : integer := 70;
+constant m65_esc           : integer := 71;
+constant m65_capslock      : integer := 72;
+constant m65_up_crsr       : integer := 73;  -- cursor up
+constant m65_left_crsr     : integer := 74;  -- cursor left
+constant m65_restore       : integer := 75;
 
+signal key_pressed_n : std_logic_vector(79 downto 0);
+
+begin
+   
+   keyboard_state : process(clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         key_pressed_n(key_num_i) <= key_pressed_n_i;
+      end if;
+   end process;
+
+   ------------------------------------------------------------------------------
+   -- Reading via port A and scanning (by setting bits to 0) on port B
+   --
+   -- This code is very similar as fpga64_keyboard.vhd. The fact that the order
+   -- of the MEGA65 scancodes (constants above) and the order how they are
+   -- scanned here is identical is no coincidence.
+   --
+   -- See also: https://www.c64-wiki.com/wiki/Keyboard#Keyboard_Matrix
+   ------------------------------------------------------------------------------
+    
+   cia1_pai_o(0) <=  (cia1_pbo_i(0) or key_pressed_n(m65_ins_del))      and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_return))       and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_horz_crsr))    and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_f7))           and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_f1))           and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_f3))           and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_f5))           and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_vert_crsr));
+
+   cia1_pai_o(1) <=  (cia1_pbo_i(0) or key_pressed_n(m65_3))            and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_w))            and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_a))            and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_4))            and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_z))            and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_s))            and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_e))            and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_left_shift));
+
+   cia1_pai_o(2) <=  (cia1_pbo_i(0) or key_pressed_n(m65_5))            and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_r))            and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_d))            and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_6))            and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_c))            and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_f))            and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_t))            and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_x));
+                     
+   cia1_pai_o(3) <=  (cia1_pbo_i(0) or key_pressed_n(m65_7))            and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_y))            and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_g))            and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_8))            and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_b))            and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_h))            and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_u))            and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_v));
+                     
+   cia1_pai_o(4) <=  (cia1_pbo_i(0) or key_pressed_n(m65_9))            and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_i))            and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_j))            and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_0))            and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_m))            and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_k))            and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_o))            and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_n));
+                     
+   cia1_pai_o(5) <=  (cia1_pbo_i(0) or key_pressed_n(m65_plus))         and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_p))            and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_l))            and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_minus))        and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_dot))          and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_colon))        and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_at))           and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_comma));
+                     
+   cia1_pai_o(6) <=  (cia1_pbo_i(0) or key_pressed_n(m65_gbp))          and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_asterisk))     and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_semicolon))    and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_clr_home))     and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_right_shift))  and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_equal))        and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_arrow_up))     and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_slash));
+
+   cia1_pai_o(7) <=  (cia1_pbo_i(0) or key_pressed_n(m65_1))            and
+                     (cia1_pbo_i(1) or key_pressed_n(m65_arrow_left))   and
+                     (cia1_pbo_i(2) or key_pressed_n(m65_ctrl))         and
+                     (cia1_pbo_i(3) or key_pressed_n(m65_2))            and
+                     (cia1_pbo_i(4) or key_pressed_n(m65_space))        and
+                     (cia1_pbo_i(5) or key_pressed_n(m65_mega))         and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_q))            and
+                     (cia1_pbo_i(7) or key_pressed_n(m65_run_stop));
+
+   ------------------------------------------------------------------------------
+   -- Reading via port B and scanning (by setting bits to 0) on port A
+   ------------------------------------------------------------------------------
+    
+   cia1_pbi_o(0) <=  (cia1_pao_i(0) or key_pressed_n(m65_ins_del))      and
+                     (cia1_pao_i(1) or key_pressed_n(m65_3))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_5))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_7))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_9))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_plus))         and
+                     (cia1_pao_i(6) or key_pressed_n(m65_gbp))          and
+                     (cia1_pao_i(7) or key_pressed_n(m65_1));
+
+   cia1_pbi_o(1) <=  (cia1_pao_i(0) or key_pressed_n(m65_return))       and
+                     (cia1_pao_i(1) or key_pressed_n(m65_w))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_r))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_y))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_i))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_p))            and
+                     (cia1_pao_i(6) or key_pressed_n(m65_asterisk))     and
+                     (cia1_pao_i(7) or key_pressed_n(m65_arrow_left));
+                                          
+   cia1_pbi_o(2) <=  (cia1_pao_i(0) or key_pressed_n(m65_horz_crsr))    and
+                     (cia1_pao_i(1) or key_pressed_n(m65_a))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_d))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_g))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_j))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_l))            and
+                     (cia1_pao_i(6) or key_pressed_n(m65_semicolon))    and
+                     (cia1_pao_i(7) or key_pressed_n(m65_ctrl));
+                     
+   cia1_pbi_o(3) <=  (cia1_pao_i(0) or key_pressed_n(m65_f7))           and
+                     (cia1_pao_i(1) or key_pressed_n(m65_4))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_6))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_8))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_0))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_minus))        and
+                     (cia1_pao_i(6) or key_pressed_n(m65_clr_home))     and
+                     (cia1_pao_i(7) or key_pressed_n(m65_2));
+                     
+   cia1_pbi_o(4) <=  (cia1_pao_i(0) or key_pressed_n(m65_f1))           and
+                     (cia1_pao_i(1) or key_pressed_n(m65_z))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_c))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_b))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_m))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_dot))          and
+                     (cia1_pao_i(6) or key_pressed_n(m65_right_shift))  and
+                     (cia1_pao_i(7) or key_pressed_n(m65_space));
+                     
+   cia1_pbi_o(5) <=  (cia1_pao_i(0) or key_pressed_n(m65_f3))           and
+                     (cia1_pao_i(1) or key_pressed_n(m65_s))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_f))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_h))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_k))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_colon))        and
+                     (cia1_pao_i(6) or key_pressed_n(m65_equal))        and
+                     (cia1_pao_i(7) or key_pressed_n(m65_mega));
+                     
+   cia1_pbi_o(6) <=  (cia1_pao_i(0) or key_pressed_n(m65_f5))           and
+                     (cia1_pao_i(1) or key_pressed_n(m65_e))            and
+                     (cia1_pao_i(2) or key_pressed_n(m65_t))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_u))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_o))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_at))           and
+                     (cia1_pao_i(6) or key_pressed_n(m65_arrow_up))     and
+                     (cia1_pao_i(7) or key_pressed_n(m65_q));
+
+   cia1_pbi_o(7) <=  (cia1_pao_i(0) or key_pressed_n(m65_vert_crsr))    and
+                     (cia1_pao_i(1) or key_pressed_n(m65_left_shift))   and
+                     (cia1_pao_i(2) or key_pressed_n(m65_x))            and
+                     (cia1_pao_i(3) or key_pressed_n(m65_v))            and
+                     (cia1_pao_i(4) or key_pressed_n(m65_n))            and
+                     (cia1_pao_i(5) or key_pressed_n(m65_comma))        and
+                     (cia1_pao_i(6) or key_pressed_n(m65_slash))        and
+                     (cia1_pao_i(7) or key_pressed_n(m65_run_stop));
+                     
 end beh;

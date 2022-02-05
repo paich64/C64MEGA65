@@ -57,8 +57,6 @@ end main;
 
 architecture synthesis of main is
 
-signal kb_ps2 : std_logic_vector(10 downto 0);
-
    component video_mixer is
       port (
          CLK_VIDEO   : in  std_logic;
@@ -97,6 +95,11 @@ signal kb_ps2 : std_logic_vector(10 downto 0);
    signal vs_vsync  : std_logic;
    signal vs_hblank : std_logic;
    signal vs_vblank : std_logic;
+   
+   signal cia1_pa_i : std_logic_vector(7 downto 0);
+   signal cia1_pa_o : std_logic_vector(7 downto 0);
+   signal cia1_pb_i : std_logic_vector(7 downto 0);
+   signal cia1_pb_o : std_logic_vector(7 downto 0);
 
 begin
 
@@ -110,10 +113,16 @@ begin
          pause       => '0',
          pause_out   => c64_pause,
       
-         -- keyboard interface (use any ordinairy PS2 keyboard)
-         ps2_key     => kb_ps2,
-         kbd_reset   => reset_i,
-      
+--         -- keyboard interface (use any ordinairy PS2 keyboard)
+--         ps2_key     => kb_ps2,
+--         kbd_reset   => reset_i,
+
+         -- keyboard interface: directly connect the CIA1
+         cia1_pa_i   => cia1_pa_i,
+         cia1_pa_o   => cia1_pa_o,
+         cia1_pb_i   => cia1_pb_i,
+         cia1_pb_o   => cia1_pb_o,
+               
          -- external memory
          ramAddr     => open,
          ramDin      => x"00",
@@ -217,18 +226,27 @@ begin
          cass_read   => '0'            
       ); -- i_fpga64_sid_iec
       
-   -- The C64 core expects an own variant of PS/2 scancodes including make/break codes
-   i_m65_to_ps2 : entity work.keyboard
+   -- Convert MEGA65 keystrokes to the C64 keyboard matrix that the CIA1 can scan
+   i_m65_to_c64 : entity work.keyboard
       port map (
          clk_main_i           => clk_main_i,
             
-         -- interface to the MEGA65 keyboard
+         -- Interface to the MEGA65 keyboard
          key_num_i            => kb_key_num_i,
          key_pressed_n_i      => kb_key_pressed_n_i,
 
-         -- PS/2 interface to the MiSTer C64 core         
-         ps2_o                => kb_ps2
-      ); -- i_m65_to_ps2
+         -- Interface to the MiSTer C64 core that directly connects to the C64's CIA1 instead of
+         -- going the detour of converting the MEGA65 keystrokes into PS/2 keystrokes first. 
+         -- This means, that the "fpga64_keyboard" entity of the original core is not used. Instead,
+         -- we are modifying the "fpga64_sid_iec" entity so that we can route the CIA1's ports
+         -- A and B into this keyboard driver which then emulates the behavior of the physical
+         -- C64 keyboard including the possibility to "scan" via the row, i.e. pull one or more bits of 
+         -- port A to zero (one by one) and read via the "column" (i.e. from port B) or vice versa.
+         cia1_pai_o           => cia1_pa_i,
+         cia1_pao_i           => cia1_pa_o,
+         cia1_pbi_o           => cia1_pb_i,
+         cia1_pbo_i           => cia1_pb_o
+      ); -- i_m65_to_c64
 
 
    i_video_sync : entity work.video_sync
