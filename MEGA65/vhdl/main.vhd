@@ -101,7 +101,32 @@ architecture synthesis of main is
    signal cia1_pb_i : std_logic_vector(7 downto 0);
    signal cia1_pb_o : std_logic_vector(7 downto 0);
 
+   -- signales for experimental RAM (TODO: remove)
+   signal c64_ram_addr : unsigned(15 downto 0);
+   signal c64_ram_din  : std_logic_vector(7 downto 0);
+   signal c64_ram_dout : unsigned(7 downto 0);
+   signal c64_ram_ce   : std_logic;
+   signal c64_ram_we   : std_logic;
+
 begin
+
+   -- experimental RAM for the C64 core
+   -- TODO: as soon as it works, it needs to be moved to MEGA65.vhd, so that the QNICE core is able
+   -- to access the RAM for example to directly load a PRG file into RAM
+   experimental_ram : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH        => 16,
+         DATA_WIDTH        => 8,
+         LATCH_ADDR_A      => true
+      )
+      port map (
+         clock_a           => clk_video_i,   -- 64 MHz = double speed of system clock
+         address_a         => std_logic_vector(c64_ram_addr),
+         do_latch_addr_a   => c64_ram_ce,
+         data_a            => std_logic_vector(c64_ram_dout),
+         wren_a            => c64_ram_ce and c64_ram_we,
+         q_a               => c64_ram_din
+      );
 
    -- MiSTer Commodore 64 core / main machine
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
@@ -124,11 +149,11 @@ begin
          cia1_pb_o   => cia1_pb_o,
                
          -- external memory
-         ramAddr     => open,
-         ramDin      => x"00",
-         ramDout     => open,
-         ramCE       => open,
-         ramWE       => open,
+         ramAddr     => c64_ram_addr,
+         ramDin      => unsigned(c64_ram_din),
+         ramDout     => c64_ram_dout,
+         ramCE       => c64_ram_ce,
+         ramWE       => c64_ram_we,
       
          io_cycle    => open,
          ext_cycle   => open,
