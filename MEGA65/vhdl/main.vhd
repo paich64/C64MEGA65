@@ -116,13 +116,11 @@ begin
    experimental_ram : entity work.dualport_2clk_ram
       generic map (
          ADDR_WIDTH        => 16,
-         DATA_WIDTH        => 8,
-         LATCH_ADDR_A      => true
+         DATA_WIDTH        => 8
       )
       port map (
-         clock_a           => clk_video_i,   -- 64 MHz = double speed of system clock
+         clock_a           => clk_main_i,
          address_a         => std_logic_vector(c64_ram_addr),
-         do_latch_addr_a   => c64_ram_ce,
          data_a            => std_logic_vector(c64_ram_dout),
          wren_a            => c64_ram_ce and c64_ram_we,
          q_a               => c64_ram_din
@@ -172,8 +170,8 @@ begin
          b           => c64_b,
       
          -- cartridge port
-         game        => '0',
-         exrom       => '0',
+         game        => '1',              -- low active, 1 is default so that KERNAL ROM can be read
+         exrom       => '1',              -- ditto
          io_rom      => '0',
          io_ext      => '0',
          io_data     => x"00",
