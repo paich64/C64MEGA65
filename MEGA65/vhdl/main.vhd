@@ -18,8 +18,8 @@ entity main is
       G_OUTPUT_DY             : natural     
    );
    port (
-      clk_main_i              : in  std_logic;    -- 32 MHz
-      clk_video_i             : in  std_logic;    -- 64 MHz
+      clk_main_i              : in  std_logic;    -- 31.528 MHz
+      clk_video_i             : in  std_logic;    -- 63.056 MHz
       reset_i                 : in  std_logic;
 
       -- M2M Keyboard interface
@@ -34,7 +34,9 @@ entity main is
       VGA_B                   : out std_logic_vector(7 downto 0);
       VGA_VS                  : out std_logic;
       VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic
+      VGA_DE                  : out std_logic;
+      VGA_CLK_CE              : out std_logic
+
 
       -- MEGA65 audio
 --      pwm_l                  : out std_logic;
@@ -296,8 +298,8 @@ begin
 
    i_video_mixer : video_mixer
       port map (
-         CLK_VIDEO   => clk_video_i,   -- 64 MHz
-         CE_PIXEL    => open,
+         CLK_VIDEO   => clk_video_i,   -- 63.056 MHz
+         CE_PIXEL    => VGA_CLK_CE,
          ce_pix      => ce_pix,
          scandoubler => '1',
          hq2x        => '0',

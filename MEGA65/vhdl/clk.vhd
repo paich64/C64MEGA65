@@ -1,14 +1,15 @@
-----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 -- MiSTer2MEGA65 Framework  
 --
 -- Main clock, pixel clock and QNICE-clock generator using the Xilinx specific MMCME2_ADV:
 --
---   Commodore 64 expects 32 MHz
+--   MiSTer's Commodore 64 expects 31.528 MHz, because 31.528 MHz / 32 = 0,98525 MHz (C64 PAL clock speed)
+--   And it expects 2x this frequency as video_clk: 63.056 MHz clock
 --   QNICE expects 50 MHz
 --   PAL @ 50 Hz expects 27 MHz (VGA) and 135 MHz (HDMI)
 --
 -- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
-----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,10 +25,10 @@ entity clk is
       sys_clk_i    : in  std_logic;   -- expects 100 MHz
       sys_rstn_i   : in  std_logic;   -- Asynchronous, asserted low
       
-      main_clk_o   : out std_logic;   -- main's 32 MHz clock
+      main_clk_o   : out std_logic;   -- main's 31.528 MHz clock
       main_rst_o   : out std_logic;   -- main's reset, synchronized
       
-      video_clk_o  : out std_logic;   -- video's 64 MHz clock
+      video_clk_o  : out std_logic;   -- video's 63.056 MHz clock
       video_rst_o  : out std_logic;   -- video's reset, synchronized
 
       qnice_clk_o  : out std_logic;   -- QNICE's 50 MHz main clock
@@ -45,6 +46,8 @@ signal clkfb1          : std_logic;
 signal clkfb1_mmcm     : std_logic;
 signal clkfb2          : std_logic;
 signal clkfb2_mmcm     : std_logic;
+signal clkfb3          : std_logic;
+signal clkfb3_mmcm     : std_logic;
 signal video_clk_mmcm  : std_logic;
 signal qnice_clk_mmcm  : std_logic;
 signal main_clk_mmcm   : std_logic;
@@ -53,10 +56,10 @@ signal pixel_clk5_mmcm : std_logic;
 
 begin
 
-   -- generate Commodore 64 and QNICE clock
+   -- generate QNICE clock
    -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
    -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE   
-   i_clk_main_qnice : MMCME2_ADV
+   i_clk_qnice : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
          CLKOUT4_CASCADE      => FALSE,
@@ -68,25 +71,15 @@ begin
          CLKFBOUT_MULT_F      => 8.0,        -- 800 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 12.500,     -- video @ 64 MHz
+         CLKOUT0_DIVIDE_F     => 16.000,     -- QNICE @ 50 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
-         CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 16,         -- QNICE @ 50 MHz
-         CLKOUT1_PHASE        => 0.000,
-         CLKOUT1_DUTY_CYCLE   => 0.500,
-         CLKOUT1_USE_FINE_PS  => FALSE,
-         CLKOUT2_DIVIDE       => 25,         -- main @ 32 MHz
-         CLKOUT2_PHASE        => 0.000,
-         CLKOUT2_DUTY_CYCLE   => 0.500,
-         CLKOUT2_USE_FINE_PS  => FALSE
+         CLKOUT0_USE_FINE_PS  => FALSE
       )
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb1_mmcm,
-         CLKOUT0             => video_clk_mmcm,
-         CLKOUT1             => qnice_clk_mmcm,
-         CLKOUT2             => main_clk_mmcm,
+         CLKOUT0             => qnice_clk_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb1,
          CLKIN1              => sys_clk_i,
@@ -169,7 +162,65 @@ begin
          PWRDWN              => '0',
          RST                 => '0'
       );
-
+      
+   i_clk_c64 : MMCME2_ADV
+      generic map (
+         BANDWIDTH            => "OPTIMIZED",
+         CLKOUT4_CASCADE      => FALSE,
+         COMPENSATION         => "ZHOLD",
+         STARTUP_WAIT         => FALSE,
+         CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
+         REF_JITTER1          => 0.010,
+         DIVCLK_DIVIDE        => 6,
+         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
+         CLKFBOUT_PHASE       => 0.000,
+         CLKFBOUT_USE_FINE_PS => FALSE,
+         CLKOUT0_DIVIDE_F     => 20.000,     -- 47.292 MHz
+         CLKOUT0_PHASE        => 0.000,
+         CLKOUT0_DUTY_CYCLE   => 0.500,
+         CLKOUT0_USE_FINE_PS  => FALSE,
+         CLKOUT1_DIVIDE       => 15,         -- 63.056 MHz
+         CLKOUT1_PHASE        => 0.000,
+         CLKOUT1_DUTY_CYCLE   => 0.500,
+         CLKOUT1_USE_FINE_PS  => FALSE,
+         CLKOUT2_DIVIDE       => 30,         -- 31.528 MHz
+         CLKOUT2_PHASE        => 0.000,
+         CLKOUT2_DUTY_CYCLE   => 0.500,
+         CLKOUT2_USE_FINE_PS  => FALSE
+      )
+      port map (
+         -- Output clocks
+         CLKFBOUT            => clkfb3_mmcm,
+         CLKOUT0             => open,
+         CLKOUT1             => video_clk_mmcm,
+         CLKOUT2             => main_clk_mmcm,
+         -- Input clock control
+         CLKFBIN             => clkfb3,
+         CLKIN1              => sys_clk_i,
+         CLKIN2              => '0',
+         -- Tied to always select the primary input clock
+         CLKINSEL            => '1',
+         -- Ports for dynamic reconfiguration
+         DADDR               => (others => '0'),
+         DCLK                => '0',
+         DEN                 => '0',
+         DI                  => (others => '0'),
+         DO                  => open,
+         DRDY                => open,
+         DWE                 => '0',
+         -- Ports for dynamic phase shift
+         PSCLK               => '0',
+         PSEN                => '0',
+         PSINCDEC            => '0',
+         PSDONE              => open,
+         -- Other control and status signals
+         LOCKED              => open,
+         CLKINSTOPPED        => open,
+         CLKFBSTOPPED        => open,
+         PWRDWN              => '0',
+         RST                 => '0'
+      );
+      
    -------------------------------------
    -- Output buffering
    -------------------------------------
@@ -185,7 +236,13 @@ begin
          I => clkfb2_mmcm,
          O => clkfb2
       );
-      
+
+   clkfb3_bufg : BUFG
+      port map (
+         I => clkfb3_mmcm,
+         O => clkfb3
+      );
+            
    video_clk_bufg : BUFG
       port map (
          I => video_clk_mmcm,
