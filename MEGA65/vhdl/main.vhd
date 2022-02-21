@@ -34,9 +34,7 @@ entity main is
       VGA_B                   : out std_logic_vector(7 downto 0);
       VGA_VS                  : out std_logic;
       VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic;
-      VGA_CLK_CE              : out std_logic
-
+      VGA_DE                  : out std_logic
 
       -- MEGA65 audio
 --      pwm_l                  : out std_logic;
@@ -59,56 +57,38 @@ end main;
 
 architecture synthesis of main is
 
-   component video_mixer is
-      port (
-         CLK_VIDEO   : in  std_logic;
-         CE_PIXEL    : out std_logic;
-         ce_pix      : in  std_logic;
-         scandoubler : in  std_logic;
-         hq2x        : in  std_logic;
-         gamma_bus   : inout std_logic_vector(21 downto 0);
-         R           : in  unsigned(7 downto 0);
-         G           : in  unsigned(7 downto 0);
-         B           : in  unsigned(7 downto 0);
-         HSync       : in  std_logic;
-         VSync       : in  std_logic;
-         HBlank      : in  std_logic;
-         VBlank      : in  std_logic;
-         HDMI_FREEZE : in  std_logic;
-         freeze_sync : out std_logic;
-         VGA_R       : out std_logic_vector(7 downto 0);
-         VGA_G       : out std_logic_vector(7 downto 0);
-         VGA_B       : out std_logic_vector(7 downto 0);
-         VGA_VS      : out std_logic;
-         VGA_HS      : out std_logic;
-         VGA_DE      : out std_logic
-      );
-   end component video_mixer;
+-- MiSTer C64 signals
+signal c64_pause     : std_logic;
+signal ce_pix        : std_logic;
+signal c64_hsync     : std_logic;
+signal c64_vsync     : std_logic;
+signal c64_r         : unsigned(7 downto 0);
+signal c64_g         : unsigned(7 downto 0);
+signal c64_b         : unsigned(7 downto 0);
 
-   signal c64_pause : std_logic;
-   signal div       : integer range 0 to 7;
-   signal ce_pix    : std_logic;
-   signal c64_hsync : std_logic;
-   signal c64_vsync : std_logic;
-   signal c64_r     : unsigned(7 downto 0);
-   signal c64_g     : unsigned(7 downto 0);
-   signal c64_b     : unsigned(7 downto 0);
-   signal vs_hsync  : std_logic;
-   signal vs_vsync  : std_logic;
-   signal vs_hblank : std_logic;
-   signal vs_vblank : std_logic;
-   
-   signal cia1_pa_i : std_logic_vector(7 downto 0);
-   signal cia1_pa_o : std_logic_vector(7 downto 0);
-   signal cia1_pb_i : std_logic_vector(7 downto 0);
-   signal cia1_pb_o : std_logic_vector(7 downto 0);
+-- MiSTer video pipeline signals
+signal vs_hsync      : std_logic;
+signal vs_vsync      : std_logic;
+signal vs_hblank     : std_logic;
+signal vs_vblank     : std_logic;
+signal div           : integer range 0 to 7;
+signal mix_r         : std_logic_vector(7 downto 0);
+signal mix_g         : std_logic_vector(7 downto 0);
+signal mix_b         : std_logic_vector(7 downto 0);
+signal mix_vga_de    : std_logic;
 
-   -- signales for experimental RAM (TODO: remove)
-   signal c64_ram_addr : unsigned(15 downto 0);
-   signal c64_ram_din  : std_logic_vector(7 downto 0);
-   signal c64_ram_dout : unsigned(7 downto 0);
-   signal c64_ram_ce   : std_logic;
-   signal c64_ram_we   : std_logic;
+-- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
+signal cia1_pa_i     : std_logic_vector(7 downto 0);
+signal cia1_pa_o     : std_logic_vector(7 downto 0);
+signal cia1_pb_i     : std_logic_vector(7 downto 0);
+signal cia1_pb_o     : std_logic_vector(7 downto 0);
+
+-- signales for experimental RAM (TODO: remove)
+signal c64_ram_addr  : unsigned(15 downto 0);
+signal c64_ram_din   : std_logic_vector(7 downto 0);
+signal c64_ram_dout  : unsigned(7 downto 0);
+signal c64_ram_ce    : std_logic;
+signal c64_ram_we    : std_logic;
 
 begin
 
@@ -296,10 +276,10 @@ begin
    end process p_div;
    ce_pix <= '1' when div = 0 else '0';
 
-   i_video_mixer : video_mixer
+   i_video_mixer : entity work.video_mixer
       port map (
          CLK_VIDEO   => clk_video_i,   -- 63.056 MHz
-         CE_PIXEL    => VGA_CLK_CE,
+         CE_PIXEL    => open,
          ce_pix      => ce_pix,
          scandoubler => '1',
          hq2x        => '0',
@@ -313,13 +293,26 @@ begin
          VBlank      => vs_vblank,
          HDMI_FREEZE => '0',
          freeze_sync => open,
-         VGA_R       => VGA_R,
-         VGA_G       => VGA_G,
-         VGA_B       => VGA_B,
+         VGA_R       => mix_r,
+         VGA_G       => mix_g,
+         VGA_B       => mix_b,
          VGA_VS      => VGA_VS,
          VGA_HS      => VGA_HS,
-         VGA_DE      => VGA_DE
+         VGA_DE      => mix_vga_de
       ); -- i_video_mixer
       
+   VGA_DE <= mix_vga_de;
+   vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
+   begin
+      if mix_vga_de = '1' then
+         VGA_R <= mix_r;
+         VGA_G <= mix_g;
+         VGA_B <= mix_b;
+      else
+         VGA_R <= (others => '0');
+         VGA_G <= (others => '0');
+         VGA_B <= (others => '0');
+      end if;
+   end process;
+      
 end synthesis;
-

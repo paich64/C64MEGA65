@@ -179,12 +179,6 @@ signal qnice_config_data      : std_logic_vector(15 downto 0);
 -- clk_pixel_1x (VGA pixelclock) and clk_pixel_5x (HDMI)
 ---------------------------------------------------------------------------------------------
 
-signal vga_clk_ce             : std_logic;
-
-attribute MARK_DEBUG : string;
-attribute MARK_DEBUG of vga_clk_ce : signal is "TRUE";
-attribute MARK_DEBUG of vdac_clk   : signal is "TRUE";
-
 signal vga_de                 : std_logic;            -- VGA data enable (visible pixels)
 signal vga_tmds               : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
 
@@ -199,6 +193,14 @@ signal vga_osm_cfg_dxdy       : std_logic_vector(15 downto 0);
 signal vga_osm_vram_addr      : std_logic_vector(15 downto 0);
 signal vga_osm_vram_data      : std_logic_vector(7 downto 0);
 signal vga_osm_vram_attr      : std_logic_vector(7 downto 0);
+
+attribute MARK_DEBUG : string;
+attribute MARK_DEBUG of VGA_RED   : signal is "TRUE";
+attribute MARK_DEBUG of VGA_GREEN : signal is "TRUE";
+attribute MARK_DEBUG of VGA_BLUE  : signal is "TRUE";
+attribute MARK_DEBUG of VGA_HS    : signal is "TRUE";
+attribute MARK_DEBUG of VGA_VS    : signal is "TRUE";
+attribute MARK_DEBUG of vga_de    : signal is "TRUE";
 
 begin
 
@@ -253,35 +255,13 @@ begin
          VGA_B                => VGA_BLUE,
          VGA_VS               => VGA_VS,
          VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de,
-         VGA_CLK_CE           => vga_clk_ce    
+         VGA_DE               => vga_de
       ); -- i_main
-      
-      
---   experimental_buffer : process(clk_pixel_1x)
---   begin
---      if rising_edge(clk_pixel_1x) then
---         vga_buf_r <= vga_in_r;
---         vga_buf_g <= vga_in_g;
---         vga_buf_b <= vga_in_b;
---         vga_buf_vs <= vga_in_vs;
---         vga_buf_hs <= vga_in_hs;         
---      end if;
---   end process;
-      
-   -- TEMP: Needs to be moved to vga.vhd (or another video mixing entity):
-   --    Make the VDAC output the image
-   --    for some reason, the VDAC does not like non-zero values outside the visible window
-   --    maybe "vdac_sync_n <= '0';" activates sync-on-green?
-   --    TODO: check that
+            
+   -- Make the VDAC output the image
    vdac_sync_n    <= '0';
-   vdac_blank_n   <= vga_de;
-   vdac_clk       <= clk_video and vga_clk_ce;
---   VGA_RED        <= vga_in_r;
---   VGA_GREEN      <= vga_in_g;
---   VGA_BLUE       <= vga_in_b;
---   VGA_HS         <= vga_in_hs;
---   VGA_VS         <= vga_in_vs;   
+   vdac_blank_n   <= '1';
+   vdac_clk       <= not clk_video;
       
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
