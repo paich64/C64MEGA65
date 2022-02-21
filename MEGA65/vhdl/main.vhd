@@ -18,23 +18,28 @@ entity main is
       G_OUTPUT_DY             : natural     
    );
    port (
-      clk_main_i              : in  std_logic;    -- 31.528 MHz
-      clk_video_i             : in  std_logic;    -- 63.056 MHz
-      reset_i                 : in  std_logic;
-
-      -- M2M Keyboard interface
-      kb_key_num_i            : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
-      kb_key_pressed_n_i      : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+      clk_main_i              : in std_logic;    -- 31.528 MHz
+      clk_video_i             : in std_logic;    -- 63.056 MHz
+      reset_i                 : in std_logic;
+      pause_i                 : in std_logic;
 
       -- MEGA65 video
-      -- Visible resolution 720x576 @ 50 Hz.
-      -- Total pixel counters: 864x623 @ 27 MHz
       VGA_R                   : out std_logic_vector(7 downto 0);
       VGA_G                   : out std_logic_vector(7 downto 0);
       VGA_B                   : out std_logic_vector(7 downto 0);
       VGA_VS                  : out std_logic;
       VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic
+      VGA_DE                  : out std_logic;
+      
+      -- M2M Keyboard interface
+      kb_key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
+      kb_key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+      
+      -- C64 RAM: No address latching necessary and the chip can always be enabled
+      c64_ram_addr_o          : out unsigned(15 downto 0);   -- C64 address bus
+      c64_ram_data_o          : out unsigned(7 downto 0);    -- C64 RAM data out
+      c64_ram_we_o            : out std_logic;               -- C64 RAM write enable      
+      c64_ram_data_i          : in unsigned(7 downto 0)      -- C64 RAM data in
 
       -- MEGA65 audio
 --      pwm_l                  : out std_logic;
@@ -109,31 +114,11 @@ signal cia1_pa_o     : std_logic_vector(7 downto 0);
 signal cia1_pb_i     : std_logic_vector(7 downto 0);
 signal cia1_pb_o     : std_logic_vector(7 downto 0);
 
--- signales for experimental RAM (TODO: remove)
-signal c64_ram_addr  : unsigned(15 downto 0);
-signal c64_ram_din   : std_logic_vector(7 downto 0);
-signal c64_ram_dout  : unsigned(7 downto 0);
+-- signales for RAM
 signal c64_ram_ce    : std_logic;
 signal c64_ram_we    : std_logic;
 
-begin
-
-   -- experimental RAM for the C64 core
-   -- TODO: as soon as it works, it needs to be moved to MEGA65.vhd, so that the QNICE core is able
-   -- to access the RAM for example to directly load a PRG file into RAM
-   experimental_ram : entity work.dualport_2clk_ram
-      generic map (
-         ADDR_WIDTH        => 16,
-         DATA_WIDTH        => 8
-      )
-      port map (
-         clock_a           => clk_main_i,
-         address_a         => std_logic_vector(c64_ram_addr),
-         data_a            => std_logic_vector(c64_ram_dout),
-         wren_a            => c64_ram_ce and c64_ram_we,
-         q_a               => c64_ram_din
-      );
-
+begin   
    -- MiSTer Commodore 64 core / main machine
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
       port map (
@@ -141,13 +126,9 @@ begin
          reset_n     => not reset_i,
          bios        => "01",             -- standard C64, internal ROM
          
-         pause       => '0',
+         pause       => pause_i,
          pause_out   => c64_pause,
       
---         -- keyboard interface (use any ordinairy PS2 keyboard)
---         ps2_key     => kb_ps2,
---         kbd_reset   => reset_i,
-
          -- keyboard interface: directly connect the CIA1
          cia1_pa_i   => cia1_pa_i,
          cia1_pa_o   => cia1_pa_o,
@@ -155,9 +136,9 @@ begin
          cia1_pb_o   => cia1_pb_o,
                
          -- external memory
-         ramAddr     => c64_ram_addr,
-         ramDin      => unsigned(c64_ram_din),
-         ramDout     => c64_ram_dout,
+         ramAddr     => c64_ram_addr_o,
+         ramDin      => c64_ram_data_i,
+         ramDout     => c64_ram_data_o,
          ramCE       => c64_ram_ce,
          ramWE       => c64_ram_we,
       
@@ -257,6 +238,9 @@ begin
          cass_read   => '0'            
       ); -- i_fpga64_sid_iec
       
+   -- RAM write enable also needs to check for chip enable
+   c64_ram_we_o <= c64_ram_ce and c64_ram_we; 
+                      
    -- Convert MEGA65 keystrokes to the C64 keyboard matrix that the CIA1 can scan
    i_m65_to_c64 : entity work.keyboard
       port map (

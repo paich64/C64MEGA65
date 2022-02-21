@@ -139,22 +139,36 @@ signal pixel_rst              : std_logic;
 -- clk_main (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
+-- QNICE control and status register
+signal main_qnice_reset       : std_logic;  
+signal main_qnice_pause       : std_logic;
+
 -- keyboard handling
 signal main_key_num           : integer range 0 to 79;
 signal main_key_pressed_n     : std_logic;
 signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
 
+-- C64 RAM
+signal c64_ram_addr           : unsigned(15 downto 0);         -- C64 address bus
+signal c64_ram_data_from_c64  : unsigned(7 downto 0);          -- C64 RAM data out
+signal c64_ram_we             : std_logic;                     -- C64 RAM write enable      
+signal c64_ram_data_to_c64    : std_logic_vector(7 downto 0);  -- C64 RAM data in
+
 ---------------------------------------------------------------------------------------------
 -- clk_qnice
 ---------------------------------------------------------------------------------------------
 
--- m2m_keyb output for the firmware and the Shell; see also sysdef.asm
-signal qnice_qnice_keys_n     : std_logic_vector(15 downto 0);
+-- Control and status register that QNICE uses to control the C64
+signal qnice_csr_reset        : std_logic;
+signal qnice_csr_pause        : std_logic;
 
 -- On-Screen-Menu (OSM)
 signal qnice_osm_cfg_enable   : std_logic;
 signal qnice_osm_cfg_xy       : std_logic_vector(15 downto 0);
 signal qnice_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
+
+-- m2m_keyb output for the firmware and the Shell; see also sysdef.asm
+signal qnice_qnice_keys_n     : std_logic_vector(15 downto 0);
 
 -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
 -- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
@@ -173,7 +187,11 @@ signal qnice_vram_attr_we     : std_logic;
 signal qnice_vram_attr_data_o : std_logic_vector(7 downto 0);
 
 -- Shell configuration (config.vhd)
-signal qnice_config_data      : std_logic_vector(15 downto 0);   
+signal qnice_config_data      : std_logic_vector(15 downto 0); 
+
+-- C64 RAM
+signal qnice_c64_ram_we       : std_logic;
+signal qnice_c64_ram_data_o   : std_logic_vector(7 downto 0);  
 
 ---------------------------------------------------------------------------------------------
 -- clk_pixel_1x (VGA pixelclock) and clk_pixel_5x (HDMI)
@@ -193,14 +211,6 @@ signal vga_osm_cfg_dxdy       : std_logic_vector(15 downto 0);
 signal vga_osm_vram_addr      : std_logic_vector(15 downto 0);
 signal vga_osm_vram_data      : std_logic_vector(7 downto 0);
 signal vga_osm_vram_attr      : std_logic_vector(7 downto 0);
-
-attribute MARK_DEBUG : string;
-attribute MARK_DEBUG of VGA_RED   : signal is "TRUE";
-attribute MARK_DEBUG of VGA_GREEN : signal is "TRUE";
-attribute MARK_DEBUG of VGA_BLUE  : signal is "TRUE";
-attribute MARK_DEBUG of VGA_HS    : signal is "TRUE";
-attribute MARK_DEBUG of VGA_VS    : signal is "TRUE";
-attribute MARK_DEBUG of vga_de    : signal is "TRUE";
 
 begin
 
@@ -243,8 +253,9 @@ begin
       port map (
          clk_main_i           => clk_main,
          clk_video_i          => clk_video,
-         reset_i              => main_rst,
-         
+         reset_i              => main_rst or qnice_csr_reset,
+         pause_i              => qnice_csr_pause,
+                  
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
          kb_key_pressed_n_i   => main_key_pressed_n,
@@ -255,7 +266,13 @@ begin
          VGA_B                => VGA_BLUE,
          VGA_VS               => VGA_VS,
          VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de
+         VGA_DE               => vga_de,
+         
+         -- C64 RAM
+         c64_ram_addr_o       => c64_ram_addr,  
+         c64_ram_data_o       => c64_ram_data_from_c64,
+         c64_ram_we_o         => c64_ram_we,
+         c64_ram_data_i       => unsigned(c64_ram_data_to_c64)
       ); -- i_main
             
    -- Make the VDAC output the image
@@ -321,8 +338,8 @@ begin
          sd_miso_i               => SD_MISO,
       
          -- QNICE public registers
-         csr_reset_o             => open,
-         csr_pause_o             => open,
+         csr_reset_o             => qnice_csr_reset,
+         csr_pause_o             => qnice_csr_pause,
          csr_osm_o               => qnice_osm_cfg_enable,
          csr_keyboard_o          => open,
          csr_joy1_o              => open,
@@ -365,13 +382,19 @@ begin
    qnice_ramrom_devices : process(all)
    variable strpos : integer;
    begin
+      -- MiSTer2MEGA65 reserved
       qnice_vram_we <= '0';
       qnice_vram_attr_we <= '0';
       qnice_ramrom_data_i <= x"EEEE";
+      -- C64 specific
+      qnice_c64_ram_we <= '0';
    
       case qnice_ramrom_dev is
+         ----------------------------------------------------------------------------
+         -- MiSTer2MEGA65 reserved devices
          -- OSM VRAM data and attributes with device numbers < 0x0100
          -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
+         ----------------------------------------------------------------------------         
          when x"0000" =>
             qnice_vram_we <= qnice_ramrom_we;
             qnice_ramrom_data_i <= x"00" & qnice_vram_data_o;
@@ -382,9 +405,16 @@ begin
          -- Shell configuration data (config.vhd)
          when x"0002" =>
             qnice_ramrom_data_i <= qnice_config_data;
+
+         ----------------------------------------------------------------------------
+         -- Commodore 64 specific devices
+         ----------------------------------------------------------------------------
          
-         -- @TODO YOUR RAMs or ROMs (e.g. for cartridges) and other RAM/ROM-like devices
-         -- Device numbers need to be >= 0x0100         
+         -- C64 RAM                           
+         when x"0100" =>
+            qnice_c64_ram_we <= qnice_ramrom_we;
+            qnice_ramrom_data_i <= x"00" & qnice_c64_ram_data_o; 
+                         
          when others => null;            
       end case;
    end process;
@@ -522,41 +552,21 @@ begin
    -- timing critical. If this changed, we might introduce "high-speed" devices that are using
    -- the falling-edge and that work without WAIT_FOR_DATA.
 
---   i_qnice2main: xpm_cdc_array_single
---      generic map (
---         WIDTH => 56
---      )
---      port map (
---         src_clk                => qnice_clk,
---         src_in(0)              => qnice_qngbc_reset,
---         src_in(1)              => qnice_qngbc_pause,
---         src_in(2)              => qnice_qngbc_keyboard,
---         src_in(3)              => qnice_qngbc_joystick,
---         src_in(4)              => qnice_qngbc_color,
---         src_in(6 downto 5)     => qnice_qngbc_joy_map,
---         src_in(7)              => qnice_qngbc_color_mode,
---         src_in(15 downto 8)    => qnice_cart_cgb_flag,
---         src_in(23 downto 16)   => qnice_cart_sgb_flag,
---         src_in(31 downto 24)   => qnice_cart_mbc_type,
---         src_in(39 downto 32)   => qnice_cart_rom_size,
---         src_in(47 downto 40)   => qnice_cart_ram_size,
---         src_in(55 downto 48)   => qnice_cart_old_licensee,
---         dest_clk               => main_clk,
---         dest_out(0)            => main_qngbc_reset,
---         dest_out(1)            => main_qngbc_pause,
---         dest_out(2)            => main_qngbc_keyboard,
---         dest_out(3)            => main_qngbc_joystick,
---         dest_out(4)            => main_qngbc_color,
---         dest_out(6 downto 5)   => main_qngbc_joy_map,
---         dest_out(7)            => main_qngbc_color_mode,
---         dest_out(15 downto 8)  => main_cart_cgb_flag,
---         dest_out(23 downto 16) => main_cart_sgb_flag,
---         dest_out(31 downto 24) => main_cart_mbc_type,
---         dest_out(39 downto 32) => main_cart_rom_size,
---         dest_out(47 downto 40) => main_cart_ram_size,
---         dest_out(55 downto 48) => main_cart_old_licensee
---      );
+   -- Clock domain crossing: QNICE to C64
+   i_qnice2main: xpm_cdc_array_single
+      generic map (
+         WIDTH => 2
+      )
+      port map (
+         src_clk                => clk_qnice,
+         src_in(0)              => qnice_csr_reset,
+         src_in(1)              => qnice_csr_pause,
+         dest_clk               => clk_main,
+         dest_out(0)            => main_qnice_reset,
+         dest_out(1)            => main_qnice_pause
+      );
 
+   -- Clock domain crossing: C64 to QNICE
    i_main2qnice: xpm_cdc_array_single
       generic map (
          WIDTH => 16
@@ -568,6 +578,7 @@ begin
          dest_out(15 downto 0)  => qnice_qnice_keys_n
       );
 
+   -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
    i_qnice2vga: xpm_cdc_array_single
       generic map (
          WIDTH => 33
@@ -583,28 +594,31 @@ begin
          dest_out(32)           => vga_osm_cfg_enable
       );
       
-   -- Dual clock & dual port RAM that acts as framebuffer: the LCD display of the gameboy is
-   -- written here by the GB core (using its local clock) and the VGA/HDMI display is being fed
-   -- using the pixel clock
-   core_frame_buffer : entity work.dualport_2clk_ram
+   -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
+   -- as well as QNICE can access it
+   c64_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH   => 15,
-         DATA_WIDTH   => 24
+         ADDR_WIDTH        => 16,
+         DATA_WIDTH        => 8,
+         FALLING_A         => false,      -- C64 expects read/write to happen at the rising clock edge
+         FALLING_B         => true        -- QNICE expects read/write to happen at the falling clock edge
       )
       port map (
---         clock_a      => main_clk,
---         address_a    => std_logic_vector(to_unsigned(main_pixel_out_ptr, 15)),
---         data_a       => main_pixel_out_data,
---         wren_a       => main_pixel_out_we,
---         q_a          => open,
-
-         clock_b      => clk_pixel_1x,
-         address_b    => vga_core_vram_addr,
-         data_b       => (others => '0'),
-         wren_b       => '0',
-         q_b          => vga_core_vram_data
+         -- C64 MiSTer core
+         clock_a           => clk_main,
+         address_a         => std_logic_vector(c64_ram_addr),
+         data_a            => std_logic_vector(c64_ram_data_from_c64),
+         wren_a            => c64_ram_we,
+         q_a               => c64_ram_data_to_c64,
+         
+         -- QNICE
+         clock_b           => clk_qnice,
+         address_b         => qnice_ramrom_addr(15 downto 0),
+         data_b            => qnice_ramrom_data_o(7 downto 0),
+         wren_b            => qnice_c64_ram_we,
+         q_b               => qnice_c64_ram_data_o
       );
-
+                     
    -- Dual port & dual clock screen RAM / video RAM: contains the "ASCII" codes of the characters
    osm_vram : entity work.dualport_2clk_ram
       generic map (
