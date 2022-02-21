@@ -57,6 +57,32 @@ end main;
 
 architecture synthesis of main is
 
+   component video_mixer is
+      port (
+         CLK_VIDEO   : in  std_logic;
+         CE_PIXEL    : out std_logic;
+         ce_pix      : in  std_logic;
+         scandoubler : in  std_logic;
+         hq2x        : in  std_logic;
+         gamma_bus   : inout std_logic_vector(21 downto 0);
+         R           : in  unsigned(7 downto 0);
+         G           : in  unsigned(7 downto 0);
+         B           : in  unsigned(7 downto 0);
+         HSync       : in  std_logic;
+         VSync       : in  std_logic;
+         HBlank      : in  std_logic;
+         VBlank      : in  std_logic;
+         HDMI_FREEZE : in  std_logic;
+         freeze_sync : out std_logic;
+         VGA_R       : out std_logic_vector(7 downto 0);
+         VGA_G       : out std_logic_vector(7 downto 0);
+         VGA_B       : out std_logic_vector(7 downto 0);
+         VGA_VS      : out std_logic;
+         VGA_HS      : out std_logic;
+         VGA_DE      : out std_logic
+      );
+   end component video_mixer;
+
 -- MiSTer C64 signals
 signal c64_pause     : std_logic;
 signal ce_pix        : std_logic;
@@ -276,9 +302,9 @@ begin
    end process p_div;
    ce_pix <= '1' when div = 0 else '0';
 
-   i_video_mixer : entity work.video_mixer
+   i_video_mixer : video_mixer
       port map (
-         CLK_VIDEO   => clk_video_i,   -- 63.056 MHz
+         CLK_VIDEO   => clk_video_i,      -- 63.056 MHz
          CE_PIXEL    => open,
          ce_pix      => ce_pix,
          scandoubler => '1',
