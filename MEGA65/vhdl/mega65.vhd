@@ -275,7 +275,7 @@ begin
    --    maybe "vdac_sync_n <= '0';" activates sync-on-green?
    --    TODO: check that
    vdac_sync_n    <= '0';
-   vdac_blank_n   <= '1';
+   vdac_blank_n   <= vga_de;
    vdac_clk       <= clk_video and vga_clk_ce;
 --   VGA_RED        <= vga_in_r;
 --   VGA_GREEN      <= vga_in_g;
