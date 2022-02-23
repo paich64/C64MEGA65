@@ -4,3 +4,4 @@
 [submodule "C64_MiSTerMEGA65"]
 	path = C64_MiSTerMEGA65
 	url = https://github.com/MJoergen/C64_MiSTerMEGA65
+    branch = develop
