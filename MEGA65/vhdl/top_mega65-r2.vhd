@@ -32,34 +32,6 @@ port (
    vdac_sync_n    : out std_logic;
    vdac_blank_n   : out std_logic;
    
-   -- MEGA65 smart keyboard controller
-   kb_io0         : out std_logic;                 -- clock to keyboard
-   kb_io1         : out std_logic;                 -- data output to keyboard
-   kb_io2         : in std_logic;                  -- data input from keyboard   
-   
-   -- SD Card
-   SD_RESET       : out std_logic;
-   SD_CLK         : out std_logic;
-   SD_MOSI        : out std_logic;
-   SD_MISO        : in std_logic
-   
-   -- 3.5mm analog audio jack
---   pwm_l          : out std_logic;
---   pwm_r          : out std_logic;
-      
-   -- Joysticks
---   joy_1_up_n     : in std_logic;
---   joy_1_down_n   : in std_logic;
---   joy_1_left_n   : in std_logic;
---   joy_1_right_n  : in std_logic;
---   joy_1_fire_n   : in std_logic;
-      
---   joy_2_up_n     : in std_logic;
---   joy_2_down_n   : in std_logic;
---   joy_2_left_n   : in std_logic;
---   joy_2_right_n  : in std_logic;
---   joy_2_fire_n   : in std_logic
-            
    -- HDMI via ADV7511
 --   hdmi_vsync     : out std_logic;
 --   hdmi_hsync     : out std_logic;
@@ -79,7 +51,35 @@ port (
    --hpd_a          : inout std_logic;
 --   ct_hpd         : out std_logic := '1';          -- assert to connect ADV7511 to the actual port
 --   ls_oe          : out std_logic := '1';          -- ditto
+      
+   -- MEGA65 smart keyboard controller
+   kb_io0         : out std_logic;                 -- clock to keyboard
+   kb_io1         : out std_logic;                 -- data output to keyboard
+   kb_io2         : in std_logic;                  -- data input from keyboard   
    
+   -- SD Card
+   SD_RESET       : out std_logic;
+   SD_CLK         : out std_logic;
+   SD_MOSI        : out std_logic;
+   SD_MISO        : in std_logic;
+   
+   -- 3.5mm analog audio jack
+--   pwm_l          : out std_logic;
+--   pwm_r          : out std_logic;
+      
+   -- Joysticks
+   joy_1_up_n     : in std_logic;
+   joy_1_down_n   : in std_logic;
+   joy_1_left_n   : in std_logic;
+   joy_1_right_n  : in std_logic;
+   joy_1_fire_n   : in std_logic;
+      
+   joy_2_up_n     : in std_logic;
+   joy_2_down_n   : in std_logic;
+   joy_2_left_n   : in std_logic;
+   joy_2_right_n  : in std_logic;
+   joy_2_fire_n   : in std_logic
+               
    -- Built-in HyperRAM
 --   hr_d           : inout unsigned(7 downto 0);    -- Data/Address
 --   hr_rwds        : inout std_logic;               -- RW Data strobe
@@ -138,24 +138,24 @@ begin
          SD_RESET       => SD_RESET,
          SD_CLK         => SD_CLK,
          SD_MOSI        => SD_MOSI,
-         SD_MISO        => SD_MISO
+         SD_MISO        => SD_MISO,
          
 --         -- 3.5mm analog audio jack
 --         pwm_l          => pwm_l,
 --         pwm_r          => pwm_r,
             
---         -- Joysticks
---         joy_1_up_n     => joy_1_up_n,     
---         joy_1_down_n   => joy_1_down_n,
---         joy_1_left_n   => joy_1_left_n,
---         joy_1_right_n  => joy_1_right_n,  
---         joy_1_fire_n   => joy_1_fire_n,   
+         -- Joysticks
+         joy_1_up_n     => joy_1_up_n,     
+         joy_1_down_n   => joy_1_down_n,
+         joy_1_left_n   => joy_1_left_n,
+         joy_1_right_n  => joy_1_right_n,  
+         joy_1_fire_n   => joy_1_fire_n,   
             
---         joy_2_up_n     => joy_2_up_n, 
---         joy_2_down_n   => joy_2_down_n,
---         joy_2_left_n   => joy_2_left_n,   
---         joy_2_right_n  => joy_2_right_n,  
---         joy_2_fire_n   => joy_2_fire_n
+         joy_2_up_n     => joy_2_up_n, 
+         joy_2_down_n   => joy_2_down_n,
+         joy_2_left_n   => joy_2_left_n,   
+         joy_2_right_n  => joy_2_right_n,  
+         joy_2_fire_n   => joy_2_fire_n
       ); 
 
 end beh;

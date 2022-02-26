@@ -255,10 +255,6 @@ begin
          clk_video_i          => clk_video,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
-                  
-         -- M2M Keyboard interface
-         kb_key_num_i         => main_key_num,
-         kb_key_pressed_n_i   => main_key_pressed_n,
 
          -- MEGA65 video
          VGA_R                => VGA_RED,
@@ -267,7 +263,24 @@ begin
          VGA_VS               => VGA_VS,
          VGA_HS               => VGA_HS,
          VGA_DE               => vga_de,
-         
+                  
+         -- M2M Keyboard interface
+         kb_key_num_i         => main_key_num,
+         kb_key_pressed_n_i   => main_key_pressed_n,
+
+         -- MEGA65 joysticks
+         joy_1_up_n           => joy_1_up_n,
+         joy_1_down_n         => joy_1_down_n,
+         joy_1_left_n         => joy_1_left_n,
+         joy_1_right_n        => joy_1_right_n,
+         joy_1_fire_n         => joy_1_fire_n,
+   
+         joy_2_up_n           => joy_2_up_n,
+         joy_2_down_n         => joy_2_down_n,
+         joy_2_left_n         => joy_2_left_n,
+         joy_2_right_n        => joy_2_right_n,
+         joy_2_fire_n         => joy_2_fire_n,
+            
          -- C64 RAM
          c64_ram_addr_o       => c64_ram_addr,  
          c64_ram_data_o       => c64_ram_data_from_c64,

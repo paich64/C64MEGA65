@@ -35,12 +35,6 @@ entity main is
       kb_key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
-      -- C64 RAM: No address latching necessary and the chip can always be enabled
-      c64_ram_addr_o          : out unsigned(15 downto 0);   -- C64 address bus
-      c64_ram_data_o          : out unsigned(7 downto 0);    -- C64 RAM data out
-      c64_ram_we_o            : out std_logic;               -- C64 RAM write enable      
-      c64_ram_data_i          : in unsigned(7 downto 0)      -- C64 RAM data in
-
       -- MEGA65 audio
 --      pwm_l                  : out std_logic;
 --      pwm_r                  : out std_logic;
@@ -56,7 +50,13 @@ entity main is
       joy_2_down_n           : in std_logic;
       joy_2_left_n           : in std_logic;
       joy_2_right_n          : in std_logic;
-      joy_2_fire_n           : in std_logic
+      joy_2_fire_n           : in std_logic;
+      
+      -- C64 RAM: No address latching necessary and the chip can always be enabled
+      c64_ram_addr_o          : out unsigned(15 downto 0);   -- C64 address bus
+      c64_ram_data_o          : out unsigned(7 downto 0);    -- C64 RAM data out
+      c64_ram_we_o            : out std_logic;               -- C64 RAM write enable      
+      c64_ram_data_i          : in unsigned(7 downto 0)      -- C64 RAM data in      
    );
 end main;
 
