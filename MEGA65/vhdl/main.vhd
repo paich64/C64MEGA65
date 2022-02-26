@@ -4,7 +4,7 @@
 -- Wrapper for the MiSTer core that runs exclusively in the core's clock domanin
 --
 -- based on C64_MiSTer by the MiSTer development team
--- port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
+-- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;

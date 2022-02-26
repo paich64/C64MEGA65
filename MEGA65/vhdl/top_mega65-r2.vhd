@@ -1,9 +1,10 @@
 ----------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework  
+-- Commodore 64 for MEGA65  
 --
--- R2-Version: Top Module for synthesizing the whole machine
+-- MEGA65 R2 main file that contains the whole machine
 --
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- based on C64_MiSTer by the MiSTer development team
+-- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library IEEE;

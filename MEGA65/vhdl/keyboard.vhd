@@ -17,7 +17,7 @@
 -- keyboard is scanned 1000 times per second. kb_key_pressed_n_i is already debounced and signals
 -- low active, if a certain key is being pressed right now.
 -- 
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
 ---------------------------------------------------------------------------------------------------------
 
 library IEEE;

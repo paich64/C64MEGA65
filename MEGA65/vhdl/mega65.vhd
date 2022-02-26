@@ -56,24 +56,24 @@ port (
    SD_RESET       : out std_logic;
    SD_CLK         : out std_logic;
    SD_MOSI        : out std_logic;
-   SD_MISO        : in std_logic
+   SD_MISO        : in std_logic;
 
    -- 3.5mm analog audio jack
 --   pwm_l          : out std_logic;
 --   pwm_r          : out std_logic;
 
---   -- Joysticks
---   joy_1_up_n     : in std_logic;
---   joy_1_down_n   : in std_logic;
---   joy_1_left_n   : in std_logic;
---   joy_1_right_n  : in std_logic;
---   joy_1_fire_n   : in std_logic;
+   -- Joysticks
+   joy_1_up_n     : in std_logic;
+   joy_1_down_n   : in std_logic;
+   joy_1_left_n   : in std_logic;
+   joy_1_right_n  : in std_logic;
+   joy_1_fire_n   : in std_logic;
 
---   joy_2_up_n     : in std_logic;
---   joy_2_down_n   : in std_logic;
---   joy_2_left_n   : in std_logic;
---   joy_2_right_n  : in std_logic;
---   joy_2_fire_n   : in std_logic
+   joy_2_up_n     : in std_logic;
+   joy_2_down_n   : in std_logic;
+   joy_2_left_n   : in std_logic;
+   joy_2_right_n  : in std_logic;
+   joy_2_fire_n   : in std_logic
 );
 end MEGA65_Core;
 

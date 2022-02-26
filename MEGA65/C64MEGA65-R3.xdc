@@ -4,7 +4,7 @@
 ##
 ## This machine is based on C64_MiSTer
 ## Powered by MiSTer2MEGA65
-## MEGA65 port done by MJoergen and sy2002 in 2021 and licensed under GPL v3
+## MEGA65 port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 
 ## External clock signal (100 MHz)
 set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVCMOS33} [get_ports CLK]
@@ -50,7 +50,7 @@ set_property -dict {PACKAGE_PIN B16  IOSTANDARD LVCMOS33} [get_ports SD_MOSI]
 set_property -dict {PACKAGE_PIN B18  IOSTANDARD LVCMOS33} [get_ports SD_MISO]
 
 ## Joystick port A
-#set_property -dict {PACKAGE_PIN C14 IOSTANDARD LVCMOS33} [get_ports joy_1_up_n]
+set_property -dict {PACKAGE_PIN C14 IOSTANDARD LVCMOS33} [get_ports joy_1_up_n]
 #set_property -dict {PACKAGE_PIN F16 IOSTANDARD LVCMOS33} [get_ports joy_1_down_n]
 #set_property -dict {PACKAGE_PIN F14 IOSTANDARD LVCMOS33} [get_ports joy_1_left_n]
 #set_property -dict {PACKAGE_PIN F13 IOSTANDARD LVCMOS33} [get_ports joy_1_right_n]
