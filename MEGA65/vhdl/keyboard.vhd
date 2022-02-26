@@ -36,7 +36,10 @@ entity keyboard is
       cia1_pai_o           : out std_logic_vector(7 downto 0);
       cia1_pao_i           : in std_logic_vector(7 downto 0);
       cia1_pbi_o           : out std_logic_vector(7 downto 0);
-      cia1_pbo_i           : in std_logic_vector(7 downto 0)
+      cia1_pbo_i           : in std_logic_vector(7 downto 0);
+      
+      -- Restore key = NMI
+      restore_n            : out std_logic
    );
 end keyboard;
 
@@ -124,6 +127,7 @@ constant m65_restore       : integer := 75;
 signal key_pressed_n : std_logic_vector(79 downto 0);
 
 begin
+   restore_n <= key_pressed_n(m65_restore);
    
    keyboard_state : process(clk_main_i)
    begin
@@ -311,6 +315,5 @@ begin
                      (cia1_pao_i(4) or key_pressed_n(m65_n))            and
                      (cia1_pao_i(5) or key_pressed_n(m65_comma))        and
                      (cia1_pao_i(6) or key_pressed_n(m65_slash))        and
-                     (cia1_pao_i(7) or key_pressed_n(m65_run_stop));
-                     
+                     (cia1_pao_i(7) or key_pressed_n(m65_run_stop));                    
 end beh;

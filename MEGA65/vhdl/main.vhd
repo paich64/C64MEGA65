@@ -114,6 +114,9 @@ signal cia1_pa_o     : std_logic_vector(7 downto 0);
 signal cia1_pb_i     : std_logic_vector(7 downto 0);
 signal cia1_pb_o     : std_logic_vector(7 downto 0);
 
+-- the Restore key is special: it creates a non maskable interrupt (NMI)
+signal restore_key_n : std_logic;
+
 -- signales for RAM
 signal c64_ram_ce    : std_logic;
 signal c64_ram_we    : std_logic;
@@ -165,7 +168,7 @@ begin
          io_ext      => '0',
          io_data     => x"00",
          irq_n       => '1',
-         nmi_n       => '1',
+         nmi_n       => restore_key_n,    -- TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
          nmi_ack     => open,
          romL        => open,
          romH        => open,
@@ -260,7 +263,10 @@ begin
          cia1_pai_o           => cia1_pa_i,
          cia1_pao_i           => cia1_pa_o,
          cia1_pbi_o           => cia1_pb_i,
-         cia1_pbo_i           => cia1_pb_o
+         cia1_pbo_i           => cia1_pb_o,
+         
+         -- Restore key = NMI
+         restore_n            => restore_key_n         
       ); -- i_m65_to_c64
 
 
