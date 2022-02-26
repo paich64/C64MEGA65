@@ -46,17 +46,17 @@ entity main is
 --      pwm_r                  : out std_logic;
 
       -- MEGA65 joysticks
---      joy_1_up_n             : in std_logic;
---      joy_1_down_n           : in std_logic;
---      joy_1_left_n           : in std_logic;
---      joy_1_right_n          : in std_logic;
---      joy_1_fire_n           : in std_logic;
+      joy_1_up_n             : in std_logic;
+      joy_1_down_n           : in std_logic;
+      joy_1_left_n           : in std_logic;
+      joy_1_right_n          : in std_logic;
+      joy_1_fire_n           : in std_logic;
 
---      joy_2_up_n             : in std_logic;
---      joy_2_down_n           : in std_logic;
---      joy_2_left_n           : in std_logic;
---      joy_2_right_n          : in std_logic;
---      joy_2_fire_n           : in std_logic
+      joy_2_up_n             : in std_logic;
+      joy_2_down_n           : in std_logic;
+      joy_2_left_n           : in std_logic;
+      joy_2_right_n          : in std_logic;
+      joy_2_fire_n           : in std_logic
    );
 end main;
 
