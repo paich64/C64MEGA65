@@ -26,11 +26,11 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity keyboard is
    port (
-      clk_main_i           : in std_logic;                     -- core clock
+      clk_main_i           : in std_logic;               -- core clock
          
       -- Interface to the MEGA65 keyboard
-      key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
-      key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+      key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
+      key_pressed_n_i      : in std_logic;               -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
       -- Interface to the C64's CIA1         
       cia1_pai_o           : out std_logic_vector(7 downto 0);
@@ -144,12 +144,19 @@ begin
     
    cia1_pai_o(0) <=  (cia1_pbo_i(0) or key_pressed_n(m65_ins_del))      and
                      (cia1_pbo_i(1) or key_pressed_n(m65_return))       and
-                     (cia1_pbo_i(2) or key_pressed_n(m65_horz_crsr))    and
+                     
+                     -- right cursor is "natural" for the C64, left cursor is emulated with RIGHT SHIFT + HORZ CRSR
+                     (cia1_pbo_i(2) or (key_pressed_n(m65_horz_crsr)
+                                    and key_pressed_n(m65_left_crsr)))  and
+                     
                      (cia1_pbo_i(3) or key_pressed_n(m65_f7))           and
                      (cia1_pbo_i(4) or key_pressed_n(m65_f1))           and
                      (cia1_pbo_i(5) or key_pressed_n(m65_f3))           and
                      (cia1_pbo_i(6) or key_pressed_n(m65_f5))           and
-                     (cia1_pbo_i(7) or key_pressed_n(m65_vert_crsr));
+                     
+                     -- down cursor is "natural" for the C64, up cursor is emulated with RIGHT SHIFT + VERT CRSR
+                     (cia1_pbo_i(7) or (key_pressed_n(m65_vert_crsr)    
+                                    and key_pressed_n(m65_up_crsr)));
 
    cia1_pai_o(1) <=  (cia1_pbo_i(0) or key_pressed_n(m65_3))            and
                      (cia1_pbo_i(1) or key_pressed_n(m65_w))            and
@@ -157,7 +164,7 @@ begin
                      (cia1_pbo_i(3) or key_pressed_n(m65_4))            and
                      (cia1_pbo_i(4) or key_pressed_n(m65_z))            and
                      (cia1_pbo_i(5) or key_pressed_n(m65_s))            and
-                     (cia1_pbo_i(6) or key_pressed_n(m65_e))            and
+                     (cia1_pbo_i(6) or key_pressed_n(m65_e))            and                  
                      (cia1_pbo_i(7) or key_pressed_n(m65_left_shift));
 
    cia1_pai_o(2) <=  (cia1_pbo_i(0) or key_pressed_n(m65_5))            and
@@ -200,7 +207,12 @@ begin
                      (cia1_pbo_i(1) or key_pressed_n(m65_asterisk))     and
                      (cia1_pbo_i(2) or key_pressed_n(m65_semicolon))    and
                      (cia1_pbo_i(3) or key_pressed_n(m65_clr_home))     and
-                     (cia1_pbo_i(4) or key_pressed_n(m65_right_shift))  and
+                     
+                     -- right shift pressed or one of the "extended" arrow keys "up" and "left" of the MEGA65
+                     (cia1_pbo_i(4) or (key_pressed_n(m65_right_shift)
+                                    and key_pressed_n(m65_up_crsr)
+                                    and key_pressed_n(m65_left_crsr)))  and
+                                                               
                      (cia1_pbo_i(5) or key_pressed_n(m65_equal))        and
                      (cia1_pbo_i(6) or key_pressed_n(m65_arrow_up))     and
                      (cia1_pbo_i(7) or key_pressed_n(m65_slash));
@@ -236,7 +248,10 @@ begin
                      (cia1_pao_i(6) or key_pressed_n(m65_asterisk))     and
                      (cia1_pao_i(7) or key_pressed_n(m65_arrow_left));
                                           
-   cia1_pbi_o(2) <=  (cia1_pao_i(0) or key_pressed_n(m65_horz_crsr))    and
+                     -- right cursor is "natural" for the C64, left cursor is emulated with RIGHT SHIFT + HORZ CRSR
+   cia1_pbi_o(2) <=  (cia1_pao_i(0) or (key_pressed_n(m65_horz_crsr)
+                                    and key_pressed_n(m65_left_crsr)))  and
+                                    
                      (cia1_pao_i(1) or key_pressed_n(m65_a))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_d))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_g))            and
@@ -260,7 +275,12 @@ begin
                      (cia1_pao_i(3) or key_pressed_n(m65_b))            and
                      (cia1_pao_i(4) or key_pressed_n(m65_m))            and
                      (cia1_pao_i(5) or key_pressed_n(m65_dot))          and
-                     (cia1_pao_i(6) or key_pressed_n(m65_right_shift))  and
+
+                     -- right shift pressed or one of the "extended" arrow keys "up" and "left" of the MEGA65                     
+                     (cia1_pao_i(6) or (key_pressed_n(m65_right_shift)
+                                    and key_pressed_n(m65_up_crsr)
+                                    and key_pressed_n(m65_left_crsr)))  and
+                                          
                      (cia1_pao_i(7) or key_pressed_n(m65_space));
                      
    cia1_pbi_o(5) <=  (cia1_pao_i(0) or key_pressed_n(m65_f3))           and
@@ -281,7 +301,10 @@ begin
                      (cia1_pao_i(6) or key_pressed_n(m65_arrow_up))     and
                      (cia1_pao_i(7) or key_pressed_n(m65_q));
 
-   cia1_pbi_o(7) <=  (cia1_pao_i(0) or key_pressed_n(m65_vert_crsr))    and
+                     -- down cursor is "natural" for the C64, up cursor is emulated with RIGHT SHIFT + VERT CRSR
+   cia1_pbi_o(7) <=  (cia1_pao_i(0) or (key_pressed_n(m65_vert_crsr)
+                                    and key_pressed_n(m65_up_crsr)))    and
+                                    
                      (cia1_pao_i(1) or key_pressed_n(m65_left_shift))   and
                      (cia1_pao_i(2) or key_pressed_n(m65_x))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_v))            and

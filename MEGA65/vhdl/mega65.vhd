@@ -253,8 +253,8 @@ begin
       port map (
          clk_main_i           => clk_main,
          clk_video_i          => clk_video,
-         reset_i              => main_rst or qnice_csr_reset,
-         pause_i              => qnice_csr_pause,
+         reset_i              => main_rst or main_qnice_reset,
+         pause_i              => main_qnice_pause,
                   
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
