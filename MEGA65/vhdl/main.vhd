@@ -175,9 +175,9 @@ begin
          UMAXromH 	=> open,
          IOE			=> open,
          IOF			=> open,
-         freeze_key  => open,
-         mod_key     => open,
-         tape_play   => open,
+--         freeze_key  => open,
+--         mod_key     => open,
+--         tape_play   => open,
       
          -- dma access
          dma_req     => '0',
@@ -188,9 +188,7 @@ begin
          dma_we      => '0',
          irq_ext_n   => '1',
       
-         -- joystick interface
-         joyA        => "0000000",
-         joyB        => "0000000",
+         -- paddle interface
          pot1        => x"00",
          pot2        => x"00",
          pot3        => x"00",
@@ -245,6 +243,7 @@ begin
    c64_ram_we_o <= c64_ram_ce and c64_ram_we; 
                       
    -- Convert MEGA65 keystrokes to the C64 keyboard matrix that the CIA1 can scan
+   -- and convert the MEGA65 joystick signals to CIA1 signals as well
    i_m65_to_c64 : entity work.keyboard
       port map (
          clk_main_i           => clk_main_i,
@@ -252,6 +251,19 @@ begin
          -- Interface to the MEGA65 keyboard
          key_num_i            => kb_key_num_i,
          key_pressed_n_i      => kb_key_pressed_n_i,
+         
+         -- Interface to the MEGA65 joysticks
+         joy_1_up_n           => joy_1_up_n,
+         joy_1_down_n         => joy_1_down_n,
+         joy_1_left_n         => joy_1_left_n,
+         joy_1_right_n        => joy_1_right_n,
+         joy_1_fire_n         => joy_1_fire_n,
+   
+         joy_2_up_n           => joy_2_up_n,
+         joy_2_down_n         => joy_2_down_n,
+         joy_2_left_n         => joy_2_left_n,
+         joy_2_right_n        => joy_2_right_n,
+         joy_2_fire_n         => joy_2_fire_n,     
 
          -- Interface to the MiSTer C64 core that directly connects to the C64's CIA1 instead of
          -- going the detour of converting the MEGA65 keystrokes into PS/2 keystrokes first. 
