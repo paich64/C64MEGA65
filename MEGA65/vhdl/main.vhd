@@ -22,22 +22,11 @@ entity main is
       clk_video_i             : in std_logic;    -- 63.056 MHz
       reset_i                 : in std_logic;
       pause_i                 : in std_logic;
-
-      -- MEGA65 video
-      VGA_R                   : out std_logic_vector(7 downto 0);
-      VGA_G                   : out std_logic_vector(7 downto 0);
-      VGA_B                   : out std_logic_vector(7 downto 0);
-      VGA_VS                  : out std_logic;
-      VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic;
-      
+            
       -- M2M Keyboard interface
       kb_key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
-      -- MEGA65 audio
---      pwm_l                  : out std_logic;
---      pwm_r                  : out std_logic;
 
       -- MEGA65 joysticks
       joy_1_up_n             : in std_logic;
@@ -52,6 +41,18 @@ entity main is
       joy_2_right_n          : in std_logic;
       joy_2_fire_n           : in std_logic;
       
+      -- C64 video out (after scandoubler)
+      VGA_R                   : out std_logic_vector(7 downto 0);
+      VGA_G                   : out std_logic_vector(7 downto 0);
+      VGA_B                   : out std_logic_vector(7 downto 0);
+      VGA_VS                  : out std_logic;
+      VGA_HS                  : out std_logic;
+      VGA_DE                  : out std_logic;
+
+      -- C64 SID audio out: signed, see MiSTer's c64.sv
+      sid_l                   : out signed(15 downto 0);
+      sid_r                   : out signed(15 downto 0);
+            
       -- C64 RAM: No address latching necessary and the chip can always be enabled
       c64_ram_addr_o          : out unsigned(15 downto 0);   -- C64 address bus
       c64_ram_data_o          : out unsigned(7 downto 0);    -- C64 RAM data out
@@ -117,9 +118,15 @@ signal cia1_pb_o     : std_logic_vector(7 downto 0);
 -- the Restore key is special: it creates a non maskable interrupt (NMI)
 signal restore_key_n : std_logic;
 
--- signales for RAM
+-- signals for RAM
 signal c64_ram_ce    : std_logic;
 signal c64_ram_we    : std_logic;
+
+-- 18-bit SID from C64: Needs to go through audio processing ported from Verilog to VHDL from MiSTer's c64.sv
+signal c64_sid_l     : std_logic_vector(17 downto 0);
+signal c64_sid_r     : std_logic_vector(17 downto 0);
+signal alo           : std_logic_vector(15 downto 0); 
+signal aro           : std_logic_vector(15 downto 0); 
 
 begin   
    -- MiSTer Commodore 64 core / main machine
@@ -195,12 +202,14 @@ begin
          pot4        => x"00",
       
          -- SID
-         audio_l     => open,
-         audio_r     => open,
-         sid_filter  => "00",
-         sid_ver     => "00",
-         sid_mode    => "000",
-         sid_cfg     => "0000",
+         audio_l     => c64_sid_l,
+         audio_r     => c64_sid_r,
+         sid_filter  => "11",          -- filter enable = true for both SIDs, low bit = left SID
+         sid_ver     => "00",          -- SID version, 0=6581, 1=8580, low bit = left SID
+         sid_mode    => "000",         -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
+         sid_cfg     => "0000",        -- filter type: 0=Default, 1=Custom 1, 2=Custom 2, 3=Custom 3, lower two bits = left SID
+         
+         -- mechanism for loading custom SID filters: not supported, yet
          sid_ld_clk  => '0',
          sid_ld_addr => "000000000000",
          sid_ld_data => x"0000",
@@ -281,7 +290,66 @@ begin
          restore_n            => restore_key_n         
       ); -- i_m65_to_c64
 
+   --------------------------------------------------------------------------------------------------
+   -- MiSTer audio signal processing: Convert the core's 18-bit signal to a signed 16-bit signal
+   --------------------------------------------------------------------------------------------------
 
+/* TODO double-check the conversion
+
+reg [15:0] alo,aro;
+always @(posedge clk_sys) begin
+	reg [16:0] alm,arm;
+	reg [15:0] cout;
+	reg [15:0] cin;
+	
+	cin  <= opl_out - {{3{opl_out[15]}},opl_out[15:3]};
+	cout <= compr(cin);
+
+	alm <= {cout[15],cout} + {audio_l[17],audio_l[17:2]} + {2'b0,dac_l,6'd0} + {cass_snd, 9'd0};
+	arm <= {cout[15],cout} + {audio_r[17],audio_r[17:2]} + {2'b0,dac_r,6'd0} + {cass_snd, 9'd0};
+	alo <= ^alm[16:15] ? {alm[16], {15{alm[15]}}} : alm[15:0];
+	aro <= ^arm[16:15] ? {arm[16], {15{arm[15]}}} : arm[15:0];
+end
+
+assign AUDIO_L = alo;
+assign AUDIO_R = aro;
+assign AUDIO_S = 1;
+assign AUDIO_MIX = status[19:18];
+*/
+
+   audio_processing : process(clk_main_i)
+      variable alm, arm : std_logic_vector(16 downto 0);      
+   begin
+      alm(16)           := c64_sid_l(17);
+      alm(15 downto 0)  := c64_sid_l(17 downto 2);
+      arm(16)           := c64_sid_r(17);
+      arm(15 downto 0)  := c64_sid_r(17 downto 2);
+      
+      if (alm(16) xor alm(15)) = '1' then
+         alo(15)           <= alm(16);
+         alo(14 downto 0)  <= (others => alm(15));
+      else
+         alo               <= alm(15 downto 0);
+      end if;   
+
+      if (arm(16) xor arm(15)) = '1' then
+         aro(15)           <= arm(16);
+         aro(14 downto 0)  <= (others => arm(15));
+      else
+         aro               <= arm(15 downto 0);
+      end if;               
+   end process;
+   
+   sid_l <= signed(alo);
+   sid_r <= signed(aro);
+   
+   --------------------------------------------------------------------------------------------------
+   -- MiSTer video signal processing pipeline
+   --
+   -- We configured it (hardcoded) to perform a scan-doubling, but there are many more things
+   -- we could do here, including to make sure that we output an old composite signal instead of VGA
+   --------------------------------------------------------------------------------------------------
+   
    i_video_sync : entity work.video_sync
       port map (
          clk32     => clk_main_i,

@@ -64,8 +64,8 @@ port (
    SD_MISO        : in std_logic;
    
    -- 3.5mm analog audio jack
---   pwm_l          : out std_logic;
---   pwm_r          : out std_logic;
+   pwm_l          : out std_logic;
+   pwm_r          : out std_logic;
       
    -- Joysticks
    joy_1_up_n     : in std_logic;
@@ -141,8 +141,8 @@ begin
          SD_MISO        => SD_MISO,
          
 --         -- 3.5mm analog audio jack
---         pwm_l          => pwm_l,
---         pwm_r          => pwm_r,
+         pwm_l          => pwm_l,
+         pwm_r          => pwm_r,
             
          -- Joysticks
          joy_1_up_n     => joy_1_up_n,     

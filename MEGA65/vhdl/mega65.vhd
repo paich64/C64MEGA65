@@ -59,8 +59,8 @@ port (
    SD_MISO        : in std_logic;
 
    -- 3.5mm analog audio jack
---   pwm_l          : out std_logic;
---   pwm_r          : out std_logic;
+   pwm_l          : out std_logic;
+   pwm_r          : out std_logic;
 
    -- Joysticks
    joy_1_up_n     : in std_logic;
@@ -81,8 +81,8 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
-constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
---constant QNICE_FIRMWARE       : string  := "../m2m-rom/m2m-rom.rom";
+--constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
+constant QNICE_FIRMWARE       : string  := "../m2m-rom/m2m-rom.rom";
 
 -- PAL 720x576 @ 50 Hz resolution
 constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;  
@@ -149,10 +149,14 @@ signal main_key_pressed_n     : std_logic;
 signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
 
 -- C64 RAM
-signal c64_ram_addr           : unsigned(15 downto 0);         -- C64 address bus
-signal c64_ram_data_from_c64  : unsigned(7 downto 0);          -- C64 RAM data out
-signal c64_ram_we             : std_logic;                     -- C64 RAM write enable      
-signal c64_ram_data_to_c64    : std_logic_vector(7 downto 0);  -- C64 RAM data in
+signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
+signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data out
+signal main_ram_we            : std_logic;                     -- C64 RAM write enable      
+signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data in
+
+-- SID Audio
+signal main_sid_l             : signed(15 downto 0);
+signal main_sid_r             : signed(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- clk_qnice
@@ -255,15 +259,7 @@ begin
          clk_video_i          => clk_video,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
-
-         -- MEGA65 video
-         VGA_R                => VGA_RED,
-         VGA_G                => VGA_GREEN,
-         VGA_B                => VGA_BLUE,
-         VGA_VS               => VGA_VS,
-         VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de,
-                  
+         
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
          kb_key_pressed_n_i   => main_key_pressed_n,
@@ -279,14 +275,26 @@ begin
          joy_2_down_n         => joy_2_down_n,
          joy_2_left_n         => joy_2_left_n,
          joy_2_right_n        => joy_2_right_n,
-         joy_2_fire_n         => joy_2_fire_n,
+         joy_2_fire_n         => joy_2_fire_n,         
+
+         -- C64 video out (after scandoubler)
+         VGA_R                => VGA_RED,
+         VGA_G                => VGA_GREEN,
+         VGA_B                => VGA_BLUE,
+         VGA_VS               => VGA_VS,
+         VGA_HS               => VGA_HS,
+         VGA_DE               => vga_de,
+            
+         -- C64 SID audio out: signed, see MiSTer's c64.sv
+         sid_l                => main_sid_l,
+         sid_r                => main_sid_r,                     
             
          -- C64 RAM
-         c64_ram_addr_o       => c64_ram_addr,  
-         c64_ram_data_o       => c64_ram_data_from_c64,
-         c64_ram_we_o         => c64_ram_we,
-         c64_ram_data_i       => unsigned(c64_ram_data_to_c64)
-      ); -- i_main
+         c64_ram_addr_o       => main_ram_addr,  
+         c64_ram_data_o       => main_ram_data_from_c64,
+         c64_ram_we_o         => main_ram_we,
+         c64_ram_data_i       => unsigned(main_ram_data_to_c64)
+      );
             
    -- Make the VDAC output the image
    vdac_sync_n    <= '0';
@@ -313,7 +321,22 @@ begin
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n          
       );
-
+      
+   -- Convert the C64's PCM output to pulse density modulation
+   i_pcm2pdm : entity work.pcm_to_pdm
+      port map
+      (
+         cpuclock                => clk_main,
+         
+         pcm_left                => main_sid_l,
+         pcm_right               => main_sid_r,
+         
+         -- Pulse Density Modulation (PDM is supposed to sound better than PWM on MEGA65)
+         pdm_left                => pwm_l,
+         pdm_right               => pwm_r,
+         audio_mode              => '0'         -- 0=PDM, 1=PWM
+      );
+      
    ---------------------------------------------------------------------------------------------
    -- clk_qnice
    ---------------------------------------------------------------------------------------------
@@ -619,10 +642,10 @@ begin
       port map (
          -- C64 MiSTer core
          clock_a           => clk_main,
-         address_a         => std_logic_vector(c64_ram_addr),
-         data_a            => std_logic_vector(c64_ram_data_from_c64),
-         wren_a            => c64_ram_we,
-         q_a               => c64_ram_data_to_c64,
+         address_a         => std_logic_vector(main_ram_addr),
+         data_a            => std_logic_vector(main_ram_data_from_c64),
+         wren_a            => main_ram_we,
+         q_a               => main_ram_data_to_c64,
          
          -- QNICE
          clock_b           => clk_qnice,
