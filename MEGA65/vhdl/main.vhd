@@ -320,19 +320,24 @@ assign AUDIO_MIX = status[19:18];
    audio_processing : process(clk_main_i)
       variable alm, arm : std_logic_vector(16 downto 0);      
    begin
+      -- "alm" and "alr" are used to mix various audio sources
+      -- Additional to SID, MiSTer supports OPL, DAC and the noise of the tape drive. All these sound
+      -- inputs are meant to be added here (see c64.sv in the MiSTER source) as soon as we support it.
       alm(16)           := c64_sid_l(17);
       alm(15 downto 0)  := c64_sid_l(17 downto 2);
       arm(16)           := c64_sid_r(17);
       arm(15 downto 0)  := c64_sid_r(17 downto 2);
       
-      if (alm(16) xor alm(15)) = '1' then
+      -- Anti-overflow mechanism for alm and arm. Right now this is not yet needed, because we are
+      -- not adding multiple audio sources, but as soon as we will do that in future, we are prepared
+      if alm(16) /= alm(15) then
          alo(15)           <= alm(16);
          alo(14 downto 0)  <= (others => alm(15));
       else
          alo               <= alm(15 downto 0);
       end if;   
 
-      if (arm(16) xor arm(15)) = '1' then
+      if arm(16) /= arm(15) then
          aro(15)           <= arm(16);
          aro(14 downto 0)  <= (others => arm(15));
       else
