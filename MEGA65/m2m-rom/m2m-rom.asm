@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#define RELEASE
+#undef RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -45,9 +45,11 @@
 START_FIRMWARE  MOVE    STR_TITLE, R8           ; output welcome message
                 SYSCALL(puts, 1)
 
+#ifdef RELEASE
                 ; Stabilize SD Card
                 RSUB    WAIT1SEC, 1
                 RSUB    WAIT1SEC, 1
+#endif
 
                 ; Mount SD card
                 MOVE    HANDLE_DEV, R8          ; device handle

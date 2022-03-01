@@ -9,6 +9,7 @@ already a pretty cool proof-of-concept.
 ## TODOs before release of alpha
 * Do all "WIP"
 * Debounce the joystick (add to MiSTer2MEGA65 from gbc4mega65)
+* Line 62 in fdc1772.v: back to 2 or work with generic?
 
 ## Features
 * PAL C64 Standard KERNAL
@@ -28,10 +29,12 @@ WIP C1541 read-only support in raw GCR mode (`*.D64`, `*.G64`) via SD card
 * Tape mounting via SD card
 * Cartridge mounting via SD card
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
+* C1581 virtual drive support (via SD card)
+* Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * REU and GeoRAM using HyperRAM
 * The following MEGA65 hardware ports are not yet working
 	* Paddles / mouse via the joystick ports
 	* C1581 via MEGA65's disk drive
 	* IEC port
 	* REU via expansion port
-
+	* Drive led during virtual disk access

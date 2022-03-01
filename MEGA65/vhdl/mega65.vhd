@@ -248,9 +248,7 @@ begin
    -- main.vhd contains the actual Commodore 64 MiSTer core
    i_main : entity work.main
       generic map (
-         G_CORE_CLK_SPEED     => CORE_CLK_SPEED,
-         
-         -- Demo core specific generics @TODO not sure if you need them, too
+         G_CORE_CLK_SPEED     => CORE_CLK_SPEED,   
          G_OUTPUT_DX          => VGA_DX,
          G_OUTPUT_DY          => VGA_DY         
       )
@@ -259,15 +257,7 @@ begin
          clk_video_i          => clk_video,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
-         
-         -- C64 video out (after scandoubler)
-         VGA_R                => VGA_RED,
-         VGA_G                => VGA_GREEN,
-         VGA_B                => VGA_BLUE,
-         VGA_VS               => VGA_VS,
-         VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de,         
-         
+                 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
          kb_key_pressed_n_i   => main_key_pressed_n,
@@ -284,6 +274,14 @@ begin
          joy_2_left_n         => joy_2_left_n,
          joy_2_right_n        => joy_2_right_n,
          joy_2_fire_n         => joy_2_fire_n,         
+
+         -- C64 video out (after scandoubler)
+         VGA_R                => VGA_RED,
+         VGA_G                => VGA_GREEN,
+         VGA_B                => VGA_BLUE,
+         VGA_VS               => VGA_VS,
+         VGA_HS               => VGA_HS,
+         VGA_DE               => vga_de,         
             
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -293,7 +291,9 @@ begin
          c64_ram_addr_o       => main_ram_addr,  
          c64_ram_data_o       => main_ram_data_from_c64,
          c64_ram_we_o         => main_ram_we,
-         c64_ram_data_i       => unsigned(main_ram_data_to_c64)
+         c64_ram_data_i       => unsigned(main_ram_data_to_c64),
+         
+         c64_clk_sd_i         => clk_qnice   -- "sd card write clock" for floppy drive internal dual clock RAM buffer         
       );
             
    -- Make the VDAC output the image

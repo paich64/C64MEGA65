@@ -22,15 +22,7 @@ entity main is
       clk_video_i             : in std_logic;    -- 63.056 MHz
       reset_i                 : in std_logic;
       pause_i                 : in std_logic;
-      
-      -- C64 video out (after scandoubler)
-      VGA_R                   : out std_logic_vector(7 downto 0);
-      VGA_G                   : out std_logic_vector(7 downto 0);
-      VGA_B                   : out std_logic_vector(7 downto 0);
-      VGA_VS                  : out std_logic;
-      VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic;      
-            
+                  
       -- M2M Keyboard interface
       kb_key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
@@ -48,16 +40,27 @@ entity main is
       joy_2_left_n           : in std_logic;
       joy_2_right_n          : in std_logic;
       joy_2_fire_n           : in std_logic;
-
+      
+      -- C64 video out (after scandoubler)
+      VGA_R                   : out std_logic_vector(7 downto 0);
+      VGA_G                   : out std_logic_vector(7 downto 0);
+      VGA_B                   : out std_logic_vector(7 downto 0);
+      VGA_VS                  : out std_logic;
+      VGA_HS                  : out std_logic;
+      VGA_DE                  : out std_logic;      
+      
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);
       sid_r                   : out signed(15 downto 0);
             
       -- C64 RAM: No address latching necessary and the chip can always be enabled
-      c64_ram_addr_o          : out unsigned(15 downto 0);   -- C64 address bus
-      c64_ram_data_o          : out unsigned(7 downto 0);    -- C64 RAM data out
-      c64_ram_we_o            : out std_logic;               -- C64 RAM write enable      
-      c64_ram_data_i          : in unsigned(7 downto 0)      -- C64 RAM data in      
+      c64_ram_addr_o          : out unsigned(15 downto 0);  -- C64 address bus
+      c64_ram_data_o          : out unsigned(7 downto 0);   -- C64 RAM data out
+      c64_ram_we_o            : out std_logic;              -- C64 RAM write enable      
+      c64_ram_data_i          : in unsigned(7 downto 0);    -- C64 RAM data in 
+      
+      -- C64 IEC
+      c64_clk_sd_i            : std_logic                   -- "sd card write clock" for floppy drive internal dual clock RAM buffer                         
    );
 end main;
 
@@ -90,45 +93,82 @@ architecture synthesis of main is
    end component video_mixer;
 
 -- MiSTer C64 signals
-signal c64_pause     : std_logic;
-signal ce_pix        : std_logic;
-signal c64_hsync     : std_logic;
-signal c64_vsync     : std_logic;
-signal c64_r         : unsigned(7 downto 0);
-signal c64_g         : unsigned(7 downto 0);
-signal c64_b         : unsigned(7 downto 0);
+signal c64_pause           : std_logic;
+signal ce_pix              : std_logic;
+signal c64_hsync           : std_logic;
+signal c64_vsync           : std_logic;
+signal c64_r               : unsigned(7 downto 0);
+signal c64_g               : unsigned(7 downto 0);
+signal c64_b               : unsigned(7 downto 0);
+signal c64_ntsc            : std_logic;
 
 -- MiSTer video pipeline signals
-signal vs_hsync      : std_logic;
-signal vs_vsync      : std_logic;
-signal vs_hblank     : std_logic;
-signal vs_vblank     : std_logic;
-signal div           : integer range 0 to 7;
-signal mix_r         : std_logic_vector(7 downto 0);
-signal mix_g         : std_logic_vector(7 downto 0);
-signal mix_b         : std_logic_vector(7 downto 0);
-signal mix_vga_de    : std_logic;
+signal vs_hsync            : std_logic;
+signal vs_vsync            : std_logic;
+signal vs_hblank           : std_logic;
+signal vs_vblank           : std_logic;
+signal div                 : integer range 0 to 7;
+signal mix_r               : std_logic_vector(7 downto 0);
+signal mix_g               : std_logic_vector(7 downto 0);
+signal mix_b               : std_logic_vector(7 downto 0);
+signal mix_vga_de          : std_logic;
 
 -- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
-signal cia1_pa_i     : std_logic_vector(7 downto 0);
-signal cia1_pa_o     : std_logic_vector(7 downto 0);
-signal cia1_pb_i     : std_logic_vector(7 downto 0);
-signal cia1_pb_o     : std_logic_vector(7 downto 0);
+signal cia1_pa_i           : std_logic_vector(7 downto 0);
+signal cia1_pa_o           : std_logic_vector(7 downto 0);
+signal cia1_pb_i           : std_logic_vector(7 downto 0);
+signal cia1_pb_o           : std_logic_vector(7 downto 0);
 
 -- the Restore key is special: it creates a non maskable interrupt (NMI)
-signal restore_key_n : std_logic;
+signal restore_key_n       : std_logic;
 
 -- signals for RAM
-signal c64_ram_ce    : std_logic;
-signal c64_ram_we    : std_logic;
+signal c64_ram_ce          : std_logic;
+signal c64_ram_we          : std_logic;
 
 -- 18-bit SID from C64: Needs to go through audio processing ported from Verilog to VHDL from MiSTer's c64.sv
-signal c64_sid_l     : std_logic_vector(17 downto 0);
-signal c64_sid_r     : std_logic_vector(17 downto 0);
-signal alo           : std_logic_vector(15 downto 0); 
-signal aro           : std_logic_vector(15 downto 0); 
+signal c64_sid_l           : std_logic_vector(17 downto 0);
+signal c64_sid_r           : std_logic_vector(17 downto 0);
+signal alo                 : std_logic_vector(15 downto 0); 
+signal aro                 : std_logic_vector(15 downto 0);
 
-begin   
+-- IEC drives
+signal iec_led             : std_logic;
+signal iec_drive_ce        : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
+signal iec_dce_sum         : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
+signal iec_drive8_mounted  : std_logic;
+signal iec_drive9_mounted  : std_logic;
+signal iec_drive_8_type    : std_logic_vector(1 downto 0);     -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
+signal iec_drive_9_type    : std_logic_vector(1 downto 0);
+signal iec_drive8_readonly : std_logic;
+signal iec_drive9_readonly : std_logic;
+signal iec_drive8_imgsize  : integer;
+signal iec_drive9_imgsize  : integer;
+signal c64_iec_clk_o       : std_logic;
+signal c64_iec_clk_i       : std_logic;
+signal c64_iec_atn_o       : std_logic;
+signal c64_iec_data_o      : std_logic;
+signal c64_iec_data_i      : std_logic;
+signal iec_sd_lba_o        : std_logic_vector(31 downto 0);
+signal iec_sd_blk_cnt_o    : std_logic_vector(5 downto 0);
+signal iec_sd_rd_o         : std_logic;
+signal iec_sd_wr_o         : std_logic;
+signal iec_sd_ack_i        : std_logic;
+signal iec_sd_buf_addr_i   : std_logic_vector(13 downto 0);
+signal iec_sd_buf_data_i   : std_logic_vector(7 downto 0);
+signal iec_sd_buf_wr       : std_logic;
+signal iec_par_stb_i       : std_logic;
+signal iec_par_stb_o       : std_logic;
+signal iec_par_data_i      : std_logic_vector(7 downto 0);
+signal iec_par_data_o      : std_logic_vector(7 downto 0);
+signal iec_rom_std         : std_logic;
+signal iec_rom_addr        : std_logic_vector(15 downto 0);
+signal iec_rom_data        : std_logic_vector(7 downto 0);
+signal iec_rom_wr          : std_logic;
+begin
+   -- for now, we hardcode PAL, NTSC will follow later
+   c64_ntsc <= '0';
+
    -- MiSTer Commodore 64 core / main machine
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
       port map (
@@ -161,7 +201,7 @@ begin
          turbo_speed => "00",
       
          -- VGA/SCART interface
-         ntscMode    => '0',
+         ntscMode    => c64_ntsc,
          hsync       => c64_hsync,
          vsync       => c64_vsync,
          r           => c64_r,
@@ -230,13 +270,13 @@ begin
          cnt2_o      => open,
          cnt1_i      => '0',
          cnt1_o      => open,
-      
+            
          -- IEC
-         iec_data_o	=> open,
-         iec_data_i	=> '0',
-         iec_clk_o	=> open,
-         iec_clk_i	=> '0',
-         iec_atn_o	=> open,
+         iec_clk_i	=> c64_iec_clk_i,        
+         iec_clk_o	=> c64_iec_clk_o,
+         iec_atn_o	=> c64_iec_atn_o,
+         iec_data_i	=> c64_iec_data_i,
+         iec_data_o	=> c64_iec_data_o,
          
          c64rom_addr => "00000000000000",
          c64rom_data => x"00",
@@ -246,7 +286,7 @@ begin
          cass_write  => open,
          cass_sense  => '0',
          cass_read   => '0'            
-      ); -- i_fpga64_sid_iec
+      );
       
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we; 
@@ -288,34 +328,11 @@ begin
          
          -- Restore key = NMI
          restore_n            => restore_key_n         
-      ); -- i_m65_to_c64
+      );
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer audio signal processing: Convert the core's 18-bit signal to a signed 16-bit signal
    --------------------------------------------------------------------------------------------------
-
-/* TODO double-check the conversion
-
-reg [15:0] alo,aro;
-always @(posedge clk_sys) begin
-	reg [16:0] alm,arm;
-	reg [15:0] cout;
-	reg [15:0] cin;
-	
-	cin  <= opl_out - {{3{opl_out[15]}},opl_out[15:3]};
-	cout <= compr(cin);
-
-	alm <= {cout[15],cout} + {audio_l[17],audio_l[17:2]} + {2'b0,dac_l,6'd0} + {cass_snd, 9'd0};
-	arm <= {cout[15],cout} + {audio_r[17],audio_r[17:2]} + {2'b0,dac_r,6'd0} + {cass_snd, 9'd0};
-	alo <= ^alm[16:15] ? {alm[16], {15{alm[15]}}} : alm[15:0];
-	aro <= ^arm[16:15] ? {arm[16], {15{arm[15]}}} : arm[15:0];
-end
-
-assign AUDIO_L = alo;
-assign AUDIO_R = aro;
-assign AUDIO_S = 1;
-assign AUDIO_MIX = status[19:18];
-*/
 
    audio_processing : process(clk_main_i)
       variable alm, arm : std_logic_vector(16 downto 0);      
@@ -400,7 +417,7 @@ assign AUDIO_MIX = status[19:18];
          VGA_VS      => VGA_VS,
          VGA_HS      => VGA_HS,
          VGA_DE      => mix_vga_de
-      ); -- i_video_mixer
+      );
       
    VGA_DE <= mix_vga_de;
    vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
@@ -415,5 +432,95 @@ assign AUDIO_MIX = status[19:18];
          VGA_B <= (others => '0');
       end if;
    end process;
-      
+   
+   --------------------------------------------------------------------------------------------------
+   -- MiSTer IEC drives
+   --------------------------------------------------------------------------------------------------
+
+   iec_drive8_readonly  <= '1';     -- Right now, QNICE only supports read-only SD-Card/FAT32 access
+   iec_drive_8_type     <= "00";    -- @TODO: remove hardcoded value (00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81))
+   iec_drive8_imgsize   <= 174848;  -- @TODO: remove hardcoded value
+   
+   -- Parallel C1541 port: not implemented, yet
+   iec_par_stb_i        <= '0';
+   iec_par_data_i       <= (others => '0'); 
+   
+   -- Custom ROM load facility: not implemented, yet
+   iec_rom_std          <= '1';     -- use the factory default ROM
+   iec_rom_addr         <= (others => '0');
+   iec_rom_data         <= (others => '0');
+   iec_rom_wr           <= '0';   
+
+   i_iec_drive : entity work.iec_drive
+      generic map (
+         PARPORT        => 0,                -- Parallel C1541 port for faster (~20x) loading time using DolphinDOS
+         DUALROM        => 0,
+         DRIVES         => 1      
+      )
+      port map (
+         clk            => clk_main_i,
+         clk_sys        => clk_main_i,
+         ce             => iec_drive_ce,
+         reset          => reset_i,          -- TODO: if drive not mounted: keep reset high
+         pause          => pause_i,
+         
+         -- interface to the C64 core
+         iec_clk_i      => c64_iec_clk_o,
+         iec_clk_o      => c64_iec_clk_i,
+         iec_atn_i      => c64_iec_atn_o,
+         iec_data_i     => c64_iec_data_o,
+         iec_data_o     => c64_iec_data_i,
+         
+         -- disk image status
+         img_mounted    => iec_drive8_mounted,
+         img_readonly   => iec_drive8_readonly,
+         img_size       => iec_drive8_imgsize,
+         img_type       => iec_drive_8_type,       -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
+
+         -- QNICE SD-Card/FAT32 interface
+         sd_lba         => iec_sd_lba_o,
+         sd_blk_cnt     => iec_sd_blk_cnt_o,
+         sd_rd          => iec_sd_rd_o,
+         sd_wr          => iec_sd_wr_o,
+         sd_ack         => iec_sd_ack_i,
+         sd_buff_addr   => iec_sd_buf_addr_i,
+         sd_buff_dout   => iec_sd_buf_data_i,   -- data from SD card to the buffer RAM within the drive ("dout" is a strange name)
+         sd_buff_din    => open,                -- possibility to read the buffer RAM within the drive
+         sd_buff_wr     => iec_sd_buf_wr,
+                 
+         -- drive led
+         led            => iec_led,             -- not used, right now
+         
+         -- Parallel C1541 port
+         par_stb_i      => iec_par_stb_i,
+         par_stb_o      => iec_par_stb_o,
+         par_data_i     => iec_par_data_i,
+         par_data_o     => iec_par_data_o,
+         
+         -- Facility to load custom rom (currently not used)
+         rom_std        => iec_rom_std,         -- hardcoded to '1', use the factory default ROM
+         rom_addr       => iec_rom_addr,
+         rom_data       => iec_rom_data,
+         rom_wr         => iec_rom_wr
+      );
+
+   generate_drive_ce : process(clk_main_i)
+      variable msum : integer;   -- caution: we expect a 32-bit integer here
+   begin
+      if rising_edge(clk_main_i) then
+         if c64_ntsc = '1' then
+            msum := 32727264;
+         else
+            msum := 31527954;
+         end if;
+         
+         iec_drive_ce <= '0';
+         iec_dce_sum <= iec_dce_sum + 16000000;
+         if iec_dce_sum >= msum then
+            iec_dce_sum <= iec_dce_sum - msum;
+            iec_drive_ce <= '1';
+         end if;
+      end if;
+   end process;
+
 end synthesis;
