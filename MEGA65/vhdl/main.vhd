@@ -22,6 +22,14 @@ entity main is
       clk_video_i             : in std_logic;    -- 63.056 MHz
       reset_i                 : in std_logic;
       pause_i                 : in std_logic;
+      
+      -- C64 video out (after scandoubler)
+      VGA_R                   : out std_logic_vector(7 downto 0);
+      VGA_G                   : out std_logic_vector(7 downto 0);
+      VGA_B                   : out std_logic_vector(7 downto 0);
+      VGA_VS                  : out std_logic;
+      VGA_HS                  : out std_logic;
+      VGA_DE                  : out std_logic;      
             
       -- M2M Keyboard interface
       kb_key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
@@ -40,14 +48,6 @@ entity main is
       joy_2_left_n           : in std_logic;
       joy_2_right_n          : in std_logic;
       joy_2_fire_n           : in std_logic;
-      
-      -- C64 video out (after scandoubler)
-      VGA_R                   : out std_logic_vector(7 downto 0);
-      VGA_G                   : out std_logic_vector(7 downto 0);
-      VGA_B                   : out std_logic_vector(7 downto 0);
-      VGA_VS                  : out std_logic;
-      VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic;
 
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);

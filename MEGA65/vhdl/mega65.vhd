@@ -82,7 +82,7 @@ architecture beh of MEGA65_Core is
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
-constant QNICE_FIRMWARE       : string  := "../m2m-rom/m2m-rom.rom";
+constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
 -- PAL 720x576 @ 50 Hz resolution
 constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;  
@@ -260,6 +260,14 @@ begin
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
          
+         -- C64 video out (after scandoubler)
+         VGA_R                => VGA_RED,
+         VGA_G                => VGA_GREEN,
+         VGA_B                => VGA_BLUE,
+         VGA_VS               => VGA_VS,
+         VGA_HS               => VGA_HS,
+         VGA_DE               => vga_de,         
+         
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
          kb_key_pressed_n_i   => main_key_pressed_n,
@@ -276,14 +284,6 @@ begin
          joy_2_left_n         => joy_2_left_n,
          joy_2_right_n        => joy_2_right_n,
          joy_2_fire_n         => joy_2_fire_n,         
-
-         -- C64 video out (after scandoubler)
-         VGA_R                => VGA_RED,
-         VGA_G                => VGA_GREEN,
-         VGA_B                => VGA_BLUE,
-         VGA_VS               => VGA_VS,
-         VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de,
             
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
