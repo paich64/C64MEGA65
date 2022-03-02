@@ -156,15 +156,15 @@ signal iec_sd_wr_o         : std_logic;
 signal iec_sd_ack_i        : std_logic;
 signal iec_sd_buf_addr_i   : std_logic_vector(13 downto 0);
 signal iec_sd_buf_data_i   : std_logic_vector(7 downto 0);
-signal iec_sd_buf_wr       : std_logic;
+signal iec_sd_buf_wr_i     : std_logic;
 signal iec_par_stb_i       : std_logic;
 signal iec_par_stb_o       : std_logic;
 signal iec_par_data_i      : std_logic_vector(7 downto 0);
 signal iec_par_data_o      : std_logic_vector(7 downto 0);
-signal iec_rom_std         : std_logic;
-signal iec_rom_addr        : std_logic_vector(15 downto 0);
-signal iec_rom_data        : std_logic_vector(7 downto 0);
-signal iec_rom_wr          : std_logic;
+signal iec_rom_std_i       : std_logic;
+signal iec_rom_addr_i      : std_logic_vector(15 downto 0);
+signal iec_rom_data_i      : std_logic_vector(7 downto 0);
+signal iec_rom_wr_i        : std_logic;
 begin
    -- for now, we hardcode PAL, NTSC will follow later
    c64_ntsc <= '0';
@@ -446,10 +446,10 @@ begin
    iec_par_data_i       <= (others => '0'); 
    
    -- Custom ROM load facility: not implemented, yet
-   iec_rom_std          <= '1';     -- use the factory default ROM
-   iec_rom_addr         <= (others => '0');
-   iec_rom_data         <= (others => '0');
-   iec_rom_wr           <= '0';   
+   iec_rom_std_i        <= '1';     -- use the factory default ROM
+   iec_rom_addr_i       <= (others => '0');
+   iec_rom_data_i       <= (others => '0');
+   iec_rom_wr_i         <= '0';   
 
    i_iec_drive : entity work.iec_drive
       generic map (
@@ -486,7 +486,7 @@ begin
          sd_buff_addr   => iec_sd_buf_addr_i,
          sd_buff_dout   => iec_sd_buf_data_i,   -- data from SD card to the buffer RAM within the drive ("dout" is a strange name)
          sd_buff_din    => open,                -- possibility to read the buffer RAM within the drive
-         sd_buff_wr     => iec_sd_buf_wr,
+         sd_buff_wr     => iec_sd_buf_wr_i,
                  
          -- drive led
          led            => iec_led,             -- not used, right now
@@ -498,10 +498,12 @@ begin
          par_data_o     => iec_par_data_o,
          
          -- Facility to load custom rom (currently not used)
-         rom_std        => iec_rom_std,         -- hardcoded to '1', use the factory default ROM
-         rom_addr       => iec_rom_addr,
-         rom_data       => iec_rom_data,
-         rom_wr         => iec_rom_wr
+         -- Important: If we want to use it, we need to replace "iecdrv_mem" in c1581_multi.sv
+         -- by "dualport_2clk_ram" due to QNICE's falling-edge reading and writing
+         rom_std        => iec_rom_std_i,       -- hardcoded to '1', use the factory default ROM
+         rom_addr       => iec_rom_addr_i,
+         rom_data       => iec_rom_data_i,
+         rom_wr         => iec_rom_wr_i
       );
 
    generate_drive_ce : process(clk_main_i)
