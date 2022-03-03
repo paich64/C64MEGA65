@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#define RELEASE
+#undef RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -78,10 +78,10 @@ D64_STDSIZE_H   .EQU    0x0002
 START_FIRMWARE  MOVE    STR_START, R8
                 SYSCALL(puts, 1)
 
-                MOVE    20, R0
-_WAIT           RSUB    WAIT1SEC, 1
-                SUB     1, R0
-                RBRA    _WAIT, !Z
+;                MOVE    20, R0
+;_WAIT           RSUB    WAIT1SEC, 1
+;                SUB     1, R0
+;                RBRA    _WAIT, !Z
 
                 MOVE    M2M$RAMROM_DEV, R8
                 MOVE    C64_IEC, @R8

@@ -124,19 +124,11 @@ begin
          SD_CLK         => SD_CLK,
          SD_MOSI        => SD_MOSI,
          SD_MISO        => SD_MISO,
-<<<<<<< HEAD
-         
-         -- 3.5mm analog audio jack
-         pwm_l          => pwm_l,
-         pwm_r          => pwm_r,
-            
-=======
 
          -- 3.5mm analog audio jack
          pwm_l          => pwm_l,
          pwm_r          => pwm_r,
 
->>>>>>> eac1fd95feb032f1b4b0527b82ecc5fa81f802d3
          -- Joysticks
          joy_1_up_n     => joy_1_up_n,
          joy_1_down_n   => joy_1_down_n,
