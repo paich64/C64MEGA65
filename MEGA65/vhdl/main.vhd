@@ -10,6 +10,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.vdrives_pkg.all;
 
 entity main is
    generic (
@@ -59,8 +60,13 @@ entity main is
       c64_ram_we_o            : out std_logic;              -- C64 RAM write enable      
       c64_ram_data_i          : in unsigned(7 downto 0);    -- C64 RAM data in 
       
-      -- C64 IEC
-      c64_clk_sd_i            : std_logic                   -- "sd card write clock" for floppy drive internal dual clock RAM buffer                         
+      -- C64 IEC handled by QNICE
+      c64_clk_sd_i            : in std_logic;               -- "sd card write clock" for floppy drive internal dual clock RAM buffer
+      c64_qnice_addr_i        : in std_logic_vector(27 downto 0);
+      c64_qnice_data_i        : in std_logic_vector(15 downto 0);
+      c64_qnice_data_o        : out std_logic_vector(15 downto 0);
+      c64_qnice_ce_i          : in std_logic;
+      c64_qnice_we_i          : in std_logic                               
    );
 end main;
 
@@ -91,6 +97,10 @@ architecture synthesis of main is
          VGA_DE      : out std_logic
       );
    end component video_mixer;
+
+-- amount of virtual drives
+-- CAUTION: i_iec_drive's reset needs to be adjusted manually, if you change this
+constant VDNUM : natural := 1;
 
 -- MiSTer C64 signals
 signal c64_pause           : std_logic;
@@ -136,24 +146,21 @@ signal aro                 : std_logic_vector(15 downto 0);
 signal iec_led             : std_logic;
 signal iec_drive_ce        : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
 signal iec_dce_sum         : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
-signal iec_drive8_mounted  : std_logic;
-signal iec_drive9_mounted  : std_logic;
 signal iec_drive_8_type    : std_logic_vector(1 downto 0);     -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
 signal iec_drive_9_type    : std_logic_vector(1 downto 0);
-signal iec_drive8_readonly : std_logic;
-signal iec_drive9_readonly : std_logic;
-signal iec_drive8_imgsize  : integer;
-signal iec_drive9_imgsize  : integer;
+signal iec_drive_mounted   : std_logic_vector(VDNUM - 1 downto 0);
+signal iec_drive_readonly  : std_logic;
+signal iec_drive_imgsize   : std_logic_vector(31 downto 0);
 signal c64_iec_clk_o       : std_logic;
 signal c64_iec_clk_i       : std_logic;
 signal c64_iec_atn_o       : std_logic;
 signal c64_iec_data_o      : std_logic;
 signal c64_iec_data_i      : std_logic;
-signal iec_sd_lba_o        : std_logic_vector(31 downto 0);
-signal iec_sd_blk_cnt_o    : std_logic_vector(5 downto 0);
-signal iec_sd_rd_o         : std_logic;
-signal iec_sd_wr_o         : std_logic;
-signal iec_sd_ack_i        : std_logic;
+signal iec_sd_lba_o        : vd_vec_array(VDNUM - 1 downto 0)(31 downto 0);
+signal iec_sd_blk_cnt_o    : vd_vec_array(VDNUM - 1 downto 0)(5 downto 0);
+signal iec_sd_rd_o         : vd_std_array(VDNUM - 1 downto 0);
+signal iec_sd_wr_o         : vd_std_array(VDNUM - 1 downto 0);
+signal iec_sd_ack_i        : vd_std_array(VDNUM - 1 downto 0);
 signal iec_sd_buf_addr_i   : std_logic_vector(13 downto 0);
 signal iec_sd_buf_data_i   : std_logic_vector(7 downto 0);
 signal iec_sd_buf_wr_i     : std_logic;
@@ -165,6 +172,11 @@ signal iec_rom_std_i       : std_logic;
 signal iec_rom_addr_i      : std_logic_vector(15 downto 0);
 signal iec_rom_data_i      : std_logic_vector(7 downto 0);
 signal iec_rom_wr_i        : std_logic;
+
+attribute MARK_DEBUG : string;
+attribute MARK_DEBUG of iec_drive_mounted : signal is "TRUE";
+attribute MARK_DEBUG of iec_sd_rd_o : signal is "TRUE";
+
 begin
    -- for now, we hardcode PAL, NTSC will follow later
    c64_ntsc <= '0';
@@ -437,9 +449,7 @@ begin
    -- MiSTer IEC drives
    --------------------------------------------------------------------------------------------------
 
-   iec_drive8_readonly  <= '1';     -- Right now, QNICE only supports read-only SD-Card/FAT32 access
    iec_drive_8_type     <= "00";    -- @TODO: remove hardcoded value (00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81))
-   iec_drive8_imgsize   <= 174848;  -- @TODO: remove hardcoded value
    
    -- Parallel C1541 port: not implemented, yet
    iec_par_stb_i        <= '0';
@@ -450,18 +460,17 @@ begin
    iec_rom_addr_i       <= (others => '0');
    iec_rom_data_i       <= (others => '0');
    iec_rom_wr_i         <= '0';   
-
+   
    i_iec_drive : entity work.iec_drive
       generic map (
          PARPORT        => 0,                -- Parallel C1541 port for faster (~20x) loading time using DolphinDOS
          DUALROM        => 0,
-         DRIVES         => 1      
+         DRIVES         => VDNUM      
       )
       port map (
          clk            => clk_main_i,
-         clk_sys        => clk_main_i,
          ce             => iec_drive_ce,
-         reset          => reset_i,          -- TODO: if drive not mounted: keep reset high
+         reset          => reset_i or not iec_drive_mounted(0),
          pause          => pause_i,
          
          -- interface to the C64 core
@@ -472,12 +481,14 @@ begin
          iec_data_o     => c64_iec_data_i,
          
          -- disk image status
-         img_mounted    => iec_drive8_mounted,
-         img_readonly   => iec_drive8_readonly,
-         img_size       => iec_drive8_imgsize,
+         img_mounted    => iec_drive_mounted,
+         img_readonly   => iec_drive_readonly,
+         img_size       => iec_drive_imgsize,
          img_type       => iec_drive_8_type,       -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
 
          -- QNICE SD-Card/FAT32 interface
+         clk_sys        => c64_clk_sd_i,           -- "SD card" clock for writing to the drives' internal data buffers
+         
          sd_lba         => iec_sd_lba_o,
          sd_blk_cnt     => iec_sd_blk_cnt_o,
          sd_rd          => iec_sd_rd_o,
@@ -524,5 +535,44 @@ begin
          end if;
       end if;
    end process;
+   
+   i_vdrives : entity work.vdrives
+      generic map (
+         VDNUM                => VDNUM,               -- only one drive
+         BLKSZ                => 1                    -- 1 = 256 bytes block size
+      )
+      port map (
+         clk_qnice_i          => c64_clk_sd_i,
+         clk_core_i           => clk_main_i,
+         reset_core_i         => reset_i,
+         
+         -- MiSTer's "SD config" interface, which runs in the core's clock domain
+         img_mounted_o        => iec_drive_mounted,
+         img_readonly_o       => iec_drive_readonly,
+         img_size_o           => iec_drive_imgsize,
+         
+         -- MiSTer's "SD block level access" interface, which runs in QNICE's clock domain
+         -- using dedicated signal on Mister's side such as "clk_sys"
+         sd_lba_i             => iec_sd_lba_o,
+         sd_blk_cnt_i         => iec_sd_blk_cnt_o,    -- number of blocks-1
+         sd_rd_i              => iec_sd_rd_o,
+         sd_wr_i              => iec_sd_wr_o,
+         sd_ack_o             => iec_sd_ack_i,
+
+         -- MiSTer's "SD byte level access": the MiSTer components use a combination of the drive-specific sd_ack and the sd_buff_wr
+         -- to determine, which RAM buffer actually needs to be written to (using the clk_qnice_i clock domain)
+         sd_buff_addr_o       => iec_sd_buf_addr_i,
+         sd_buff_dout_o       => iec_sd_buf_data_i,
+         sd_buff_din_i        => (others => (others => '0')),
+         sd_buff_wr_o         => iec_sd_buf_wr_i,
+
+         -- QNICE interface (MMIO, 4k-segmented)
+         -- qnice_addr is 28-bit because we have a 16-bit window selector and a 4k window: 65536*4096 = 268.435.456 = 2^28
+         qnice_addr_i         => c64_qnice_addr_i,  
+         qnice_data_i         => c64_qnice_data_i,
+         qnice_data_o         => c64_qnice_data_o,
+         qnice_ce_i           => c64_qnice_ce_i,
+         qnice_we_i           => c64_qnice_we_i
+      );
 
 end synthesis;

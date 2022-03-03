@@ -195,7 +195,11 @@ signal qnice_config_data      : std_logic_vector(15 downto 0);
 
 -- C64 RAM
 signal qnice_c64_ram_we       : std_logic;
-signal qnice_c64_ram_data_o   : std_logic_vector(7 downto 0);  
+signal qnice_c64_ram_data_o   : std_logic_vector(7 downto 0);
+
+signal qnice_c64_qnice_ce     : std_logic;
+signal qnice_c64_qnice_we     : std_logic;
+signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- clk_pixel_1x (VGA pixelclock) and clk_pixel_5x (HDMI)
@@ -292,8 +296,14 @@ begin
          c64_ram_data_o       => main_ram_data_from_c64,
          c64_ram_we_o         => main_ram_we,
          c64_ram_data_i       => unsigned(main_ram_data_to_c64),
-         
-         c64_clk_sd_i         => clk_qnice   -- "sd card write clock" for floppy drive internal dual clock RAM buffer         
+
+         -- C64 IEC handled by QNICE
+         c64_clk_sd_i         => clk_qnice,           -- "sd card write clock" for floppy drive internal dual clock RAM buffer                  
+         c64_qnice_addr_i     => qnice_ramrom_addr,
+         c64_qnice_data_i     => qnice_ramrom_data_o,
+         c64_qnice_data_o     => qnice_c64_qnice_data_o,
+         c64_qnice_ce_i       => qnice_c64_qnice_ce,
+         c64_qnice_we_i       => qnice_c64_qnice_we      
       );
             
    -- Make the VDAC output the image
@@ -419,12 +429,14 @@ begin
    variable strpos : integer;
    begin
       -- MiSTer2MEGA65 reserved
-      qnice_vram_we <= '0';
-      qnice_vram_attr_we <= '0';
-      qnice_ramrom_data_i <= x"EEEE";
+      qnice_vram_we        <= '0';
+      qnice_vram_attr_we   <= '0';
+      qnice_ramrom_data_i  <= x"EEEE";
       -- C64 specific
-      qnice_c64_ram_we <= '0';
-   
+      qnice_c64_ram_we     <= '0';
+      qnice_c64_qnice_ce   <= '0';
+      qnice_c64_qnice_we   <= '0';
+      
       case qnice_ramrom_dev is
          ----------------------------------------------------------------------------
          -- MiSTer2MEGA65 reserved devices
@@ -432,15 +444,15 @@ begin
          -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
          ----------------------------------------------------------------------------         
          when x"0000" =>
-            qnice_vram_we <= qnice_ramrom_we;
-            qnice_ramrom_data_i <= x"00" & qnice_vram_data_o;
+            qnice_vram_we        <= qnice_ramrom_we;
+            qnice_ramrom_data_i  <= x"00" & qnice_vram_data_o;
          when x"0001" =>
-            qnice_vram_attr_we <= qnice_ramrom_we;
-            qnice_ramrom_data_i <= x"00" & qnice_vram_attr_data_o;
+            qnice_vram_attr_we   <= qnice_ramrom_we;
+            qnice_ramrom_data_i  <= x"00" & qnice_vram_attr_data_o;
             
          -- Shell configuration data (config.vhd)
          when x"0002" =>
-            qnice_ramrom_data_i <= qnice_config_data;
+            qnice_ramrom_data_i  <= qnice_config_data;
 
          ----------------------------------------------------------------------------
          -- Commodore 64 specific devices
@@ -448,8 +460,14 @@ begin
          
          -- C64 RAM                           
          when x"0100" =>
-            qnice_c64_ram_we <= qnice_ramrom_we;
-            qnice_ramrom_data_i <= x"00" & qnice_c64_ram_data_o; 
+            qnice_c64_ram_we     <= qnice_ramrom_we;
+            qnice_ramrom_data_i  <= x"00" & qnice_c64_ram_data_o; 
+                         
+         -- C64 IEC drives
+         when x"0101" =>
+            qnice_c64_qnice_ce   <= qnice_ramrom_ce;
+            qnice_c64_qnice_we   <= qnice_ramrom_we; 
+            qnice_ramrom_data_i  <= qnice_c64_qnice_data_o;                        
                          
          when others => null;            
       end case;

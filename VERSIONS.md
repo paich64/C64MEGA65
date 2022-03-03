@@ -8,7 +8,8 @@ already a pretty cool proof-of-concept.
 
 ## TODOs before release of alpha
 * Do all "WIP"
-* Debounce the joystick (add to MiSTer2MEGA65 from gbc4mega65)
+* Debounce the joystick and the MEGA65's reset button
+  (add to MiSTer2MEGA65 from gbc4mega65)
 * Line 62 in fdc1772.v: back to 2 or work with generic?
 * Decide: Can we remove the code for C1581? Remember, that buffers that
   are filled via the SD card (e.g. fdc1772 in c1581_drv.sv) need dual-clock

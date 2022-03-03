@@ -42,7 +42,144 @@
 ;                ; instead of the shell
 ;START_FIRMWARE  RBRA    START_SHELL, 1
 
-START_FIRMWARE  MOVE    STR_TITLE, R8           ; output welcome message
+C64_RAM         .EQU    0x0100  ; RAM of the Commodore 64
+C64_IEC         .EQU    0x0101  ; IEC bridge
+C64_MOUNTBUF    .EQU    0x0102  ; 256kB buffer to hold mounted disks
+
+C64_IEC_WIN_CAD .EQU    0x0000  ; control and data registers
+C64_IEC_WIN_DRV .EQU    0x0001  ; drive 0, next window = drive 1, ...
+
+C64_IEC_MOUNT   .EQU    0x7000  ; image mounted, lowest bit = drive 0
+C64_IEC_RO      .EQU    0x7001  ; read-only for currently mounted drive
+C64_IEC_SIZE_L  .EQU    0x7002  ; image file size, low word
+C64_IEC_SIZE_H  .EQU    0x7003  ; image file size, high word
+C64_IEC_B_ADDR  .EQU    0x7004  ; drive buffer: address
+C64_IEC_B_DOUT  .EQU    0x7005  ; drive buffer: data out (to drive)
+C64_IEC_B_WREN  .EQU    0x7006  ; drive buffer: write enable (also needs ack)
+C64_IEC_VDNUM   .EQU    0x7007  ; number of virtual drives
+C64_IEC_BLKSZ   .EQU    0x7008  ; block size for LBA in bytes
+
+C64_IEC_LBA_L   .EQU    0x7000  ; SD LBA low word
+C64_IEC_LBA_H   .EQU    0x7001  ; SD LBA high word
+C64_IEC_BLKCNT  .EQU    0x7002  ; SD block count
+C64_IEC_BYTES_L .EQU    0x7003  ; SD block address in bytes: low word
+C64_IEC_BYTES_H .EQU    0x7004  ; SD block address in bytes: high word
+C64_IEC_SIZEB   .EQU    0x7005  ; SD block data amount in bytes
+C64_IEC_RD      .EQU    0x7006  ; SD read request
+C64_IEC_WR      .EQU    0x7007  ; SD write request
+C64_IEC_ACK     .EQU    0x7008  ; SD acknowledge
+C64_IEC_B_DIN   .EQU    0x7009  ; drive buffer: data in (from drive)
+
+; We currently only support D64 images that are exactly 174.848 bytes in
+; size, which is the standard format. 174848 decimal = 0x0002AB00 hex
+D64_STDSIZE_L   .EQU    0xAB00
+D64_STDSIZE_H   .EQU    0x0002
+
+START_FIRMWARE  MOVE    STR_START, R8
+                SYSCALL(puts, 1)
+
+                MOVE    20, R0
+_WAIT           RSUB    WAIT1SEC, 1
+                SUB     1, R0
+                RBRA    _WAIT, !Z
+
+                MOVE    M2M$RAMROM_DEV, R8
+                MOVE    C64_IEC, @R8
+
+                ; output basic system data
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    C64_IEC_WIN_CAD, @R8
+                MOVE    STR_DRIVES, R8
+                SYSCALL(puts, 1)
+                MOVE    C64_IEC_VDNUM, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    STR_BLKSZ, R8
+                SYSCALL(puts, 1)
+                MOVE    C64_IEC_BLKSZ, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                ; check for sd_rd_i for drive 0 to be 0
+                MOVE    STR_RD_0, R8
+                SYSCALL(puts, 1)
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    C64_IEC_WIN_DRV, @R8
+                MOVE    C64_IEC_RD, R8
+                CMP     0, @R8
+                RBRA    _RD_0_OK, Z
+                MOVE    STR_ERROR, R8
+                SYSCALL(puts, 1)
+                SYSCALL(exit, 1)
+
+_RD_0_OK        MOVE    STR_OK, R8
+                SYSCALL(puts, 1)
+
+                ; trigger mount signal
+                MOVE    STR_MOUNT, R8
+                SYSCALL(puts, 1)
+
+                MOVE    M2M$RAMROM_4KWIN, R8    ; control and data registers
+                MOVE    C64_IEC_WIN_CAD, @R8
+
+                MOVE    C64_IEC_RO, R8          ; set readonly
+                MOVE    1, @R8
+
+                MOVE    C64_IEC_SIZE_L, R8      ; set D64 size to standard
+                MOVE    D64_STDSIZE_L, @R8
+                MOVE    C64_IEC_SIZE_H, R8
+                MOVE    D64_STDSIZE_H, @R8
+
+                MOVE    C64_IEC_MOUNT, R8       ; signal mount
+                MOVE    1, @R8
+                MOVE    0, @R8
+
+                MOVE    C64_IEC_RO, R8          ; readonly and size back to 0
+                MOVE    0, @R8
+                MOVE    C64_IEC_SIZE_L, R8
+                MOVE    0, @R8
+                MOVE    C64_IEC_SIZE_H, R8
+                MOVE    0, @R8  
+
+                MOVE    STR_OK, R8
+                SYSCALL(puts, 1)
+
+                ; check for sd_rd_i for drive 0 to be 1
+                MOVE    STR_RD_1, R8
+                SYSCALL(puts, 1)
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    C64_IEC_WIN_DRV, @R8
+                MOVE    C64_IEC_RD, R8
+                CMP     1, @R8
+                RBRA    _RD_1_OK, Z
+                MOVE    STR_ERROR, R8
+                SYSCALL(puts, 1)
+                SYSCALL(exit, 1)
+
+_RD_1_OK        MOVE    STR_OK, R8
+                SYSCALL(puts, 1)
+
+                SYSCALL(exit, 1)
+
+STR_START       .ASCII_P "                                                  "
+                .ASCII_W "\nC64 for MEGA65: IEC development testbed\n"
+STR_DRIVES      .ASCII_W "Number of drives: "
+STR_BLKSZ       .ASCII_W "LBA block size: "
+STR_OK          .ASCII_W "OK\n"
+STR_ERROR       .ASCII_W "ERROR\n"
+STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
+STR_RD_1        .ASCII_W "Checking for sd_rd_i for drive 0 to be 1: "
+STR_MOUNT       .ASCII_W "Triggering mount signal... "
+
+STR_D64         .ASCII_W "sidtest.d64"
+
+; ----------------------------------------------------------------------------
+; PRG LOADER
+; ----------------------------------------------------------------------------
+
+                MOVE    STR_TITLE, R8           ; output welcome message
                 SYSCALL(puts, 1)
 
 #ifdef RELEASE
@@ -108,7 +245,7 @@ FOPEN_OK        MOVE    HANDLE_FILE, R8
 
                 ; Load file
                 MOVE    M2M$RAMROM_DEV, R8      ; map C64 RAM to 0x7000
-                MOVE    0x0100, @R8             ; 0x0100 = C64 RAM device hdl
+                MOVE    C64_RAM, @R8            ; C64 RAM device handle
 FREAD_NEXTWIN   MOVE    M2M$RAMROM_4KWIN, R8    ; set 4k window
                 MOVE    R1, @R8
 
@@ -158,7 +295,8 @@ _W1S_L2         SUB     1, R1
 ; Strings
 ; ----------------------------------------------------------------------------
 
-STR_TITLE       .ASCII_W "\nC64 for MEGA65 PRG file loader\n"
+STR_TITLE       .ASCII_P "                                                   "
+                .ASCII_W "\nC64 for MEGA65 PRG file loader\n"
 STR_FINPUT      .ASCII_W "Enter PRG filename: "
 STR_STARTADDR   .ASCII_W "Start address of PRG: "
 STR_LOAD_OK     .ASCII_W "OK: Loading successful."
