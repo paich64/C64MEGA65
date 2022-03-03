@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
--- Commodore 64 for MEGA65  
+-- Commodore 64 for MEGA65
 --
 -- MEGA65 main file that contains the whole machine
 --
@@ -85,7 +85,7 @@ constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 --constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
 -- PAL 720x576 @ 50 Hz resolution
-constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;  
+constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;
 
 -- Clock speeds
 constant CORE_CLK_SPEED       : natural := 31_528_000;   -- C64 main clock @ 31.528 MHz
@@ -140,7 +140,7 @@ signal pixel_rst              : std_logic;
 ---------------------------------------------------------------------------------------------
 
 -- QNICE control and status register
-signal main_qnice_reset       : std_logic;  
+signal main_qnice_reset       : std_logic;
 signal main_qnice_pause       : std_logic;
 
 -- keyboard handling
@@ -151,7 +151,7 @@ signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
 signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data out
-signal main_ram_we            : std_logic;                     -- C64 RAM write enable      
+signal main_ram_we            : std_logic;                     -- C64 RAM write enable
 signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data in
 
 -- SID Audio
@@ -191,7 +191,7 @@ signal qnice_vram_attr_we     : std_logic;
 signal qnice_vram_attr_data_o : std_logic_vector(7 downto 0);
 
 -- Shell configuration (config.vhd)
-signal qnice_config_data      : std_logic_vector(15 downto 0); 
+signal qnice_config_data      : std_logic_vector(15 downto 0);
 
 -- C64 RAM
 signal qnice_c64_ram_we       : std_logic;
@@ -230,21 +230,21 @@ begin
       port map (
          sys_clk_i    => CLK,             -- expects 100 MHz
          sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
-         
+
          video_clk_o  => clk_video,       -- video's 63.056 MHz clock
          video_rst_o  => open,            -- video's reset, synchronized
-         
+
          qnice_clk_o  => clk_qnice,       -- QNICE's 50 MHz main clock
          qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
-         
+
          main_clk_o   => clk_main,        -- main's 31.528 MHz clock
          main_rst_o   => main_rst,        -- main's reset, synchronized
 
          pixel_clk_o  => clk_pixel_1x,    -- VGA 27 MHz pixelclock for PAL @ 50 Hz
          pixel_rst_o  => pixel_rst,       -- VGA's reset, synchronized
-         pixel_clk5_o => clk_pixel_5x     -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI         
+         pixel_clk5_o => clk_pixel_5x     -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
       );
-   
+
    ---------------------------------------------------------------------------------------------
    -- clk_main (C64 MiSTer Core clock)
    ---------------------------------------------------------------------------------------------
@@ -252,16 +252,16 @@ begin
    -- main.vhd contains the actual Commodore 64 MiSTer core
    i_main : entity work.main
       generic map (
-         G_CORE_CLK_SPEED     => CORE_CLK_SPEED,   
+         G_CORE_CLK_SPEED     => CORE_CLK_SPEED,
          G_OUTPUT_DX          => VGA_DX,
-         G_OUTPUT_DY          => VGA_DY         
+         G_OUTPUT_DY          => VGA_DY
       )
       port map (
          clk_main_i           => clk_main,
          clk_video_i          => clk_video,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
-                 
+
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
          kb_key_pressed_n_i   => main_key_pressed_n,
@@ -272,12 +272,12 @@ begin
          joy_1_left_n         => joy_1_left_n,
          joy_1_right_n        => joy_1_right_n,
          joy_1_fire_n         => joy_1_fire_n,
-   
+
          joy_2_up_n           => joy_2_up_n,
          joy_2_down_n         => joy_2_down_n,
          joy_2_left_n         => joy_2_left_n,
          joy_2_right_n        => joy_2_right_n,
-         joy_2_fire_n         => joy_2_fire_n,         
+         joy_2_fire_n         => joy_2_fire_n,
 
          -- C64 video out (after scandoubler)
          VGA_R                => VGA_RED,
@@ -285,14 +285,14 @@ begin
          VGA_B                => VGA_BLUE,
          VGA_VS               => VGA_VS,
          VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de,         
-            
+         VGA_DE               => vga_de,
+
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
-         sid_r                => main_sid_r,                     
-            
+         sid_r                => main_sid_r,
+
          -- C64 RAM
-         c64_ram_addr_o       => main_ram_addr,  
+         c64_ram_addr_o       => main_ram_addr,
          c64_ram_data_o       => main_ram_data_from_c64,
          c64_ram_we_o         => main_ram_we,
          c64_ram_data_i       => unsigned(main_ram_data_to_c64),
@@ -310,7 +310,7 @@ begin
    vdac_sync_n    <= '0';
    vdac_blank_n   <= '1';
    vdac_clk       <= not clk_video;
-      
+
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
       generic map (
@@ -318,35 +318,35 @@ begin
       )
       port map (
          clk_main_i           => clk_main,
-             
-         -- interface to the MEGA65 keyboard controller       
+
+         -- interface to the MEGA65 keyboard controller
          kio8_o               => kb_io0,
          kio9_o               => kb_io1,
          kio10_i              => kb_io2,
-         
+
          -- interface to the core
          key_num_o            => main_key_num,
          key_pressed_n_o      => main_key_pressed_n,
-               
+
          -- interface to QNICE: used by the firmware and the Shell
-         qnice_keys_n_o       => main_qnice_keys_n          
-      );
-      
+         qnice_keys_n_o       => main_qnice_keys_n
+      ); -- i_m2m_keyb
+
    -- Convert the C64's PCM output to pulse density modulation
    i_pcm2pdm : entity work.pcm_to_pdm
       port map
       (
          cpuclock                => clk_main,
-         
+
          pcm_left                => main_sid_l,
          pcm_right               => main_sid_r,
-         
+
          -- Pulse Density Modulation (PDM is supposed to sound better than PWM on MEGA65)
          pdm_left                => pwm_l,
          pdm_right               => pwm_r,
          audio_mode              => '0'         -- 0=PDM, 1=PWM
-      );
-      
+      ); -- i_pcm2pdm
+
    ---------------------------------------------------------------------------------------------
    -- clk_qnice
    ---------------------------------------------------------------------------------------------
@@ -371,9 +371,9 @@ begin
       port map (
          clk50_i                 => clk_qnice,
          reset_n_i               => not qnice_rst,
-      
+
          -- serial communication (rxd, txd only; rts/cts are not available)
-         -- 115.200 baud, 8-N-1      
+         -- 115.200 baud, 8-N-1
          uart_rxd_i              => UART_RXD,
          uart_txd_o              => UART_TXD,
 
@@ -382,7 +382,7 @@ begin
          sd_clk_o                => SD_CLK,
          sd_mosi_o               => SD_MOSI,
          sd_miso_i               => SD_MISO,
-      
+
          -- QNICE public registers
          csr_reset_o             => qnice_csr_reset,
          csr_pause_o             => qnice_csr_pause,
@@ -392,10 +392,10 @@ begin
          csr_joy2_o              => open,
          osm_xy_o                => qnice_osm_cfg_xy,
          osm_dxdy_o              => qnice_osm_cfg_dxdy,
-         
+
          -- Keyboard input for the firmware and Shell (see sysdef.asm)
          keys_n_i                => qnice_qnice_keys_n,
-                  
+
          -- 256-bit General purpose control flags
          -- "d" = directly controled by the firmware
          -- "m" = indirectly controled by the menu system
@@ -410,19 +410,19 @@ begin
          ramrom_data_o           => qnice_ramrom_data_o,
          ramrom_data_i           => qnice_ramrom_data_i,
          ramrom_ce_o             => qnice_ramrom_ce,
-         ramrom_we_o             => qnice_ramrom_we         
+         ramrom_we_o             => qnice_ramrom_we
       );
-      
+
    shell_cfg : entity work.config
       port map (
          -- bits 27 .. 12:    select configuration data block; called "Selector" hereafter
          -- bits 11 downto 0: address the up to 4k the configuration data
          address_i               => qnice_ramrom_addr,
-         
+
          -- config data
-         data_o                  => qnice_config_data         
+         data_o                  => qnice_config_data
       );
-      
+
    -- The device selector qnice_ramrom_dev decides, which RAM/ROM-like device QNICE is writing to.
    -- Device numbers < 256 are reserved for QNICE; everything else can be used by your MiSTer core.
    qnice_ramrom_devices : process(all)
@@ -442,7 +442,7 @@ begin
          -- MiSTer2MEGA65 reserved devices
          -- OSM VRAM data and attributes with device numbers < 0x0100
          -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
-         ----------------------------------------------------------------------------         
+         ----------------------------------------------------------------------------
          when x"0000" =>
             qnice_vram_we        <= qnice_ramrom_we;
             qnice_ramrom_data_i  <= x"00" & qnice_vram_data_o;
@@ -457,8 +457,8 @@ begin
          ----------------------------------------------------------------------------
          -- Commodore 64 specific devices
          ----------------------------------------------------------------------------
-         
-         -- C64 RAM                           
+
+         -- C64 RAM
          when x"0100" =>
             qnice_c64_ram_we     <= qnice_ramrom_we;
             qnice_ramrom_data_i  <= x"00" & qnice_c64_ram_data_o; 
@@ -472,7 +472,7 @@ begin
          when others => null;            
       end case;
    end process;
-      
+
    ---------------------------------------------------------------------------------------------
    -- clk_pixel_1x (VGA pixelclock) and clk_pixel_5x (HDMI)
    ---------------------------------------------------------------------------------------------
@@ -647,7 +647,7 @@ begin
          dest_out(31 downto 16) => vga_osm_cfg_dxdy,
          dest_out(32)           => vga_osm_cfg_enable
       );
-      
+
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
    -- as well as QNICE can access it
    c64_ram : entity work.dualport_2clk_ram
@@ -664,7 +664,7 @@ begin
          data_a            => std_logic_vector(main_ram_data_from_c64),
          wren_a            => main_ram_we,
          q_a               => main_ram_data_to_c64,
-         
+
          -- QNICE
          clock_b           => clk_qnice,
          address_b         => qnice_ramrom_addr(15 downto 0),
@@ -672,7 +672,7 @@ begin
          wren_b            => qnice_c64_ram_we,
          q_b               => qnice_c64_ram_data_o
       );
-                     
+
    -- Dual port & dual clock screen RAM / video RAM: contains the "ASCII" codes of the characters
    osm_vram : entity work.dualport_2clk_ram
       generic map (
