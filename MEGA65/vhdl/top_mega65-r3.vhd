@@ -19,7 +19,7 @@ port (
    -- serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
    UART_RXD       : in  std_logic;                  -- receive data
-   UART_TXD       : out std_logic;                 -- send data
+   UART_TXD       : out std_logic;                  -- send data
 
    -- VGA and VDAC
    VGA_RED        : out std_logic_vector(7 downto 0);
@@ -41,7 +41,7 @@ port (
    -- MEGA65 smart keyboard controller
    kb_io0         : out std_logic;                 -- clock to keyboard
    kb_io1         : out std_logic;                 -- data output to keyboard
-   kb_io2         : in  std_logic;                  -- data input from keyboard
+   kb_io2         : in  std_logic;                 -- data input from keyboard
 
    -- SD Card
    SD_RESET       : out std_logic;
@@ -124,11 +124,19 @@ begin
          SD_CLK         => SD_CLK,
          SD_MOSI        => SD_MOSI,
          SD_MISO        => SD_MISO,
+<<<<<<< HEAD
          
          -- 3.5mm analog audio jack
          pwm_l          => pwm_l,
          pwm_r          => pwm_r,
             
+=======
+
+         -- 3.5mm analog audio jack
+         pwm_l          => pwm_l,
+         pwm_r          => pwm_r,
+
+>>>>>>> eac1fd95feb032f1b4b0527b82ecc5fa81f802d3
          -- Joysticks
          joy_1_up_n     => joy_1_up_n,
          joy_1_down_n   => joy_1_down_n,
