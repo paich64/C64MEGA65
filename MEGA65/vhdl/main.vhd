@@ -163,6 +163,7 @@ signal iec_sd_wr_o         : vd_std_array(VDNUM - 1 downto 0);
 signal iec_sd_ack_i        : vd_std_array(VDNUM - 1 downto 0);
 signal iec_sd_buf_addr_i   : std_logic_vector(13 downto 0);
 signal iec_sd_buf_data_i   : std_logic_vector(7 downto 0);
+signal iec_sd_buf_data_o   : vd_vec_array(VDNUM - 1 downto 0)(7 downto 0);
 signal iec_sd_buf_wr_i     : std_logic;
 signal iec_par_stb_i       : std_logic;
 signal iec_par_stb_o       : std_logic;
@@ -496,7 +497,7 @@ begin
          sd_ack         => iec_sd_ack_i,
          sd_buff_addr   => iec_sd_buf_addr_i,
          sd_buff_dout   => iec_sd_buf_data_i,   -- data from SD card to the buffer RAM within the drive ("dout" is a strange name)
-         sd_buff_din    => open,                -- possibility to read the buffer RAM within the drive
+         sd_buff_din    => iec_sd_buf_data_o,   -- read the buffer RAM within the drive
          sd_buff_wr     => iec_sd_buf_wr_i,
                  
          -- drive led
@@ -563,7 +564,7 @@ begin
          -- to determine, which RAM buffer actually needs to be written to (using the clk_qnice_i clock domain)
          sd_buff_addr_o       => iec_sd_buf_addr_i,
          sd_buff_dout_o       => iec_sd_buf_data_i,
-         sd_buff_din_i        => (others => (others => '0')),
+         sd_buff_din_i        => iec_sd_buf_data_o,
          sd_buff_wr_o         => iec_sd_buf_wr_i,
 
          -- QNICE interface (MMIO, 4k-segmented)

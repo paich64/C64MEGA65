@@ -12,7 +12,7 @@
 --
 -- QNICE memory map:
 --
--- Window 0x0000:
+-- Window 0x0000: Control and data registers
 --    0x0000   img_mounted_o (drive 0 = lowest bit of std_logic_vector)
 --    0x0001   img_readonly_o
 --    0x0002   img_size_o: low word
@@ -30,10 +30,12 @@
 --    0x0003   sd_lba_i in bytes: low word
 --    0x0004   sd_lba_i in bytes: high word
 --    0x0005   (sd_blk_cnt_i + 1) in bytes 
---    0x0006   sd_rd_i
---    0x0007   sd_wr_i
---    0x0008   sd_ack_o
---    0x0009   sd_buff_din_i
+--    0x0006   sd_lba_i in 4k window logic: number of 4k window
+--    0x0007   sd_lba_i in 4k window logic: offset within the window
+--    0x0008   sd_rd_i
+--    0x0009   sd_wr_i
+--    0x000A   sd_ack_o
+--    0x000B   sd_buff_din_i
 --
 --
 -- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
@@ -114,6 +116,9 @@ signal sd_lba           : vd_vec_array(VDNUM - 1 downto 0)(31 downto 0);
 signal sd_blk_cnt       : vd_vec_array(VDNUM - 1 downto 0)(5 downto 0);
 signal sd_lba_bytes     : vd_vec_array(VDNUM - 1 downto 0)(63 downto 0);
 signal sd_blk_cnt_bytes : vd_vec_array(VDNUM - 1 downto 0)(31 downto 0);
+signal sd_lba_4k_win    : vd_vec_array(VDNUM - 1 downto 0)(15 downto 0);
+signal sd_lba_4k_offs   : vd_vec_array(VDNUM - 1 downto 0)(11 downto 0);
+signal sd_ack           : vd_std_array(VDNUM - 1 downto 0);
 
 signal sd_buff_addr     : std_logic_vector(AW downto 0);
 signal sd_buff_dout     : std_logic_vector(DW downto 0);
@@ -139,13 +144,18 @@ begin
    sd_buff_addr_o    <= sd_buff_addr;
    sd_buff_dout_o    <= sd_buff_dout;
    sd_buff_wr_o      <= sd_buff_wr;
+   sd_ack_o          <= sd_ack;
    
-   -- calculate lba and block count in bytes by shifting to the left
    g_bytecalc : for i in 0 to VDNUM - 1 generate
+      -- calculate lba and block count in bytes by shifting to the left
       sd_lba_bytes(i)((31 + 7 + BLKSZ) downto (7 + BLKSZ))     <= sd_lba(0);
       sd_lba_bytes(i)((7 + BLKSZ - 1) downto 0)                <= (others => '0');
       sd_blk_cnt_bytes(i)((5 + 7 + BLKSZ) downto (7 + BLKSZ))  <= sd_blk_cnt(0);
       sd_blk_cnt_bytes(i)((7 + BLKSZ - 1) downto 0)            <= (others => '0');
+      
+      -- calculate the QNICE RAMROM logic 4k window and the offset within the window by selecting the right bits
+      sd_lba_4k_win(i)  <= sd_lba_bytes(i)(27 downto 12);      
+      sd_lba_4k_offs(i) <= sd_lba_bytes(i)(11 downto 0);      
    end generate g_bytecalc;
 
    i_cdc_main2qnice: xpm_cdc_array_single
@@ -197,9 +207,10 @@ begin
             sd_rd_trig_del <= (others => '0');
             sd_lba <= (others => (others => '0'));
             sd_blk_cnt <= (others => (others => '0'));
+            sd_ack <= (others => '0');
             
          -- reading sd_rd is triggering a reset of the sd_rd flag
-         elsif qnice_ce_i = '1' and qnice_we_i = '0' and qnice_addr_i(27 downto 12) > x"0000" and qnice_addr_i(11 downto 0) = x"006" then
+         elsif qnice_ce_i = '1' and qnice_we_i = '0' and qnice_addr_i(27 downto 12) > x"0000" and qnice_addr_i(11 downto 0) = x"008" then
             for i in 0 to VDNUM - 1 loop
                if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
                   sd_rd_trig_del(i) <= '1';
@@ -214,8 +225,9 @@ begin
                end if;
             end loop;
          
-            -- Address window 0x0000: QNICE registers written by QNICE         
-            if qnice_we_i = '1' then            
+            -- QNICE registers written by QNICE
+            if qnice_we_i = '1' then
+               -- Window 0x0000: Control and data registers              
                if qnice_addr_i(27 downto 4) = x"000000" then
                   case qnice_addr_i(3 downto 0) is
                      -- img_mounted_o (drive 0 = lowest bit of std_logic_vector)
@@ -253,7 +265,18 @@ begin
                                                
                      when others =>
                         null;
-                  end case;                  
+                  end case;
+                                    
+               -- Window 0x0001 and onwards: window 1 = drive 0, window 2 = drive 1, ...         
+               elsif qnice_addr_i(27 downto 12) > x"0000" and qnice_addr_i(11 downto 4) = x"00" then
+                  -- sd_ack_o
+                  if qnice_addr_i(3 downto 0) = x"A" then
+                     for i in 0 to VDNUM - 1 loop
+                        if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                           sd_ack(i) <= qnice_data_i(0);
+                        end if;                  
+                     end loop;                                 
+                  end if;
                end if;
             end if;
             
@@ -368,15 +391,51 @@ begin
                      qnice_data_o <= sd_blk_cnt_bytes(i)(15 downto 0);
                   end if;                  
                end loop;
-         
-            -- sd_rd_i            
+            
+            -- sd_lba_i in 4k window logic: number of 4k window
             when x"6" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o <= sd_lba_4k_win(i);
+                  end if;                  
+               end loop;
+               
+            -- sd_lba_i in 4k window logic: offset within the window
+            when x"7" =>   
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(11 downto 0) <= sd_lba_4k_offs(i);
+                  end if;                  
+               end loop;
+               
+            -- sd_rd_i            
+            when x"8" =>
                for i in 0 to VDNUM - 1 loop
                   if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
                      qnice_data_o(0) <= sd_rd(i);
                   end if;
                end loop;
                
+            -- sd_wr_i
+            when x"9" =>
+               null;
+            
+            -- sd_ack_o
+            when x"A" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= sd_ack(i);
+                  end if;                  
+               end loop;                                 
+               
+            -- sd_buff_din_i: since we are reading from a RAM: no need to buffer the value in another register
+            when x"B" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(DW downto 0) <= sd_buff_din_i(i);
+                  end if;                  
+               end loop;                                        
+                        
             when others =>
                null;
          end case;

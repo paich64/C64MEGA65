@@ -193,10 +193,13 @@ signal qnice_vram_attr_data_o : std_logic_vector(7 downto 0);
 -- Shell configuration (config.vhd)
 signal qnice_config_data      : std_logic_vector(15 downto 0);
 
--- C64 RAM
-signal qnice_c64_ram_we       : std_logic;
-signal qnice_c64_ram_data_o   : std_logic_vector(7 downto 0);
+-- RAMs for the C64
+signal qnice_c64_ram_data_o            : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
+signal qnice_c64_ram_we                : std_logic;                        
+signal qnice_c64_mount_buf_ram_data_o  : std_logic_vector(7 downto 0);  -- Disk mount buffer
+signal qnice_c64_mount_buf_ram_we      : std_logic;
 
+-- QNICE signals passed down to main.vhd to handle IEC drives using vdrives.vhd
 signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
@@ -433,9 +436,10 @@ begin
       qnice_vram_attr_we   <= '0';
       qnice_ramrom_data_i  <= x"EEEE";
       -- C64 specific
-      qnice_c64_ram_we     <= '0';
-      qnice_c64_qnice_ce   <= '0';
-      qnice_c64_qnice_we   <= '0';
+      qnice_c64_ram_we           <= '0';
+      qnice_c64_qnice_ce         <= '0';
+      qnice_c64_qnice_we         <= '0';
+      qnice_c64_mount_buf_ram_we <= '0';
       
       case qnice_ramrom_dev is
          ----------------------------------------------------------------------------
@@ -444,15 +448,15 @@ begin
          -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
          ----------------------------------------------------------------------------
          when x"0000" =>
-            qnice_vram_we        <= qnice_ramrom_we;
-            qnice_ramrom_data_i  <= x"00" & qnice_vram_data_o;
+            qnice_vram_we              <= qnice_ramrom_we;
+            qnice_ramrom_data_i        <= x"00" & qnice_vram_data_o;
          when x"0001" =>
-            qnice_vram_attr_we   <= qnice_ramrom_we;
-            qnice_ramrom_data_i  <= x"00" & qnice_vram_attr_data_o;
+            qnice_vram_attr_we         <= qnice_ramrom_we;
+            qnice_ramrom_data_i        <= x"00" & qnice_vram_attr_data_o;
             
          -- Shell configuration data (config.vhd)
          when x"0002" =>
-            qnice_ramrom_data_i  <= qnice_config_data;
+            qnice_ramrom_data_i        <= qnice_config_data;
 
          ----------------------------------------------------------------------------
          -- Commodore 64 specific devices
@@ -460,14 +464,19 @@ begin
 
          -- C64 RAM
          when x"0100" =>
-            qnice_c64_ram_we     <= qnice_ramrom_we;
-            qnice_ramrom_data_i  <= x"00" & qnice_c64_ram_data_o; 
+            qnice_c64_ram_we           <= qnice_ramrom_we;
+            qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data_o; 
                          
          -- C64 IEC drives
          when x"0101" =>
-            qnice_c64_qnice_ce   <= qnice_ramrom_ce;
-            qnice_c64_qnice_we   <= qnice_ramrom_we; 
-            qnice_ramrom_data_i  <= qnice_c64_qnice_data_o;                        
+            qnice_c64_qnice_ce         <= qnice_ramrom_ce;
+            qnice_c64_qnice_we         <= qnice_ramrom_we; 
+            qnice_ramrom_data_i        <= qnice_c64_qnice_data_o;
+            
+         -- Disk mount buffer RAM
+         when x"0102" =>
+            qnice_c64_mount_buf_ram_we <= qnice_ramrom_we;
+            qnice_ramrom_data_i        <= x"00" & qnice_c64_mount_buf_ram_data_o; 
                          
          when others => null;            
       end case;
@@ -671,6 +680,25 @@ begin
          data_b            => qnice_ramrom_data_o(7 downto 0),
          wren_b            => qnice_c64_ram_we,
          q_b               => qnice_c64_ram_data_o
+      );
+      
+   -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
+   -- the disks that we are mounting. This will work for D64 only.
+   -- @TODO: Switch to HyperRAM at a later stage
+   mount_buf_ram : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH        => 18,
+         DATA_WIDTH        => 8,
+         MAXIMUM_SIZE      => 174848,        -- size of standard D64
+         FALLING_A         => true
+      )
+      port map (
+         -- QNICE only
+         clock_a           => clk_qnice,
+         address_a         => qnice_ramrom_addr(17 downto 0),
+         data_a            => qnice_ramrom_data_o(7 downto 0),
+         wren_a            => qnice_c64_mount_buf_ram_we,
+         q_a               => qnice_c64_mount_buf_ram_data_o
       );
 
    -- Dual port & dual clock screen RAM / video RAM: contains the "ASCII" codes of the characters
