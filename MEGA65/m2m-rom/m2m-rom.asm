@@ -161,6 +161,38 @@ _RD_0_OK        MOVE    STR_OK, R8
 _RD_1_OK        MOVE    STR_OK, R8
                 SYSCALL(puts, 1)
 
+                ; read lba, to-be-read blocks, addr in bytes and size in bytes
+                MOVE    STR_LBA, R8
+                SYSCALL(puts, 1)
+                MOVE    C64_IEC_LBA_H, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                MOVE    C64_IEC_LBA_L, R8
+                MOVE    @R8 R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    STR_BLOCKS, R8
+                SYSCALL(puts, 1)
+                MOVE    C64_IEC_BLKCNT, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    STR_B_ADDR, R8
+                SYSCALL(puts, 1)
+                MOVE    C64_IEC_BYTES_H, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                MOVE    C64_IEC_BYTES_L, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    STR_B_SIZE, R8
+                SYSCALL(puts, 1)
+                MOVE    C64_IEC_SIZEB, R8
+                MOVE    @R8, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
                 SYSCALL(exit, 1)
 
 STR_START       .ASCII_P "                                                  "
@@ -172,6 +204,10 @@ STR_ERROR       .ASCII_W "ERROR\n"
 STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
 STR_RD_1        .ASCII_W "Checking for sd_rd_i for drive 0 to be 1: "
 STR_MOUNT       .ASCII_W "Triggering mount signal... "
+STR_LBA         .ASCII_W "LBA: "
+STR_BLOCKS      .ASCII_W "Blocks: "
+STR_B_ADDR      .ASCII_W "Address (bytes): "
+STR_B_SIZE      .ASCII_W "Size (bytes): "
 
 STR_D64         .ASCII_W "sidtest.d64"
 

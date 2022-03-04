@@ -64,13 +64,8 @@ set_property -dict {PACKAGE_PIN C15 IOSTANDARD LVCMOS33} [get_ports joy_2_right_
 set_property -dict {PACKAGE_PIN F15 IOSTANDARD LVCMOS33} [get_ports joy_2_fire_n]
 
 ## PWM Audio
-<<<<<<< HEAD:MEGA65/C64MEGA65-R3.xdc
-set_property -dict {PACKAGE_PIN L6 IOSTANDARD LVCMOS33} [get_ports pwm_l]
-set_property -dict {PACKAGE_PIN F4 IOSTANDARD LVCMOS33} [get_ports pwm_r]
-=======
 set_property -dict {PACKAGE_PIN L6  IOSTANDARD LVCMOS33} [get_ports pwm_l]
 set_property -dict {PACKAGE_PIN F4  IOSTANDARD LVCMOS33} [get_ports pwm_r]
->>>>>>> 3d26d83281ec395470108351e7bf8a0b195872d4:MEGA65/MEGA65-R3.xdc
 
 ## VGA via VDAC
 set_property -dict {PACKAGE_PIN U15  IOSTANDARD LVCMOS33} [get_ports {VGA_RED[0]}]
