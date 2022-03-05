@@ -35,10 +35,10 @@ set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_
 set_false_path -from [get_pins -hier id1_reg[*]/C]
 set_false_path -from [get_pins -hier id2_reg[*]/C]
 set_false_path -from [get_pins -hier busy_reg/C]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[0].c1541_drv/c1541_track/reset_sync/s1_reg[*]/D]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[0].c1541_drv/c1541_track/change_sync/s1_reg[*]/D]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[0].c1541_drv/c1541_track/save_sync/s1_reg[*]/D]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[0].c1541_drv/c1541_track/track_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/reset_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/change_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/save_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/track_sync/s1_reg[*]/D]
 
 ## Reset button
 set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports RESET_N]
