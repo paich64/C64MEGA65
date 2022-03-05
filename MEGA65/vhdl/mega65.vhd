@@ -527,8 +527,8 @@ begin
          vs_pol       => VIDEO_MODE.V_POL,            -- horizontal polarity: negative
          hs_pol       => VIDEO_MODE.H_POL,            -- vertaical polarity: negative
 
-         vga_rst      => pixel_rst,                   -- active high reset
-         vga_clk      => clk_pixel_1x,                -- VGA pixel clock
+         vga_rst      => '0', -- pixel_rst,                   -- active high reset
+         vga_clk      => '0', -- clk_pixel_1x,                -- VGA pixel clock
          vga_vs       => '0', --vga_vs,
          vga_hs       => '0', --vga_hs,
          vga_de       => '0', --vga_de,
@@ -547,7 +547,7 @@ begin
          pcm_cts      => (others => '0'),
 
          -- TMDS output (parallel)
-         tmds         => vga_tmds
+         tmds         => open -- vga_tmds
       ); -- i_vga_to_hdmi: entity work.vga_to_hdmi
 
    -- serialiser: in this design we use TMDS SelectIO outputs
@@ -555,9 +555,9 @@ begin
    begin
       HDMI_DATA: entity work.serialiser_10to1_selectio
       port map (
-         rst     => pixel_rst,
-         clk     => clk_pixel_1x,
-         clk_x5  => clk_pixel_5x,
+         rst     => '0', -- pixel_rst,
+         clk     => '0', -- clk_pixel_1x,
+         clk_x5  => '0', -- clk_pixel_5x,
          d       => vga_tmds(i),
          out_p   => TMDS_data_p(i),
          out_n   => TMDS_data_n(i)
