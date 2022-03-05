@@ -99,7 +99,8 @@ architecture synthesis of main is
    end component video_mixer;
 
 -- amount of virtual drives
--- CAUTION: i_iec_drive's reset needs to be adjusted manually, if you change this
+-- CAUTION: 1. i_iec_drive's reset needs to be adjusted manually, if you change this
+--          2. you need to create copies of the "drives[0]" constraints in the .xdc file for each drive
 constant VDNUM : natural := 1;
 
 -- MiSTer C64 signals
