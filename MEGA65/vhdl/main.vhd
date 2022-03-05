@@ -174,10 +174,6 @@ signal iec_rom_addr_i      : std_logic_vector(15 downto 0);
 signal iec_rom_data_i      : std_logic_vector(7 downto 0);
 signal iec_rom_wr_i        : std_logic;
 
-attribute MARK_DEBUG : string;
-attribute MARK_DEBUG of iec_drive_mounted : signal is "TRUE";
-attribute MARK_DEBUG of iec_sd_rd_o : signal is "TRUE";
-
 begin
    -- for now, we hardcode PAL, NTSC will follow later
    c64_ntsc <= '0';

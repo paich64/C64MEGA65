@@ -221,9 +221,10 @@ _RD_0_OK        MOVE    STR_OK, R8
                 MOVE    C64_IEC_SIZE_H, R8
                 MOVE    D64_STDSIZE_H, @R8
 
-                MOVE    C64_IEC_MOUNT, R8       ; signal mount
-                MOVE    1, @R8
-                MOVE    0, @R8
+                MOVE    C64_IEC_MOUNT, R8       ; signal mount for drive 0..
+                MOVE    1, @R8                  ; ..readonly and size are..
+                                                ; ..latched during the..
+                                                ; ..edge of the signal
 
                 MOVE    C64_IEC_RO, R8          ; readonly and size back to 0
                 MOVE    0, @R8
@@ -360,7 +361,7 @@ STR_ERR_D64     .ASCII_P "ERROR: For now, only standard D64 files with a "
                 .ASCII_W "size of exactly 174,848 bytes are supported.\n"
 STR_LOADING     .ASCII_W "Loading file: "
 STR_D64_LD_OK   .ASCII_W "Loading OK\n"
-STR_MOUNT       .ASCII_W "Triggering mount signal... "
+STR_MOUNT       .ASCII_W "Setting mount signal"
 STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
 STR_RD_1        .ASCII_W "Waiting for sd_rd_i to be 1: "
 STR_LBA         .ASCII_W "   LBA: "

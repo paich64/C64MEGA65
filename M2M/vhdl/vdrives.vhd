@@ -130,9 +130,6 @@ signal img_mounted_out  : std_logic_vector(VDNUM - 1 downto 0);
 signal img_readonly_out : std_logic;
 signal img_size_out     : std_logic_vector(31 downto 0);
 
-attribute MARK_DEBUG : string;
-attribute MARK_DEBUG of sd_rd : signal is "TRUE";
-
 begin
 
    -- core clock domain

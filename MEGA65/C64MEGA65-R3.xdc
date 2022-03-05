@@ -30,7 +30,15 @@ set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -setup 3
 set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -hold 2
-     
+   
+## CDC in IEC drives, handled manually in the source code
+set_false_path -from [get_cells -include_replicated {*/c1541_gcr/id1_reg[*]}]
+set_false_path -from [get_cells -include_replicated {*/c1541_gcr/id2_reg[*]}]
+set_false_path -from [get_cells -include_replicated {*/c1541_track/busy_reg[*]}]
+set_false_path -to   [get_cells -include_replicated {*/c1541_track/track_sync/s1_reg[*]}]
+set_false_path -to   [get_cells -include_replicated {*/c1541_track/save_sync/s1_reg[*]}]
+set_false_path -to   [get_cells -include_replicated {*/c1541_track/change_sync/s1_reg[*]}]
+
 ## Reset button
 set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports RESET_N]
 
