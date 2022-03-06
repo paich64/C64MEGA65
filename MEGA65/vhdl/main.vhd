@@ -99,7 +99,6 @@ architecture synthesis of main is
    end component video_mixer;
 
 -- amount of virtual drives
--- CAUTION: i_iec_drive's reset needs to be adjusted manually, if you change this
 constant VDNUM : natural := 1;
 
 -- MiSTer C64 signals
@@ -146,11 +145,15 @@ signal aro                 : std_logic_vector(15 downto 0);
 signal iec_led             : std_logic;
 signal iec_drive_ce        : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
 signal iec_dce_sum         : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
-signal iec_drive_8_type    : std_logic_vector(1 downto 0);     -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
-signal iec_drive_9_type    : std_logic_vector(1 downto 0);
-signal iec_drive_mounted   : std_logic_vector(VDNUM - 1 downto 0);
-signal iec_drive_readonly  : std_logic;
-signal iec_drive_imgsize   : std_logic_vector(31 downto 0);
+
+signal iec_img_mounted_i   : std_logic_vector(VDNUM - 1 downto 0);
+signal iec_img_readonly_i  : std_logic;
+signal iec_img_size_i      : std_logic_vector(31 downto 0);
+signal iec_img_type_i      : std_logic_vector(1 downto 0);
+
+signal iec_drives_reset    : std_logic_vector(VDNUM - 1 downto 0);
+signal vdrives_mounted_o   : std_logic_vector(VDNUM - 1 downto 0);
+
 signal c64_iec_clk_o       : std_logic;
 signal c64_iec_clk_i       : std_logic;
 signal c64_iec_atn_o       : std_logic;
@@ -446,8 +449,6 @@ begin
    -- MiSTer IEC drives
    --------------------------------------------------------------------------------------------------
 
-   iec_drive_8_type     <= "00";    -- @TODO: remove hardcoded value (00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81))
-
    -- Parallel C1541 port: not implemented, yet
    iec_par_stb_i        <= '0';
    iec_par_data_i       <= (others => '0');
@@ -458,6 +459,15 @@ begin
    iec_rom_data_i       <= (others => '0');
    iec_rom_wr_i         <= '0';
 
+   -- Drive is held to reset if the core is held to reset or if the drive is not mounted, yet
+   -- @TODO: MiSTer also allows these options when it comes to drive-enable:
+	--        "P2oPQ,Enable Drive #8,If Mounted,Always,Never;"
+	--        "P2oNO,Enable Drive #9,If Mounted,Always,Never;"
+	--        This code currently only implements the "If Mounted" option       
+   g_iec_drv_reset : for i in 0 to VDNUM - 1 generate
+      iec_drives_reset(i) <= reset_i or not vdrives_mounted_o(i);
+   end generate g_iec_drv_reset;
+      
    i_iec_drive : entity work.iec_drive
       generic map (
          PARPORT        => 0,                -- Parallel C1541 port for faster (~20x) loading time using DolphinDOS
@@ -467,7 +477,7 @@ begin
       port map (
          clk            => clk_main_i,
          ce             => iec_drive_ce,
-         reset          => reset_i or not iec_drive_mounted(0),
+         reset          => iec_drives_reset,
          pause          => pause_i,
 
          -- interface to the C64 core
@@ -478,10 +488,10 @@ begin
          iec_data_o     => c64_iec_data_i,
 
          -- disk image status
-         img_mounted    => iec_drive_mounted,
-         img_readonly   => iec_drive_readonly,
-         img_size       => iec_drive_imgsize,
-         img_type       => iec_drive_8_type,       -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
+         img_mounted    => iec_img_mounted_i,
+         img_readonly   => iec_img_readonly_i,
+         img_size       => iec_img_size_i,
+         img_type       => iec_img_type_i,         -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
 
          -- QNICE SD-Card/FAT32 interface
          clk_sys        => c64_clk_sd_i,           -- "SD card" clock for writing to the drives' internal data buffers
@@ -514,21 +524,31 @@ begin
          rom_wr         => iec_rom_wr_i
       );
 
+   -- 16 MHz chip enable for the IEC drives, so that ph2_r and ph2_f can be 1 MHz (C1541's CPU runs with 1 MHz)
    generate_drive_ce : process(clk_main_i)
-      variable msum : integer;   -- caution: we expect a 32-bit integer here
+      variable msum, nextsum: integer;
    begin
+      -- @TODO: There are multiple places in the original MiSTer core that use slightly different values
+      -- These values are from c64.sv, but for example in fpga64_sid_iec.vhd, other values are used.
+      -- We could "grep" them all, and define one constant that is consistent throughout the system
+      if c64_ntsc = '1' then
+         msum := 32727264;
+      else
+         msum := 31527954;
+      end if;
+      
+      nextsum := iec_dce_sum + 16000000;
+      
       if rising_edge(clk_main_i) then
-         if c64_ntsc = '1' then
-            msum := 32727264;
+         iec_drive_ce <= '0';      
+         if reset_i = '1' then
+            iec_dce_sum <= 0;
          else
-            msum := 31527954;
-         end if;
-
-         iec_drive_ce <= '0';
-         iec_dce_sum <= iec_dce_sum + 16000000;
-         if iec_dce_sum >= msum then
-            iec_dce_sum <= iec_dce_sum - msum;
-            iec_drive_ce <= '1';
+            iec_dce_sum <= nextsum;
+            if nextsum >= msum then
+               iec_dce_sum <= nextsum - msum;
+               iec_drive_ce <= '1';
+            end if;
          end if;
       end if;
    end process;
@@ -544,9 +564,14 @@ begin
          reset_core_i         => reset_i,
 
          -- MiSTer's "SD config" interface, which runs in the core's clock domain
-         img_mounted_o        => iec_drive_mounted,
-         img_readonly_o       => iec_drive_readonly,
-         img_size_o           => iec_drive_imgsize,
+         img_mounted_o        => iec_img_mounted_i,
+         img_readonly_o       => iec_img_readonly_i,
+         img_size_o           => iec_img_size_i,
+         img_type_o           => iec_img_type_i,      -- 00=1541 emulated GCR(D64), 01=1541 real GCR mode (G64,D64), 10=1581 (D81)
+         
+         -- While "img_mounted_o" needs to be strobed, "drive_mounted" latches the strobe in the core's clock domain,
+         -- so that it can be used for resetting (and unresetting) the drive.
+         drive_mounted_o      => vdrives_mounted_o,            
 
          -- MiSTer's "SD block level access" interface, which runs in QNICE's clock domain
          -- using dedicated signal on Mister's side such as "clk_sys"

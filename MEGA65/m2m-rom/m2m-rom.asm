@@ -53,11 +53,16 @@ C64_IEC_MOUNT   .EQU    0x7000  ; image mounted, lowest bit = drive 0
 C64_IEC_RO      .EQU    0x7001  ; read-only for currently mounted drive
 C64_IEC_SIZE_L  .EQU    0x7002  ; image file size, low word
 C64_IEC_SIZE_H  .EQU    0x7003  ; image file size, high word
-C64_IEC_B_ADDR  .EQU    0x7004  ; drive buffer: address
-C64_IEC_B_DOUT  .EQU    0x7005  ; drive buffer: data out (to drive)
-C64_IEC_B_WREN  .EQU    0x7006  ; drive buffer: write enable (also needs ack)
-C64_IEC_VDNUM   .EQU    0x7007  ; number of virtual drives
-C64_IEC_BLKSZ   .EQU    0x7008  ; block size for LBA in bytes
+C64_IEC_TYPE    .EQU    0x7004  ; image file type (see C64_IMGTYPE_* below)
+C64_IEC_B_ADDR  .EQU    0x7005  ; drive buffer: address
+C64_IEC_B_DOUT  .EQU    0x7006  ; drive buffer: data out (to drive)
+C64_IEC_B_WREN  .EQU    0x7007  ; drive buffer: write enable (also needs ack)
+C64_IEC_VDNUM   .EQU    0x7008  ; number of virtual drives
+C64_IEC_BLKSZ   .EQU    0x7009  ; block size for LBA in bytes
+
+C64_IMGTYPE_D64 .EQU    0x0000  ; 1541 emulated GCR: D64
+C64_IMGTYPE_G64 .EQU    0x0001  ; 1541 real GCR mode: G64, D64
+C64_IMGTYPE_D81 .EQU    0x0002  ; 1581: D81
 
 C64_IEC_LBA_L   .EQU    0x7000  ; SD LBA low word
 C64_IEC_LBA_H   .EQU    0x7001  ; SD LBA high word
@@ -221,17 +226,28 @@ _RD_0_OK        MOVE    STR_OK, R8
                 MOVE    C64_IEC_SIZE_H, R8
                 MOVE    D64_STDSIZE_H, @R8
 
-                MOVE    C64_IEC_MOUNT, R8       ; signal mount for drive 0..
-                MOVE    1, @R8                  ; ..readonly and size are..
-                                                ; ..latched during the..
-                                                ; ..edge of the signal
+                MOVE    C64_IEC_TYPE, R8        ; set "D64" image type
+                MOVE    C64_IMGTYPE_D64, @R8 
 
-                MOVE    C64_IEC_RO, R8          ; readonly and size back to 0
+                ; strobe the mount signal for drive 0 (bit 0 = drive 0)
+                ; MiSTer expects a strobe and not a constant signal
+                ; during the rising edge of the strobe, the following signals
+                ; are latched by MiSTer: readonly, size and image type
+                MOVE    C64_IEC_MOUNT, R8
+                MOVE    1, @R8
+                MOVE    0, @R8
+
+                ; set registers for readonly, size and type back to 0;
+                ; it seems that only "size" really *needs* to be set back
+                ; to 0, but for being on the safe side, we set everything back
+                MOVE    C64_IEC_RO, R8
                 MOVE    0, @R8
                 MOVE    C64_IEC_SIZE_L, R8
                 MOVE    0, @R8
                 MOVE    C64_IEC_SIZE_H, R8
-                MOVE    0, @R8  
+                MOVE    0, @R8
+                MOVE    C64_IEC_TYPE, R8
+                MOVE    0, @R8
 
                 MOVE    STR_OK, R8
                 SYSCALL(puts, 1)
@@ -361,7 +377,7 @@ STR_ERR_D64     .ASCII_P "ERROR: For now, only standard D64 files with a "
                 .ASCII_W "size of exactly 174,848 bytes are supported.\n"
 STR_LOADING     .ASCII_W "Loading file: "
 STR_D64_LD_OK   .ASCII_W "Loading OK\n"
-STR_MOUNT       .ASCII_W "Asserting mount signal: "
+STR_MOUNT       .ASCII_W "Strobing mount signal: "
 STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
 STR_RD_1        .ASCII_W "Waiting for sd_rd_i to be 1: "
 STR_LBA         .ASCII_W "   LBA: "
