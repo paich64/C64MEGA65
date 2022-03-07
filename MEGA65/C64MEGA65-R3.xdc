@@ -40,6 +40,10 @@ set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_d
 set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/save_sync/s1_reg[*]/D]
 set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/track_sync/s1_reg[*]/D]
 
+## Disk type register that moves very slow (on each (re-)mount) and that is initialized with very stable signals 
+set_false_path -from [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/C]
+set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
+
 ## Reset button
 set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports RESET_N]
 
