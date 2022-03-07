@@ -10,11 +10,6 @@ already a pretty cool proof-of-concept that runs a ton of games and demos.
 * Do all "WIP"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
-* Line 62 in fdc1772.v: back to 2 or work with generic?
-* Decide: Can we remove the code for C1581 for now (alpha)?
-  Remember, that buffers that are filled via the SD card (e.g. fdc1772 in
-  c1581_drv.sv) need dual-clockand QNICE compatible falling edges. This needs
-  to be documented somewhere so that we are not forgetting it later.
 
 ## Features
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
@@ -44,3 +39,5 @@ WIP Drive led during virtual disk access
 	* IEC port (for example to plug in a real C1541)	
 	* C1581 via MEGA65's disk drive
 	* REU via expansion port
+* Internal TODOs: 
+  * Line 65 in fdc1772.v: back to 2 or work with generic?

@@ -528,14 +528,12 @@ begin
    generate_drive_ce : process(clk_main_i)
       variable msum, nextsum: integer;
    begin
-      -- @TODO: There are multiple places in the original MiSTer core that use slightly different values
-      -- These values are from c64.sv, but for example in fpga64_sid_iec.vhd, other values are used.
-      -- We could "grep" them all, and define one constant that is consistent throughout the system
       if c64_ntsc = '1' then
-         msum := 32727264;
+         msum := 32727264; -- @TODO: this is still MiSTer's value; needs to be matched with our NTSC clock in future
       else
-         msum := 31527954;
+         msum := 31527778; -- matches our clock; original MiSTer value: 31527954;
       end if;
+      
       
       nextsum := iec_dce_sum + 16000000;
       
