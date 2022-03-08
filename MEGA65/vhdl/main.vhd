@@ -30,25 +30,25 @@ entity main is
 
 
       -- MEGA65 joysticks
-      joy_1_up_n             : in std_logic;
-      joy_1_down_n           : in std_logic;
-      joy_1_left_n           : in std_logic;
-      joy_1_right_n          : in std_logic;
-      joy_1_fire_n           : in std_logic;
+      joy_1_up_n_i            : in std_logic;
+      joy_1_down_n_i          : in std_logic;
+      joy_1_left_n_i          : in std_logic;
+      joy_1_right_n_i         : in std_logic;
+      joy_1_fire_n_i          : in std_logic;
 
-      joy_2_up_n             : in std_logic;
-      joy_2_down_n           : in std_logic;
-      joy_2_left_n           : in std_logic;
-      joy_2_right_n          : in std_logic;
-      joy_2_fire_n           : in std_logic;
+      joy_2_up_n_i            : in std_logic;
+      joy_2_down_n_i          : in std_logic;
+      joy_2_left_n_i          : in std_logic;
+      joy_2_right_n_i         : in std_logic;
+      joy_2_fire_n_i          : in std_logic;
 
       -- C64 video out (after scandoubler)
-      VGA_R                   : out std_logic_vector(7 downto 0);
-      VGA_G                   : out std_logic_vector(7 downto 0);
-      VGA_B                   : out std_logic_vector(7 downto 0);
-      VGA_VS                  : out std_logic;
-      VGA_HS                  : out std_logic;
-      VGA_DE                  : out std_logic;
+      vga_red_o               : out std_logic_vector(7 downto 0);
+      vga_green_o             : out std_logic_vector(7 downto 0);
+      vga_blue_o              : out std_logic_vector(7 downto 0);
+      vga_vs_o                : out std_logic;
+      vga_hs_o                : out std_logic;
+      vga_de_o                : out std_logic;
 
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);
@@ -314,17 +314,17 @@ begin
          key_pressed_n_i      => kb_key_pressed_n_i,
 
          -- Interface to the MEGA65 joysticks
-         joy_1_up_n           => joy_1_up_n,
-         joy_1_down_n         => joy_1_down_n,
-         joy_1_left_n         => joy_1_left_n,
-         joy_1_right_n        => joy_1_right_n,
-         joy_1_fire_n         => joy_1_fire_n,
+         joy_1_up_n           => joy_1_up_n_i,
+         joy_1_down_n         => joy_1_down_n_i,
+         joy_1_left_n         => joy_1_left_n_i,
+         joy_1_right_n        => joy_1_right_n_i,
+         joy_1_fire_n         => joy_1_fire_n_i,
 
-         joy_2_up_n           => joy_2_up_n,
-         joy_2_down_n         => joy_2_down_n,
-         joy_2_left_n         => joy_2_left_n,
-         joy_2_right_n        => joy_2_right_n,
-         joy_2_fire_n         => joy_2_fire_n,
+         joy_2_up_n           => joy_2_up_n_i,
+         joy_2_down_n         => joy_2_down_n_i,
+         joy_2_left_n         => joy_2_left_n_i,
+         joy_2_right_n        => joy_2_right_n_i,
+         joy_2_fire_n         => joy_2_fire_n_i,
 
          -- Interface to the MiSTer C64 core that directly connects to the C64's CIA1 instead of
          -- going the detour of converting the MEGA65 keystrokes into PS/2 keystrokes first.
@@ -426,22 +426,22 @@ begin
          VGA_R       => mix_r,
          VGA_G       => mix_g,
          VGA_B       => mix_b,
-         VGA_VS      => VGA_VS,
-         VGA_HS      => VGA_HS,
+         VGA_VS      => vga_vs_o,
+         VGA_HS      => vga_hs_o,
          VGA_DE      => mix_vga_de
       );
 
-   VGA_DE <= mix_vga_de;
+   vga_de_o <= mix_vga_de;
    vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
    begin
       if mix_vga_de = '1' then
-         VGA_R <= mix_r;
-         VGA_G <= mix_g;
-         VGA_B <= mix_b;
+         vga_red_o   <= mix_r;
+         vga_green_o <= mix_g;
+         vga_blue_o  <= mix_b;
       else
-         VGA_R <= (others => '0');
-         VGA_G <= (others => '0');
-         VGA_B <= (others => '0');
+         vga_red_o   <= (others => '0');
+         vga_green_o <= (others => '0');
+         vga_blue_o  <= (others => '0');
       end if;
    end process;
 

@@ -75,7 +75,7 @@ port (
    joy_2_right_n  : in std_logic;
    joy_2_fire_n   : in std_logic
 );
-end MEGA65_Core;
+end entity MEGA65_Core;
 
 architecture beh of MEGA65_Core is
 
@@ -126,17 +126,17 @@ constant SHELL_O_DY           : integer := 26;
 ---------------------------------------------------------------------------------------------
 
 signal clk_video              : std_logic;               -- Video clock @ 63.056 MHz
-signal clk_qnice              : std_logic;               -- QNICE main clock @ 50 MHz
-signal clk_main               : std_logic;               -- C64 main clock @ 31.528 MHz
-signal clk_pixel_1x           : std_logic;               -- pixel clock at normal speed (default: PAL @ 50 Hz = 27 MHz)
-signal clk_pixel_5x           : std_logic;               -- pixel clock at 5x speed for HDMI (default: Pal @ 50 Hz = 135 MHz)
+signal qnice_clk              : std_logic;               -- QNICE main clock @ 50 MHz
+signal main_clk               : std_logic;               -- C64 main clock @ 31.528 MHz
+signal vga_clk                : std_logic;               -- pixel clock at normal speed (default: PAL @ 50 Hz = 27 MHz)
+signal tmds_clk               : std_logic;               -- pixel clock at 5x speed for HDMI (default: Pal @ 50 Hz = 135 MHz)
 
 signal main_rst               : std_logic;
 signal qnice_rst              : std_logic;
-signal pixel_rst              : std_logic;
+signal vga_rst                : std_logic;
 
 ---------------------------------------------------------------------------------------------
--- clk_main (MiSTer core's clock)
+-- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
 -- QNICE control and status register
@@ -159,7 +159,7 @@ signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
--- clk_qnice
+-- qnice_clk
 ---------------------------------------------------------------------------------------------
 
 -- Control and status register that QNICE uses to control the C64
@@ -195,7 +195,7 @@ signal qnice_config_data      : std_logic_vector(15 downto 0);
 
 -- RAMs for the C64
 signal qnice_c64_ram_data_o            : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
-signal qnice_c64_ram_we                : std_logic;                        
+signal qnice_c64_ram_we                : std_logic;
 signal qnice_c64_mount_buf_ram_data_o  : std_logic_vector(7 downto 0);  -- Disk mount buffer
 signal qnice_c64_mount_buf_ram_we      : std_logic;
 
@@ -205,7 +205,7 @@ signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
--- clk_pixel_1x (VGA pixelclock) and clk_pixel_5x (HDMI)
+-- vga_clk (VGA pixelclock)
 ---------------------------------------------------------------------------------------------
 
 signal vga_de                 : std_logic;            -- VGA data enable (visible pixels)
@@ -237,19 +237,19 @@ begin
          video_clk_o  => clk_video,       -- video's 63.056 MHz clock
          video_rst_o  => open,            -- video's reset, synchronized
 
-         qnice_clk_o  => clk_qnice,       -- QNICE's 50 MHz main clock
+         qnice_clk_o  => qnice_clk,       -- QNICE's 50 MHz main clock
          qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
 
-         main_clk_o   => clk_main,        -- main's 31.528 MHz clock
+         main_clk_o   => main_clk,        -- main's 31.528 MHz clock
          main_rst_o   => main_rst,        -- main's reset, synchronized
 
-         pixel_clk_o  => clk_pixel_1x,    -- VGA 27 MHz pixelclock for PAL @ 50 Hz
-         pixel_rst_o  => pixel_rst,       -- VGA's reset, synchronized
-         pixel_clk5_o => clk_pixel_5x     -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
+         pixel_clk_o  => vga_clk,         -- VGA 27 MHz pixelclock for PAL @ 50 Hz
+         pixel_rst_o  => vga_rst,         -- VGA's reset, synchronized
+         pixel_clk5_o => tmds_clk         -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
       );
 
    ---------------------------------------------------------------------------------------------
-   -- clk_main (C64 MiSTer Core clock)
+   -- main_clk (C64 MiSTer Core clock)
    ---------------------------------------------------------------------------------------------
 
    -- main.vhd contains the actual Commodore 64 MiSTer core
@@ -260,7 +260,7 @@ begin
          G_OUTPUT_DY          => VGA_DY
       )
       port map (
-         clk_main_i           => clk_main,
+         clk_main_i           => main_clk,
          clk_video_i          => clk_video,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
@@ -270,25 +270,25 @@ begin
          kb_key_pressed_n_i   => main_key_pressed_n,
 
          -- MEGA65 joysticks
-         joy_1_up_n           => joy_1_up_n,
-         joy_1_down_n         => joy_1_down_n,
-         joy_1_left_n         => joy_1_left_n,
-         joy_1_right_n        => joy_1_right_n,
-         joy_1_fire_n         => joy_1_fire_n,
+         joy_1_up_n_i         => joy_1_up_n,
+         joy_1_down_n_i       => joy_1_down_n,
+         joy_1_left_n_i       => joy_1_left_n,
+         joy_1_right_n_i      => joy_1_right_n,
+         joy_1_fire_n_i       => joy_1_fire_n,
 
-         joy_2_up_n           => joy_2_up_n,
-         joy_2_down_n         => joy_2_down_n,
-         joy_2_left_n         => joy_2_left_n,
-         joy_2_right_n        => joy_2_right_n,
-         joy_2_fire_n         => joy_2_fire_n,
+         joy_2_up_n_i         => joy_2_up_n,
+         joy_2_down_n_i       => joy_2_down_n,
+         joy_2_left_n_i       => joy_2_left_n,
+         joy_2_right_n_i      => joy_2_right_n,
+         joy_2_fire_n_i       => joy_2_fire_n,
 
          -- C64 video out (after scandoubler)
-         VGA_R                => VGA_RED,
-         VGA_G                => VGA_GREEN,
-         VGA_B                => VGA_BLUE,
-         VGA_VS               => VGA_VS,
-         VGA_HS               => VGA_HS,
-         VGA_DE               => vga_de,
+         vga_red_o            => VGA_RED,
+         vga_green_o          => VGA_GREEN,
+         vga_blue_o           => VGA_BLUE,
+         vga_vs_o             => VGA_VS,
+         vga_hs_o             => VGA_HS,
+         vga_de_o             => vga_de,
 
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -301,14 +301,14 @@ begin
          c64_ram_data_i       => unsigned(main_ram_data_to_c64),
 
          -- C64 IEC handled by QNICE
-         c64_clk_sd_i         => clk_qnice,           -- "sd card write clock" for floppy drive internal dual clock RAM buffer                  
+         c64_clk_sd_i         => qnice_clk,           -- "sd card write clock" for floppy drive internal dual clock RAM buffer
          c64_qnice_addr_i     => qnice_ramrom_addr,
          c64_qnice_data_i     => qnice_ramrom_data_o,
          c64_qnice_data_o     => qnice_c64_qnice_data_o,
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
-         c64_qnice_we_i       => qnice_c64_qnice_we      
+         c64_qnice_we_i       => qnice_c64_qnice_we
       );
-            
+
    -- Make the VDAC output the image
    vdac_sync_n    <= '0';
    vdac_blank_n   <= '1';
@@ -320,7 +320,7 @@ begin
          CLOCK_SPEED          => CORE_CLK_SPEED
       )
       port map (
-         clk_main_i           => clk_main,
+         clk_main_i           => main_clk,
 
          -- interface to the MEGA65 keyboard controller
          kio8_o               => kb_io0,
@@ -339,7 +339,7 @@ begin
    i_pcm2pdm : entity work.pcm_to_pdm
       port map
       (
-         cpuclock                => clk_main,
+         cpuclock                => main_clk,
 
          pcm_left                => main_sid_l,
          pcm_right               => main_sid_r,
@@ -350,8 +350,9 @@ begin
          audio_mode              => '0'         -- 0=PDM, 1=PWM
       ); -- i_pcm2pdm
 
+
    ---------------------------------------------------------------------------------------------
-   -- clk_qnice
+   -- qnice_clk
    ---------------------------------------------------------------------------------------------
 
    -- QNICE Co-Processor (System-on-a-Chip) for ROM loading and On-Screen-Menu
@@ -372,7 +373,7 @@ begin
          G_SHELL_O_DY            => SHELL_O_DY
       )
       port map (
-         clk50_i                 => clk_qnice,
+         clk50_i                 => qnice_clk,
          reset_n_i               => not qnice_rst,
 
          -- serial communication (rxd, txd only; rts/cts are not available)
@@ -414,7 +415,7 @@ begin
          ramrom_data_i           => qnice_ramrom_data_i,
          ramrom_ce_o             => qnice_ramrom_ce,
          ramrom_we_o             => qnice_ramrom_we
-      );
+      ); -- QNICE_SOC
 
    shell_cfg : entity work.config
       port map (
@@ -424,7 +425,7 @@ begin
 
          -- config data
          data_o                  => qnice_config_data
-      );
+      ); -- shell_cfg
 
    -- The device selector qnice_ramrom_dev decides, which RAM/ROM-like device QNICE is writing to.
    -- Device numbers < 256 are reserved for QNICE; everything else can be used by your MiSTer core.
@@ -440,7 +441,7 @@ begin
       qnice_c64_qnice_ce         <= '0';
       qnice_c64_qnice_we         <= '0';
       qnice_c64_mount_buf_ram_we <= '0';
-      
+
       case qnice_ramrom_dev is
          ----------------------------------------------------------------------------
          -- MiSTer2MEGA65 reserved devices
@@ -453,7 +454,7 @@ begin
          when x"0001" =>
             qnice_vram_attr_we         <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= x"00" & qnice_vram_attr_data_o;
-            
+
          -- Shell configuration data (config.vhd)
          when x"0002" =>
             qnice_ramrom_data_i        <= qnice_config_data;
@@ -465,25 +466,26 @@ begin
          -- C64 RAM
          when x"0100" =>
             qnice_c64_ram_we           <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data_o; 
-                         
+            qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data_o;
+
          -- C64 IEC drives
          when x"0101" =>
             qnice_c64_qnice_ce         <= qnice_ramrom_ce;
-            qnice_c64_qnice_we         <= qnice_ramrom_we; 
+            qnice_c64_qnice_we         <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= qnice_c64_qnice_data_o;
-            
+
          -- Disk mount buffer RAM
          when x"0102" =>
             qnice_c64_mount_buf_ram_we <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= x"00" & qnice_c64_mount_buf_ram_data_o; 
-                         
-         when others => null;            
+            qnice_ramrom_data_i        <= x"00" & qnice_c64_mount_buf_ram_data_o;
+
+         when others => null;
       end case;
-   end process;
+   end process qnice_ramrom_devices;
+
 
    ---------------------------------------------------------------------------------------------
-   -- clk_pixel_1x (VGA pixelclock) and clk_pixel_5x (HDMI)
+   -- vga_clk (VGA pixelclock)
    ---------------------------------------------------------------------------------------------
 
    i_vga : entity work.vga
@@ -496,8 +498,8 @@ begin
          G_FONT_DY            => FONT_DY
       )
       port map (
-         clk_i                => clk_pixel_1x,     -- pixel clock at frequency of VGA mode being used
-         rstn_i               => not pixel_rst,    -- active low reset
+         clk_i                => vga_clk,          -- pixel clock at frequency of VGA mode being used
+         rstn_i               => not vga_rst,      -- active low reset
          vga_osm_cfg_enable_i => vga_osm_cfg_enable,
          vga_osm_cfg_xy_i     => vga_osm_cfg_xy,
          vga_osm_cfg_dxdy_i   => vga_osm_cfg_dxdy,
@@ -527,8 +529,8 @@ begin
          vs_pol       => VIDEO_MODE.V_POL,            -- horizontal polarity: negative
          hs_pol       => VIDEO_MODE.H_POL,            -- vertaical polarity: negative
 
-         vga_rst      => '0', -- pixel_rst,                   -- active high reset
-         vga_clk      => '0', -- clk_pixel_1x,                -- VGA pixel clock
+         vga_rst      => '0', -- vga_rst,                     -- active high reset
+         vga_clk      => '0', -- vga_clk,                     -- VGA pixel clock
          vga_vs       => '0', --vga_vs,
          vga_hs       => '0', --vga_hs,
          vga_de       => '0', --vga_de,
@@ -538,7 +540,7 @@ begin
 
          -- PCM audio
          pcm_rst      => main_rst,
-         pcm_clk      => clk_main,
+         pcm_clk      => main_clk,
          pcm_clken    => '0',
          pcm_l        => (others => '0'),
          pcm_r        => (others => '0'),
@@ -548,16 +550,21 @@ begin
 
          -- TMDS output (parallel)
          tmds         => open -- vga_tmds
-      ); -- i_vga_to_hdmi: entity work.vga_to_hdmi
+      ); -- i_vga_to_hdmi
+
+
+   ---------------------------------------------------------------------------------------------
+   -- tmds_clk (HDMI)
+   ---------------------------------------------------------------------------------------------
 
    -- serialiser: in this design we use TMDS SelectIO outputs
    GEN_HDMI_DATA: for i in 0 to 2 generate
    begin
       HDMI_DATA: entity work.serialiser_10to1_selectio
       port map (
-         rst     => '0', -- pixel_rst,
-         clk     => '0', -- clk_pixel_1x,
-         clk_x5  => '0', -- clk_pixel_5x,
+         rst     => '0', -- vga_rst,
+         clk     => '0', -- vga_clk,
+         clk_x5  => '0', -- tmds_clk,
          d       => vga_tmds(i),
          out_p   => TMDS_data_p(i),
          out_n   => TMDS_data_n(i)
@@ -566,13 +573,14 @@ begin
 
    HDMI_CLK: entity work.serialiser_10to1_selectio
    port map (
-         rst     => pixel_rst,
-         clk     => clk_pixel_1x,
-         clk_x5  => clk_pixel_5x,
+         rst     => vga_rst,
+         clk     => vga_clk,
+         clk_x5  => tmds_clk,
          d       => "0000011111",
          out_p   => TMDS_clk_p,
          out_n   => TMDS_clk_n
-      ); -- HDMI_CLK: entity work.serialiser_10to1_selectio
+      ); -- HDMI_CLK
+
 
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
@@ -621,13 +629,13 @@ begin
          WIDTH => 2
       )
       port map (
-         src_clk                => clk_qnice,
+         src_clk                => qnice_clk,
          src_in(0)              => qnice_csr_reset,
          src_in(1)              => qnice_csr_pause,
-         dest_clk               => clk_main,
+         dest_clk               => main_clk,
          dest_out(0)            => main_qnice_reset,
          dest_out(1)            => main_qnice_pause
-      );
+      ); -- i_qnice2main
 
    -- Clock domain crossing: C64 to QNICE
    i_main2qnice: xpm_cdc_array_single
@@ -635,11 +643,11 @@ begin
          WIDTH => 16
       )
       port map (
-         src_clk                => clk_main,
+         src_clk                => main_clk,
          src_in(15 downto 0)    => main_qnice_keys_n,
-         dest_clk               => clk_qnice,
+         dest_clk               => qnice_clk,
          dest_out(15 downto 0)  => qnice_qnice_keys_n
-      );
+      ); -- i_main2qnice
 
    -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
    i_qnice2vga: xpm_cdc_array_single
@@ -647,15 +655,15 @@ begin
          WIDTH => 33
       )
       port map (
-         src_clk                => clk_qnice,
+         src_clk                => qnice_clk,
          src_in(15 downto 0)    => qnice_osm_cfg_xy,
          src_in(31 downto 16)   => qnice_osm_cfg_dxdy,
          src_in(32)             => qnice_osm_cfg_enable,
-         dest_clk               => clk_pixel_1x,
+         dest_clk               => vga_clk,
          dest_out(15 downto 0)  => vga_osm_cfg_xy,
          dest_out(31 downto 16) => vga_osm_cfg_dxdy,
          dest_out(32)           => vga_osm_cfg_enable
-      );
+      ); -- i_qnice2vga
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
    -- as well as QNICE can access it
@@ -668,20 +676,20 @@ begin
       )
       port map (
          -- C64 MiSTer core
-         clock_a           => clk_main,
+         clock_a           => main_clk,
          address_a         => std_logic_vector(main_ram_addr),
          data_a            => std_logic_vector(main_ram_data_from_c64),
          wren_a            => main_ram_we,
          q_a               => main_ram_data_to_c64,
 
          -- QNICE
-         clock_b           => clk_qnice,
+         clock_b           => qnice_clk,
          address_b         => qnice_ramrom_addr(15 downto 0),
          data_b            => qnice_ramrom_data_o(7 downto 0),
          wren_b            => qnice_c64_ram_we,
          q_b               => qnice_c64_ram_data_o
       );
-      
+
    -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
    -- the disks that we are mounting. This will work for D64 only.
    -- @TODO: Switch to HyperRAM at a later stage
@@ -694,7 +702,7 @@ begin
       )
       port map (
          -- QNICE only
-         clock_a           => clk_qnice,
+         clock_a           => qnice_clk,
          address_a         => qnice_ramrom_addr(17 downto 0),
          data_a            => qnice_ramrom_data_o(7 downto 0),
          wren_a            => qnice_c64_mount_buf_ram_we,
@@ -709,16 +717,16 @@ begin
          FALLING_A    => true              -- QNICE expects read/write to happen at the falling clock edge
       )
       port map (
-         clock_a      => clk_qnice,
+         clock_a      => qnice_clk,
          address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
          data_a       => qnice_ramrom_data_o(7 downto 0),
          wren_a       => qnice_vram_we,
          q_a          => qnice_vram_data_o,
 
-         clock_b      => clk_pixel_1x,
+         clock_b      => vga_clk,
          address_b    => vga_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
          q_b          => vga_osm_vram_data
-      );
+      ); -- osm_vram
 
    -- Dual port & dual clock attribute RAM: contains inverse attribute, light/dark attrib. and colors of the chars
    -- bit 7: 1=inverse
@@ -736,16 +744,16 @@ begin
          FALLING_A    => true
       )
       port map (
-         clock_a      => clk_qnice,
+         clock_a      => qnice_clk,
          address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
          data_a       => qnice_ramrom_data_o(7 downto 0),
          wren_a       => qnice_vram_attr_we,
          q_a          => qnice_vram_attr_data_o,
 
-         clock_b      => clk_pixel_1x,
+         clock_b      => vga_clk,
          address_b    => vga_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
          q_b          => vga_osm_vram_attr
-      );
+      ); -- osm_vram_attr
 
-end beh;
+end architecture beh;
 
