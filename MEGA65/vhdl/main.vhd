@@ -213,6 +213,8 @@ begin
          turbo_speed => "00",
 
          -- VGA/SCART interface
+         -- The hsync frequency is 15.64 kHz (period 63.94 us).
+         -- The hsync pulse width is 12.69 us.
          ntscMode    => c64_ntsc,
          hsync       => c64_hsync,
          vsync       => c64_vsync,
@@ -384,6 +386,7 @@ begin
    -- we could do here, including to make sure that we output an old composite signal instead of VGA
    --------------------------------------------------------------------------------------------------
 
+   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
    i_video_sync : entity work.video_sync
       port map (
          clk32     => clk_main_i,
@@ -405,6 +408,19 @@ begin
       end if;
    end process p_div;
    ce_pix <= '1' when div = 0 else '0';
+
+   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ clk_video_i).
+   -- According the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
+   -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
+   -- a horizontal period of 32.00 us. The difference here is 0.1 %.
+   -- The ratio between clk_video_i and the pixel frequency is 7/3.
+   --
+   -- Using a logic analyzer it's observed that the output has the following horizontal parameters:
+   -- H_PIXELS = 658 pixels (1536 clock cycles)
+   -- H_PULSE  =  65 pixels ( 152 clock cycles)
+   -- H_BP     = 105 pixels ( 244 clock cycles)
+   -- H_FP     =  36 pixels (  84 clock cycles)
+   -- TOTAL    = 864 pixels (2016 clock cycles)
 
    i_video_mixer : video_mixer
       port map (
