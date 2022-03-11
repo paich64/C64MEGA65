@@ -13,7 +13,8 @@ already a pretty cool proof-of-concept that runs a ton of games and demos.
 
 ## Features
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
-WIP PAL 720 x 576 pixels via VGA and via HDMI
+WIP PAL 720 x 576 pixels (4:3) @ 50 Hz via VGA: for a true retro feeling
+WIP 720p @ 60 Hz (16:9) @ 60 Hz via HDMI: for convenience
 WIP Sound output via 3.5mm jack and via HDMI
 * MEGA65 keyboard support (including cursor keys)
 * Joystick support

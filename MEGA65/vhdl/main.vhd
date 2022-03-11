@@ -348,7 +348,7 @@ begin
    -- MiSTer audio signal processing: Convert the core's 18-bit signal to a signed 16-bit signal
    --------------------------------------------------------------------------------------------------
 
-   audio_processing : process(clk_main_i)
+   audio_processing : process(all)
       variable alm, arm : std_logic_vector(16 downto 0);
    begin
       -- "alm" and "alr" are used to mix various audio sources
@@ -541,7 +541,7 @@ begin
       );
 
    -- 16 MHz chip enable for the IEC drives, so that ph2_r and ph2_f can be 1 MHz (C1541's CPU runs with 1 MHz)
-   generate_drive_ce : process(clk_main_i)
+   generate_drive_ce : process(all)
       variable msum, nextsum: integer;
    begin
       if c64_ntsc = '1' then
