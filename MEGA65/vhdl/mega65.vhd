@@ -73,7 +73,14 @@ port (
    joy_2_down_n   : in std_logic;
    joy_2_left_n   : in std_logic;
    joy_2_right_n  : in std_logic;
-   joy_2_fire_n   : in std_logic
+   joy_2_fire_n   : in std_logic;
+
+   -- Built-in HyperRAM
+   hr_d           : inout std_logic_vector(7 downto 0);    -- Data/Address
+   hr_rwds        : inout std_logic;               -- RW Data strobe
+   hr_reset       : out std_logic;                 -- Active low RESET line to HyperRAM
+   hr_clk_p       : out std_logic;
+   hr_cs0         : out std_logic
 );
 end entity MEGA65_Core;
 
@@ -120,15 +127,21 @@ constant SHELL_O_DY           : integer := 26;
 -- Clocks and active high reset signals for each clock domain
 ---------------------------------------------------------------------------------------------
 
-signal video_clk              : std_logic;               -- Video clock @ 63.056 MHz
 signal qnice_clk              : std_logic;               -- QNICE main clock @ 50 MHz
+signal hr_clk_x1              : std_logic;               -- HyperRAM @ 100 MHz
+signal hr_clk_x2              : std_logic;               -- HyperRAM @ 200 MHz
+signal hr_clk_x2_del          : std_logic;               -- HyperRAM @ 200 MHz phase delayed
+signal tmds_clk               : std_logic;               -- HDMI pixel clock at 5x speed for TMDS @ 371.25 MHz
+signal vga_clk                : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 signal main_clk               : std_logic;               -- C64 main clock @ 31.528 MHz
-signal vga_clk                : std_logic;               -- pixel clock at normal speed (default: PAL @ 50 Hz = 27 MHz)
-signal tmds_clk               : std_logic;               -- pixel clock at 5x speed for HDMI (default: Pal @ 50 Hz = 135 MHz)
+signal video_clk              : std_logic;               -- Video clock @ 63.056 MHz
 
-signal main_rst               : std_logic;
 signal qnice_rst              : std_logic;
+signal hr_rst                 : std_logic;
 signal vga_rst                : std_logic;
+signal main_rst               : std_logic;
+signal reset_na               : std_logic;
+
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -235,26 +248,32 @@ signal vga_core_vram_data     : std_logic_vector(23 downto 0);
 begin
 
    -- MMCME2_ADV clock generators:
-   --   C64:                  31.528 MHz
    --   QNICE:                50 MHz
-   --   PAL @ 50 Hz:          27 MHz (VGA) and 135 MHz (HDMI)
+   --   HyperRAM:             100 MHz
+   --   HDMI 720p 50 Hz:      74.25 MHz (HDMI) and 371.25 MHz (TMDS)
+   --   C64:                  31.528 MHz
    clk_gen : entity work.clk
       port map (
-         sys_clk_i    => CLK,             -- expects 100 MHz
-         sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
+         sys_clk_i       => CLK,             -- expects 100 MHz
+         sys_rstn_i      => RESET_N,         -- Asynchronous, asserted low
 
-         qnice_clk_o  => qnice_clk,       -- QNICE's 50 MHz main clock
-         qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
+         qnice_clk_o     => qnice_clk,       -- QNICE's 50 MHz main clock
+         qnice_rst_o     => qnice_rst,       -- QNICE's reset, synchronized
 
-         main_clk_o   => main_clk,        -- main's 31.528 MHz clock
-         main_rst_o   => main_rst,        -- main's reset, synchronized
+         hr_clk_x1_o     => hr_clk_x1,
+         hr_clk_x2_o     => hr_clk_x2,
+         hr_clk_x2_del_o => hr_clk_x2_del,
+         hr_rst_o        => hr_rst,
 
-         video_clk_o  => video_clk,       -- video's 63.056 MHz clock
-         video_rst_o  => open,            -- video's reset, synchronized
+--         tmds_clk_o      => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
+--         hdmi_clk_o      => vga_clk,         -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
+--         hdmi_rst_o      => vga_rst,         -- HDMI's reset, synchronized
 
-         vga_clk_o    => vga_clk,         -- VGA 27 MHz pixelclock for PAL @ 50 Hz
-         vga_rst_o    => vga_rst,         -- VGA's reset, synchronized
-         tmds_clk_o   => tmds_clk         -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
+         main_clk_o      => main_clk,        -- main's 31.528 MHz clock
+         main_rst_o      => main_rst,        -- main's reset, synchronized
+
+         video_clk_o     => video_clk,       -- video's 63.056 MHz clock
+         video_rst_o     => open             -- video's reset, synchronized
       ); -- clk_gen
 
 
@@ -486,7 +505,7 @@ begin
 
 
    ---------------------------------------------------------------------------------------------
-   -- vga_clk (VGA pixelclock)
+   -- video_clk (VGA pixelclock)
    ---------------------------------------------------------------------------------------------
 
    p_video_vga_ce : process (video_clk)
@@ -583,9 +602,9 @@ begin
    begin
       HDMI_DATA: entity work.serialiser_10to1_selectio
       port map (
-         rst     => '0', -- vga_rst,
-         clk     => '0', -- vga_clk,
-         clk_x5  => '0', -- tmds_clk,
+         rst     => vga_rst,
+         clk     => vga_clk,
+         clk_x5  => tmds_clk,
          d       => vga_tmds(i),
          out_p   => TMDS_data_p(i),
          out_n   => TMDS_data_n(i)
