@@ -32,7 +32,7 @@
 ; Only include the Shell, if you want to use the pre-build core automation
 ; and user experience. If you build your own, then remove this include and
 ; also remove the include "shell_vars.asm" in the variables section below.
-;#include "../../M2M/rom/shell.asm"
+#include "../../M2M/rom/shell.asm"
 
 ; ----------------------------------------------------------------------------
 ; Firmware: Main Code
@@ -40,7 +40,7 @@
 
 ;                ; Run the shell: This is where you could put your own system
 ;                ; instead of the shell
-;START_FIRMWARE  RBRA    START_SHELL, 1
+START_FIRMWARE  RBRA    START_SHELL, 1
 
 C64_RAM         .EQU    0x0100  ; RAM of the Commodore 64
 C64_IEC         .EQU    0x0101  ; IEC bridge
@@ -82,7 +82,7 @@ C64_IEC_B_DIN   .EQU    0x700B  ; drive buffer: data in (from drive)
 D64_STDSIZE_L   .EQU    0xAB00
 D64_STDSIZE_H   .EQU    0x0002
 
-START_FIRMWARE  MOVE    STR_START, R8
+;START_FIRMWARE  MOVE    STR_START, R8
                 SYSCALL(puts, 1)
 
 #ifdef RELEASE
@@ -535,7 +535,7 @@ HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
 FINPUT_BUF      .BLOCK  256
 
 ; M2M shell variables (only include, if you included "shell.asm" above)
-;#include "../../M2M/rom/shell_vars.asm"
+#include "../../M2M/rom/shell_vars.asm"
 
 ; ----------------------------------------------------------------------------
 ; Heap and Stack: Need to be located in RAM after the variables
