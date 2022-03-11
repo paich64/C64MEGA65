@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework  
+-- MiSTer2MEGA65 Framework
 --
 -- Main clock, pixel clock and QNICE-clock generator using the Xilinx specific MMCME2_ADV:
 --
@@ -24,19 +24,19 @@ entity clk is
    port (
       sys_clk_i    : in  std_logic;   -- expects 100 MHz
       sys_rstn_i   : in  std_logic;   -- Asynchronous, asserted low
-      
+
       main_clk_o   : out std_logic;   -- main's 31.528 MHz clock
       main_rst_o   : out std_logic;   -- main's reset, synchronized
-      
-      video_clk_o  : out std_logic;   -- video's 63.056 MHz clock
-      video_rst_o  : out std_logic;   -- video's reset, synchronized
 
       qnice_clk_o  : out std_logic;   -- QNICE's 50 MHz main clock
       qnice_rst_o  : out std_logic;   -- QNICE's reset, synchronized
-      
-      pixel_clk_o  : out std_logic;   -- VGA 27 MHz pixelclock for PAL @ 50 Hz
-      pixel_rst_o  : out std_logic;   -- VGA's reset, synchronized
-      pixel_clk5_o : out std_logic    -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
+
+      video_clk_o  : out std_logic;   -- video's 63.056 MHz clock
+      video_rst_o  : out std_logic;   -- video's reset, synchronized
+
+      vga_clk_o    : out std_logic;   -- VGA 27 MHz pixelclock for PAL @ 50 Hz
+      vga_rst_o    : out std_logic;   -- VGA's reset, synchronized
+      tmds_clk_o   : out std_logic    -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
    );
 end clk;
 
@@ -48,17 +48,17 @@ signal clkfb2          : std_logic;
 signal clkfb2_mmcm     : std_logic;
 signal clkfb3          : std_logic;
 signal clkfb3_mmcm     : std_logic;
-signal video_clk_mmcm  : std_logic;
-signal qnice_clk_mmcm  : std_logic;
 signal main_clk_mmcm   : std_logic;
-signal pixel_clk_mmcm  : std_logic;
-signal pixel_clk5_mmcm : std_logic;
+signal qnice_clk_mmcm  : std_logic;
+signal video_clk_mmcm  : std_logic;
+signal vga_clk_mmcm    : std_logic;
+signal tmds_clk_mmcm   : std_logic;
 
 begin
 
    -- generate QNICE clock
    -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
-   -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE   
+   -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE
    i_clk_qnice : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
@@ -109,7 +109,7 @@ begin
 
    -- generate 27 MHz for PAL 720 x 576 @ 50 Hz and 5x27 MHz = 135 MHz for HDMI
    -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
-   -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE   
+   -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE
    i_clk_pal_hdmi : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
@@ -134,8 +134,8 @@ begin
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb2_mmcm,
-         CLKOUT0             => pixel_clk_mmcm,
-         CLKOUT1             => pixel_clk5_mmcm,
+         CLKOUT0             => vga_clk_mmcm,
+         CLKOUT1             => tmds_clk_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb2,
          CLKIN1              => sys_clk_i,
@@ -162,7 +162,7 @@ begin
          PWRDWN              => '0',
          RST                 => '0'
       );
-      
+
    i_clk_c64 : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
@@ -220,7 +220,7 @@ begin
          PWRDWN              => '0',
          RST                 => '0'
       );
-      
+
    -------------------------------------
    -- Output buffering
    -------------------------------------
@@ -242,13 +242,13 @@ begin
          I => clkfb3_mmcm,
          O => clkfb3
       );
-            
+
    video_clk_bufg : BUFG
       port map (
          I => video_clk_mmcm,
          O => video_clk_o
       );
-      
+
    qnice_clk_bufg : BUFG
       port map (
          I => qnice_clk_mmcm,
@@ -261,16 +261,16 @@ begin
          O => main_clk_o
       );
 
-   pixel_clk_bufg : BUFG
+   vga_clk_bufg : BUFG
       port map (
-         I => pixel_clk_mmcm,
-         O => pixel_clk_o
+         I => vga_clk_mmcm,
+         O => vga_clk_o
       );
 
-   pixel_clk5_bufg : BUFG
+   tmds_clk_bufg : BUFG
       port map (
-         I => pixel_clk5_mmcm,
-         O => pixel_clk5_o
+         I => tmds_clk_mmcm,
+         O => tmds_clk_o
       );
 
    -------------------------------------
@@ -310,15 +310,16 @@ begin
                                        -- This output is registered.
       );
 
-   i_xpm_cdc_sync_rst_pixel : xpm_cdc_sync_rst
+   i_xpm_cdc_sync_rst_vga : xpm_cdc_sync_rst
       generic map (
          INIT_SYNC_FF => 1  -- Enable simulation init values
       )
       port map (
          src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => pixel_clk_o,      -- 1-bit input: Destination clock.
-         dest_rst => pixel_rst_o       -- 1-bit output: src_rst synchronized to the destination clock domain.
+         dest_clk => vga_clk_o,        -- 1-bit input: Destination clock.
+         dest_rst => vga_rst_o         -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
-      
+
 end architecture rtl;
+

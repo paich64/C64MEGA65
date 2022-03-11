@@ -243,19 +243,20 @@ begin
          sys_clk_i    => CLK,             -- expects 100 MHz
          sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
 
-         video_clk_o  => video_clk,       -- video's 63.056 MHz clock
-         video_rst_o  => open,            -- video's reset, synchronized
-
          qnice_clk_o  => qnice_clk,       -- QNICE's 50 MHz main clock
          qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
 
          main_clk_o   => main_clk,        -- main's 31.528 MHz clock
          main_rst_o   => main_rst,        -- main's reset, synchronized
 
-         pixel_clk_o  => vga_clk,         -- VGA 27 MHz pixelclock for PAL @ 50 Hz
-         pixel_rst_o  => vga_rst,         -- VGA's reset, synchronized
-         pixel_clk5_o => tmds_clk         -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
-      );
+         video_clk_o  => video_clk,       -- video's 63.056 MHz clock
+         video_rst_o  => open,            -- video's reset, synchronized
+
+         vga_clk_o    => vga_clk,         -- VGA 27 MHz pixelclock for PAL @ 50 Hz
+         vga_rst_o    => vga_rst,         -- VGA's reset, synchronized
+         tmds_clk_o   => tmds_clk         -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
+      ); -- clk_gen
+
 
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
@@ -312,7 +313,7 @@ begin
          c64_qnice_data_o     => qnice_c64_qnice_data_o,
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
          c64_qnice_we_i       => qnice_c64_qnice_we
-      );
+      ); -- i_main
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
@@ -534,9 +535,9 @@ begin
 
 
    -- Make the VDAC output the image
-   vdac_sync_n    <= '0';
-   vdac_blank_n   <= '1';
-   vdac_clk       <= not video_clk;
+   vdac_sync_n  <= '0';
+   vdac_blank_n <= '1';
+   vdac_clk     <= not video_clk;
 
 
    i_vga_to_hdmi : entity work.vga_to_hdmi
