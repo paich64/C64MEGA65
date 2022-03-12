@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity vga_wrapper is
+entity video_overlay is
    generic  (
       G_VGA_DX         : natural;
       G_VGA_DY         : natural;
@@ -38,9 +38,9 @@ entity vga_wrapper is
       vga_vs_o         : out std_logic;
       vga_de_o         : out std_logic
    );
-end entity vga_wrapper;
+end entity video_overlay;
 
-architecture synthesis of vga_wrapper is
+architecture synthesis of video_overlay is
 
    -- Delayed VGA signals
    signal vga_ce_d    : std_logic;

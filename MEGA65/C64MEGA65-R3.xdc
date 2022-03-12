@@ -19,7 +19,7 @@ create_generated_clock -name hr_clk_x1     [get_pins */clk_gen/i_clk_qnice/CLKOU
 create_generated_clock -name hr_clk_x2     [get_pins */clk_gen/i_clk_qnice/CLKOUT2]
 create_generated_clock -name hr_clk_x2_del [get_pins */clk_gen/i_clk_qnice/CLKOUT3]
 create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
-create_generated_clock -name vga_clk       [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
+create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
 create_generated_clock -name main_clk      [get_pins */clk_gen/i_clk_c64/CLKOUT0]
 create_generated_clock -name video_clk     [get_pins */clk_gen/i_clk_c64/CLKOUT1]
 
@@ -42,12 +42,12 @@ add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_video_rescaler/i
 endgroup
 
 # Timing between ascal.vhd and HyperRAM is asynchronous.
-set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks vga_clk]
-set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks vga_clk]
-set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks main_clk]
-set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks main_clk]
-set_false_path -from [get_clocks vga_clk]      -to [get_clocks main_clk]
-set_false_path   -to [get_clocks vga_clk]    -from [get_clocks main_clk]
+set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks hdmi_clk]
+set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks hdmi_clk]
+set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks video_clk]
+set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks video_clk]
+set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks video_clk]
+set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks video_clk]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
@@ -144,18 +144,18 @@ set_property -dict {PACKAGE_PIN AB5  IOSTANDARD TMDS_33}  [get_ports {tmds_data_
 set_property -dict {PACKAGE_PIN AA5  IOSTANDARD TMDS_33}  [get_ports {tmds_data_p[2]}]
 
 ## HyperRAM (standard)
-#set_property -dict {PACKAGE_PIN D22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_clk_p]
-#set_property -dict {PACKAGE_PIN A21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[0]}]
-#set_property -dict {PACKAGE_PIN D21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[1]}]
-#set_property -dict {PACKAGE_PIN C20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[2]}]
-#set_property -dict {PACKAGE_PIN A20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[3]}]
-#set_property -dict {PACKAGE_PIN B20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[4]}]
-#set_property -dict {PACKAGE_PIN A19 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[5]}]
-#set_property -dict {PACKAGE_PIN E21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[6]}]
-#set_property -dict {PACKAGE_PIN E22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[7]}]
-#set_property -dict {PACKAGE_PIN B21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_rwds]
-#set_property -dict {PACKAGE_PIN B22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_reset]
-#set_property -dict {PACKAGE_PIN C22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_cs0]
+set_property -dict {PACKAGE_PIN D22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_clk_p]
+set_property -dict {PACKAGE_PIN A21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[0]}]
+set_property -dict {PACKAGE_PIN D21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[1]}]
+set_property -dict {PACKAGE_PIN C20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[2]}]
+set_property -dict {PACKAGE_PIN A20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[3]}]
+set_property -dict {PACKAGE_PIN B20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[4]}]
+set_property -dict {PACKAGE_PIN A19 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[5]}]
+set_property -dict {PACKAGE_PIN E21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[6]}]
+set_property -dict {PACKAGE_PIN E22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[7]}]
+set_property -dict {PACKAGE_PIN B21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_rwds]
+set_property -dict {PACKAGE_PIN B22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_reset]
+set_property -dict {PACKAGE_PIN C22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_cs0]
 
 ## Additional HyperRAM on trap-door PMOD
 ## Pinout is for one of these: https://github.com/blackmesalabs/hyperram

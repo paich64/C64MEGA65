@@ -91,8 +91,8 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
--- PAL 720x576 @ 50 Hz resolution
-constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;
+-- HDMI 1280x720 @ 50 Hz resolution
+constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_50;
 
 -- Clock speeds
 constant CORE_CLK_SPEED       : natural := 31_528_000;   -- C64 main clock @ 31.528 MHz
@@ -101,8 +101,8 @@ constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 5
 -- Rendering constants (in pixels)
 --    VGA_*   size of the final output on the screen
 --    FONT_*  size of one OSM character
-constant VGA_DX               : natural := 658; -- VIDEO_MODE.H_PIXELS;
-constant VGA_DY               : natural := 540; -- VIDEO_MODE.V_PIXELS;
+constant VGA_DX               : natural := 658;
+constant VGA_DY               : natural := 540;
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
 
@@ -132,14 +132,15 @@ signal hr_clk_x1              : std_logic;               -- HyperRAM @ 100 MHz
 signal hr_clk_x2              : std_logic;               -- HyperRAM @ 200 MHz
 signal hr_clk_x2_del          : std_logic;               -- HyperRAM @ 200 MHz phase delayed
 signal tmds_clk               : std_logic;               -- HDMI pixel clock at 5x speed for TMDS @ 371.25 MHz
-signal vga_clk                : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
+signal hdmi_clk               : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 signal main_clk               : std_logic;               -- C64 main clock @ 31.528 MHz
 signal video_clk              : std_logic;               -- Video clock @ 63.056 MHz
 
 signal qnice_rst              : std_logic;
 signal hr_rst                 : std_logic;
-signal vga_rst                : std_logic;
+signal hdmi_rst               : std_logic;
 signal main_rst               : std_logic;
+signal video_rst              : std_logic;
 signal reset_na               : std_logic;
 
 
@@ -235,15 +236,18 @@ signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
--- vga_clk (VGA pixelclock)
+-- hdmi_clk (VGA pixelclock)
 ---------------------------------------------------------------------------------------------
 
-signal vga_de                 : std_logic;            -- VGA data enable (visible pixels)
-signal vga_tmds               : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
+signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
 
--- Core frame buffer
-signal vga_core_vram_addr     : std_logic_vector(14 downto 0);
-signal vga_core_vram_data     : std_logic_vector(23 downto 0);
+-- After video_rescaler
+signal hdmi_scaled_red        : std_logic_vector(7 downto 0);
+signal hdmi_scaled_green      : std_logic_vector(7 downto 0);
+signal hdmi_scaled_blue       : std_logic_vector(7 downto 0);
+signal hdmi_scaled_hs         : std_logic;
+signal hdmi_scaled_vs         : std_logic;
+signal hdmi_scaled_de         : std_logic;
 
 begin
 
@@ -265,15 +269,15 @@ begin
          hr_clk_x2_del_o => hr_clk_x2_del,
          hr_rst_o        => hr_rst,
 
---         tmds_clk_o      => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
---         hdmi_clk_o      => vga_clk,         -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
---         hdmi_rst_o      => vga_rst,         -- HDMI's reset, synchronized
+         tmds_clk_o      => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
+         hdmi_clk_o      => hdmi_clk,        -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
+         hdmi_rst_o      => hdmi_rst,        -- HDMI's reset, synchronized
 
          main_clk_o      => main_clk,        -- main's 31.528 MHz clock
          main_rst_o      => main_rst,        -- main's reset, synchronized
 
          video_clk_o     => video_clk,       -- video's 63.056 MHz clock
-         video_rst_o     => open             -- video's reset, synchronized
+         video_rst_o     => video_rst        -- video's reset, synchronized
       ); -- clk_gen
 
 
@@ -505,7 +509,7 @@ begin
 
 
    ---------------------------------------------------------------------------------------------
-   -- video_clk (VGA pixelclock)
+   -- video_clk (VGA output)
    ---------------------------------------------------------------------------------------------
 
    p_video_vga_ce : process (video_clk)
@@ -515,7 +519,7 @@ begin
       end if;
    end process p_video_vga_ce;
 
-   i_vga_wrapper : entity work.vga_wrapper
+   i_video_overlay : entity work.video_overlay
       generic  map (
          G_VGA_DX         => VGA_DX,
          G_VGA_DY         => VGA_DY,
@@ -544,7 +548,7 @@ begin
          vga_hs_o         => video_osm_hs,
          vga_vs_o         => video_osm_vs,
          vga_de_o         => open
-      ); -- i_vga_wrapper
+      ); -- i_video_overlay
 
    vga_red   <= video_osm_red;
    vga_green <= video_osm_green;
@@ -552,11 +556,52 @@ begin
    vga_hs    <= video_osm_hs;
    vga_vs    <= video_osm_vs;
 
-
    -- Make the VDAC output the image
    vdac_sync_n  <= '0';
    vdac_blank_n <= '1';
    vdac_clk     <= not video_clk;
+
+
+   ---------------------------------------------------------------------------------------------
+   -- hdmi_clk
+   ---------------------------------------------------------------------------------------------
+
+   reset_na <= not (video_rst or hdmi_rst or hr_rst);
+
+   i_video_rescaler : entity work.video_rescaler
+      generic map (
+         G_VIDEO_MODE => VIDEO_MODE
+      )
+      port map (
+         reset_na_i      => reset_na,
+         core_clk_i      => video_clk,
+         core_ce_i       => video_vga_ce(0),
+         core_r_i        => video_vga_red,
+         core_g_i        => video_vga_green,
+         core_b_i        => video_vga_blue,
+         core_hs_i       => video_vga_hs,
+         core_vs_i       => video_vga_vs,
+         core_de_i       => video_vga_de,
+
+         vga_clk_i       => hdmi_clk,
+         vga_ce_i        => '1',
+         vga_r_o         => hdmi_scaled_red,
+         vga_g_o         => hdmi_scaled_green,
+         vga_b_o         => hdmi_scaled_blue,
+         vga_hs_o        => hdmi_scaled_hs,
+         vga_vs_o        => hdmi_scaled_vs,
+         vga_de_o        => hdmi_scaled_de,
+
+         hr_clk_x1_i     => hr_clk_x1,
+         hr_clk_x2_i     => hr_clk_x2,
+         hr_clk_x2_del_i => hr_clk_x2_del,
+         hr_rst_i        => hr_rst,
+         hr_resetn       => hr_reset,
+         hr_csn          => hr_cs0,
+         hr_ck           => hr_clk_p,
+         hr_rwds         => hr_rwds,
+         hr_dq           => hr_d
+      ); -- i_video_rescaler
 
 
    i_vga_to_hdmi : entity work.vga_to_hdmi
@@ -569,14 +614,14 @@ begin
          vs_pol       => VIDEO_MODE.V_POL,            -- horizontal polarity: negative
          hs_pol       => VIDEO_MODE.H_POL,            -- vertaical polarity: negative
 
-         vga_rst      => '0', -- vga_rst,                     -- active high reset
-         vga_clk      => '0', -- vga_clk,                     -- VGA pixel clock
-         vga_vs       => '0', --vga_vs,
-         vga_hs       => '0', --vga_hs,
-         vga_de       => '0', --vga_de,
-         vga_r        => (others => '0'), --vga_red,
-         vga_g        => (others => '0'), --vga_green,
-         vga_b        => (others => '0'), --vga_blue,
+         vga_rst      => hdmi_rst,                    -- active high reset
+         vga_clk      => hdmi_clk,                    -- VGA pixel clock
+         vga_vs       => hdmi_scaled_vs,
+         vga_hs       => hdmi_scaled_hs,
+         vga_de       => hdmi_scaled_de,
+         vga_r        => hdmi_scaled_red,
+         vga_g        => hdmi_scaled_green,
+         vga_b        => hdmi_scaled_blue,
 
          -- PCM audio
          pcm_rst      => main_rst,
@@ -589,7 +634,7 @@ begin
          pcm_cts      => (others => '0'),
 
          -- TMDS output (parallel)
-         tmds         => open -- vga_tmds
+         tmds         => hdmi_tmds
       ); -- i_vga_to_hdmi
 
 
@@ -600,26 +645,26 @@ begin
    -- serialiser: in this design we use TMDS SelectIO outputs
    GEN_HDMI_DATA: for i in 0 to 2 generate
    begin
-      HDMI_DATA: entity work.serialiser_10to1_selectio
+      I_HDMI_DATA: entity work.serialiser_10to1_selectio
       port map (
-         rst     => vga_rst,
-         clk     => vga_clk,
+         rst     => hdmi_rst,
+         clk     => hdmi_clk,
          clk_x5  => tmds_clk,
-         d       => vga_tmds(i),
+         d       => hdmi_tmds(i),
          out_p   => TMDS_data_p(i),
          out_n   => TMDS_data_n(i)
-      ); -- HDMI_DATA: entity work.serialiser_10to1_selectio
+      ); -- I_HDMI_DATA: entity work.serialiser_10to1_selectio
    end generate GEN_HDMI_DATA;
 
-   HDMI_CLK: entity work.serialiser_10to1_selectio
+   GEN_HDMI_CLK: entity work.serialiser_10to1_selectio
    port map (
-         rst     => vga_rst,
-         clk     => vga_clk,
+         rst     => hdmi_rst,
+         clk     => hdmi_clk,
          clk_x5  => tmds_clk,
          d       => "0000011111",
          out_p   => TMDS_clk_p,
          out_n   => TMDS_clk_n
-      ); -- HDMI_CLK
+      ); -- GEN_HDMI_CLK
 
 
    ---------------------------------------------------------------------------------------------
