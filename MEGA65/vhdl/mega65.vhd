@@ -114,10 +114,12 @@ constant VRAM_ADDR_WIDTH      : natural := f_log2(CHAR_MEM_SIZE);
 
 -- Shell rendering constants (in characters)
 -- The Shell uses the OSM mechanism to display itself
+-- SHELL_M_* full screen menu and file browser
 constant SHELL_M_X            : integer := 0;
 constant SHELL_M_Y            : integer := 0;
 constant SHELL_M_DX           : integer := CHARS_DX;
 constant SHELL_M_DY           : integer := CHARS_DY;
+-- SHELL_O_* (smaller) on-screen menu, overlayed on top of the cores video.
 constant SHELL_O_X            : integer := CHARS_DX - 20;
 constant SHELL_O_Y            : integer := 0;
 constant SHELL_O_DX           : integer := 20;
