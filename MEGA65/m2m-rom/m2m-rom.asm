@@ -19,6 +19,7 @@
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
 #define RELEASE
+#undef DEBUG_OUTPUT
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -106,18 +107,17 @@ START_FIRMWARE  MOVE    STR_START, R8
                 RBRA    ERROR_END, 1
 
                 ; Ask for filename and let the user input the filename
-_MOUNT_OK       ;MOVE    STR_FINPUTD64, R8
-                ;SYSCALL(puts, 1)
-                ;MOVE    FINPUT_BUF, R8
-                ;MOVE    256, R9
-                ;SYSCALL(gets_s, 1)
-                ;SYSCALL(crlf, 1)
+_MOUNT_OK       MOVE    STR_FINPUTD64, R8
+                SYSCALL(puts, 1)
+                MOVE    FINPUT_BUF, R8
+                MOVE    256, R9
+                SYSCALL(gets_s, 1)
+                SYSCALL(crlf, 1)
 
                 ; Open file
                 MOVE    HANDLE_DEV, R8
                 MOVE    HANDLE_FILE, R9
-                ;MOVE    FINPUT_BUF, R10         ; user provided filename
-                MOVE    STR_D64, R10            ; hardcoded filename
+                MOVE    FINPUT_BUF, R10         ; user provided filename
                 MOVE    R10, R7                 ; remember for string output
                 XOR     R11, R11
                 SYSCALL(f32_fopen, 1)
@@ -181,6 +181,7 @@ _FREAD_EOF      MOVE    STR_D64_LD_OK, R8
                 MOVE    C64_IEC, @R8
 
                 ; output basic system data
+#ifdef DEBUG_OUTPUT
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    C64_IEC_WIN_CAD, @R8
                 MOVE    STR_DRIVES, R8
@@ -195,10 +196,13 @@ _FREAD_EOF      MOVE    STR_D64_LD_OK, R8
                 MOVE    @R8, R8
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
+#endif
 
                 ; check for sd_rd_i for drive 0 to be 0
+#ifdef DEBUG_OUTPUT                
                 MOVE    STR_RD_0, R8
                 SYSCALL(puts, 1)
+#endif
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    C64_IEC_WIN_DRV, @R8
                 MOVE    C64_IEC_RD, R8
@@ -208,9 +212,11 @@ _FREAD_EOF      MOVE    STR_D64_LD_OK, R8
                 SYSCALL(puts, 1)
                 SYSCALL(exit, 1)
 
-_RD_0_OK        MOVE    STR_OK, R8
+_RD_0_OK        
+#ifdef DEBUG_OUTPUT
+                MOVE    STR_OK, R8
                 SYSCALL(puts, 1)
-
+#endif
                 ; trigger mount signal
                 MOVE    STR_MOUNT, R8
                 SYSCALL(puts, 1)
@@ -251,15 +257,30 @@ _RD_0_OK        MOVE    STR_OK, R8
 
                 MOVE    STR_OK, R8
                 SYSCALL(puts, 1)
+                MOVE    STR_MOUNT2, R8
+                SYSCALL(puts, 1)
 
                 ; wait for sd_rd_i for drive 0 to be 1
-_NEXT_WAIT      MOVE    STR_RD_1, R8
+_NEXT_WAIT      
+#ifdef DEBUG_OUTPUT
+                MOVE    STR_RD_1, R8
                 SYSCALL(puts, 1)
+#endif                
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    C64_IEC_WIN_DRV, @R8    ; select drive 0
                 MOVE    C64_IEC_RD, R8
+
+                MOVE    M2M$KEY_HELP, R9
+                NOT     R9, R9
+                MOVE    M2M$KEYBOARD, R10
 _WAIT_RD_1      CMP     1, @R8
-                RBRA    _WAIT_RD_1, !Z
+                RBRA    _RD_1, Z
+                CMP     R9, @R10
+                RBRA    _UNMOUNT, Z
+                RBRA    _WAIT_RD_1, 1
+
+_RD_1
+#ifdef DEBUG_OUTPUT            
                 MOVE    STR_OK, R8
                 SYSCALL(puts, 1)
 
@@ -290,31 +311,38 @@ _WAIT_RD_1      CMP     1, @R8
                 SYSCALL(crlf, 1)
                 MOVE    STR_B_SIZE, R8
                 SYSCALL(puts, 1)
+#endif
                 MOVE    C64_IEC_SIZEB, R8
                 MOVE    @R8, R8
                 MOVE    R8, R0                  ; R0=# bytes to be transmitted
+#ifdef DEBUG_OUTPUT
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
                 MOVE    STR_B_4K_WIN, R8
                 SYSCALL(puts, 1)
+#endif
                 MOVE    C64_IEC_4K_WIN, R8
                 MOVE    @R8, R8
                 MOVE    R8, R1                  ; R1=start 4k win of transmis.
+#ifdef DEBUG_OUTPUT
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
                 MOVE    STR_B_4K_OFFS, R8
                 SYSCALL(puts, 1)
+#endif
                 MOVE    C64_IEC_4K_OFFS, R8
                 MOVE    @R8, R8
                 MOVE    R8, R2                  ; R2=start offs in 4k win 
+#ifdef DEBUG_OUTPUT
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
 
-                ; transmit data to internal buffer of C1541
                 MOVE    STR_FILL_S, R8
                 SYSCALL(puts, 1)
                 MOVE    STR_FILL_ACK_1, R8
                 SYSCALL(puts, 1)
+#endif
+                ; transmit data to internal buffer of C1541
                 MOVE    C64_IEC_ACK, R8         ; ackknowledge sd_rd_i
                 MOVE    1, @R8
 
@@ -323,7 +351,7 @@ _WAIT_RD_1      CMP     1, @R8
                 MOVE    M2M$RAMROM_DATA, R5     ; R5=data window
                 ADD     R2, R5                  ; start offset within window
                 XOR     R6, R6                  ; R6=# transmitted bytes
-                MOVE    M2M$RAMROM_4KWIN, R7    ; R7=end of window marker
+                MOVE    M2M$RAMROM_DATA, R7     ; R7=end of window marker
                 ADD     0x1000, R7
 
 _SEND_LOOP      CMP     R6, R0                  ; transmission done?
@@ -339,6 +367,7 @@ _SEND_LOOP      CMP     R6, R0                  ; transmission done?
                 MOVE    R6, @R9
                 MOVE    C64_IEC_B_DOUT, R9      ; write buffer: data out
                 MOVE    R8, @R9
+
                 MOVE    C64_IEC_B_WREN, R9      ; strobe write enable
                 MOVE    1, @R9
                 MOVE    0, @R9
@@ -351,139 +380,35 @@ _SEND_LOOP      CMP     R6, R0                  ; transmission done?
                 MOVE    M2M$RAMROM_DATA, R5     ; byte zero in next window
                 RBRA    _SEND_LOOP, 1
 
-_SEND_DONE      MOVE    STR_FILL_ACK_0, R8
+_SEND_DONE      
+#ifdef DEBUG_OUTPUT
+                MOVE    STR_FILL_ACK_0, R8
                 SYSCALL(puts, 1)
+#endif
                 MOVE    C64_IEC_WIN_DRV, @R4    ; select drive 0
                 MOVE    C64_IEC_ACK, R8         ; unassert ACK
                 MOVE    0, @R8
 
+#ifdef DEBUG_OUTPUT
                 MOVE    STR_FILL_DATA, R8
                 SYSCALL(puts, 1)
                 MOVE    R6, R8
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
-
+#endif
                 ; endless loop: next read request
                 RBRA    _NEXT_WAIT, 1
 
-STR_START       .ASCII_P "                                                  "
-                .ASCII_W "\nC64 for MEGA65: IEC development testbed\n"
-STR_FINPUTD64   .ASCII_W "Enter D64 file name: "                
-STR_DRIVES      .ASCII_W "Number of drives: "
-STR_BLKSZ       .ASCII_W "LBA block size: "
-STR_OK          .ASCII_W "OK\n"
-STR_ERROR       .ASCII_W "ERROR\n"
-STR_ERR_D64     .ASCII_P "ERROR: For now, only standard D64 files with a "
-                .ASCII_W "size of exactly 174,848 bytes are supported.\n"
-STR_LOADING     .ASCII_W "Loading file: "
-STR_D64_LD_OK   .ASCII_W "Loading OK\n"
-STR_MOUNT       .ASCII_W "Strobing mount signal: "
-STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
-STR_RD_1        .ASCII_W "Waiting for sd_rd_i to be 1: "
-STR_LBA         .ASCII_W "   LBA: "
-STR_BLOCKS      .ASCII_W "   Blocks: "
-STR_B_ADDR      .ASCII_W "   Address (bytes): "
-STR_B_SIZE      .ASCII_W "   Size (bytes): "
-STR_B_4K_WIN    .ASCII_W "   4k Window: "
-STR_B_4K_OFFS   .ASCII_W "   4k Offset: "
-STR_FILL_S      .ASCII_W "Filling C1541's data buffer...\n"
-STR_FILL_ACK_1  .ASCII_W "   sd_ack_o = 1\n"
-STR_FILL_ACK_0  .ASCII_W "   sd_ack_o = 0\n"
-STR_FILL_DATA   .ASCII_W "   Bytes transmitted: "
-STR_D64         .ASCII_W "sidtest.d64"
-
-; ----------------------------------------------------------------------------
-; PRG LOADER
-; ----------------------------------------------------------------------------
-
-                MOVE    STR_TITLE, R8           ; output welcome message
+; Unmount current disk image and let the user mount a new one
+_UNMOUNT        MOVE    M2M$RAMROM_DEV, R8
+                MOVE    C64_IEC, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    C64_IEC_WIN_CAD, @R8
+                MOVE    C64_IEC_MOUNT, R8
+                MOVE    0, @R8                  ; currently hardcoded
+                MOVE    STR_UNMOUNT, R8
                 SYSCALL(puts, 1)
-
-#ifdef RELEASE
-                ; Stabilize SD Card
-                RSUB    WAIT1SEC, 1
-                RSUB    WAIT1SEC, 1
-#endif
-
-                ; Mount SD card
-                MOVE    HANDLE_DEV, R8          ; device handle
-                MOVE    1, R9                   ; partition #1 hardcoded
-                SYSCALL(f32_mnt_sd, 1)
-                CMP     0, R9                   ; R9=error code; 0=OK
-                RBRA    MOUNT_OK, Z
-                MOVE    STR_ERR_SD, R8
-                RBRA    ERROR_END, 1
-
-                ; Ask for filename and let the user input the filename
-MOUNT_OK        MOVE    STR_FINPUT, R8
-                SYSCALL(puts, 1)
-                MOVE    FINPUT_BUF, R8
-                MOVE    256, R9
-                SYSCALL(gets_s, 1)
-                SYSCALL(crlf, 1)
-
-                ; Open file
-                MOVE    HANDLE_DEV, R8
-                MOVE    HANDLE_FILE, R9
-                MOVE    FINPUT_BUF, R10
-                XOR     R11, R11
-                SYSCALL(f32_fopen, 1)
-                CMP     0, R10                  ; R10=error code; 0=OK
-                RBRA    FOPEN_OK, Z
-                MOVE    STR_ERR_FNF, R8
-                RBRA    ERROR_END, 1
-
-                ; Read C64 two byte PRG file header, which is the start
-                ; address of the program in little-endian
-FOPEN_OK        MOVE    HANDLE_FILE, R8
-                SYSCALL(f32_fread, 1)
-                RSUB    FREAD_CHK, 1
-                MOVE    R9, R0                  ; low byte of prg start addr
-                SYSCALL(f32_fread, 1)
-                RSUB    FREAD_CHK, 1
-                AND     0xFFFD, SR              ; clear X flag
-                SHL     8, R9                   ; high byte of prg start addr
-                OR      R9, R0                   
-                MOVE    STR_STARTADDR, R8
-                SYSCALL(puts, 1)
-                MOVE    R0, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-
-                ; Calculate 4k window and offset for QNICE RAM access
-                MOVE    R0, R8
-                MOVE    4096, R9
-                SYSCALL(divu, 1)                ; R10=R8/R9; R11=R8%R9
-                MOVE    R10, R1                 ; R1=window
-                MOVE    R11, R2                 ; R2=start address in window
-                ADD     M2M$RAMROM_DATA, R2
-                MOVE    M2M$RAMROM_DATA, R3     ; R3=end of 4k page reached
-                ADD     0x1000, R3
-
-                ; Load file
-                MOVE    M2M$RAMROM_DEV, R8      ; map C64 RAM to 0x7000
-                MOVE    C64_RAM, @R8            ; C64 RAM device handle
-FREAD_NEXTWIN   MOVE    M2M$RAMROM_4KWIN, R8    ; set 4k window
-                MOVE    R1, @R8
-
-FREAD_NEXTBYTE  MOVE    HANDLE_FILE, R8         ; read next byte to R9
-                SYSCALL(f32_fread, 1)
-                CMP     FAT32$EOF, R10
-                RBRA    FREAD_EOF, Z
-                RSUB    FREAD_CHK, 1
-
-                MOVE    R9, @R2++               ; write byte to C64 RAM
-
-                CMP     R3, R2                  ; end of 4k page reached?
-                RBRA    FREAD_NEXTBYTE, !Z      ; no: read next byte
-                ADD     1, R1                   ; inc. window counter
-                MOVE    M2M$RAMROM_DATA, R2     ; start at beginning of window
-                RBRA    FREAD_NEXTWIN, 1        ; set next window
-
-                ; Print success message and end program
-FREAD_EOF       MOVE    STR_LOAD_OK, R8
-                SYSCALL(puts, 1)
-                SYSCALL(exit, 1)
+                RBRA    _MOUNT_OK, 1
 
 ; Check, if reading the last byte went OK, otherwise end the program
 FREAD_CHK       CMP     0, R10
@@ -506,17 +431,41 @@ _W1S_L2         SUB     1, R1
                 SUB     1, R0
                 RBRA    _W1S_L1, !Z
                 DECRB
-                RET    
+                RET  
 
 ; ----------------------------------------------------------------------------
 ; Strings
 ; ----------------------------------------------------------------------------
 
-STR_TITLE       .ASCII_P "                                                   "
-                .ASCII_W "\nC64 for MEGA65 PRG file loader\n"
-STR_FINPUT      .ASCII_W "Enter PRG file name: "
-STR_STARTADDR   .ASCII_W "Start address of PRG: "
-STR_LOAD_OK     .ASCII_W "OK: Loading successful."
+STR_START       .ASCII_P "                                                  "
+                .ASCII_W "\nC64 for MEGA65: C1541 development testbed\n\n"
+STR_FINPUTD64   .ASCII_W "Enter D64 file name: "                
+STR_DRIVES      .ASCII_W "Number of drives: "
+STR_BLKSZ       .ASCII_W "LBA block size: "
+STR_OK          .ASCII_W "OK\n"
+STR_ERROR       .ASCII_W "ERROR\n"
+STR_ERR_D64     .ASCII_P "ERROR: For now, only standard D64 files with a "
+                .ASCII_W "size of exactly 174,848 bytes are supported.\n"
+STR_LOADING     .ASCII_W "Loading file: "
+STR_D64_LD_OK   .ASCII_W "Loading OK\n"
+STR_MOUNT       .ASCII_W "Mounting drive #8: "
+STR_MOUNT2      .ASCII_P "\nPress the MEGA65 HELP key to unmount this disk "
+                .ASCII_P "and to mount a new one. This also works for games "
+                .ASCII_P "and demos that ask you to change the disk at some "
+                .ASCII_W "point.\n\n"
+STR_UNMOUNT     .ASCII_W "Unmounted drive #8\n\n"
+STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
+STR_RD_1        .ASCII_W "Waiting for sd_rd_i to be 1: "
+STR_LBA         .ASCII_W "   LBA: "
+STR_BLOCKS      .ASCII_W "   Blocks: "
+STR_B_ADDR      .ASCII_W "   Address (bytes): "
+STR_B_SIZE      .ASCII_W "   Size (bytes): "
+STR_B_4K_WIN    .ASCII_W "   4k Window: "
+STR_B_4K_OFFS   .ASCII_W "   4k Offset: "
+STR_FILL_S      .ASCII_W "Filling C1541's data buffer...\n"
+STR_FILL_ACK_1  .ASCII_W "   sd_ack_o = 1\n"
+STR_FILL_ACK_0  .ASCII_W "   sd_ack_o = 0\n"
+STR_FILL_DATA   .ASCII_W "   Bytes transmitted: "
 
 STR_ERR_SD      .ASCII_W "ERROR: Cannot mount SD card.\n"
 STR_ERR_FNF     .ASCII_W "ERROR: File not found.\n"

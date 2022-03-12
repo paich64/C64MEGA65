@@ -1,7 +1,7 @@
 Commodore 64 for MEGA65 aka C64MEGA65
 =====================================
 
-done in 2021 by
+done in 2022 by
     * MJoergen   github.com/MJoergen
     * sy2002     github.com/sy2002     www.sy2002.de
 
@@ -38,11 +38,14 @@ Other than that and our own work, C64MEGA65 uses:
   * Various MEGA65 drivers taken from the MEGA65 VHDL source by Paul Gardner-Stephen
     https://github.com/MEGA65/mega65-core
 
-  * VGA Timing Generator, done by Scott Larson
-    https://www.digikey.com/eewiki/pages/viewpage.action?pageId=15925278
-
   * VGA to HDMI converter IP core, done by Adam Barnes
     https://github.com/amb5l/tyto_project
+
+  * AVALON SCALER used for scaling to 720p for HDMI, done by temlib.org
+    http://temlib.org/site/?page_id=10
+
+  * HyperRAM controller, done by MJoergen
+    https://mjoergen.github.io/HyperRAM/
 
   * Debouncer: I/O debouncing used for the joysticks, done by Scott Larson
     https://www.digikey.com/eewiki/pages/viewpage.action?pageId=4980758
@@ -55,3 +58,20 @@ Other than that and our own work, C64MEGA65 uses:
 
   * PSF font to C include file converter psftools-1.1.1 by John Elliott
     https://www.seasip.info/Unix/PSF/
+
+The following resources and tools were invaluable for developing C64MEGA65:
+---------------------------------------------------------------------------
+
+  * Book "Die Floppy 1541" by Karsten Schramm
+    Special thanks to Spiro Trikaliotis, who made it legally available online:
+    https://spiro.trikaliotis.net/Book#vic1541
+
+  * "Emulator file formats", chapter 17 of the Vice emulator's user manual:
+    https://vice-emu.sourceforge.io/vice_17.html#SEC351
+
+  * "MCS6500, MICROCOMPUTER FAMILY PROGRAMMING MANUAL" by MOS Technology
+    Special thanks to Erik Van den Broeck for the excellent HTML version:
+    http://users.telenet.be/kim1-6502/6502/proman.html
+
+  * DirMaster by Style
+    https://style64.org/dirmaster
