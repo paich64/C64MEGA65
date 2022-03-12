@@ -409,7 +409,7 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../C64_MiSTerMEGA65/rtl/video_sync.vhd">
-        <FileInfo>
+        <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
@@ -436,7 +436,7 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../M2M/vhdl/drivers/pcm_to_pdm.vhdl">
-        <FileInfo>
+        <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
@@ -463,7 +463,7 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../C64_MiSTerMEGA65/rtl/iec_drive/iecdrv_via6522.vhd">
-        <FileInfo>
+        <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
