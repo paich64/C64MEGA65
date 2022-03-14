@@ -180,8 +180,7 @@ signal video_osm_cfg_enable   : std_logic;
 signal video_osm_cfg_xy       : std_logic_vector(15 downto 0);
 signal video_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
 signal video_osm_vram_addr    : std_logic_vector(15 downto 0);
-signal video_osm_vram_data    : std_logic_vector(7 downto 0);
-signal video_osm_vram_attr    : std_logic_vector(7 downto 0);
+signal video_osm_vram_data    : std_logic_vector(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -210,10 +209,9 @@ signal qnice_ramrom_ce        : std_logic;
 signal qnice_ramrom_we        : std_logic;
 
 -- VRAM
-signal qnice_vram_we          : std_logic;
-signal qnice_vram_data_o      : std_logic_vector(7 downto 0);
-signal qnice_vram_attr_we     : std_logic;
-signal qnice_vram_attr_data_o : std_logic_vector(7 downto 0);
+signal qnice_vram_data        : std_logic_vector(15 downto 0);
+signal qnice_vram_we          : std_logic;   -- Writing to bits 7-0
+signal qnice_vram_attr_we     : std_logic;   -- Writing to bits 15-8
 
 -- Shell configuration (config.vhd)
 signal qnice_config_data      : std_logic_vector(15 downto 0);
@@ -458,10 +456,10 @@ begin
          ----------------------------------------------------------------------------
          when x"0000" =>
             qnice_vram_we              <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= x"00" & qnice_vram_data_o;
+            qnice_ramrom_data_i        <= x"00" & qnice_vram_data(7 downto 0);
          when x"0001" =>
             qnice_vram_attr_we         <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= x"00" & qnice_vram_attr_data_o;
+            qnice_ramrom_data_i        <= x"00" & qnice_vram_data(15 downto 8);
 
          -- Shell configuration data (config.vhd)
          when x"0002" =>
@@ -619,51 +617,26 @@ begin
          q_a               => qnice_c64_mount_buf_ram_data_o
       );
 
-   -- Dual port & dual clock screen RAM / video RAM: contains the "ASCII" codes of the characters
-   osm_vram : entity work.dualport_2clk_ram
+
+   i_osm_vram : entity work.dualport_2clk_ram_byteenable
       generic map (
-         ADDR_WIDTH   => VRAM_ADDR_WIDTH,
-         DATA_WIDTH   => 8,
-         FALLING_A    => true              -- QNICE expects read/write to happen at the falling clock edge
+         G_ADDR_WIDTH   => VRAM_ADDR_WIDTH,
+         G_DATA_WIDTH   => 16,
+         G_FALLING_A    => true  -- QNICE expects read/write to happen at the falling clock edge
       )
-      port map (
-         clock_a      => qnice_clk,
-         address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
-         data_a       => qnice_ramrom_data_o(7 downto 0),
-         wren_a       => qnice_vram_we,
-         q_a          => qnice_vram_data_o,
+      port map
+      (
+         a_clk_i        => qnice_clk,
+         a_address_i    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
+         a_data_i       => qnice_ramrom_data_o(7 downto 0) & qnice_ramrom_data_o(7 downto 0),   -- 2 copies of the same data
+         a_wren_i       => qnice_vram_we or qnice_vram_attr_we,
+         a_byteenable_i => qnice_vram_attr_we & qnice_vram_we,
+         a_q_o          => qnice_vram_data,
 
-         clock_b      => video_clk,
-         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
-         q_b          => video_osm_vram_data
-      ); -- osm_vram
-
-   -- Dual port & dual clock attribute RAM: contains inverse attribute, light/dark attrib. and colors of the chars
-   -- bit 7: 1=inverse
-   -- bit 6: 1=dark, 0=bright
-   -- bit 5: background red
-   -- bit 4: background green
-   -- bit 3: background blue
-   -- bit 2: foreground red
-   -- bit 1: foreground green
-   -- bit 0: foreground blue
-   osm_vram_attr : entity work.dualport_2clk_ram
-      generic map (
-         ADDR_WIDTH   => VRAM_ADDR_WIDTH,
-         DATA_WIDTH   => 8,
-         FALLING_A    => true
-      )
-      port map (
-         clock_a      => qnice_clk,
-         address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
-         data_a       => qnice_ramrom_data_o(7 downto 0),
-         wren_a       => qnice_vram_attr_we,
-         q_a          => qnice_vram_attr_data_o,
-
-         clock_b      => video_clk,
-         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
-         q_b          => video_osm_vram_attr
-      ); -- osm_vram_attr
+         b_clk_i        => video_clk,
+         b_address_i    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
+         b_q_o          => video_osm_vram_data
+      ); -- i_osm_vram
 
 
    --------------------------------------------------------
@@ -713,7 +686,6 @@ begin
          osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
          osm_vram_addr_o    => video_osm_vram_addr,
          osm_vram_data_i    => video_osm_vram_data,
-         osm_vram_attr_i    => video_osm_vram_attr,
          hr_clk_i           => hr_clk_x1,
          hr_rst_i           => hr_rst,
          hr_write_o         => hr_write,
@@ -726,6 +698,7 @@ begin
          hr_readdatavalid_i => hr_readdatavalid,
          hr_waitrequest_i   => hr_waitrequest
       ); -- i_audio_video_pipeline
+
 
    --------------------------------------------------------
    -- Instantiate HyperRAM controller

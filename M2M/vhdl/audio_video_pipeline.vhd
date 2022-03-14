@@ -8,8 +8,8 @@ use work.video_modes_pkg.all;
 
 entity audio_video_pipeline is
    generic (
-      G_VIDEO_MODE           : video_modes_t;
-      G_VGA_DX               : natural;
+      G_VIDEO_MODE           : video_modes_t;   -- Desired video format of HDMI output.
+      G_VGA_DX               : natural;         -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural
    );
    port (
@@ -55,15 +55,14 @@ entity audio_video_pipeline is
       osm_cfg_xy_i           : in  std_logic_vector(15 downto 0);
       osm_cfg_dxdy_i         : in  std_logic_vector(15 downto 0);
       osm_vram_addr_o        : out std_logic_vector(15 downto 0);
-      osm_vram_data_i        : in  std_logic_vector(7 downto 0);
-      osm_vram_attr_i        : in  std_logic_vector(7 downto 0);
+      osm_vram_data_i        : in  std_logic_vector(15 downto 0);
 
       -- Connect to HyperRAM controller
       hr_clk_i               : in  std_logic;
       hr_rst_i               : in  std_logic;
       hr_write_o             : out std_logic;
       hr_read_o              : out std_logic;
-      hr_address_o           : out std_logic_vector(31 downto 0) := (others => '0');
+      hr_address_o           : out std_logic_vector(31 downto 0);
       hr_writedata_o         : out std_logic_vector(15 downto 0);
       hr_byteenable_o        : out std_logic_vector(1 downto 0);
       hr_burstcount_o        : out std_logic_vector(7 downto 0);
@@ -158,7 +157,6 @@ begin
          vga_cfg_dxdy_i   => osm_cfg_dxdy_i,
          vga_vram_addr_o  => osm_vram_addr_o,
          vga_vram_data_i  => osm_vram_data_i,
-         vga_vram_attr_i  => osm_vram_attr_i,
          vga_ce_o         => open,
          vga_red_o        => vga_red_o,
          vga_green_o      => vga_green_o,
