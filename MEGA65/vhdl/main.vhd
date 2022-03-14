@@ -13,11 +13,6 @@ use ieee.numeric_std.all;
 use work.vdrives_pkg.all;
 
 entity main is
-   generic (
-      G_CORE_CLK_SPEED        : natural;
-      G_OUTPUT_DX             : natural;
-      G_OUTPUT_DY             : natural
-   );
    port (
       clk_main_i              : in std_logic;    -- 31.528 MHz
       clk_video_i             : in std_logic;    -- 63.056 MHz
@@ -410,17 +405,22 @@ begin
    ce_pix <= '1' when div = 0 else '0';
 
    -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ clk_video_i).
-   -- According the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
+   -- According to the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
    -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
    -- a horizontal period of 32.00 us. The difference here is 0.1 %.
    -- The ratio between clk_video_i and the pixel frequency is 7/3.
    --
-   -- Using a logic analyzer it's observed that the output has the following horizontal parameters:
+   -- Using a logic analyzer it's observed that the output has the following parameters:
    -- H_PIXELS = 658 pixels (1536 clock cycles)
    -- H_PULSE  =  65 pixels ( 152 clock cycles)
    -- H_BP     = 105 pixels ( 244 clock cycles)
    -- H_FP     =  36 pixels (  84 clock cycles)
    -- TOTAL    = 864 pixels (2016 clock cycles)
+   -- V_PIXELS = 540 lines
+   -- V_PULSE  =   8 lines
+   -- V_BP     =  17 lines
+   -- V_FP     =  59 lines
+   -- TOTAL    = 624 lines
 
    i_video_mixer : video_mixer
       port map (

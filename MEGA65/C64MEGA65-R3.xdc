@@ -14,14 +14,17 @@ create_clock -period 10.000 -name CLK [get_ports CLK]
 ## Important: Using them in subsequent statements, e.g. clock dividers requries that they
 ## have been named/defined here before
 ## otherwise Vivado does not find the pins)
-create_generated_clock -name qniceclk  [get_pins */clk_gen/i_clk_qnice/CLKOUT0]
-create_generated_clock -name videoclk  [get_pins */clk_gen/i_clk_c64/CLKOUT1]
-create_generated_clock -name mainclk   [get_pins */clk_gen/i_clk_c64/CLKOUT2]
-create_generated_clock -name pixelclk  [get_pins */clk_gen/i_clk_pal_hdmi/CLKOUT0]
-create_generated_clock -name pixelclk5 [get_pins */clk_gen/i_clk_pal_hdmi/CLKOUT1]
+create_generated_clock -name qnice_clk     [get_pins */clk_gen/i_clk_qnice/CLKOUT0]
+create_generated_clock -name hr_clk_x1     [get_pins */clk_gen/i_clk_qnice/CLKOUT1]
+create_generated_clock -name hr_clk_x2     [get_pins */clk_gen/i_clk_qnice/CLKOUT2]
+create_generated_clock -name hr_clk_x2_del [get_pins */clk_gen/i_clk_qnice/CLKOUT3]
+create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
+create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
+create_generated_clock -name main_clk      [get_pins */clk_gen/i_clk_c64/CLKOUT0]
+create_generated_clock -name video_clk     [get_pins */clk_gen/i_clk_c64/CLKOUT1]
 
 ## Clock divider sdcardclk that creates the 25 MHz used by sd_spi.vhd
-create_generated_clock -name sdcardclk -source [get_pins */clk_gen/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins MEGA65/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
+create_generated_clock -name sdcard_clk -source [get_pins */clk_gen/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins MEGA65/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
 
 ## QNICE's EAE combinatorial division networks take longer than
 ## the regular clock period, so we specify a multicycle path
@@ -30,7 +33,22 @@ set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -setup 3
 set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -hold 2
-   
+
+# Place HyperRAM close to I/O pins
+startgroup
+create_pblock pblock_i_hyperram
+resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
+add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_video_rescaler/i_hyperram_wrapper/i_hyperram]]
+endgroup
+
+# Timing between ascal.vhd and HyperRAM is asynchronous.
+set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks hdmi_clk]
+set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks hdmi_clk]
+set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks video_clk]
+set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks video_clk]
+set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks video_clk]
+set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks video_clk]
+
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
 set_false_path -from [get_pins -hier id2_reg[*]/C]
@@ -126,18 +144,18 @@ set_property -dict {PACKAGE_PIN AB5  IOSTANDARD TMDS_33}  [get_ports {tmds_data_
 set_property -dict {PACKAGE_PIN AA5  IOSTANDARD TMDS_33}  [get_ports {tmds_data_p[2]}]
 
 ## HyperRAM (standard)
-#set_property -dict {PACKAGE_PIN D22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_clk_p]
-#set_property -dict {PACKAGE_PIN A21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[0]}]
-#set_property -dict {PACKAGE_PIN D21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[1]}]
-#set_property -dict {PACKAGE_PIN C20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[2]}]
-#set_property -dict {PACKAGE_PIN A20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[3]}]
-#set_property -dict {PACKAGE_PIN B20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[4]}]
-#set_property -dict {PACKAGE_PIN A19 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[5]}]
-#set_property -dict {PACKAGE_PIN E21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[6]}]
-#set_property -dict {PACKAGE_PIN E22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[7]}]
-#set_property -dict {PACKAGE_PIN B21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_rwds]
-#set_property -dict {PACKAGE_PIN B22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_reset]
-#set_property -dict {PACKAGE_PIN C22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_cs0]
+set_property -dict {PACKAGE_PIN D22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_clk_p]
+set_property -dict {PACKAGE_PIN A21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[0]}]
+set_property -dict {PACKAGE_PIN D21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[1]}]
+set_property -dict {PACKAGE_PIN C20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[2]}]
+set_property -dict {PACKAGE_PIN A20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[3]}]
+set_property -dict {PACKAGE_PIN B20 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[4]}]
+set_property -dict {PACKAGE_PIN A19 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[5]}]
+set_property -dict {PACKAGE_PIN E21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[6]}]
+set_property -dict {PACKAGE_PIN E22 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports {hr_d[7]}]
+set_property -dict {PACKAGE_PIN B21 IOSTANDARD LVCMOS33 PULLUP FALSE SLEW FAST DRIVE 16} [get_ports hr_rwds]
+set_property -dict {PACKAGE_PIN B22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_reset]
+set_property -dict {PACKAGE_PIN C22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_cs0]
 
 ## Additional HyperRAM on trap-door PMOD
 ## Pinout is for one of these: https://github.com/blackmesalabs/hyperram

@@ -73,7 +73,14 @@ port (
    joy_2_down_n   : in std_logic;
    joy_2_left_n   : in std_logic;
    joy_2_right_n  : in std_logic;
-   joy_2_fire_n   : in std_logic
+   joy_2_fire_n   : in std_logic;
+
+   -- Built-in HyperRAM
+   hr_d           : inout std_logic_vector(7 downto 0);    -- Data/Address
+   hr_rwds        : inout std_logic;               -- RW Data strobe
+   hr_reset       : out std_logic;                 -- Active low RESET line to HyperRAM
+   hr_clk_p       : out std_logic;
+   hr_cs0         : out std_logic
 );
 end entity MEGA65_Core;
 
@@ -84,23 +91,18 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
--- PAL 720x576 @ 50 Hz resolution
-constant VIDEO_MODE           : video_modes_t := C_PAL_720_576_50;
+-- HDMI 1280x720 @ 50 Hz resolution
+constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_50;
 
 -- Clock speeds
 constant CORE_CLK_SPEED       : natural := 31_528_000;   -- C64 main clock @ 31.528 MHz
 constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
---constant PIXEL_CLK_SPEED      : natural := VIDEO_MODE.CLK_KHZ * 1000;
 
 -- Rendering constants (in pixels)
 --    VGA_*   size of the final output on the screen
---    CORE_*  size of the input resolution coming from the core and scaling factor
 --    FONT_*  size of one OSM character
-constant VGA_DX               : natural := VIDEO_MODE.H_PIXELS;
-constant VGA_DY               : natural := VIDEO_MODE.V_PIXELS;
-constant CORE_DX              : natural := 160;
-constant CORE_DY              : natural := 144;
-constant CORE_TO_VGA_SCALE    : natural := 5;
+constant VGA_DX               : natural := 658;
+constant VGA_DY               : natural := 540;
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
 
@@ -112,10 +114,12 @@ constant VRAM_ADDR_WIDTH      : natural := f_log2(CHAR_MEM_SIZE);
 
 -- Shell rendering constants (in characters)
 -- The Shell uses the OSM mechanism to display itself
+-- SHELL_M_* full screen menu and file browser
 constant SHELL_M_X            : integer := 0;
 constant SHELL_M_Y            : integer := 0;
 constant SHELL_M_DX           : integer := CHARS_DX;
 constant SHELL_M_DY           : integer := CHARS_DY;
+-- SHELL_O_* (smaller) on-screen menu, overlayed on top of the cores video.
 constant SHELL_O_X            : integer := CHARS_DX - 20;
 constant SHELL_O_Y            : integer := 0;
 constant SHELL_O_DX           : integer := 20;
@@ -125,15 +129,22 @@ constant SHELL_O_DY           : integer := 26;
 -- Clocks and active high reset signals for each clock domain
 ---------------------------------------------------------------------------------------------
 
-signal clk_video              : std_logic;               -- Video clock @ 63.056 MHz
 signal qnice_clk              : std_logic;               -- QNICE main clock @ 50 MHz
+signal hr_clk_x1              : std_logic;               -- HyperRAM @ 100 MHz
+signal hr_clk_x2              : std_logic;               -- HyperRAM @ 200 MHz
+signal hr_clk_x2_del          : std_logic;               -- HyperRAM @ 200 MHz phase delayed
+signal tmds_clk               : std_logic;               -- HDMI pixel clock at 5x speed for TMDS @ 371.25 MHz
+signal hdmi_clk               : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 signal main_clk               : std_logic;               -- C64 main clock @ 31.528 MHz
-signal vga_clk                : std_logic;               -- pixel clock at normal speed (default: PAL @ 50 Hz = 27 MHz)
-signal tmds_clk               : std_logic;               -- pixel clock at 5x speed for HDMI (default: Pal @ 50 Hz = 135 MHz)
+signal video_clk              : std_logic;               -- Video clock @ 63.056 MHz
 
-signal main_rst               : std_logic;
 signal qnice_rst              : std_logic;
-signal vga_rst                : std_logic;
+signal hr_rst                 : std_logic;
+signal hdmi_rst               : std_logic;
+signal main_rst               : std_logic;
+signal video_rst              : std_logic;
+signal reset_na               : std_logic;
+
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -157,6 +168,28 @@ signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data i
 -- SID Audio
 signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
+
+-- C64 Video output
+signal video_vga_ce           : std_logic_vector(6 downto 0) := "1010100"; -- Clock divider 3/7
+signal video_vga_red          : std_logic_vector(7 downto 0);
+signal video_vga_green        : std_logic_vector(7 downto 0);
+signal video_vga_blue         : std_logic_vector(7 downto 0);
+signal video_vga_hs           : std_logic;
+signal video_vga_vs           : std_logic;
+signal video_vga_de           : std_logic;
+
+-- On-Screen-Menu (OSM)
+signal video_osm_cfg_enable   : std_logic;
+signal video_osm_cfg_xy       : std_logic_vector(15 downto 0);
+signal video_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
+signal video_osm_vram_addr    : std_logic_vector(15 downto 0);
+signal video_osm_vram_data    : std_logic_vector(7 downto 0);
+signal video_osm_vram_attr    : std_logic_vector(7 downto 0);
+signal video_osm_red          : std_logic_vector(7 downto 0);
+signal video_osm_green        : std_logic_vector(7 downto 0);
+signal video_osm_blue         : std_logic_vector(7 downto 0);
+signal video_osm_hs           : std_logic;
+signal video_osm_vs           : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -205,48 +238,50 @@ signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
 
 ---------------------------------------------------------------------------------------------
--- vga_clk (VGA pixelclock)
+-- hdmi_clk (VGA pixelclock)
 ---------------------------------------------------------------------------------------------
 
-signal vga_de                 : std_logic;            -- VGA data enable (visible pixels)
-signal vga_tmds               : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
+signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
 
--- Core frame buffer
-signal vga_core_vram_addr     : std_logic_vector(14 downto 0);
-signal vga_core_vram_data     : std_logic_vector(23 downto 0);
-
--- On-Screen-Menu (OSM)
-signal vga_osm_cfg_enable     : std_logic;
-signal vga_osm_cfg_xy         : std_logic_vector(15 downto 0);
-signal vga_osm_cfg_dxdy       : std_logic_vector(15 downto 0);
-signal vga_osm_vram_addr      : std_logic_vector(15 downto 0);
-signal vga_osm_vram_data      : std_logic_vector(7 downto 0);
-signal vga_osm_vram_attr      : std_logic_vector(7 downto 0);
+-- After video_rescaler
+signal hdmi_scaled_red        : std_logic_vector(7 downto 0);
+signal hdmi_scaled_green      : std_logic_vector(7 downto 0);
+signal hdmi_scaled_blue       : std_logic_vector(7 downto 0);
+signal hdmi_scaled_hs         : std_logic;
+signal hdmi_scaled_vs         : std_logic;
+signal hdmi_scaled_de         : std_logic;
 
 begin
 
    -- MMCME2_ADV clock generators:
-   --   C64:                  31.528 MHz
    --   QNICE:                50 MHz
-   --   PAL @ 50 Hz:          27 MHz (VGA) and 135 MHz (HDMI)
+   --   HyperRAM:             100 MHz
+   --   HDMI 720p 50 Hz:      74.25 MHz (HDMI) and 371.25 MHz (TMDS)
+   --   C64:                  31.528 MHz
    clk_gen : entity work.clk
       port map (
-         sys_clk_i    => CLK,             -- expects 100 MHz
-         sys_rstn_i   => RESET_N,         -- Asynchronous, asserted low
+         sys_clk_i       => CLK,             -- expects 100 MHz
+         sys_rstn_i      => RESET_N,         -- Asynchronous, asserted low
 
-         video_clk_o  => clk_video,       -- video's 63.056 MHz clock
-         video_rst_o  => open,            -- video's reset, synchronized
+         qnice_clk_o     => qnice_clk,       -- QNICE's 50 MHz main clock
+         qnice_rst_o     => qnice_rst,       -- QNICE's reset, synchronized
 
-         qnice_clk_o  => qnice_clk,       -- QNICE's 50 MHz main clock
-         qnice_rst_o  => qnice_rst,       -- QNICE's reset, synchronized
+         hr_clk_x1_o     => hr_clk_x1,
+         hr_clk_x2_o     => hr_clk_x2,
+         hr_clk_x2_del_o => hr_clk_x2_del,
+         hr_rst_o        => hr_rst,
 
-         main_clk_o   => main_clk,        -- main's 31.528 MHz clock
-         main_rst_o   => main_rst,        -- main's reset, synchronized
+         tmds_clk_o      => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
+         hdmi_clk_o      => hdmi_clk,        -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
+         hdmi_rst_o      => hdmi_rst,        -- HDMI's reset, synchronized
 
-         pixel_clk_o  => vga_clk,         -- VGA 27 MHz pixelclock for PAL @ 50 Hz
-         pixel_rst_o  => vga_rst,         -- VGA's reset, synchronized
-         pixel_clk5_o => tmds_clk         -- VGA's 135 MHz pixelclock (27 MHz x 5) for HDMI
-      );
+         main_clk_o      => main_clk,        -- main's 31.528 MHz clock
+         main_rst_o      => main_rst,        -- main's reset, synchronized
+
+         video_clk_o     => video_clk,       -- video's 63.056 MHz clock
+         video_rst_o     => video_rst        -- video's reset, synchronized
+      ); -- clk_gen
+
 
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
@@ -254,16 +289,11 @@ begin
 
    -- main.vhd contains the actual Commodore 64 MiSTer core
    i_main : entity work.main
-      generic map (
-         G_CORE_CLK_SPEED     => CORE_CLK_SPEED,
-         G_OUTPUT_DX          => VGA_DX,
-         G_OUTPUT_DY          => VGA_DY
-      )
       port map (
          clk_main_i           => main_clk,
-         clk_video_i          => clk_video,
-         reset_i              => main_rst or main_qnice_reset,
-         pause_i              => main_qnice_pause,
+         clk_video_i          => video_clk,
+         reset_i              => main_rst, --  or main_qnice_reset,
+         pause_i              => '0', -- main_qnice_pause,
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
@@ -283,12 +313,13 @@ begin
          joy_2_fire_n_i       => joy_2_fire_n,
 
          -- C64 video out (after scandoubler)
-         vga_red_o            => VGA_RED,
-         vga_green_o          => VGA_GREEN,
-         vga_blue_o           => VGA_BLUE,
-         vga_vs_o             => VGA_VS,
-         vga_hs_o             => VGA_HS,
-         vga_de_o             => vga_de,
+         -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to video_clk (63 MHz).
+         vga_red_o            => video_vga_red,
+         vga_green_o          => video_vga_green,
+         vga_blue_o           => video_vga_blue,
+         vga_vs_o             => video_vga_vs,
+         vga_hs_o             => video_vga_hs,
+         vga_de_o             => video_vga_de,
 
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -307,12 +338,7 @@ begin
          c64_qnice_data_o     => qnice_c64_qnice_data_o,
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
          c64_qnice_we_i       => qnice_c64_qnice_we
-      );
-
-   -- Make the VDAC output the image
-   vdac_sync_n    <= '0';
-   vdac_blank_n   <= '1';
-   vdac_clk       <= not clk_video;
+      ); -- i_main
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
@@ -485,39 +511,100 @@ begin
 
 
    ---------------------------------------------------------------------------------------------
-   -- vga_clk (VGA pixelclock)
+   -- video_clk (VGA output)
    ---------------------------------------------------------------------------------------------
 
-   i_vga : entity work.vga
-      generic map (
-         G_VIDEO_MODE         => VIDEO_MODE,
-         G_CORE_DX            => CORE_DX,
-         G_CORE_DY            => CORE_DY,
-         G_CORE_TO_VGA_SCALE  => CORE_TO_VGA_SCALE,
-         G_FONT_DX            => FONT_DX,
-         G_FONT_DY            => FONT_DY
+   p_video_vga_ce : process (video_clk)
+   begin
+      if rising_edge(video_clk) then
+         video_vga_ce <= video_vga_ce(0) & video_vga_ce(video_vga_ce'left downto 1);
+      end if;
+   end process p_video_vga_ce;
+
+   i_video_overlay : entity work.video_overlay
+      generic  map (
+         G_VGA_DX         => VGA_DX,
+         G_VGA_DY         => VGA_DY,
+         G_FONT_DX        => FONT_DX,
+         G_FONT_DY        => FONT_DY
       )
       port map (
-         clk_i                => vga_clk,          -- pixel clock at frequency of VGA mode being used
-         rstn_i               => not vga_rst,      -- active low reset
-         vga_osm_cfg_enable_i => vga_osm_cfg_enable,
-         vga_osm_cfg_xy_i     => vga_osm_cfg_xy,
-         vga_osm_cfg_dxdy_i   => vga_osm_cfg_dxdy,
-         vga_osm_vram_addr_o  => vga_osm_vram_addr,
-         vga_osm_vram_data_i  => vga_osm_vram_data,
-         vga_osm_vram_attr_i  => vga_osm_vram_attr,
-         vga_core_vram_addr_o => vga_core_vram_addr,
-         vga_core_vram_data_i => vga_core_vram_data,
-         vga_red_o            => open, -- vga_red,
-         vga_green_o          => open, -- vga_green,
-         vga_blue_o           => open, -- vga_blue,
-         vga_hs_o             => open, -- vga_hs,
-         vga_vs_o             => open, -- vga_vs,
-         vga_de_o             => open, -- vga_de,
-         vdac_clk_o           => open, -- vdac_clk,
-         vdac_sync_n_o        => open, -- vdac_sync_n,
-         vdac_blank_n_o       => open  -- vdac_blank_n
-      );
+         vga_clk_i        => video_clk,
+         vga_ce_i         => video_vga_ce(0),
+         vga_red_i        => video_vga_red,
+         vga_green_i      => video_vga_green,
+         vga_blue_i       => video_vga_blue,
+         vga_hs_i         => video_vga_hs,
+         vga_vs_i         => video_vga_vs,
+         vga_de_i         => video_vga_de,
+         vga_cfg_enable_i => video_osm_cfg_enable,
+         vga_cfg_xy_i     => video_osm_cfg_xy,
+         vga_cfg_dxdy_i   => video_osm_cfg_dxdy,
+         vga_vram_addr_o  => video_osm_vram_addr,
+         vga_vram_data_i  => video_osm_vram_data,
+         vga_vram_attr_i  => video_osm_vram_attr,
+         vga_ce_o         => open,
+         vga_red_o        => video_osm_red,
+         vga_green_o      => video_osm_green,
+         vga_blue_o       => video_osm_blue,
+         vga_hs_o         => video_osm_hs,
+         vga_vs_o         => video_osm_vs,
+         vga_de_o         => open
+      ); -- i_video_overlay
+
+   vga_red   <= video_osm_red;
+   vga_green <= video_osm_green;
+   vga_blue  <= video_osm_blue;
+   vga_hs    <= video_osm_hs;
+   vga_vs    <= video_osm_vs;
+
+   -- Make the VDAC output the image
+   vdac_sync_n  <= '0';
+   vdac_blank_n <= '1';
+   vdac_clk     <= not video_clk;
+
+
+   ---------------------------------------------------------------------------------------------
+   -- hdmi_clk
+   ---------------------------------------------------------------------------------------------
+
+   reset_na <= not (video_rst or hdmi_rst or hr_rst);
+
+   i_video_rescaler : entity work.video_rescaler
+      generic map (
+         G_VIDEO_MODE => VIDEO_MODE
+      )
+      port map (
+         reset_na_i      => reset_na,
+         core_clk_i      => video_clk,
+         core_ce_i       => video_vga_ce(0),
+         core_r_i        => video_vga_red,
+         core_g_i        => video_vga_green,
+         core_b_i        => video_vga_blue,
+         core_hs_i       => video_vga_hs,
+         core_vs_i       => video_vga_vs,
+         core_de_i       => video_vga_de,
+
+         vga_clk_i       => hdmi_clk,
+         vga_ce_i        => '1',
+         vga_r_o         => hdmi_scaled_red,
+         vga_g_o         => hdmi_scaled_green,
+         vga_b_o         => hdmi_scaled_blue,
+         vga_hs_o        => hdmi_scaled_hs,
+         vga_vs_o        => hdmi_scaled_vs,
+         vga_de_o        => hdmi_scaled_de,
+
+         hr_clk_x1_i     => hr_clk_x1,
+         hr_clk_x2_i     => hr_clk_x2,
+         hr_clk_x2_del_i => hr_clk_x2_del,
+         hr_rst_i        => hr_rst,
+         hr_resetn       => hr_reset,
+         hr_csn          => hr_cs0,
+         hr_ck           => hr_clk_p,
+         hr_rwds         => hr_rwds,
+         hr_dq           => hr_d
+      ); -- i_video_rescaler
+
 
    i_vga_to_hdmi : entity work.vga_to_hdmi
       port map (
@@ -529,14 +616,14 @@ begin
          vs_pol       => VIDEO_MODE.V_POL,            -- horizontal polarity: negative
          hs_pol       => VIDEO_MODE.H_POL,            -- vertaical polarity: negative
 
-         vga_rst      => '0', -- vga_rst,                     -- active high reset
-         vga_clk      => '0', -- vga_clk,                     -- VGA pixel clock
-         vga_vs       => '0', --vga_vs,
-         vga_hs       => '0', --vga_hs,
-         vga_de       => '0', --vga_de,
-         vga_r        => (others => '0'), --vga_red,
-         vga_g        => (others => '0'), --vga_green,
-         vga_b        => (others => '0'), --vga_blue,
+         vga_rst      => hdmi_rst,                    -- active high reset
+         vga_clk      => hdmi_clk,                    -- VGA pixel clock
+         vga_vs       => hdmi_scaled_vs,
+         vga_hs       => hdmi_scaled_hs,
+         vga_de       => hdmi_scaled_de,
+         vga_r        => hdmi_scaled_red,
+         vga_g        => hdmi_scaled_green,
+         vga_b        => hdmi_scaled_blue,
 
          -- PCM audio
          pcm_rst      => main_rst,
@@ -549,7 +636,7 @@ begin
          pcm_cts      => (others => '0'),
 
          -- TMDS output (parallel)
-         tmds         => open -- vga_tmds
+         tmds         => hdmi_tmds
       ); -- i_vga_to_hdmi
 
 
@@ -560,26 +647,26 @@ begin
    -- serialiser: in this design we use TMDS SelectIO outputs
    GEN_HDMI_DATA: for i in 0 to 2 generate
    begin
-      HDMI_DATA: entity work.serialiser_10to1_selectio
+      I_HDMI_DATA: entity work.serialiser_10to1_selectio
       port map (
-         rst     => '0', -- vga_rst,
-         clk     => '0', -- vga_clk,
-         clk_x5  => '0', -- tmds_clk,
-         d       => vga_tmds(i),
+         rst     => hdmi_rst,
+         clk     => hdmi_clk,
+         clk_x5  => tmds_clk,
+         d       => hdmi_tmds(i),
          out_p   => TMDS_data_p(i),
          out_n   => TMDS_data_n(i)
-      ); -- HDMI_DATA: entity work.serialiser_10to1_selectio
+      ); -- I_HDMI_DATA: entity work.serialiser_10to1_selectio
    end generate GEN_HDMI_DATA;
 
-   HDMI_CLK: entity work.serialiser_10to1_selectio
+   GEN_HDMI_CLK: entity work.serialiser_10to1_selectio
    port map (
-         rst     => vga_rst,
-         clk     => vga_clk,
+         rst     => hdmi_rst,
+         clk     => hdmi_clk,
          clk_x5  => tmds_clk,
          d       => "0000011111",
          out_p   => TMDS_clk_p,
          out_n   => TMDS_clk_n
-      ); -- HDMI_CLK
+      ); -- GEN_HDMI_CLK
 
 
    ---------------------------------------------------------------------------------------------
@@ -659,10 +746,10 @@ begin
          src_in(15 downto 0)    => qnice_osm_cfg_xy,
          src_in(31 downto 16)   => qnice_osm_cfg_dxdy,
          src_in(32)             => qnice_osm_cfg_enable,
-         dest_clk               => vga_clk,
-         dest_out(15 downto 0)  => vga_osm_cfg_xy,
-         dest_out(31 downto 16) => vga_osm_cfg_dxdy,
-         dest_out(32)           => vga_osm_cfg_enable
+         dest_clk               => video_clk,
+         dest_out(15 downto 0)  => video_osm_cfg_xy,
+         dest_out(31 downto 16) => video_osm_cfg_dxdy,
+         dest_out(32)           => video_osm_cfg_enable
       ); -- i_qnice2vga
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
@@ -723,9 +810,9 @@ begin
          wren_a       => qnice_vram_we,
          q_a          => qnice_vram_data_o,
 
-         clock_b      => vga_clk,
-         address_b    => vga_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
-         q_b          => vga_osm_vram_data
+         clock_b      => video_clk,
+         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
+         q_b          => video_osm_vram_data
       ); -- osm_vram
 
    -- Dual port & dual clock attribute RAM: contains inverse attribute, light/dark attrib. and colors of the chars
@@ -750,9 +837,9 @@ begin
          wren_a       => qnice_vram_attr_we,
          q_a          => qnice_vram_attr_data_o,
 
-         clock_b      => vga_clk,
-         address_b    => vga_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
-         q_b          => vga_osm_vram_attr
+         clock_b      => video_clk,
+         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
+         q_b          => video_osm_vram_attr
       ); -- osm_vram_attr
 
 end architecture beh;

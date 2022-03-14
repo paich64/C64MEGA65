@@ -40,7 +40,7 @@ constant SEL_WELCOME : std_logic_vector(15 downto 0) := x"0000";
 constant SCR_WELCOME : string :=
 
    "Commodore 64 for MEGA65 V0.1 [WIP]\n" &
-   "MiSTer port by MJoergen & sy2002 in 2021\n\n" &
+   "MiSTer port by MJoergen & sy2002 in 2022\n\n" &
    
    "Powered by MiSTer2MEGA65 V0.1 [WIP]\n" &
    
