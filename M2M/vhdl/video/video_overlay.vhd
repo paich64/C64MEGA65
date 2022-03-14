@@ -26,8 +26,7 @@ entity video_overlay is
       vga_cfg_xy_i     : in  std_logic_vector(15 downto 0);
       vga_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
       vga_vram_addr_o  : out std_logic_vector(15 downto 0);
-      vga_vram_data_i  : in  std_logic_vector(7 downto 0);
-      vga_vram_attr_i  : in  std_logic_vector(7 downto 0);
+      vga_vram_data_i  : in  std_logic_vector(15 downto 0);
 
       -- VGA output
       vga_ce_o         : out std_logic;
@@ -103,8 +102,8 @@ begin
          vga_osm_cfg_dxdy_i   => vga_cfg_dxdy_i,
          vga_osm_cfg_enable_i => vga_cfg_enable_i,
          vga_osm_vram_addr_o  => vga_vram_addr_o,
-         vga_osm_vram_data_i  => vga_vram_data_i,
-         vga_osm_vram_attr_i  => vga_vram_attr_i,
+         vga_osm_vram_data_i  => vga_vram_data_i( 7 downto 0),
+         vga_osm_vram_attr_i  => vga_vram_data_i(15 downto 8),
          vga_osm_on_o         => vga_osm_on_d,
          vga_osm_rgb_o        => vga_osm_rgb_d
       ); -- i_vga_osm

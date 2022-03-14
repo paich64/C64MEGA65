@@ -38,7 +38,7 @@ set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_
 startgroup
 create_pblock pblock_i_hyperram
 resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
-add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_video_rescaler/i_hyperram_wrapper/i_hyperram]]
+add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_hyperram]]
 endgroup
 
 # Timing between ascal.vhd and HyperRAM is asynchronous.
