@@ -643,6 +643,13 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
+   p_video_ce : process (video_clk)
+   begin
+      if rising_edge(video_clk) then
+         video_ce <= video_ce(0) & video_ce(video_ce'left downto 1);
+      end if;
+   end process p_video_ce;
+
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
          G_VIDEO_MODE       => C_HDMI_720p_50,
