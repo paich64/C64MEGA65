@@ -91,8 +91,16 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
--- Clock speeds
-constant CORE_CLK_SPEED       : natural := 31_528_000;   -- C64 main clock @ 31.528 MHz
+-- HDMI 1280x720 @ 50 Hz resolution
+constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_50;
+
+-- C64 core clock speeds
+-- Make sure that you specify very exact values here, because these values will be used in counters
+-- in main.vhd and in fpga64_sid_iec.vhd to avoid clock drift at derived clocks
+constant CORE_CLK_SPEED_PAL   : natural := 31_527_778;   -- C64 main clock in PAL mode @ 31,527,778 MHz
+constant CORE_CLK_SPEED_NTSC  : natural := 32_727_264;   -- @TODO: This is MiSTer's value; we will need to adjust it to ours
+
+-- QNICE clock speed
 constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
 
 -- Rendering constants (in pixels)
@@ -120,7 +128,7 @@ constant SHELL_M_DY           : integer := CHARS_DY;
 constant SHELL_O_X            : integer := CHARS_DX - 20;
 constant SHELL_O_Y            : integer := 0;
 constant SHELL_O_DX           : integer := 20;
-constant SHELL_O_DY           : integer := 26;
+constant SHELL_O_DY           : integer := 15;
 
 ---------------------------------------------------------------------------------------------
 -- Clocks and active high reset signals for each clock domain
@@ -142,14 +150,19 @@ signal main_rst               : std_logic;
 signal video_rst              : std_logic;
 signal reset_na               : std_logic;
 
-
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
+signal c64_ntsc               : std_logic;                     -- global switch: 0 = PAL mode, 1 = NTSC mode
+signal c64_clock_speed        : natural;                       -- clock speed depending on PAL/NTSC
+
 -- QNICE control and status register
 signal main_qnice_reset       : std_logic;
 signal main_qnice_pause       : std_logic;
+signal main_csr_keyboard_on   : std_logic;
+signal main_csr_joy1_on       : std_logic;
+signal main_csr_joy2_on       : std_logic;
 
 -- keyboard handling
 signal main_key_num           : integer range 0 to 79;
@@ -189,6 +202,9 @@ signal video_osm_vram_data    : std_logic_vector(15 downto 0);
 -- Control and status register that QNICE uses to control the C64
 signal qnice_csr_reset        : std_logic;
 signal qnice_csr_pause        : std_logic;
+signal qnice_csr_keyboard_on  : std_logic;
+signal qnice_csr_joy1_on      : std_logic;
+signal qnice_csr_joy2_on      : std_logic;
 
 -- On-Screen-Menu (OSM)
 signal qnice_osm_cfg_enable   : std_logic;
@@ -276,6 +292,25 @@ begin
          video_rst_o     => video_rst        -- video's reset, synchronized
       ); -- clk_gen
 
+   ---------------------------------------------------------------------------------------------
+   -- Global switch between PAL and NTSC
+   ---------------------------------------------------------------------------------------------
+
+   -- @TODO: For now, we hardcode PAL mode
+   -- CAUTION: As soon as we change this to a dynamic behavior, we need to make sure
+   -- that we are adding False Paths or something like that for keyscan_delay,
+   -- repeat_start_timer and repeat_again_timer in matrix_to_keynum.vhdl and we also
+   -- need to port these False Paths upstream into the XDC of the MiSTer2MEGA65 framework
+   -- itself. Right now, Vivado is optimizing everything away, because we have a hard coded
+   -- PAL mode: The frequencies are constantsand so the math can be done during synthesis.
+   -- But as soon as this becomes dynamic, the calculations done for the
+   -- above-mentioned signals will put a strain on our timing closure. Due to the fact
+   -- that switching between PAL and NTSC does not happen very often, it is OK to accept
+   -- that the calculations might take multiple cycles and therefore use a False Path or
+   -- another measure in the XDC.
+
+   c64_ntsc <= '0'; -- @TODO: For now, we hardcode PAL mode
+   c64_clock_speed <= CORE_CLK_SPEED_PAL when c64_ntsc = '0' else CORE_CLK_SPEED_NTSC;
 
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
@@ -286,8 +321,12 @@ begin
       port map (
          clk_main_i           => main_clk,
          clk_video_i          => video_clk,
-         reset_i              => main_rst, --  or main_qnice_reset,
-         pause_i              => '0', -- main_qnice_pause,
+         reset_i              => main_rst or main_qnice_reset,
+         pause_i              => main_qnice_pause,
+
+         -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
+         c64_ntsc_i           => c64_ntsc,
+         clk_main_speed_i     => c64_clock_speed,
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
@@ -334,14 +373,11 @@ begin
          c64_qnice_we_i       => qnice_c64_qnice_we
       ); -- i_main
 
-
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
-      generic map (
-         CLOCK_SPEED          => CORE_CLK_SPEED
-      )
       port map (
          clk_main_i           => main_clk,
+         clk_main_speed_i     => c64_clock_speed,
 
          -- interface to the MEGA65 keyboard controller
          kio8_o               => kb_io0,
@@ -349,6 +385,7 @@ begin
          kio10_i              => kb_io2,
 
          -- interface to the core
+         enable_core_i        => main_csr_keyboard_on,
          key_num_o            => main_key_num,
          key_pressed_n_o      => main_key_pressed_n,
 
@@ -397,9 +434,9 @@ begin
          csr_reset_o             => qnice_csr_reset,
          csr_pause_o             => qnice_csr_pause,
          csr_osm_o               => qnice_osm_cfg_enable,
-         csr_keyboard_o          => open,
-         csr_joy1_o              => open,
-         csr_joy2_o              => open,
+         csr_keyboard_o          => qnice_csr_keyboard_on,
+         csr_joy1_o              => qnice_csr_joy1_on,
+         csr_joy2_o              => qnice_csr_joy2_on,
          osm_xy_o                => qnice_osm_cfg_xy,
          osm_dxdy_o              => qnice_osm_cfg_dxdy,
 
@@ -534,15 +571,21 @@ begin
    -- Clock domain crossing: QNICE to C64
    i_qnice2main: xpm_cdc_array_single
       generic map (
-         WIDTH => 2
+         WIDTH => 5
       )
       port map (
          src_clk                => qnice_clk,
          src_in(0)              => qnice_csr_reset,
          src_in(1)              => qnice_csr_pause,
+         src_in(2)              => qnice_csr_keyboard_on,
+         src_in(3)              => qnice_csr_joy1_on,
+         src_in(4)              => qnice_csr_joy2_on,
          dest_clk               => main_clk,
          dest_out(0)            => main_qnice_reset,
-         dest_out(1)            => main_qnice_pause
+         dest_out(1)            => main_qnice_pause,
+         dest_out(2)            => main_csr_keyboard_on,
+         dest_out(3)            => main_csr_joy1_on,
+         dest_out(4)            => main_csr_joy2_on
       ); -- i_qnice2main
 
    -- Clock domain crossing: C64 to QNICE
@@ -744,4 +787,3 @@ begin
    hr_dq_in   <= hr_d;
 
 end architecture beh;
-
