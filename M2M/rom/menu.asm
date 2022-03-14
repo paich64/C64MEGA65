@@ -3,7 +3,7 @@
 ;
 ; Options Menu
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
@@ -59,33 +59,34 @@ OPTM_FP_GETKEY  .EQU 6
 ;     in case of single selected items: 0=not selected, 1=selected
 OPTM_FP_CLLBCK  .EQU 7
 
-; selection character + zero terminator: 2 words in length!
+; multi-selection character + zero-terminator, after that:
+; single-selection character + zero-terminator, total: 4 words in length!
 OPTM_IR_SEL     .EQU 8
 
 ; amount of menu items: the length of the arrays to which OPTM_IR_GROUPS,
 ; OPTM_IR_DEFAULT and OPTM_IR_LINES point needs to be equal to this amount
-OPTM_IR_SIZE    .EQU 10
+OPTM_IR_SIZE    .EQU 12
 
 ; pointer to string containing the menu items and separating them with \n
-OPTM_IR_ITEMS   .EQU 11
+OPTM_IR_ITEMS   .EQU 13
 
 ; array of digits that define and group menu items,
 ; 0xEEEE automatically closes the menu when selected by the user
 ; 0x8xxx denotes single-select menu items
-OPTM_IR_GROUPS  .EQU 12
+OPTM_IR_GROUPS  .EQU 14
 
 ; array of 0s and 1s to define menu items that are activated by default
 ; in case this array is located in RAM, these are the advantages (but it
 ; can without problems also be located in ROM): the menu remembers the
 ; various multi- and single selections, if any and the menu prevents calling
 ; the callback function for already selected items
-OPTM_IR_STDSEL  .EQU 13
+OPTM_IR_STDSEL  .EQU 15
 
 ; array of 0s and 1s to define horizontal separator lines
-OPTM_IR_LINES   .EQU 14
+OPTM_IR_LINES   .EQU 16
 
 ; size of initialization record in words
-OPTM_STRUCTSIZE .EQU 15
+OPTM_STRUCTSIZE .EQU 17
 
 ; ----------------------------------------------------------------------------
 ; Options Menu functions
@@ -130,6 +131,10 @@ OPTM_SHOW       SYSCALL(enter, 1)
                 MOVE    @R3, R3
                 ADD     OPTM_IR_LINES, R3
                 MOVE    @R3, R3
+                MOVE    OPTM_DATA, R4           ; R4: groups (single-select)
+                MOVE    @R4, R4
+                ADD     OPTM_IR_GROUPS, R4
+                MOVE    @R4, R4
 
                 MOVE    OPTM_FP_CLEAR, R7       ; clear VRAM
                 RSUB    _OPTM_CALL, 1
@@ -160,8 +165,14 @@ _OPTM_SHOW_1    CMP     R0, R1                  ; R0 < R1 (start from 0)
                 RBRA    _OPTM_SHOW_2, Z         ; no
                 MOVE    OPTM_DATA, R8           ; yes: print selection here
                 MOVE    @R8, R8
-                ADD     OPTM_IR_SEL, R8
-                MOVE    R5, R9
+
+                ADD     OPTM_IR_SEL, R8         ; decide: single or multi-sel.
+                MOVE    @R4, R7
+                AND     OPTM_SINGLESEL, R7
+                RBRA    _OPTM_SHOW_1A, Z        ; multi-select
+                ADD     2, R8                   ; single-select
+
+_OPTM_SHOW_1A   MOVE    R5, R9
                 MOVE    R6, R10
                 MOVE    OPTM_FP_PRINTXY, R7
                 RSUB    _OPTM_CALL, 1
@@ -174,6 +185,7 @@ _OPTM_SHOW_2    CMP     0, @R3++                ; horiz. line here?
 
 _OPTM_SHOW_3    ADD     1, R6                   ; next y-pos
                 ADD     1, R0                   ; next menu item
+                ADD     1, R4                   ; next single/multi sel. info
                 RBRA    _OPTM_SHOW_1, 1
 
 _OPTM_SHOW_RET  SYSCALL(leave, 1)
@@ -269,16 +281,21 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 ADD     R2, R6                  ; use current selection to ..
                 MOVE    @R6, R6                 ; .. find the selected group
 
-                ; single select items are not marked
-                ; TODO:
-                ; enhance behavior to support marked ("checked" / "unchecked")
-                ; and unmarked single select menu items
+                ; single select items
                 MOVE    R6, R4
-                AND     OPTM_SINGLESEL, R4
-                RBRA    _OPTM_RUN_10, !Z
+                AND     OPTM_SINGLESEL, R4      ; single-select item?
+                RBRA    _OPTM_RUN_16, Z         ; no: proceed as multi-select
+                MOVE    OPTM_SSMS, R12          ; yes: Flag multi-select
+                MOVE    2, @R12
+                MOVE    OPTM_X, R9              ; R9: x-coord
+                MOVE    @R9, R9
+                ADD     1, R9                
+                RBRA    _OPTM_RUN_9, 1  
 
                 ; deselect all other group members on screen (and inside the
                 ; OPTM_IR_STDSEL array in case that it resides in RAM)
+_OPTM_RUN_16    MOVE    OPTM_SSMS, R12          ; Flag on stack: multi-select
+                MOVE    0, @R12
                 MOVE    OPTM_DATA, R12          ; R12: OPTM_IR_STDSEL ptr
                 MOVE    @R12, R12
                 ADD     OPTM_IR_STDSEL, R12
@@ -312,6 +329,8 @@ _OPTM_RUN_9     MOVE    OPTM_Y, R10
                 MOVE    OPTM_DATA, R8
                 MOVE    @R8, R8
                 ADD     OPTM_IR_SEL, R8
+                MOVE    OPTM_SSMS, R7           ; single select flag
+                ADD     @R7, R8
                 MOVE    OPTM_FP_PRINTXY, R7
                 RSUB    _OPTM_CALL, 1
                 MOVE    OPTM_DATA, R12          ; R12: OPTM_IR_STDSEL ptr

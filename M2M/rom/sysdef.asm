@@ -91,7 +91,8 @@ M2M$NC_VE_LEFT      .EQU 199    ; normal vertical line end: left part
 M2M$NC_VE_RIGHT     .EQU 182    ; normal vertical line end: right part
 M2M$DIR_L           .EQU 17     ; left char for displaying a directory
 M2M$DIR_R           .EQU 16     ; right char for displaying a directory
-M2M$OPT_SEL         .EQU 7      ; selection char for options menu
+M2M$OPT_SEL_MULTI   .EQU 7      ; selection char for options menu: multi-sel.
+M2M$OPT_SEL_SINGLE  .EQU 35     ; ditto for single select
 
 ; ----------------------------------------------------------------------------
 ; Keyboard for the framework (independent from the keyboard of the core)
@@ -168,3 +169,5 @@ M2M$CFG_OPTM_STDSEL .EQU 0x0302     ; Menu items that are selected by default
 M2M$CFG_OPTM_LINES  .EQU 0x0303     ; Separator lines
 M2M$CFG_OPTM_START  .EQU 0x0304     ; Position of very first cursor pos
 M2M$CFG_OPTM_ICOUNT .EQU 0x0305     ; Amount of menu items
+M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
+M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item

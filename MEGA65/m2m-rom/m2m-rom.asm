@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#define RELEASE
+#undef RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -95,17 +95,18 @@ START_FIRMWARE  MOVE    STR_START, R8
                 RBRA    ERROR_END, 1
 
                 ; Ask for filename and let the user input the filename
-_MOUNT_OK       MOVE    STR_FINPUTD64, R8
-                SYSCALL(puts, 1)
-                MOVE    FINPUT_BUF, R8
-                MOVE    256, R9
-                SYSCALL(gets_s, 1)
-                SYSCALL(crlf, 1)
+_MOUNT_OK       ;MOVE    STR_FINPUTD64, R8
+                ;SYSCALL(puts, 1)
+                ;MOVE    FINPUT_BUF, R8
+                ;MOVE    256, R9
+                ;SYSCALL(gets_s, 1)
+                ;SYSCALL(crlf, 1)
 
                 ; Open file
                 MOVE    HANDLE_DEV, R8
                 MOVE    HANDLE_FILE, R9
-                MOVE    FINPUT_BUF, R10         ; user provided filename
+                ;MOVE    FINPUT_BUF, R10         ; user provided filename
+                MOVE    TMP_DEBUG, R10          ; tmp/debug hardcoded D64
                 MOVE    R10, R7                 ; remember for string output
                 XOR     R11, R11
                 SYSCALL(f32_fopen, 1)
@@ -365,6 +366,8 @@ STR_UNMOUNT     .ASCII_W "Unmounted drive #8\n\n"
 STR_ERR_SD      .ASCII_W "ERROR: Cannot mount SD card.\n"
 STR_ERR_FNF     .ASCII_W "ERROR: File not found.\n"
 STR_ERR_LOAD    .ASCII_W "ERROR: Cannot load file.\n"
+
+TMP_DEBUG       .ASCII_W "d64/sidtest.d64"
 
 ; ----------------------------------------------------------------------------
 ; Variables: Need to be located in RAM
