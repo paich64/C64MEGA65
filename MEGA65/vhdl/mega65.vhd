@@ -91,9 +91,6 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
--- HDMI 1280x720 @ 50 Hz resolution
-constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_50;
-
 -- Clock speeds
 constant CORE_CLK_SPEED       : natural := 31_528_000;   -- C64 main clock @ 31.528 MHz
 constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
@@ -170,13 +167,13 @@ signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
 
 -- C64 Video output
-signal video_vga_ce           : std_logic_vector(6 downto 0) := "1010100"; -- Clock divider 3/7
-signal video_vga_red          : std_logic_vector(7 downto 0);
-signal video_vga_green        : std_logic_vector(7 downto 0);
-signal video_vga_blue         : std_logic_vector(7 downto 0);
-signal video_vga_hs           : std_logic;
-signal video_vga_vs           : std_logic;
-signal video_vga_de           : std_logic;
+signal video_ce               : std_logic_vector(6 downto 0) := "1010100"; -- Clock divider 3/7
+signal video_red              : std_logic_vector(7 downto 0);
+signal video_green            : std_logic_vector(7 downto 0);
+signal video_blue             : std_logic_vector(7 downto 0);
+signal video_hs               : std_logic;
+signal video_vs               : std_logic;
+signal video_de               : std_logic;
 
 -- On-Screen-Menu (OSM)
 signal video_osm_cfg_enable   : std_logic;
@@ -185,11 +182,6 @@ signal video_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
 signal video_osm_vram_addr    : std_logic_vector(15 downto 0);
 signal video_osm_vram_data    : std_logic_vector(7 downto 0);
 signal video_osm_vram_attr    : std_logic_vector(7 downto 0);
-signal video_osm_red          : std_logic_vector(7 downto 0);
-signal video_osm_green        : std_logic_vector(7 downto 0);
-signal video_osm_blue         : std_logic_vector(7 downto 0);
-signal video_osm_hs           : std_logic;
-signal video_osm_vs           : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -237,19 +229,23 @@ signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
 
----------------------------------------------------------------------------------------------
--- hdmi_clk (VGA pixelclock)
----------------------------------------------------------------------------------------------
+-- HyperRAM
+signal hr_write         : std_logic;
+signal hr_read          : std_logic;
+signal hr_address       : std_logic_vector(31 downto 0) := (others => '0');
+signal hr_writedata     : std_logic_vector(15 downto 0);
+signal hr_byteenable    : std_logic_vector(1 downto 0);
+signal hr_burstcount    : std_logic_vector(7 downto 0);
+signal hr_readdata      : std_logic_vector(15 downto 0);
+signal hr_readdatavalid : std_logic;
+signal hr_waitrequest   : std_logic;
 
-signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
-
--- After video_rescaler
-signal hdmi_scaled_red        : std_logic_vector(7 downto 0);
-signal hdmi_scaled_green      : std_logic_vector(7 downto 0);
-signal hdmi_scaled_blue       : std_logic_vector(7 downto 0);
-signal hdmi_scaled_hs         : std_logic;
-signal hdmi_scaled_vs         : std_logic;
-signal hdmi_scaled_de         : std_logic;
+signal hr_rwds_in       : std_logic;
+signal hr_rwds_out      : std_logic;
+signal hr_rwds_oe       : std_logic;   -- Output enable for RWDS
+signal hr_dq_in         : std_logic_vector(7 downto 0);
+signal hr_dq_out        : std_logic_vector(7 downto 0);
+signal hr_dq_oe         : std_logic;    -- Output enable for DQ
 
 begin
 
@@ -314,12 +310,12 @@ begin
 
          -- C64 video out (after scandoubler)
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to video_clk (63 MHz).
-         vga_red_o            => video_vga_red,
-         vga_green_o          => video_vga_green,
-         vga_blue_o           => video_vga_blue,
-         vga_vs_o             => video_vga_vs,
-         vga_hs_o             => video_vga_hs,
-         vga_de_o             => video_vga_de,
+         vga_red_o            => video_red,
+         vga_green_o          => video_green,
+         vga_blue_o           => video_blue,
+         vga_vs_o             => video_vs,
+         vga_hs_o             => video_hs,
+         vga_de_o             => video_de,
 
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -339,6 +335,7 @@ begin
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
          c64_qnice_we_i       => qnice_c64_qnice_we
       ); -- i_main
+
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
@@ -360,21 +357,6 @@ begin
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n
       ); -- i_m2m_keyb
-
-   -- Convert the C64's PCM output to pulse density modulation
-   i_pcm2pdm : entity work.pcm_to_pdm
-      port map
-      (
-         cpuclock                => main_clk,
-
-         pcm_left                => main_sid_l,
-         pcm_right               => main_sid_r,
-
-         -- Pulse Density Modulation (PDM is supposed to sound better than PWM on MEGA65)
-         pdm_left                => pwm_l,
-         pdm_right               => pwm_r,
-         audio_mode              => '0'         -- 0=PDM, 1=PWM
-      ); -- i_pcm2pdm
 
 
    ---------------------------------------------------------------------------------------------
@@ -508,165 +490,6 @@ begin
          when others => null;
       end case;
    end process qnice_ramrom_devices;
-
-
-   ---------------------------------------------------------------------------------------------
-   -- video_clk (VGA output)
-   ---------------------------------------------------------------------------------------------
-
-   p_video_vga_ce : process (video_clk)
-   begin
-      if rising_edge(video_clk) then
-         video_vga_ce <= video_vga_ce(0) & video_vga_ce(video_vga_ce'left downto 1);
-      end if;
-   end process p_video_vga_ce;
-
-   i_video_overlay : entity work.video_overlay
-      generic  map (
-         G_VGA_DX         => VGA_DX,
-         G_VGA_DY         => VGA_DY,
-         G_FONT_DX        => FONT_DX,
-         G_FONT_DY        => FONT_DY
-      )
-      port map (
-         vga_clk_i        => video_clk,
-         vga_ce_i         => video_vga_ce(0),
-         vga_red_i        => video_vga_red,
-         vga_green_i      => video_vga_green,
-         vga_blue_i       => video_vga_blue,
-         vga_hs_i         => video_vga_hs,
-         vga_vs_i         => video_vga_vs,
-         vga_de_i         => video_vga_de,
-         vga_cfg_enable_i => video_osm_cfg_enable,
-         vga_cfg_xy_i     => video_osm_cfg_xy,
-         vga_cfg_dxdy_i   => video_osm_cfg_dxdy,
-         vga_vram_addr_o  => video_osm_vram_addr,
-         vga_vram_data_i  => video_osm_vram_data,
-         vga_vram_attr_i  => video_osm_vram_attr,
-         vga_ce_o         => open,
-         vga_red_o        => video_osm_red,
-         vga_green_o      => video_osm_green,
-         vga_blue_o       => video_osm_blue,
-         vga_hs_o         => video_osm_hs,
-         vga_vs_o         => video_osm_vs,
-         vga_de_o         => open
-      ); -- i_video_overlay
-
-   vga_red   <= video_osm_red;
-   vga_green <= video_osm_green;
-   vga_blue  <= video_osm_blue;
-   vga_hs    <= video_osm_hs;
-   vga_vs    <= video_osm_vs;
-
-   -- Make the VDAC output the image
-   vdac_sync_n  <= '0';
-   vdac_blank_n <= '1';
-   vdac_clk     <= not video_clk;
-
-
-   ---------------------------------------------------------------------------------------------
-   -- hdmi_clk
-   ---------------------------------------------------------------------------------------------
-
-   reset_na <= not (video_rst or hdmi_rst or hr_rst);
-
-   i_video_rescaler : entity work.video_rescaler
-      generic map (
-         G_VIDEO_MODE => VIDEO_MODE
-      )
-      port map (
-         reset_na_i      => reset_na,
-         core_clk_i      => video_clk,
-         core_ce_i       => video_vga_ce(0),
-         core_r_i        => video_vga_red,
-         core_g_i        => video_vga_green,
-         core_b_i        => video_vga_blue,
-         core_hs_i       => video_vga_hs,
-         core_vs_i       => video_vga_vs,
-         core_de_i       => video_vga_de,
-
-         vga_clk_i       => hdmi_clk,
-         vga_ce_i        => '1',
-         vga_r_o         => hdmi_scaled_red,
-         vga_g_o         => hdmi_scaled_green,
-         vga_b_o         => hdmi_scaled_blue,
-         vga_hs_o        => hdmi_scaled_hs,
-         vga_vs_o        => hdmi_scaled_vs,
-         vga_de_o        => hdmi_scaled_de,
-
-         hr_clk_x1_i     => hr_clk_x1,
-         hr_clk_x2_i     => hr_clk_x2,
-         hr_clk_x2_del_i => hr_clk_x2_del,
-         hr_rst_i        => hr_rst,
-         hr_resetn       => hr_reset,
-         hr_csn          => hr_cs0,
-         hr_ck           => hr_clk_p,
-         hr_rwds         => hr_rwds,
-         hr_dq           => hr_d
-      ); -- i_video_rescaler
-
-
-   i_vga_to_hdmi : entity work.vga_to_hdmi
-      port map (
-         select_44100 => '0',
-         dvi          => '0',                         -- DVI mode: if activated, HDMI extensions like sound are deactivated
-         vic          => std_logic_vector(to_unsigned(VIDEO_MODE.CEA_CTA_VIC, 8)),  -- CEA/CTA VIC 17=PAL @ 50 Hz 4:3
-         aspect       => VIDEO_MODE.ASPECT,           -- "01" which means 4:3 which fits for PAL
-         pix_rep      => VIDEO_MODE.PIXEL_REP,        -- no pixel repetition for PAL
-         vs_pol       => VIDEO_MODE.V_POL,            -- horizontal polarity: negative
-         hs_pol       => VIDEO_MODE.H_POL,            -- vertaical polarity: negative
-
-         vga_rst      => hdmi_rst,                    -- active high reset
-         vga_clk      => hdmi_clk,                    -- VGA pixel clock
-         vga_vs       => hdmi_scaled_vs,
-         vga_hs       => hdmi_scaled_hs,
-         vga_de       => hdmi_scaled_de,
-         vga_r        => hdmi_scaled_red,
-         vga_g        => hdmi_scaled_green,
-         vga_b        => hdmi_scaled_blue,
-
-         -- PCM audio
-         pcm_rst      => main_rst,
-         pcm_clk      => main_clk,
-         pcm_clken    => '0',
-         pcm_l        => (others => '0'),
-         pcm_r        => (others => '0'),
-         pcm_acr      => '0',
-         pcm_n        => (others => '0'),
-         pcm_cts      => (others => '0'),
-
-         -- TMDS output (parallel)
-         tmds         => hdmi_tmds
-      ); -- i_vga_to_hdmi
-
-
-   ---------------------------------------------------------------------------------------------
-   -- tmds_clk (HDMI)
-   ---------------------------------------------------------------------------------------------
-
-   -- serialiser: in this design we use TMDS SelectIO outputs
-   GEN_HDMI_DATA: for i in 0 to 2 generate
-   begin
-      I_HDMI_DATA: entity work.serialiser_10to1_selectio
-      port map (
-         rst     => hdmi_rst,
-         clk     => hdmi_clk,
-         clk_x5  => tmds_clk,
-         d       => hdmi_tmds(i),
-         out_p   => TMDS_data_p(i),
-         out_n   => TMDS_data_n(i)
-      ); -- I_HDMI_DATA: entity work.serialiser_10to1_selectio
-   end generate GEN_HDMI_DATA;
-
-   GEN_HDMI_CLK: entity work.serialiser_10to1_selectio
-   port map (
-         rst     => hdmi_rst,
-         clk     => hdmi_clk,
-         clk_x5  => tmds_clk,
-         d       => "0000011111",
-         out_p   => TMDS_clk_p,
-         out_n   => TMDS_clk_n
-      ); -- GEN_HDMI_CLK
 
 
    ---------------------------------------------------------------------------------------------
@@ -841,6 +664,104 @@ begin
          address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
          q_b          => video_osm_vram_attr
       ); -- osm_vram_attr
+
+
+   --------------------------------------------------------
+   -- Audio and Video processing pipeline
+   --------------------------------------------------------
+
+   i_audio_video_pipeline : entity work.audio_video_pipeline
+      generic map (
+         G_VIDEO_MODE       => C_HDMI_720p_50,
+         G_VGA_DX           => VGA_DX,
+         G_VGA_DY           => VGA_DY
+      )
+      port map (
+         video_clk_i        => video_clk,
+         video_rst_i        => video_rst,
+         video_ce_i         => video_ce(0),
+         video_red_i        => video_red,
+         video_green_i      => video_green,
+         video_blue_i       => video_blue,
+         video_hs_i         => video_hs,
+         video_vs_i         => video_vs,
+         video_de_i         => video_de,
+         audio_clk_i        => main_clk,
+         audio_rst_i        => main_rst,
+         audio_left_i       => main_sid_l,
+         audio_right_i      => main_sid_r,
+         vga_red_o          => vga_red,
+         vga_green_o        => vga_green,
+         vga_blue_o         => vga_blue,
+         vga_hs_o           => vga_hs,
+         vga_vs_o           => vga_vs,
+         vdac_clk_o         => vdac_clk,
+         vdac_syncn_o       => vdac_sync_n,
+         vdac_blankn_o      => vdac_blank_n,
+         pwm_l_o            => pwm_l,
+         pwm_r_o            => pwm_r,
+         hdmi_clk_i         => hdmi_clk,
+         hdmi_rst_i         => hdmi_rst,
+         tmds_clk_i         => tmds_clk,
+         tmds_data_p_o      => tmds_data_p,
+         tmds_data_n_o      => tmds_data_n,
+         tmds_clk_p_o       => tmds_clk_p,
+         tmds_clk_n_o       => tmds_clk_n,
+         osm_clk_i          => video_clk,
+         osm_cfg_enable_i   => video_osm_cfg_enable,
+         osm_cfg_xy_i       => video_osm_cfg_xy,
+         osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
+         osm_vram_addr_o    => video_osm_vram_addr,
+         osm_vram_data_i    => video_osm_vram_data,
+         osm_vram_attr_i    => video_osm_vram_attr,
+         hr_clk_i           => hr_clk_x1,
+         hr_rst_i           => hr_rst,
+         hr_write_o         => hr_write,
+         hr_read_o          => hr_read,
+         hr_address_o       => hr_address,
+         hr_writedata_o     => hr_writedata,
+         hr_byteenable_o    => hr_byteenable,
+         hr_burstcount_o    => hr_burstcount,
+         hr_readdata_i      => hr_readdata,
+         hr_readdatavalid_i => hr_readdatavalid,
+         hr_waitrequest_i   => hr_waitrequest
+      ); -- i_audio_video_pipeline
+
+   --------------------------------------------------------
+   -- Instantiate HyperRAM controller
+   --------------------------------------------------------
+
+   i_hyperram : entity work.hyperram
+      port map (
+         clk_x1_i            => hr_clk_x1,
+         clk_x2_i            => hr_clk_x2,
+         clk_x2_del_i        => hr_clk_x2_del,
+         rst_i               => hr_rst,
+         avm_write_i         => hr_write,
+         avm_read_i          => hr_read,
+         avm_address_i       => hr_address,
+         avm_writedata_i     => hr_writedata,
+         avm_byteenable_i    => hr_byteenable,
+         avm_burstcount_i    => hr_burstcount,
+         avm_readdata_o      => hr_readdata,
+         avm_readdatavalid_o => hr_readdatavalid,
+         avm_waitrequest_o   => hr_waitrequest,
+         hr_resetn_o         => hr_reset,
+         hr_csn_o            => hr_cs0,
+         hr_ck_o             => hr_clk_p,
+         hr_rwds_in_i        => hr_rwds_in,
+         hr_rwds_out_o       => hr_rwds_out,
+         hr_rwds_oe_o        => hr_rwds_oe,
+         hr_dq_in_i          => hr_dq_in,
+         hr_dq_out_o         => hr_dq_out,
+         hr_dq_oe_o          => hr_dq_oe
+      ); -- i_hyperram
+
+   -- Tri-state buffers for HyperRAM
+   hr_rwds    <= hr_rwds_out when hr_rwds_oe = '1' else 'Z';
+   hr_d       <= hr_dq_out   when hr_dq_oe   = '1' else (others => 'Z');
+   hr_rwds_in <= hr_rwds;
+   hr_dq_in   <= hr_d;
 
 end architecture beh;
 
