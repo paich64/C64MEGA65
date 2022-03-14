@@ -10,6 +10,10 @@ already a pretty cool proof-of-concept that runs a ton of games and demos.
 * Do all "WIP"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
+* TODO implement couple/decouple joysticks/paddles (QNICE CSR register);
+  maybe we can combine this elegantly with the debouncer and reduce the
+  signals that go to the core by using a std_logic_vector for the
+  joysticks/paddles
 
 ## Features
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)

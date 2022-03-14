@@ -18,8 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#undef RELEASE
-#undef DEBUG_OUTPUT
+#define RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -30,18 +29,12 @@
 ; called "Monitor" has been included and initialized
 #include "../../M2M/rom/main.asm"
 
-; Only include the Shell, if you want to use the pre-build core automation
-; and user experience. If you build your own, then remove this include and
-; also remove the include "shell_vars.asm" in the variables section below.
-;#include "../../M2M/rom/shell.asm"
+; The C64 core uses the Shell of MiSTer2MEGA65
+#include "../../M2M/rom/shell.asm"
 
 ; ----------------------------------------------------------------------------
 ; Firmware: Main Code
 ; ----------------------------------------------------------------------------
-
-;                ; Run the shell: This is where you could put your own system
-;                ; instead of the shell
-;START_FIRMWARE  RBRA    START_SHELL, 1
 
 C64_RAM         .EQU    0x0100  ; RAM of the Commodore 64
 C64_IEC         .EQU    0x0101  ; IEC bridge
@@ -91,11 +84,6 @@ START_FIRMWARE  MOVE    STR_START, R8
                 RSUB    WAIT1SEC, 1
                 RSUB    WAIT1SEC, 1
 #endif                
-
-;                MOVE    20, R0
-;_WAIT           RSUB    WAIT1SEC, 1
-;                SUB     1, R0
-;                RBRA    _WAIT, !Z
 
                 ; Mount SD card
                 MOVE    HANDLE_DEV, R8          ; device handle
@@ -176,33 +164,106 @@ _FREAD_NEXTBYTE MOVE    HANDLE_FILE, R8         ; read next byte to R9
 _FREAD_EOF      MOVE    STR_D64_LD_OK, R8
                 SYSCALL(puts, 1)
 
+                ; ------------------------------------------------------------
+                ; @TODO/TEMP Call Shell
+                ; ------------------------------------------------------------
+
+                RBRA    START_SHELL, 1
+
+                ; ------------------------------------------------------------
+                ; @TODO/TEMP Will be called from Shell indirectly via
+                ; HANDLE_CORE_IO
+                ; ------------------------------------------------------------
+
+_RD_1           MOVE    C64_IEC_SIZEB, R8
+                MOVE    @R8, R8
+                MOVE    R8, R0                  ; R0=# bytes to be transmitted
+                MOVE    C64_IEC_4K_WIN, R8
+                MOVE    @R8, R8
+                MOVE    R8, R1                  ; R1=start 4k win of transmis.
+                MOVE    C64_IEC_4K_OFFS, R8
+                MOVE    @R8, R8
+                MOVE    R8, R2                  ; R2=start offs in 4k win
+
+                ; transmit data to internal buffer of C1541
+                MOVE    C64_IEC_ACK, R8         ; ackknowledge sd_rd_i
+                MOVE    1, @R8
+
+                MOVE    M2M$RAMROM_DEV, R3      ; R3=device selector
+                MOVE    M2M$RAMROM_4KWIN, R4    ; R4=window selector
+                MOVE    M2M$RAMROM_DATA, R5     ; R5=data window
+                ADD     R2, R5                  ; start offset within window
+                XOR     R6, R6                  ; R6=# transmitted bytes
+                MOVE    M2M$RAMROM_DATA, R7     ; R7=end of window marker
+                ADD     0x1000, R7
+
+_SEND_LOOP      CMP     R6, R0                  ; transmission done?
+                RBRA    _SEND_DONE, Z           ; yes
+
+                MOVE    C64_MOUNTBUF, @R3       ; select mount buffer RAM
+                MOVE    R1, @R4                 ; select window in RAM
+                MOVE    @R5++, R8               ; R8=next byte from D64
+
+                MOVE    C64_IEC, @R3            ; select IEC bridge
+                MOVE    C64_IEC_WIN_CAD, @R4    ; select control & data regs
+                MOVE    C64_IEC_B_ADDR, R9      ; write buffer: address
+                MOVE    R6, @R9
+                MOVE    C64_IEC_B_DOUT, R9      ; write buffer: data out
+                MOVE    R8, @R9
+
+                MOVE    C64_IEC_B_WREN, R9      ; strobe write enable
+                MOVE    1, @R9
+                MOVE    0, @R9
+
+                ADD     1, R6                   ; next byte
+
+                CMP     R5, R7                  ; window boundary reached?
+                RBRA    _SEND_LOOP, !Z          ; no
+                ADD     1, R1                   ; next window
+                MOVE    M2M$RAMROM_DATA, R5     ; byte zero in next window
+                RBRA    _SEND_LOOP, 1
+
+_SEND_DONE      MOVE    C64_IEC_WIN_DRV, @R4    ; select drive 0
+                MOVE    C64_IEC_ACK, R8         ; unassert ACK
+                MOVE    0, @R8
+
+                ; endless loop: next read request
+                RBRA    _NEXT_WAIT, 1
+
+; Unmount current disk image and let the user mount a new one
+_UNMOUNT        MOVE    M2M$RAMROM_DEV, R8
+                MOVE    C64_IEC, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    C64_IEC_WIN_CAD, @R8
+                MOVE    C64_IEC_MOUNT, R8
+                MOVE    0, @R8                  ; currently hardcoded
+                MOVE    STR_UNMOUNT, R8
+                SYSCALL(puts, 1)
+                RBRA    _MOUNT_OK, 1
+
+; Check, if reading the last byte went OK, otherwise end the program
+FREAD_CHK       CMP     0, R10
+                RBRA    _FREAD_CHK_OK, 1    
+                MOVE    STR_ERR_LOAD, R8
+                RBRA    ERROR_END, 1
+_FREAD_CHK_OK   RET    
+
+
+; Output error message in R8 and end program
+ERROR_END       SYSCALL(puts, 1)
+                SYSCALL(exit, 1)
+
+; ----------------------------------------------------------------------------
+; Firmware: Core specific IO handler (called by the Shell)
+; ----------------------------------------------------------------------------
+
+PREPARE_CORE_IO SYSCALL(enter, 1)
+
                 ; Switch to IEC device
                 MOVE    M2M$RAMROM_DEV, R8
                 MOVE    C64_IEC, @R8
 
-                ; output basic system data
-#ifdef DEBUG_OUTPUT
-                MOVE    M2M$RAMROM_4KWIN, R8
-                MOVE    C64_IEC_WIN_CAD, @R8
-                MOVE    STR_DRIVES, R8
-                SYSCALL(puts, 1)
-                MOVE    C64_IEC_VDNUM, R8
-                MOVE    @R8, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    STR_BLKSZ, R8
-                SYSCALL(puts, 1)
-                MOVE    C64_IEC_BLKSZ, R8
-                MOVE    @R8, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-#endif
-
                 ; check for sd_rd_i for drive 0 to be 0
-#ifdef DEBUG_OUTPUT                
-                MOVE    STR_RD_0, R8
-                SYSCALL(puts, 1)
-#endif
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    C64_IEC_WIN_DRV, @R8
                 MOVE    C64_IEC_RD, R8
@@ -212,12 +273,7 @@ _FREAD_EOF      MOVE    STR_D64_LD_OK, R8
                 SYSCALL(puts, 1)
                 SYSCALL(exit, 1)
 
-_RD_0_OK        
-#ifdef DEBUG_OUTPUT
-                MOVE    STR_OK, R8
-                SYSCALL(puts, 1)
-#endif
-                ; trigger mount signal
+_RD_0_OK        ; trigger mount signal
                 MOVE    STR_MOUNT, R8
                 SYSCALL(puts, 1)
 
@@ -260,188 +316,39 @@ _RD_0_OK
                 MOVE    STR_MOUNT2, R8
                 SYSCALL(puts, 1)
 
-                ; wait for sd_rd_i for drive 0 to be 1
-_NEXT_WAIT      
-#ifdef DEBUG_OUTPUT
-                MOVE    STR_RD_1, R8
-                SYSCALL(puts, 1)
-#endif                
-                MOVE    M2M$RAMROM_4KWIN, R8
-                MOVE    C64_IEC_WIN_DRV, @R8    ; select drive 0
-                MOVE    C64_IEC_RD, R8
+                SYSCALL(leave, 1)
+                RET
 
-                MOVE    M2M$KEY_HELP, R9
-                NOT     R9, R9
-                MOVE    M2M$KEYBOARD, R10
-_WAIT_RD_1      CMP     1, @R8
+HANDLE_CORE_IO  INCRB
+
+                ; check, if sd_rd_i for drive 0 is 1 = drive needs data
+_NEXT_WAIT      MOVE    M2M$RAMROM_DEV, R0      ; select IEC device
+                MOVE    C64_IEC, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0
+                MOVE    C64_IEC_WIN_DRV, @R0    ; select drive 0
+                MOVE    C64_IEC_RD, R0
+
+                ; @TODO/TEMP UNMOUNT mechanism
+                MOVE    M2M$KEY_HELP, R1
+                NOT     R1, R1
+                MOVE    M2M$KEYBOARD, R2
+
+_WAIT_RD_1      CMP     1, @R0
                 RBRA    _RD_1, Z
-                CMP     R9, @R10
+                CMP     1, @R2
                 RBRA    _UNMOUNT, Z
-                RBRA    _WAIT_RD_1, 1
 
-_RD_1
-#ifdef DEBUG_OUTPUT            
-                MOVE    STR_OK, R8
-                SYSCALL(puts, 1)
-
-                ; read lba, to-be-read blocks, addr in bytes and size in bytes
-                MOVE    STR_LBA, R8
-                SYSCALL(puts, 1)
-                MOVE    C64_IEC_LBA_H, R8
-                MOVE    @R8, R8
-                SYSCALL(puthex, 1)
-                MOVE    C64_IEC_LBA_L, R8
-                MOVE    @R8 R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    STR_BLOCKS, R8
-                SYSCALL(puts, 1)
-                MOVE    C64_IEC_BLKCNT, R8
-                MOVE    @R8, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    STR_B_ADDR, R8
-                SYSCALL(puts, 1)
-                MOVE    C64_IEC_BYTES_H, R8
-                MOVE    @R8, R8
-                SYSCALL(puthex, 1)
-                MOVE    C64_IEC_BYTES_L, R8
-                MOVE    @R8, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    STR_B_SIZE, R8
-                SYSCALL(puts, 1)
-#endif
-                MOVE    C64_IEC_SIZEB, R8
-                MOVE    @R8, R8
-                MOVE    R8, R0                  ; R0=# bytes to be transmitted
-#ifdef DEBUG_OUTPUT
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    STR_B_4K_WIN, R8
-                SYSCALL(puts, 1)
-#endif
-                MOVE    C64_IEC_4K_WIN, R8
-                MOVE    @R8, R8
-                MOVE    R8, R1                  ; R1=start 4k win of transmis.
-#ifdef DEBUG_OUTPUT
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    STR_B_4K_OFFS, R8
-                SYSCALL(puts, 1)
-#endif
-                MOVE    C64_IEC_4K_OFFS, R8
-                MOVE    @R8, R8
-                MOVE    R8, R2                  ; R2=start offs in 4k win 
-#ifdef DEBUG_OUTPUT
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-
-                MOVE    STR_FILL_S, R8
-                SYSCALL(puts, 1)
-                MOVE    STR_FILL_ACK_1, R8
-                SYSCALL(puts, 1)
-#endif
-                ; transmit data to internal buffer of C1541
-                MOVE    C64_IEC_ACK, R8         ; ackknowledge sd_rd_i
-                MOVE    1, @R8
-
-                MOVE    M2M$RAMROM_DEV, R3      ; R3=device selector
-                MOVE    M2M$RAMROM_4KWIN, R4    ; R4=window selector
-                MOVE    M2M$RAMROM_DATA, R5     ; R5=data window
-                ADD     R2, R5                  ; start offset within window
-                XOR     R6, R6                  ; R6=# transmitted bytes
-                MOVE    M2M$RAMROM_DATA, R7     ; R7=end of window marker
-                ADD     0x1000, R7
-
-_SEND_LOOP      CMP     R6, R0                  ; transmission done?
-                RBRA    _SEND_DONE, Z           ; yes
-
-                MOVE    C64_MOUNTBUF, @R3       ; select mount buffer RAM
-                MOVE    R1, @R4                 ; select window in RAM
-                MOVE    @R5++, R8               ; R8=next byte from D64
-
-                MOVE    C64_IEC, @R3            ; select IEC bridge
-                MOVE    C64_IEC_WIN_CAD, @R4    ; select control & data regs
-                MOVE    C64_IEC_B_ADDR, R9      ; write buffer: address
-                MOVE    R6, @R9
-                MOVE    C64_IEC_B_DOUT, R9      ; write buffer: data out
-                MOVE    R8, @R9
-
-                MOVE    C64_IEC_B_WREN, R9      ; strobe write enable
-                MOVE    1, @R9
-                MOVE    0, @R9
-
-                ADD     1, R6                   ; next byte
-
-                CMP     R5, R7                  ; window boundary reached?
-                RBRA    _SEND_LOOP, !Z          ; no
-                ADD     1, R1                   ; next window
-                MOVE    M2M$RAMROM_DATA, R5     ; byte zero in next window
-                RBRA    _SEND_LOOP, 1
-
-_SEND_DONE      
-#ifdef DEBUG_OUTPUT
-                MOVE    STR_FILL_ACK_0, R8
-                SYSCALL(puts, 1)
-#endif
-                MOVE    C64_IEC_WIN_DRV, @R4    ; select drive 0
-                MOVE    C64_IEC_ACK, R8         ; unassert ACK
-                MOVE    0, @R8
-
-#ifdef DEBUG_OUTPUT
-                MOVE    STR_FILL_DATA, R8
-                SYSCALL(puts, 1)
-                MOVE    R6, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-#endif
-                ; endless loop: next read request
-                RBRA    _NEXT_WAIT, 1
-
-; Unmount current disk image and let the user mount a new one
-_UNMOUNT        MOVE    M2M$RAMROM_DEV, R8
-                MOVE    C64_IEC, @R8
-                MOVE    M2M$RAMROM_4KWIN, R8
-                MOVE    C64_IEC_WIN_CAD, @R8
-                MOVE    C64_IEC_MOUNT, R8
-                MOVE    0, @R8                  ; currently hardcoded
-                MOVE    STR_UNMOUNT, R8
-                SYSCALL(puts, 1)
-                RBRA    _MOUNT_OK, 1
-
-; Check, if reading the last byte went OK, otherwise end the program
-FREAD_CHK       CMP     0, R10
-                RBRA    _FREAD_CHK_OK, 1    
-                MOVE    STR_ERR_LOAD, R8
-                RBRA    ERROR_END, 1
-_FREAD_CHK_OK   RET    
-
-
-; Output error message in R8 and end program
-ERROR_END       SYSCALL(puts, 1)
-                SYSCALL(exit, 1)
-
-; Waits about 1 second
-WAIT1SEC        INCRB
-                MOVE    0x0060, R0
-_W1S_L1         MOVE    0xFFFF, R1
-_W1S_L2         SUB     1, R1
-                RBRA    _W1S_L2, !Z
-                SUB     1, R0
-                RBRA    _W1S_L1, !Z
                 DECRB
-                RET  
+                RET
 
 ; ----------------------------------------------------------------------------
 ; Strings
 ; ----------------------------------------------------------------------------
 
 STR_START       .ASCII_P "                                                  "
-                .ASCII_W "\nC64 for MEGA65: C1541 development testbed\n\n"
+                .ASCII_P "\nC64 for MEGA65 done by MJoergen & sy2002 in 2022"
+                .ASCII_W "\n\n"
 STR_FINPUTD64   .ASCII_W "Enter D64 file name: "                
-STR_DRIVES      .ASCII_W "Number of drives: "
-STR_BLKSZ       .ASCII_W "LBA block size: "
 STR_OK          .ASCII_W "OK\n"
 STR_ERROR       .ASCII_W "ERROR\n"
 STR_ERR_D64     .ASCII_P "ERROR: For now, only standard D64 files with a "
@@ -454,18 +361,6 @@ STR_MOUNT2      .ASCII_P "\nPress the MEGA65 HELP key to unmount this disk "
                 .ASCII_P "and demos that ask you to change the disk at some "
                 .ASCII_W "point.\n\n"
 STR_UNMOUNT     .ASCII_W "Unmounted drive #8\n\n"
-STR_RD_0        .ASCII_W "Checking for sd_rd_i for drive 0 to be 0: "
-STR_RD_1        .ASCII_W "Waiting for sd_rd_i to be 1: "
-STR_LBA         .ASCII_W "   LBA: "
-STR_BLOCKS      .ASCII_W "   Blocks: "
-STR_B_ADDR      .ASCII_W "   Address (bytes): "
-STR_B_SIZE      .ASCII_W "   Size (bytes): "
-STR_B_4K_WIN    .ASCII_W "   4k Window: "
-STR_B_4K_OFFS   .ASCII_W "   4k Offset: "
-STR_FILL_S      .ASCII_W "Filling C1541's data buffer...\n"
-STR_FILL_ACK_1  .ASCII_W "   sd_ack_o = 1\n"
-STR_FILL_ACK_0  .ASCII_W "   sd_ack_o = 0\n"
-STR_FILL_DATA   .ASCII_W "   Bytes transmitted: "
 
 STR_ERR_SD      .ASCII_W "ERROR: Cannot mount SD card.\n"
 STR_ERR_FNF     .ASCII_W "ERROR: File not found.\n"
@@ -483,8 +378,8 @@ HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
 HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
 FINPUT_BUF      .BLOCK  256
 
-; M2M shell variables (only include, if you included "shell.asm" above)
-;#include "../../M2M/rom/shell_vars.asm"
+; M2M shell variables
+#include "../../M2M/rom/shell_vars.asm"
 
 ; ----------------------------------------------------------------------------
 ; Heap and Stack: Need to be located in RAM after the variables

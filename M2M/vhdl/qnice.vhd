@@ -470,7 +470,7 @@ begin
          -- Default values of all registers (reset)
          if reset_ctl = '1' then
 --            reg_csr     <= x"0001"; -- Hold the MiSTer core in reset state, de-couple all peripherals
-            reg_csr     <= x"0000"; -- TODO/DEBUG: by default the C64 core is running
+            reg_csr     <= x"0038"; -- TODO/DEBUG: by default the C64 core is running and the keyboard and the joysticks are active
             
              -- OSM is fullscreen by default
             osm_xy_o    <= x"0000";

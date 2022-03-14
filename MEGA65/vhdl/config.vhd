@@ -40,14 +40,14 @@ constant SEL_WELCOME : std_logic_vector(15 downto 0) := x"0000";
 constant SCR_WELCOME : string :=
 
    "Commodore 64 for MEGA65 V0.1 [WIP]\n" &
-   "MiSTer port by MJoergen & sy2002 in 2022\n\n" &
+   "MiSTer port 2022 by MJoergen & sy2002\n\n" &
    
    "Powered by MiSTer2MEGA65 V0.1 [WIP]\n" &
    
    "\n\nPLACEHOLDER FOR CORE DOCUMENTATION\n\n" &
    
-   "You can for example show the keyboard map.\n" &
-   "And explain how the help menu works.\n" & 
+   "Press the HELP key to mount drives\n" &
+   "and to configure the core.\n" &  
    
    "\n\nPress Space to continue.\n\n\n";
 
@@ -116,76 +116,46 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 
 -- Size of menu and menu items
 -- End each line with a \n and make sure empty lines / separator lines are only consisting of a "\n"
-constant OPTM_SIZE         : integer := 24;  -- amount of items including empty lines:
+constant OPTM_SIZE         : integer := 13;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
                                              -- Important: make sure that SHELL_O_DY in mega65.vhd is equal to OPTM_SIZE + 2,
                                              -- so that the On-Screen window has the correct length
                                              -- @TODO: There is for sure a more elegant way than this redundant definition
 constant OPTM_ITEMS        : string :=
 
-   " Demo Headline A\n" &
-   "\n" & 
-   " Item A.1\n" &
-   " Item A.2\n" &
-   "\n" &
-   " Headline B\n" &
-   "\n" &
-   " Item B.1\n" &
-   " Item B.2\n" &
-   " Item B.3\n" &
-   " Item B.4\n" &
-   "\n" &
-   " Headline C\n" &
-   "\n" &
-   " Item C.1\n" &
-   " Item C.2\n" &
-   "\n" &
-   " Another Headline\n" &
-   "\n" &
-   " Yes\n" &
-   " No\n" &
-   " Maybe\n" &
-   "\n" &
+   " 8: <Mount Drive>\n"   &
+   "\n"                    &
+   " SID\n"                &
+   "\n"                    &
+   " 6581\n"               &
+   " 8580\n"               &
+   "\n"                    &
+   " Audio Processing\n"   &
+   "\n"                    &
+   " On\n"                 &
+   " Off\n"                & 
+   "\n"                    &
    " Close Menu\n";
         
--- define your own constants here and choose meaningful names
--- make sure that your first group uses the value 1 (0 means "no menu item", such as text and line),
--- and be aware that you can only have a maximum of 254 groups (255 means "Close Menu");
--- also make sure that your group numbers are monotonic increasing (e.g. 1, 2, 3, 4, ...)
-constant OPTM_G_A          : integer := 1;
-constant OPTM_G_B          : integer := 2;
-constant OPTM_G_C          : integer := 3;
-constant OPTM_G_ANOTHER    : integer := 4;
+constant OPTM_G_MOUNT      : integer := 1;
+constant OPTM_G_SID        : integer := 2;
+constant OPTM_G_AUDIO      : integer := 3;
 
--- define your menu groups: which menu items are belonging together to form a group?
--- where are separator lines? which items should be selected by default?
--- make sure that you have exactly the same amount of entries here than in OPTM_ITEMS and defined by OPTM_SIZE
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
-constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_TEXT,                              -- Demo Headline
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_A + OPTM_G_START,                  -- Item A.1, cursor start position
-                                             OPTM_G_A + OPTM_G_STDSEL,                 -- Item A.2, selected by default
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_TEXT,                              -- Headine B
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_B + OPTM_G_STDSEL,                 -- Item B.1, selected by default
-                                             OPTM_G_B,                                 -- Item B.2
-                                             OPTM_G_B,                                 -- Item B.3
-                                             OPTM_G_B,                                 -- Item B.4
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_TEXT,                              -- Headline C
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_C + OPTM_G_STDSEL,                 -- Item C.1, selected by default
-                                             OPTM_G_C,                                 -- Item C.2
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_TEXT,                              -- Another Headline
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_ANOTHER + OPTM_G_STDSEL,           -- Item Yes, selected by default
-                                             OPTM_G_ANOTHER,                           -- Item No
-                                             OPTM_G_ANOTHER,                           -- Item Maybe
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_CLOSE                              -- Close Menu
-                                           ); 
+constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_MOUNT   + OPTM_G_START + OPTM_G_SINGLESEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_SID     + OPTM_G_STDSEL,
+                                             OPTM_G_SID,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_AUDIO   + OPTM_G_STDSEL,
+                                             OPTM_G_AUDIO,
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE
+                                           );
 
 --------------------------------------------------------------------------------------------------------------------
 -- Address Decoding 
