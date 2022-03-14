@@ -14,7 +14,7 @@ use ieee.numeric_std.all;
 entity matrix_to_keynum is
   generic (scan_frequency : integer := 1000);
   port (Clk : in std_logic;
-        clock_frequency : natural;
+        clock_frequency : in natural;
         reset_in : in std_logic;
 
         matrix_col : in std_logic_vector(7 downto 0);

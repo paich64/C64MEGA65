@@ -27,7 +27,7 @@ entity m2m_keyb is
    );
    port (
       clk_main_i           : in std_logic;                     -- core clock
-      clk_main_speed_i     : natural;                          -- speed of core clock in Hz
+      clk_main_speed_i     : in natural;                       -- speed of core clock in Hz
        
       -- interface to the MEGA65 keyboard controller       
       kio8_o               : out std_logic;                    -- clock to keyboard

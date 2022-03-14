@@ -23,7 +23,7 @@ entity main is
 
       -- MiSTer core main clock speed:      
       -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
-      clk_main_speed_i        : natural;    
+      clk_main_speed_i        : in natural;    
 
       -- M2M Keyboard interface
       kb_key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
