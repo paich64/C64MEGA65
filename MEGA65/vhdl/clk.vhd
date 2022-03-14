@@ -1,14 +1,18 @@
 -------------------------------------------------------------------------------------------------------------
--- MiSTer2MEGA65 Framework
+-- Commodore 64 for MEGA65 (C64MEGA65)
 --
--- Main clock, pixel clock and QNICE-clock generator using the Xilinx specific MMCME2_ADV:
+-- Clock Generator using the Xilinx specific MMCME2_ADV:
 --
---   MiSTer's Commodore 64 expects 31.528 MHz, because 31.528 MHz / 32 = 0,98525 MHz (C64 PAL clock speed)
---   And it expects 2x this frequency as video_clk: 63.056 MHz clock
+--   MiSTer's Commodore 64 expects:
+--      PAL:  31,527,778 MHz, this divided by 32 = 0,98525 MHz (C64 clock speed)
+--      NTSC: @TODO
+--     And it expects 2x the C64 clock frequency as video_clk: 63.056 MHz clock (PAL) and @TODO (NTSC)
 --   QNICE expects 50 MHz
 --   HDMI 720p 60 Hz expects 74.25 MHz (HDMI) and 371.25 MHz (TMDS)
---
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- 
+-- This machine is based on C64_MiSTer
+-- Powered by MiSTer2MEGA65
+-- MEGA65 port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 -------------------------------------------------------------------------------------------------------------
 
 library ieee;

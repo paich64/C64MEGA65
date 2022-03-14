@@ -9,9 +9,21 @@
 ; done by sy2002 in 2021 and licensed under GPL v3
 ; ****************************************************************************
 
-                ; keep core in reset state
-START_SHELL     MOVE    M2M$CSR, R0             ; keep core in reset state ..
-                MOVE    M2M$CSR_RESET, @R0      ; .. and clear all other flags
+                ; @TODO: different behavior of C64 core than in the framework
+                ; make reset and pause behavior configurable in config.vhd
+                ; Make sure that SCR$OSM_O_ON (and the others) are behaving
+                ; consistent to this setting in config.vhd
+                ; And anyway, as a first step the shell should keep the core
+                ; in reset state for "a while" so that it can settle and we
+                ; have no reset related bugs
+START_SHELL     MOVE    M2M$CSR, R0             ; Reset core and clear all
+                MOVE    M2M$CSR_RESET, @R0      ; other CSR flags, so that
+                                                ; no keypress propagates to
+                                                ; the core
+                MOVE    100, R1
+_RESET_A_WHILE  SUB     1, R1
+                RBRA    _RESET_A_WHILE, !Z
+                MOVE    0, @R0                  ; remove reset signal
 
                 ; initialize screen library and show welcome screen:
                 ; draw frame and print text
@@ -50,11 +62,20 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 CMP     M2M$KEY_SPACE, R8
                 RBRA    START_SPACE, !Z         ; loop until Space was pressed
 
-                ; Hide OSM and "un-reset" (aka start) the core
-                ; SCR$OSM_OFF also connects keyboard and joysticks to the core
+                ; Hide OSM and connect keyboard and joysticks to the core
                 RSUB    SCR$OSM_OFF, 1
+
+                ; Avoid that the keypress to exit the splash screen gets
+                ; noticed by the core: Wait 1 second and only after that
+                ; connect the keyboard and the joysticks to the core
+                RSUB    WAIT333MS, 1
                 MOVE    M2M$CSR, R0
-                AND     M2M$CSR_UN_RESET, @R0
+                OR      M2M$CSR_KBD_JOY, @R0
+
+                ; if drives have been mounted, the mount strobe needs to be
+                ; renewed after a reset, as the reset signal also resets
+                ; the state of vdrives.vhd
+                RSUB    PREPARE_CORE_IO, 1
 
                 ; Main loop:
                 ;
@@ -66,7 +87,8 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 ; The latter one could also be done via interrupts, but we
                 ; will try to keep it simple in the first iteration and only
                 ; increase complexity by using interrupts if neccessary.
-MAIN_LOOP       RSUB    CHECK_DEBUG, 1          ; (Run/Stop+Cursor Up) + Help
+MAIN_LOOP       RSUB    HANDLE_CORE_IO, 1       ; IO handling (e.g. vdrives)
+                RSUB    CHECK_DEBUG, 1          ; (Run/Stop+Cursor Up) + Help
 
                 RSUB    KEYB$SCAN, 1            ; scan for single key presses
                 RSUB    KEYB$GETKEY, 1
@@ -84,8 +106,10 @@ HELP_MENU       SYSCALL(enter, 1)
                 CMP     M2M$KEY_HELP, R8        ; help key pressed?
                 RBRA    _HLP_RET, !Z                
 
-                ; TODO: We might want to pause/unpause the core while
-                ; the Options menu is running
+                ; Deactivate keyboard and joysticks, so that the key strokes
+                ; done during the OSD is on are not passed along to the core
+                MOVE    M2M$CSR, R0
+                AND     M2M$CSR_UN_KBD_JOY, @R0
 
                 ; Copy menu items from config.vhd to heap
                 MOVE    M2M$RAMROM_DEV, R0
@@ -204,7 +228,15 @@ _HLP_SSIC1      SUB     1, R4                   ; one less menu item to go
 _HLP_RESETPOS   MOVE    OPTM_START, R0
                 MOVE    @R0, @R9
 
-_HLP_RET        SYSCALL(leave, 1)
+                ; when the menu was exited via "Close" + Return, make sure
+                ; that the Return key press is not registered by the core
+                RSUB    WAIT333MS, 1
+
+                ; Reactivate keyboard and joysticks
+_HLP_RET        MOVE    M2M$CSR, R0
+                OR      M2M$CSR_KBD_JOY, @R0
+
+                SYSCALL(leave, 1)
                 RET
 
                 ; init/configure the menu library
@@ -389,7 +421,8 @@ _OPTM_FPS_RET   DECRB
 ; Waits until one of the four Option Menu keys is pressed
 ; and returns the OPTM_KEY_* code in R8
 OPT_MENU_GETKEY INCRB
-_OPTMGK_LOOP    RSUB    KEYB$SCAN, 1            ; wait until key is pressed
+_OPTMGK_LOOP    RSUB    HANDLE_CORE_IO, 1       ; IO handling (e.g. vdrives)
+                RSUB    KEYB$SCAN, 1            ; wait until key is pressed
                 RSUB    KEYB$GETKEY, 1
                 CMP     0, R8
                 RBRA    _OPTMGK_LOOP, Z

@@ -32,14 +32,8 @@ M2M$CSR_UN_JOY1     .EQU 0xFFEF
 M2M$CSR_JOY2        .EQU 0x0020
 M2M$CSR_UN_JOY2     .EQU 0xFFDF
 
-; Convenient activating of the OSM means:
-; Pause the core, show the OSM, de-couple the keyboard and the joysticks
-; from the core so that there is no interference, do not reset.
-; Convenient de-activating of the OSM means:
-; No reset, no pause, no OSM, but the peripherals are coupled.
-; The following two values can be directly MOVEd into the CSR
-M2M$CSR_OSM_ON      .EQU 0x0006
-M2M$CSR_OSM_OFF     .EQU 0x0038
+M2M$CSR_KBD_JOY     .EQU 0x0038
+M2M$CSR_UN_KBD_JOY  .EQU 0xFFC7
 
 ; ----------------------------------------------------------------------------
 ; VGA and On-Screen-Menu (OSM)

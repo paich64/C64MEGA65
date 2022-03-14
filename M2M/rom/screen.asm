@@ -81,7 +81,7 @@ SCR$OSM_M_ON    INCRB
                 MOVE    @R1, @R0
 
                 MOVE    M2M$CSR, R0             ; activate OSM
-                OR      M2M$CSR_OSM_ON, @R0
+                OR      M2M$CSR_OSM, @R0
 
                 DECRB
                 RET
@@ -100,7 +100,7 @@ SCR$OSM_O_ON    INCRB
                 MOVE    @R1, @R0
 
                 MOVE    M2M$CSR, R0             ; activate OSM
-                OR      M2M$CSR_OSM_ON, @R0
+                OR      M2M$CSR_OSM, @R0
 
                 DECRB
                 RET

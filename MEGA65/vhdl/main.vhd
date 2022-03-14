@@ -14,14 +14,20 @@ use work.vdrives_pkg.all;
 
 entity main is
    port (
-      clk_main_i              : in std_logic;    -- 31.528 MHz
-      clk_video_i             : in std_logic;    -- 63.056 MHz
+      clk_main_i              : in std_logic;
+      clk_video_i             : in std_logic;
       reset_i                 : in std_logic;
       pause_i                 : in std_logic;
 
+      c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
+
+      -- MiSTer core main clock speed:      
+      -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
+      clk_main_speed_i        : in natural;    
+
       -- M2M Keyboard interface
-      kb_key_num_i            : in integer range 0 to 79;    -- cycles through all MEGA65 keys
-      kb_key_pressed_n_i      : in std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+      kb_key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
+      kb_key_pressed_n_i      : in std_logic;               -- low active: debounced feedback: is kb_key_num_i pressed right now?
 
 
       -- MEGA65 joysticks
@@ -104,7 +110,6 @@ signal c64_vsync           : std_logic;
 signal c64_r               : unsigned(7 downto 0);
 signal c64_g               : unsigned(7 downto 0);
 signal c64_b               : unsigned(7 downto 0);
-signal c64_ntsc            : std_logic;
 
 -- MiSTer video pipeline signals
 signal vs_hsync            : std_logic;
@@ -173,13 +178,11 @@ signal iec_rom_data_i      : std_logic_vector(7 downto 0);
 signal iec_rom_wr_i        : std_logic;
 
 begin
-   -- for now, we hardcode PAL, NTSC will follow later
-   c64_ntsc <= '0';
-
    -- MiSTer Commodore 64 core / main machine
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
       port map (
          clk32       => clk_main_i,
+         clk32_speed => clk_main_speed_i,
          reset_n     => not reset_i,
          bios        => "01",             -- standard C64, internal ROM
 
@@ -210,7 +213,7 @@ begin
          -- VGA/SCART interface
          -- The hsync frequency is 15.64 kHz (period 63.94 us).
          -- The hsync pulse width is 12.69 us.
-         ntscMode    => c64_ntsc,
+         ntscMode    => c64_ntsc_i,
          hsync       => c64_hsync,
          vsync       => c64_vsync,
          r           => c64_r,
@@ -388,7 +391,7 @@ begin
          pause     => c64_pause,
          hsync     => c64_hsync,
          vsync     => c64_vsync,
-         ntsc      => '0',
+         ntsc      => c64_ntsc_i,
          wide      => '0',
          hsync_out => vs_hsync,
          vsync_out => vs_vsync,
@@ -541,18 +544,13 @@ begin
       );
 
    -- 16 MHz chip enable for the IEC drives, so that ph2_r and ph2_f can be 1 MHz (C1541's CPU runs with 1 MHz)
+   -- Uses a counter to compensate for clock drift, because the input clock is not exactly at 32 MHz
    generate_drive_ce : process(all)
       variable msum, nextsum: integer;
    begin
-      if c64_ntsc = '1' then
-         msum := 32727264; -- @TODO: this is still MiSTer's value; needs to be matched with our NTSC clock in future
-      else
-         msum := 31527778; -- matches our clock; original MiSTer value: 31527954;
-      end if;
-      
-      
+      msum    := clk_main_speed_i;           
       nextsum := iec_dce_sum + 16000000;
-      
+
       if rising_edge(clk_main_i) then
          iec_drive_ce <= '0';      
          if reset_i = '1' then
