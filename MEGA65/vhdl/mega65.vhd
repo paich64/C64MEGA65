@@ -88,14 +88,19 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
---constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
-constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
+constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
+--constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
 -- HDMI 1280x720 @ 50 Hz resolution
 constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_50;
 
--- Clock speeds
-constant CORE_CLK_SPEED       : natural := 31_528_000;   -- C64 main clock @ 31.528 MHz
+-- C64 core clock speeds
+-- Make sure that you specify very exact values here, because these values will be used in counters
+-- in main.vhd and in fpga64_sid_iec.vhd to avoid clock drift at derived clocks
+constant CORE_CLK_SPEED_PAL   : natural := 31_527_778;   -- C64 main clock in PAL mode @ 31,527,778 MHz
+constant CORE_CLK_SPEED_NTSC  : natural := 32_727_264;   -- @TODO: This is MiSTer's value; we will need to adjust it to ours
+
+-- QNICE clock speed
 constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
 
 -- Rendering constants (in pixels)
@@ -145,10 +150,12 @@ signal main_rst               : std_logic;
 signal video_rst              : std_logic;
 signal reset_na               : std_logic;
 
-
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
+
+signal c64_ntsc               : std_logic;                     -- global switch: 0 = PAL mode, 1 = NTSC mode
+signal c64_clock_speed        : natural;                       -- clock speed depending on PAL/NTSC     
 
 -- QNICE control and status register
 signal main_qnice_reset       : std_logic;
@@ -282,6 +289,25 @@ begin
          video_rst_o     => video_rst        -- video's reset, synchronized
       ); -- clk_gen
 
+   ---------------------------------------------------------------------------------------------
+   -- Global switch between PAL and NTSC
+   ---------------------------------------------------------------------------------------------
+
+   -- @TODO: For now, we hardcode PAL mode
+   -- CAUTION: As soon as we change this to a dynamic behavior, we need to make sure
+   -- that we are adding False Paths or something like that for keyscan_delay,
+   -- repeat_start_timer and repeat_again_timer in matrix_to_keynum.vhdl and we also
+   -- need to port these False Paths upstream into the XDC of the MiSTer2MEGA65 framework
+   -- itself. Right now, Vivado is optimizing everything away, because we have a hard coded
+   -- PAL mode: The frequencies are constantsand so the math can be done during synthesis.
+   -- But as soon as this becomes dynamic, the calculations done for the
+   -- above-mentioned signals will put a strain on our timing closure. Due to the fact
+   -- that switching between PAL and NTSC does not happen very often, it is OK to accept
+   -- that the calculations might take multiple cycles and therefore use a False Path or
+   -- another measure in the XDC. 
+
+   c64_ntsc <= '0'; -- @TODO: For now, we hardcode PAL mode
+   c64_clock_speed <= CORE_CLK_SPEED_PAL when c64_ntsc = '0' else CORE_CLK_SPEED_NTSC;
 
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
@@ -292,8 +318,12 @@ begin
       port map (
          clk_main_i           => main_clk,
          clk_video_i          => video_clk,
-         reset_i              => main_rst, --  or main_qnice_reset,
-         pause_i              => '0', -- main_qnice_pause,
+         reset_i              => main_rst or main_qnice_reset,
+         pause_i              => main_qnice_pause,
+ 
+         -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
+         c64_ntsc_i           => c64_ntsc,
+         clk_main_speed_i     => c64_clock_speed,
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
@@ -342,11 +372,9 @@ begin
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
-      generic map (
-         CLOCK_SPEED          => CORE_CLK_SPEED
-      )
       port map (
          clk_main_i           => main_clk,
+         clk_main_speed_i     => c64_clock_speed,
 
          -- interface to the MEGA65 keyboard controller
          kio8_o               => kb_io0,
@@ -375,7 +403,6 @@ begin
          pdm_right               => pwm_r,
          audio_mode              => '0'         -- 0=PDM, 1=PWM
       ); -- i_pcm2pdm
-
 
    ---------------------------------------------------------------------------------------------
    -- qnice_clk
@@ -509,7 +536,6 @@ begin
       end case;
    end process qnice_ramrom_devices;
 
-
    ---------------------------------------------------------------------------------------------
    -- video_clk (VGA output)
    ---------------------------------------------------------------------------------------------
@@ -562,7 +588,6 @@ begin
    vdac_sync_n  <= '0';
    vdac_blank_n <= '1';
    vdac_clk     <= not video_clk;
-
 
    ---------------------------------------------------------------------------------------------
    -- hdmi_clk
@@ -639,7 +664,6 @@ begin
          tmds         => hdmi_tmds
       ); -- i_vga_to_hdmi
 
-
    ---------------------------------------------------------------------------------------------
    -- tmds_clk (HDMI)
    ---------------------------------------------------------------------------------------------
@@ -667,7 +691,6 @@ begin
          out_p   => TMDS_clk_p,
          out_n   => TMDS_clk_n
       ); -- GEN_HDMI_CLK
-
 
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
@@ -843,4 +866,3 @@ begin
       ); -- osm_vram_attr
 
 end architecture beh;
-
