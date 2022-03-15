@@ -1,3 +1,12 @@
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
+-- Complete pipeline processing of audio and video output (analog and digital)
+--
+-- based on C64_MiSTer by the MiSTer development team
+-- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -50,12 +59,16 @@ entity audio_video_pipeline is
       tmds_clk_n_o           : out std_logic;
 
       -- Connect to QNICE and Video RAM
-      osm_clk_i              : in  std_logic;
-      osm_cfg_enable_i       : in  std_logic;
-      osm_cfg_xy_i           : in  std_logic_vector(15 downto 0);
-      osm_cfg_dxdy_i         : in  std_logic_vector(15 downto 0);
-      osm_vram_addr_o        : out std_logic_vector(15 downto 0);
-      osm_vram_data_i        : in  std_logic_vector(15 downto 0);
+      video_osm_cfg_enable_i : in  std_logic;
+      video_osm_cfg_xy_i     : in  std_logic_vector(15 downto 0);
+      video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
+      video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
+      video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
+      hdmi_osm_cfg_enable_i  : in  std_logic;
+      hdmi_osm_cfg_xy_i      : in  std_logic_vector(15 downto 0);
+      hdmi_osm_cfg_dxdy_i    : in  std_logic_vector(15 downto 0);
+      hdmi_osm_vram_addr_o   : out std_logic_vector(15 downto 0);
+      hdmi_osm_vram_data_i   : in  std_logic_vector(15 downto 0);
 
       -- Connect to HyperRAM controller
       hr_clk_i               : in  std_logic;
@@ -106,6 +119,14 @@ architecture synthesis of audio_video_pipeline is
    signal hdmi_vs                : std_logic;
    signal hdmi_de                : std_logic;
 
+   -- After OSM
+   signal hdmi_osm_red           : std_logic_vector(7 downto 0);
+   signal hdmi_osm_green         : std_logic_vector(7 downto 0);
+   signal hdmi_osm_blue          : std_logic_vector(7 downto 0);
+   signal hdmi_osm_hs            : std_logic;
+   signal hdmi_osm_vs            : std_logic;
+   signal hdmi_osm_de            : std_logic;
+
    signal hr_wide_write          : std_logic;
    signal hr_wide_read           : std_logic;
    signal hr_wide_address        : std_logic_vector(C_AVM_ADDRESS_SIZE-1 downto 0);
@@ -136,7 +157,7 @@ begin
       ); -- i_pcm2pdm
 
 
-   i_video_overlay : entity work.video_overlay
+   i_video_overlay_video : entity work.video_overlay
       generic  map (
          G_VGA_DX         => G_VGA_DX,
          G_VGA_DY         => G_VGA_DY,
@@ -152,11 +173,11 @@ begin
          vga_hs_i         => video_hs_i,
          vga_vs_i         => video_vs_i,
          vga_de_i         => video_de_i,
-         vga_cfg_enable_i => osm_cfg_enable_i,
-         vga_cfg_xy_i     => osm_cfg_xy_i,
-         vga_cfg_dxdy_i   => osm_cfg_dxdy_i,
-         vga_vram_addr_o  => osm_vram_addr_o,
-         vga_vram_data_i  => osm_vram_data_i,
+         vga_cfg_enable_i => video_osm_cfg_enable_i,
+         vga_cfg_xy_i     => video_osm_cfg_xy_i,
+         vga_cfg_dxdy_i   => video_osm_cfg_dxdy_i,
+         vga_vram_addr_o  => video_osm_vram_addr_o,
+         vga_vram_data_i  => video_osm_vram_data_i,
          vga_ce_o         => open,
          vga_red_o        => vga_red_o,
          vga_green_o      => vga_green_o,
@@ -164,7 +185,7 @@ begin
          vga_hs_o         => vga_hs_o,
          vga_vs_o         => vga_vs_o,
          vga_de_o         => open
-      ); -- i_video_overlay
+      ); -- i_video_overlay_video
 
    -- Make the VDAC output the image
    vdac_syncn_o  <= '0';
@@ -215,7 +236,7 @@ begin
          o_vbl             => open,                         -- output
          o_ce              => '1',                          -- input
          o_clk             => hdmi_clk_i,                   -- input
-         o_border          => X"886644",                    -- input
+         o_border          => X"000000",                    -- input
          o_fb_ena          => '0',                          -- input
          o_fb_hsize        => 0,                            -- input
          o_fb_vsize        => 0,                            -- input
@@ -305,6 +326,36 @@ begin
       ); -- i_avm_decrease
 
 
+   i_video_overlay_hdmi : entity work.video_overlay
+      generic  map (
+         G_VGA_DX         => G_VGA_DX,  -- TBD
+         G_VGA_DY         => G_VGA_DY,  -- TBD
+         G_FONT_DX        => C_FONT_DX,
+         G_FONT_DY        => C_FONT_DY
+      )
+      port map (
+         vga_clk_i        => hdmi_clk_i,
+         vga_ce_i         => '1',
+         vga_red_i        => std_logic_vector(hdmi_red),
+         vga_green_i      => std_logic_vector(hdmi_green),
+         vga_blue_i       => std_logic_vector(hdmi_blue),
+         vga_hs_i         => hdmi_hs,
+         vga_vs_i         => hdmi_vs,
+         vga_de_i         => hdmi_de,
+         vga_cfg_enable_i => hdmi_osm_cfg_enable_i,
+         vga_cfg_xy_i     => hdmi_osm_cfg_xy_i,
+         vga_cfg_dxdy_i   => hdmi_osm_cfg_dxdy_i,
+         vga_vram_addr_o  => hdmi_osm_vram_addr_o,
+         vga_vram_data_i  => hdmi_osm_vram_data_i,
+         vga_ce_o         => open,
+         vga_red_o        => hdmi_osm_red,
+         vga_green_o      => hdmi_osm_green,
+         vga_blue_o       => hdmi_osm_blue,
+         vga_hs_o         => hdmi_osm_hs,
+         vga_vs_o         => hdmi_osm_vs,
+         vga_de_o         => hdmi_osm_de
+      ); -- i_video_overlay_hdmi
+
    i_vga_to_hdmi : entity work.vga_to_hdmi
       port map (
          select_44100 => '0',
@@ -317,12 +368,12 @@ begin
 
          vga_rst      => hdmi_rst_i,
          vga_clk      => hdmi_clk_i,
-         vga_vs       => hdmi_vs,
-         vga_hs       => hdmi_hs,
-         vga_de       => hdmi_de,
-         vga_r        => std_logic_vector(hdmi_red),
-         vga_g        => std_logic_vector(hdmi_green),
-         vga_b        => std_logic_vector(hdmi_blue),
+         vga_vs       => hdmi_osm_vs,
+         vga_hs       => hdmi_osm_hs,
+         vga_de       => hdmi_osm_de,
+         vga_r        => hdmi_osm_red,
+         vga_g        => hdmi_osm_green,
+         vga_b        => hdmi_osm_blue,
 
          -- PCM audio
          pcm_rst      => audio_rst_i,
