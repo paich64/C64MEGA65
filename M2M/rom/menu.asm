@@ -242,7 +242,7 @@ _OPTM_RUN_3     CMP     OPTM_KEY_DOWN, R8       ; key: down?
                 RBRA    _OPTM_RUN_5, !Z         ; no: check other key
 _OPTM_RUN_4     CMP     R0, R2                  ; yes: wrap around at bottom?
                 RBRA    _OPTM_KD_NWA, !Z        ; no: find next menu item
-                MOVE    0, R2                   ; yes: wrap around
+                MOVE    0xFFFF, R2              ; yes: wrap around
 _OPTM_KD_NWA    ADD     1, R2                   ; one element down
                 MOVE    R1, R6                  ; find next menu item: ascend.
                 ADD     R2, R6
@@ -285,7 +285,7 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 MOVE    R6, R4
                 AND     OPTM_SINGLESEL, R4      ; single-select item?
                 RBRA    _OPTM_RUN_16, Z         ; no: proceed as multi-select
-                MOVE    OPTM_SSMS, R12          ; yes: Flag multi-select
+                MOVE    OPTM_SSMS, R12          ; yes: set single-select flag
                 MOVE    2, @R12
                 MOVE    OPTM_X, R9              ; R9: x-coord
                 MOVE    @R9, R9
