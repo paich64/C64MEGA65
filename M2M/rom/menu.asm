@@ -240,7 +240,9 @@ _OPTM_RUN_2     MOVE    OPTM_FP_SELECT, R7      ; unselect old item
 
 _OPTM_RUN_3     CMP     OPTM_KEY_DOWN, R8       ; key: down?
                 RBRA    _OPTM_RUN_5, !Z         ; no: check other key
-_OPTM_RUN_4     CMP     R0, R2                  ; yes: wrap around at bottom?
+_OPTM_RUN_4     MOVE    R0, R7                  ; yes: wrap around at bottom?
+                SUB     1, R7
+                CMP     R7, R2
                 RBRA    _OPTM_KD_NWA, !Z        ; no: find next menu item
                 MOVE    0xFFFF, R2              ; yes: wrap around
 _OPTM_KD_NWA    ADD     1, R2                   ; one element down
