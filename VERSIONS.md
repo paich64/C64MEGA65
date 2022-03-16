@@ -1,12 +1,11 @@
-Version 0.5 (alpha) - Month, DD 2022
+Version 1 - Month, DD 2022
 ====================================
 
 Experience the Commodore 64 with great accuracy and sublime compatibility
-on your MEGA65! This is an "alpha" version, i.e. it is not yet feature
-complete and there might be occasional bugs and odd behaviors. Yet, it is
-already a pretty cool proof-of-concept that runs a ton of games and demos.
+on your MEGA65! It can run a ton of games and demos and it offers convenient
+features.
 
-## TODOs before release of alpha
+## TODOs before release
 * Do all "WIP"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
