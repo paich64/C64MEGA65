@@ -6,7 +6,7 @@ on your MEGA65! It can run a ton of games and demos and it offers convenient
 features.
 
 ## TODOs before release
-* Do all "WIP"
+* Do all "WIP" and "TBD"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
 * TODO implement couple/decouple joysticks/paddles (QNICE CSR register);
@@ -19,9 +19,6 @@ features.
 * Check directory structure and headers of source files.
 * Review all documentation and README's.
 * Search and replace "gbc4MEGA65" in all source files.
-TODO for next release:
-* Add HyperRAM device support to QNICE
-* Add 2 graphic cards to QNICE
 
 ## Features
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
@@ -36,6 +33,8 @@ WIP C1541 read-only support: Mount standard `*.D64` via SD card
 WIP Drive led during virtual disk access
 
 ## Constraints (What is not yet working)
+* HyperRAM device support to QNICE
+* 2 graphic cards to QNICE
 * NTSC
 * Writing to virtual disks
 * More sophisticated scalers and scandoublers
