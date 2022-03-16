@@ -1,12 +1,11 @@
-Version 0.5 (alpha) - Month, DD 2022
+Version 1 - Month, DD 2022
 ====================================
 
 Experience the Commodore 64 with great accuracy and sublime compatibility
-on your MEGA65! This is an "alpha" version, i.e. it is not yet feature
-complete and there might be occasional bugs and odd behaviors. Yet, it is
-already a pretty cool proof-of-concept that runs a ton of games and demos.
+on your MEGA65! It can run a ton of games and demos and it offers convenient
+features.
 
-## TODOs before release of alpha
+## TODOs before release
 * Do all "WIP"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
@@ -14,6 +13,15 @@ already a pretty cool proof-of-concept that runs a ton of games and demos.
   maybe we can combine this elegantly with the debouncer and reduce the
   signals that go to the core by using a std_logic_vector for the
   joysticks/paddles
+* Add OSM option to enable/disable tripple buffering.
+* Add OSM option to switch between 50 Hz and 60 Hz for HDMI output.
+* Add OSM option to enable hq2x (input to the scan-doubler module) (I'm not sure what it does).
+* Check directory structure and headers of source files.
+* Review all documentation and README's.
+* Search and replace "gbc4MEGA65" in all source files.
+TODO for next release:
+* Add HyperRAM device support to QNICE
+* Add 2 graphic cards to QNICE
 
 ## Features
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
