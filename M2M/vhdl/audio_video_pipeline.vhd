@@ -17,8 +17,9 @@ use work.video_modes_pkg.all;
 
 entity audio_video_pipeline is
    generic (
-      G_VIDEO_MODE           : video_modes_t;   -- Desired video format of HDMI output.
-      G_VGA_DX               : natural;         -- Actual format of video from Core (in pixels).
+      G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
+      G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
+      G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural
    );
    port (
@@ -65,6 +66,7 @@ entity audio_video_pipeline is
       video_osm_vram_addr_o    : out std_logic_vector(15 downto 0);
       video_osm_vram_data_i    : in  std_logic_vector(15 downto 0);
       hdmi_triple_buffering_i  : in  std_logic;
+      hdmi_video_mode_i        : in  natural;
       hdmi_osm_cfg_enable_i    : in  std_logic;
       hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
       hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
@@ -94,23 +96,24 @@ architecture synthesis of audio_video_pipeline is
    signal reset_na               : std_logic;
 
    signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
+   signal hdmi_video_mode        : video_modes_t;
 
    constant C_AVM_ADDRESS_SIZE   : integer := 19;
    constant C_AVM_DATA_SIZE      : integer := 128;
-   constant C_HTOTAL             : integer := G_VIDEO_MODE.H_PIXELS + G_VIDEO_MODE.H_FP + G_VIDEO_MODE.H_PULSE + G_VIDEO_MODE.H_BP;
-   constant C_HSSTART            : integer := G_VIDEO_MODE.H_PIXELS + G_VIDEO_MODE.H_FP;
-   constant C_HSEND              : integer := G_VIDEO_MODE.H_PIXELS + G_VIDEO_MODE.H_FP + G_VIDEO_MODE.H_PULSE;
-   constant C_HDISP              : integer := G_VIDEO_MODE.H_PIXELS;
-   constant C_VTOTAL             : integer := G_VIDEO_MODE.V_PIXELS + G_VIDEO_MODE.V_FP + G_VIDEO_MODE.V_PULSE + G_VIDEO_MODE.V_BP;
-   constant C_VSSTART            : integer := G_VIDEO_MODE.V_PIXELS + G_VIDEO_MODE.V_FP;
-   constant C_VSEND              : integer := G_VIDEO_MODE.V_PIXELS + G_VIDEO_MODE.V_FP + G_VIDEO_MODE.V_PULSE;
-   constant C_VDISP              : integer := G_VIDEO_MODE.V_PIXELS;
+   signal hdmi_htotal            : integer;
+   signal hdmi_hsstart           : integer;
+   signal hdmi_hsend             : integer;
+   signal hdmi_hdisp             : integer;
+   signal hdmi_vtotal            : integer;
+   signal hdmi_vsstart           : integer;
+   signal hdmi_vsend             : integer;
+   signal hdmi_vdisp             : integer;
 
    -- Auto-calculate display dimensions based on an 4:3 aspect ratio
-   constant C_HMIN               : integer := (G_VIDEO_MODE.H_PIXELS-G_VIDEO_MODE.V_PIXELS*4/3)/2;
-   constant C_HMAX               : integer := (G_VIDEO_MODE.H_PIXELS+G_VIDEO_MODE.V_PIXELS*4/3)/2-1;
-   constant C_VMIN               : integer := 0;
-   constant C_VMAX               : integer := G_VIDEO_MODE.V_PIXELS-1;
+   signal hdmi_hmin              : integer;
+   signal hdmi_hmax              : integer;
+   signal hdmi_vmin              : integer;
+   signal hdmi_vmax              : integer;
 
    -- After video_rescaler
    signal hdmi_red               : unsigned(7 downto 0);
@@ -142,6 +145,20 @@ architecture synthesis of audio_video_pipeline is
    signal video_ce_hdmi          : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
 
 begin
+
+   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(hdmi_video_mode_i);
+   hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
+   hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;
+   hdmi_hsend      <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE;
+   hdmi_hdisp      <= hdmi_video_mode.H_PIXELS;
+   hdmi_vtotal     <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP + hdmi_video_mode.V_PULSE + hdmi_video_mode.V_BP;
+   hdmi_vsstart    <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP;
+   hdmi_vsend      <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP + hdmi_video_mode.V_PULSE;
+   hdmi_vdisp      <= hdmi_video_mode.V_PIXELS;
+   hdmi_hmin       <= (hdmi_video_mode.H_PIXELS-hdmi_video_mode.V_PIXELS*4/3)/2;
+   hdmi_hmax       <= (hdmi_video_mode.H_PIXELS+hdmi_video_mode.V_PIXELS*4/3)/2-1;
+   hdmi_vmin       <= 0;
+   hdmi_vmax       <= hdmi_video_mode.V_PIXELS-1;
 
    ---------------------------------------------------------------------------------------------
    -- Analog output (VGA and audio jack)
@@ -277,18 +294,18 @@ begin
          run               => '1',                          -- input
          freeze            => '0',                          -- input
          mode              => "0" & hdmi_triple_buffering_i & "000", -- input
-         htotal            => C_HTOTAL,                     -- input
-         hsstart           => C_HSSTART,                    -- input
-         hsend             => C_HSEND,                      -- input
-         hdisp             => C_HDISP,                      -- input
-         vtotal            => C_VTOTAL,                     -- input
-         vsstart           => C_VSSTART,                    -- input
-         vsend             => C_VSEND,                      -- input
-         vdisp             => C_VDISP,                      -- input
-         hmin              => C_HMIN,                       -- input
-         hmax              => C_HMAX,                       -- input
-         vmin              => C_VMIN,                       -- input
-         vmax              => C_VMAX,                       -- input
+         htotal            => hdmi_htotal,                  -- input
+         hsstart           => hdmi_hsstart,                 -- input
+         hsend             => hdmi_hsend,                   -- input
+         hdisp             => hdmi_hdisp,                   -- input
+         vtotal            => hdmi_vtotal,                  -- input
+         vsstart           => hdmi_vsstart,                 -- input
+         vsend             => hdmi_vsend,                   -- input
+         vdisp             => hdmi_vdisp,                   -- input
+         hmin              => hdmi_hmin,                    -- input
+         hmax              => hdmi_hmax,                    -- input
+         vmin              => hdmi_vmin,                    -- input
+         vmax              => hdmi_vmax,                    -- input
          format            => "01",                         -- input
          poly_clk          => '0',                          -- input
          poly_dw           => (others => '0'),              -- input
@@ -340,6 +357,7 @@ begin
 
    i_video_overlay_hdmi : entity work.video_overlay
       generic  map (
+         G_SHIFT          => G_SHIFT_HDMI,   -- Deprecated. Will be removed in future release
          G_VGA_DX         => G_VGA_DX,  -- TBD
          G_VGA_DY         => G_VGA_DY,  -- TBD
          G_FONT_DX        => C_FONT_DX,
@@ -372,11 +390,11 @@ begin
       port map (
          select_44100 => '0',
          dvi          => '0',
-         vic          => std_logic_vector(to_unsigned(G_VIDEO_MODE.CEA_CTA_VIC, 8)),
-         aspect       => G_VIDEO_MODE.ASPECT,
-         pix_rep      => G_VIDEO_MODE.PIXEL_REP,
-         vs_pol       => G_VIDEO_MODE.V_POL,
-         hs_pol       => G_VIDEO_MODE.H_POL,
+         vic          => std_logic_vector(to_unsigned(hdmi_video_mode.CEA_CTA_VIC, 8)),
+         aspect       => hdmi_video_mode.ASPECT,
+         pix_rep      => hdmi_video_mode.PIXEL_REP,
+         vs_pol       => hdmi_video_mode.V_POL,
+         hs_pol       => hdmi_video_mode.H_POL,
 
          vga_rst      => hdmi_rst_i,
          vga_clk      => hdmi_clk_i,

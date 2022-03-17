@@ -4,6 +4,7 @@ use ieee.numeric_std.all;
 
 entity video_overlay is
    generic  (
+      G_SHIFT          : integer := 0;    -- Deprecated. Will be removed in future release
       G_VGA_DX         : natural;
       G_VGA_DY         : natural;
       G_FONT_DX        : natural;
@@ -102,7 +103,7 @@ begin
       )
       port map (
          clk_i                => vga_clk_i,
-         vga_col_i            => to_integer(unsigned(vga_pix_x_d)),
+         vga_col_i            => to_integer(unsigned(vga_pix_x_d)) - G_SHIFT,
          vga_row_i            => to_integer(unsigned(vga_pix_y_d)),
          vga_osm_cfg_xy_i     => vga_cfg_xy_i,
          vga_osm_cfg_dxdy_i   => vga_cfg_dxdy_i,

@@ -92,7 +92,7 @@ architecture beh of MEGA65_Core is
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
 -- HDMI 1280x720 @ 60 Hz resolution
-constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_60;
+constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
 
 -- C64 core clock speeds
 -- Make sure that you specify very exact values here, because these values will be used in counters
@@ -128,7 +128,7 @@ constant SHELL_M_DY           : integer := CHARS_DY;
 constant SHELL_O_X            : integer := CHARS_DX - 20;
 constant SHELL_O_Y            : integer := 0;
 constant SHELL_O_DX           : integer := 20;
-constant SHELL_O_DY           : integer := 15;
+constant SHELL_O_DY           : integer := 20;
 
 ---------------------------------------------------------------------------------------------
 -- Clocks and active high reset signals for each clock domain
@@ -203,6 +203,7 @@ signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
 
 -- QNICE On Screen Menu selections
 signal hdmi_control_m         : std_logic_vector(255 downto 0);
+signal hdmi_video_mode        : natural;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -256,6 +257,7 @@ signal qnice_c64_qnice_data : std_logic_vector(15 downto 0);
 signal qnice_control_m : std_logic_vector(255 downto 0);
 
 constant C_MENU_TRIPLE_BUFFERING : natural := 9;
+constant C_MENU_50_HZ            : natural := 14;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -736,11 +738,15 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
+   hdmi_video_mode <= 0 when hdmi_control_m(C_MENU_50_HZ) else 1;
+
+
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
-         G_VIDEO_MODE       => VIDEO_MODE,
-         G_VGA_DX           => VGA_DX,
-         G_VGA_DY           => VGA_DY
+         G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
+         G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
+         G_VGA_DX            => VGA_DX,
+         G_VGA_DY            => VGA_DY
       )
       port map (
          -- Input from Core (video and audio)
@@ -783,6 +789,7 @@ begin
          video_osm_vram_addr_o    => video_osm_vram_addr,
          video_osm_vram_data_i    => video_osm_vram_data,
          hdmi_triple_buffering_i  => hdmi_control_m(C_MENU_TRIPLE_BUFFERING),
+         hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
          hdmi_osm_cfg_dxdy_i      => hdmi_osm_cfg_dxdy,

@@ -116,7 +116,7 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 
 -- Size of menu and menu items
 -- End each line with a \n and make sure empty lines / separator lines are only consisting of a "\n"
-constant OPTM_SIZE         : integer := 13;  -- amount of items including empty lines:
+constant OPTM_SIZE         : integer := 18;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
                                              -- Important: make sure that SHELL_O_DY in mega65.vhd is equal to OPTM_SIZE + 2,
                                              -- so that the On-Screen window has the correct length
@@ -133,13 +133,19 @@ constant OPTM_ITEMS        : string :=
    " Triple Buffering\n"   &
    "\n"                    &
    " On\n"                 &
-   " Off\n"                & 
+   " Off\n"                &
+   "\n"                    &
+   " 60 Hz\n"              &
+   "\n"                    &
+   " On\n"                 &
+   " Off\n"                &
    "\n"                    &
    " Close Menu\n";
         
 constant OPTM_G_MOUNT      : integer := 1;
 constant OPTM_G_SID        : integer := 2;
 constant OPTM_G_AUDIO      : integer := 3;
+constant OPTM_G_VIDEO      : integer := 4;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_MOUNT   + OPTM_G_START + OPTM_G_SINGLESEL,
@@ -153,6 +159,11 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_MOUNT   + OPTM_G_START + OPT
                                              OPTM_G_LINE,
                                              OPTM_G_AUDIO   + OPTM_G_STDSEL,
                                              OPTM_G_AUDIO,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_VIDEO   + OPTM_G_STDSEL,
+                                             OPTM_G_VIDEO,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE
                                            );
