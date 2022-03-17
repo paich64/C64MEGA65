@@ -262,6 +262,9 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
 
                 ; avoid "double-firing" of already selected items by
                 ; ignoring the selection key in this case
+                ;
+                ; exception: single-select items actually need to fire each
+                ; time you select them as they flip their state
                 ; 
                 ; this "double-firing prevention" only works in those cases,
                 ; where OPTM_IR_STDSE resides in RAM; otherwise the menu
@@ -272,10 +275,48 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 ADD     OPTM_IR_STDSEL, R6
                 MOVE    @R6, R6
                 ADD     R2, R6
+                MOVE    R6, R7                  ; remember R6 for later
                 CMP     0, @R6
-                RBRA    _OPTM_RUN_SEL, !Z
+                RBRA    _OPTM_RUN_6A, Z         ; no: not selected
 
-                MOVE    OPTM_DATA, R6           ; R6: selected group
+                ; yes: selected: is it a single-select item?
+                MOVE    OPTM_DATA, R6
+                MOVE    @R6, R6
+                ADD     OPTM_IR_GROUPS, R6
+                MOVE    @R6, R6
+                ADD     R2, R6
+                MOVE    @R6, R8                 ; remember @R6 for later
+                MOVE    @R6, R6                 ; do not destroy original data
+                AND     OPTM_SINGLESEL, R6      ; ..by the AND command but use
+                CMP     0, R6                   ; ..a scratch register instead
+                RBRA    _OPTM_RUN_SEL, Z        ; is multi select: ignore key
+
+                ; yes: selected item has been selected again and yes, it is a
+                ; single-select item, so we need to treat it differently:
+                ; we need to flip its state (unselect), remove the selection
+                ; indicator on screen and notify the listener by calling
+                ; the callback function 
+                MOVE    0, @R7                  ; unselect single-select item
+                                                ; in memory
+
+                XOR     R9, R9                  ; R8 still contains group id
+                MOVE    OPTM_FP_CLLBCK, R7      ; call callback
+                RSUB    _OPTM_CALL, 1
+
+                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete
+                MOVE    OPTM_X, R9              ; R9: x-coord
+                MOVE    @R9, R9
+                ADD     1, R9
+                MOVE    OPTM_Y, R10             ; R10: y-coord
+                MOVE    @R10, R10
+                ADD     1, R10
+                MOVE    OPTM_FP_PRINTXY, R7     ; delete marker at current pos
+                RSUB    _OPTM_CALL, 1           ; ..on screen
+
+                RBRA    _OPTM_RUN_SEL, 1        ; continue main loop of menu
+
+                ; proceed in case of multi-sel. with the not yet selected item
+_OPTM_RUN_6A    MOVE    OPTM_DATA, R6           ; R6: selected group
                 MOVE    @R6, R6
                 ADD     OPTM_IR_GROUPS, R6
                 MOVE    @R6, R6
@@ -303,7 +344,7 @@ _OPTM_RUN_16    MOVE    OPTM_SSMS, R12          ; Flag on stack: multi-select
                 ADD     OPTM_IR_STDSEL, R12
                 MOVE    @R12, R12
                 XOR     R4, R4                  ; R4: loop var
-                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space to delete
+                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete
                 MOVE    OPTM_X, R9              ; R9: x-coord
                 MOVE    @R9, R9
                 ADD     1, R9

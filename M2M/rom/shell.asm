@@ -460,6 +460,14 @@ _OPTMGK_RET     DECRB
 ; QNICE M2M$CFM_DATA register each time something changes.
 OPTM_CALLBACK   INCRB
 
+                ; DEBUG
+                MOVE    R8, @--SP
+                SYSCALL(puthex, 1)
+                MOVE    R9, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    @SP++, R8
+
                 CMP     OPTM_CLOSE, R8          ; CLOSE = no changes: leave
                 RBRA    _OPTMCB_RET, Z
 
