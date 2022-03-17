@@ -42,18 +42,24 @@ end entity video_overlay;
 architecture synthesis of video_overlay is
 
    -- Delayed VGA signals
-   signal vga_ce_d    : std_logic;
-   signal vga_pix_x_d : std_logic_vector(10 downto 0);
-   signal vga_pix_y_d : std_logic_vector(10 downto 0);
-   signal vga_red_d   : std_logic_vector(7 downto 0);
-   signal vga_green_d : std_logic_vector(7 downto 0);
-   signal vga_blue_d  : std_logic_vector(7 downto 0);
-   signal vga_hs_d    : std_logic;
-   signal vga_vs_d    : std_logic;
-   signal vga_de_d    : std_logic;
+   signal vga_ce_d       : std_logic;
+   signal vga_pix_x_d    : std_logic_vector(10 downto 0);
+   signal vga_pix_y_d    : std_logic_vector(10 downto 0);
+   signal vga_red_d      : std_logic_vector(7 downto 0);
+   signal vga_green_d    : std_logic_vector(7 downto 0);
+   signal vga_blue_d     : std_logic_vector(7 downto 0);
+   signal vga_hs_d       : std_logic;
+   signal vga_vs_d       : std_logic;
+   signal vga_de_d       : std_logic;
 
-   signal vga_osm_on_d  : std_logic;
-   signal vga_osm_rgb_d : std_logic_vector(23 downto 0);   -- 23..0 = RGB, 8 bits each
+   signal vga_osm_on_dd  : std_logic;
+   signal vga_osm_rgb_dd : std_logic_vector(23 downto 0);   -- 23..0 = RGB, 8 bits each
+   signal vga_red_dd     : std_logic_vector(7 downto 0);
+   signal vga_green_dd   : std_logic_vector(7 downto 0);
+   signal vga_blue_dd    : std_logic_vector(7 downto 0);
+   signal vga_hs_dd      : std_logic;
+   signal vga_vs_dd      : std_logic;
+   signal vga_de_dd      : std_logic;
 
 begin
 
@@ -104,39 +110,52 @@ begin
          vga_osm_vram_addr_o  => vga_vram_addr_o,
          vga_osm_vram_data_i  => vga_vram_data_i( 7 downto 0),
          vga_osm_vram_attr_i  => vga_vram_data_i(15 downto 8),
-         vga_osm_on_o         => vga_osm_on_d,
-         vga_osm_rgb_o        => vga_osm_rgb_d
+         vga_osm_on_o         => vga_osm_on_dd,
+         vga_osm_rgb_o        => vga_osm_rgb_dd
       ); -- i_vga_osm
 
 
-   p_video_signal_latches : process (vga_clk_i)
+   -- Clear video output outside visible screen.
+   -- This also delays the video stream to bring it in sync with the OSM overlay.
+   p_clear_invisible : process (vga_clk_i)
    begin
       if rising_edge(vga_clk_i) then
-         -- Default border color
-         vga_red_o   <= (others => '0');
-         vga_blue_o  <= (others => '0');
-         vga_green_o <= (others => '0');
+         vga_red_dd   <= (others => '0');
+         vga_blue_dd  <= (others => '0');
+         vga_green_dd <= (others => '0');
 
          if vga_de_d then
-            -- MiSTer core output
-            vga_red_o   <= vga_red_d;
-            vga_green_o <= vga_green_d;
-            vga_blue_o  <= vga_blue_d;
-
-            -- On-Screen-Menu (OSM) output
-            if vga_osm_on_d then
-               vga_red_o   <= vga_osm_rgb_d(23 downto 16);
-               vga_green_o <= vga_osm_rgb_d(15 downto 8);
-               vga_blue_o  <= vga_osm_rgb_d(7 downto 0);
-            end if;
+            vga_red_dd   <= vga_red_d;
+            vga_green_dd <= vga_green_d;
+            vga_blue_dd  <= vga_blue_d;
          end if;
 
-         -- VGA horizontal and vertical sync
-         vga_hs_o <= vga_hs_d;
-         vga_vs_o <= vga_vs_d;
-         vga_de_o <= vga_de_d;
+         vga_hs_dd <= vga_hs_d;
+         vga_vs_dd <= vga_vs_d;
+         vga_de_dd <= vga_de_d;
       end if;
-   end process; -- p_video_signal_latches : process(vga_pixelclk)
+   end process; -- p_clear_invisible
+
+   p_output_registers : process (vga_clk_i)
+   begin
+      if rising_edge(vga_clk_i) then
+         -- Output from Core
+         vga_red_o   <= vga_red_dd;
+         vga_green_o <= vga_green_dd;
+         vga_blue_o  <= vga_blue_dd;
+
+         -- On-Screen Menu overlay
+         if vga_osm_on_dd = '1' then
+            vga_red_o   <= vga_osm_rgb_dd(23 downto 16);
+            vga_green_o <= vga_osm_rgb_dd(15 downto  8);
+            vga_blue_o  <= vga_osm_rgb_dd( 7 downto  0);
+         end if;
+
+         vga_hs_o    <= vga_hs_dd;
+         vga_vs_o    <= vga_vs_dd;
+         vga_de_o    <= vga_de_dd;
+      end if;
+   end process; -- p_output_registers
 
 end architecture synthesis;
 

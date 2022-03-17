@@ -69,7 +69,7 @@ entity main is
       c64_qnice_ce_i          : in std_logic;
       c64_qnice_we_i          : in std_logic
    );
-end main;
+end entity main;
 
 architecture synthesis of main is
 

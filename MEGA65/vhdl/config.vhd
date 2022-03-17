@@ -133,7 +133,7 @@ constant OPTM_ITEMS        : string :=
    " 6581\n"               &
    " 8580\n"               &
    "\n"                    &
-   " Audio Processing\n"   &
+   " Triple Buffering\n"   &
    "\n"                    &
    " On\n"                 &
    " Off\n"                & 

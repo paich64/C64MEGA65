@@ -91,8 +91,8 @@ architecture beh of MEGA65_Core is
 constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
 --constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
 
--- HDMI 1280x720 @ 50 Hz resolution
-constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_50;
+-- HDMI 1280x720 @ 60 Hz resolution
+constant VIDEO_MODE           : video_modes_t := C_HDMI_720p_60;
 
 -- C64 core clock speeds
 -- Make sure that you specify very exact values here, because these values will be used in counters
@@ -106,7 +106,7 @@ constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 5
 -- Rendering constants (in pixels)
 --    VGA_*   size of the final output on the screen
 --    FONT_*  size of one OSM character
-constant VGA_DX               : natural := 658;
+constant VGA_DX               : natural := 768;
 constant VGA_DY               : natural := 540;
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
@@ -141,21 +141,21 @@ signal hr_clk_x2_del          : std_logic;               -- HyperRAM @ 200 MHz p
 signal tmds_clk               : std_logic;               -- HDMI pixel clock at 5x speed for TMDS @ 371.25 MHz
 signal hdmi_clk               : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 signal main_clk               : std_logic;               -- C64 main clock @ 31.528 MHz
-signal video_clk              : std_logic;               -- Video clock @ 63.056 MHz
+signal video_clk              : std_logic;               -- C64 video clock @ 63.056 MHz
 
 signal qnice_rst              : std_logic;
 signal hr_rst                 : std_logic;
 signal hdmi_rst               : std_logic;
 signal main_rst               : std_logic;
 signal video_rst              : std_logic;
-signal reset_na               : std_logic;
+signal reset_na               : std_logic;               -- Asynchronous reset
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
-signal c64_ntsc               : std_logic;                     -- global switch: 0 = PAL mode, 1 = NTSC mode
-signal c64_clock_speed        : natural;                       -- clock speed depending on PAL/NTSC
+signal c64_ntsc               : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
+signal c64_clock_speed        : natural;                 -- clock speed depending on PAL/NTSC
 
 -- QNICE control and status register
 signal main_qnice_reset       : std_logic;
@@ -180,7 +180,6 @@ signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
 
 -- C64 Video output
-signal video_ce               : std_logic_vector(6 downto 0) := "1010100"; -- Clock divider 3/7
 signal video_red              : std_logic_vector(7 downto 0);
 signal video_green            : std_logic_vector(7 downto 0);
 signal video_blue             : std_logic_vector(7 downto 0);
@@ -188,12 +187,22 @@ signal video_hs               : std_logic;
 signal video_vs               : std_logic;
 signal video_de               : std_logic;
 
--- On-Screen-Menu (OSM)
+-- On-Screen-Menu (OSM) for VGA
 signal video_osm_cfg_enable   : std_logic;
 signal video_osm_cfg_xy       : std_logic_vector(15 downto 0);
 signal video_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
 signal video_osm_vram_addr    : std_logic_vector(15 downto 0);
 signal video_osm_vram_data    : std_logic_vector(15 downto 0);
+
+-- On-Screen-Menu (OSM) for HDMI
+signal hdmi_osm_cfg_enable    : std_logic;
+signal hdmi_osm_cfg_xy        : std_logic_vector(15 downto 0);
+signal hdmi_osm_cfg_dxdy      : std_logic_vector(15 downto 0);
+signal hdmi_osm_vram_addr     : std_logic_vector(15 downto 0);
+signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
+
+-- QNICE On Screen Menu selections
+signal hdmi_control_m         : std_logic_vector(255 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -233,15 +242,20 @@ signal qnice_vram_attr_we     : std_logic;   -- Writing to bits 15-8
 signal qnice_config_data      : std_logic_vector(15 downto 0);
 
 -- RAMs for the C64
-signal qnice_c64_ram_data_o            : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
-signal qnice_c64_ram_we                : std_logic;
-signal qnice_c64_mount_buf_ram_data_o  : std_logic_vector(7 downto 0);  -- Disk mount buffer
-signal qnice_c64_mount_buf_ram_we      : std_logic;
+signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
+signal qnice_c64_ram_we             : std_logic;
+signal qnice_c64_mount_buf_ram_data : std_logic_vector(7 downto 0);  -- Disk mount buffer
+signal qnice_c64_mount_buf_ram_we   : std_logic;
 
 -- QNICE signals passed down to main.vhd to handle IEC drives using vdrives.vhd
-signal qnice_c64_qnice_ce     : std_logic;
-signal qnice_c64_qnice_we     : std_logic;
-signal qnice_c64_qnice_data_o : std_logic_vector(15 downto 0);
+signal qnice_c64_qnice_ce   : std_logic;
+signal qnice_c64_qnice_we   : std_logic;
+signal qnice_c64_qnice_data : std_logic_vector(15 downto 0);
+
+-- QNICE On Screen Menu selections
+signal qnice_control_m : std_logic_vector(255 downto 0);
+
+constant C_MENU_TRIPLE_BUFFERING : natural := 9;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -259,15 +273,15 @@ signal hr_rwds_out      : std_logic;
 signal hr_rwds_oe       : std_logic;   -- Output enable for RWDS
 signal hr_dq_in         : std_logic_vector(7 downto 0);
 signal hr_dq_out        : std_logic_vector(7 downto 0);
-signal hr_dq_oe         : std_logic;    -- Output enable for DQ
+signal hr_dq_oe         : std_logic;   -- Output enable for DQ
 
 begin
 
    -- MMCME2_ADV clock generators:
    --   QNICE:                50 MHz
-   --   HyperRAM:             100 MHz
+   --   HyperRAM:             100 MHz and 200 MHz
    --   HDMI 720p 50 Hz:      74.25 MHz (HDMI) and 371.25 MHz (TMDS)
-   --   C64:                  31.528 MHz
+   --   C64:                  31.528 MHz (main) and 63.056 MHz (video)
    clk_gen : entity work.clk
       port map (
          sys_clk_i       => CLK,             -- expects 100 MHz
@@ -276,20 +290,19 @@ begin
          qnice_clk_o     => qnice_clk,       -- QNICE's 50 MHz main clock
          qnice_rst_o     => qnice_rst,       -- QNICE's reset, synchronized
 
-         hr_clk_x1_o     => hr_clk_x1,
-         hr_clk_x2_o     => hr_clk_x2,
-         hr_clk_x2_del_o => hr_clk_x2_del,
-         hr_rst_o        => hr_rst,
+         hr_clk_x1_o     => hr_clk_x1,       -- HyperRAM's 100 MHz
+         hr_clk_x2_o     => hr_clk_x2,       -- HyperRAM's 200 MHz
+         hr_clk_x2_del_o => hr_clk_x2_del,   -- HyperRAM's 200 MHz phase delayed
+         hr_rst_o        => hr_rst,          -- HyperRAM's reset, synchronized
 
          tmds_clk_o      => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
          hdmi_clk_o      => hdmi_clk,        -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
          hdmi_rst_o      => hdmi_rst,        -- HDMI's reset, synchronized
 
-         main_clk_o      => main_clk,        -- main's 31.528 MHz clock
-         main_rst_o      => main_rst,        -- main's reset, synchronized
-
-         video_clk_o     => video_clk,       -- video's 63.056 MHz clock
-         video_rst_o     => video_rst        -- video's reset, synchronized
+         main_clk_o      => main_clk,        -- C64 main's 31.528 MHz clock
+         main_rst_o      => main_rst,        -- C64 main's reset, synchronized
+         video_clk_o     => video_clk,       -- C64 video's 63.056 MHz clock
+         video_rst_o     => video_rst        -- C64 video's reset, synchronized
       ); -- clk_gen
 
    ---------------------------------------------------------------------------------------------
@@ -368,7 +381,7 @@ begin
          c64_clk_sd_i         => qnice_clk,           -- "sd card write clock" for floppy drive internal dual clock RAM buffer
          c64_qnice_addr_i     => qnice_ramrom_addr,
          c64_qnice_data_i     => qnice_ramrom_data_o,
-         c64_qnice_data_o     => qnice_c64_qnice_data_o,
+         c64_qnice_data_o     => qnice_c64_qnice_data,
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
          c64_qnice_we_i       => qnice_c64_qnice_we
       ); -- i_main
@@ -447,7 +460,7 @@ begin
          -- "d" = directly controled by the firmware
          -- "m" = indirectly controled by the menu system
          control_d_o             => open,
-         control_m_o             => open,
+         control_m_o             => qnice_control_m,
 
          -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
          -- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
@@ -509,18 +522,18 @@ begin
          -- C64 RAM
          when x"0100" =>
             qnice_c64_ram_we           <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data_o;
+            qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data;
 
          -- C64 IEC drives
          when x"0101" =>
             qnice_c64_qnice_ce         <= qnice_ramrom_ce;
             qnice_c64_qnice_we         <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= qnice_c64_qnice_data_o;
+            qnice_ramrom_data_i        <= qnice_c64_qnice_data;
 
          -- Disk mount buffer RAM
          when x"0102" =>
             qnice_c64_mount_buf_ram_we <= qnice_ramrom_we;
-            qnice_ramrom_data_i        <= x"00" & qnice_c64_mount_buf_ram_data_o;
+            qnice_ramrom_data_i        <= x"00" & qnice_c64_mount_buf_ram_data;
 
          when others => null;
       end case;
@@ -600,7 +613,7 @@ begin
       ); -- i_main2qnice
 
    -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
-   i_qnice2vga: xpm_cdc_array_single
+   i_qnice2video: xpm_cdc_array_single
       generic map (
          WIDTH => 33
       )
@@ -613,7 +626,25 @@ begin
          dest_out(15 downto 0)  => video_osm_cfg_xy,
          dest_out(31 downto 16) => video_osm_cfg_dxdy,
          dest_out(32)           => video_osm_cfg_enable
-      ); -- i_qnice2vga
+      ); -- i_qnice2video
+
+   -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
+   i_qnice2hdmi: xpm_cdc_array_single
+      generic map (
+         WIDTH => 289
+      )
+      port map (
+         src_clk                 => qnice_clk,
+         src_in(15 downto 0)     => qnice_osm_cfg_xy,
+         src_in(31 downto 16)    => qnice_osm_cfg_dxdy,
+         src_in(32)              => qnice_osm_cfg_enable,
+         src_in(288 downto 33)   => qnice_control_m,
+         dest_clk                => hdmi_clk,
+         dest_out(15 downto 0)   => hdmi_osm_cfg_xy,
+         dest_out(31 downto 16)  => hdmi_osm_cfg_dxdy,
+         dest_out(32)            => hdmi_osm_cfg_enable,
+         dest_out(288 downto 33) => hdmi_control_m
+      ); -- i_qnice2hdmi
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
    -- as well as QNICE can access it
@@ -637,8 +668,8 @@ begin
          address_b         => qnice_ramrom_addr(15 downto 0),
          data_b            => qnice_ramrom_data_o(7 downto 0),
          wren_b            => qnice_c64_ram_we,
-         q_b               => qnice_c64_ram_data_o
-      );
+         q_b               => qnice_c64_ram_data
+      ); -- c64_ram
 
    -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
    -- the disks that we are mounting. This will work for D64 only.
@@ -656,11 +687,11 @@ begin
          address_a         => qnice_ramrom_addr(17 downto 0),
          data_a            => qnice_ramrom_data_o(7 downto 0),
          wren_a            => qnice_c64_mount_buf_ram_we,
-         q_a               => qnice_c64_mount_buf_ram_data_o
-      );
+         q_a               => qnice_c64_mount_buf_ram_data
+      ); -- mount_buf_ram
 
 
-   i_osm_vram : entity work.dualport_2clk_ram_byteenable
+   i_osm_vram_vga : entity work.dualport_2clk_ram_byteenable
       generic map (
          G_ADDR_WIDTH   => VRAM_ADDR_WIDTH,
          G_DATA_WIDTH   => 16,
@@ -678,74 +709,97 @@ begin
          b_clk_i        => video_clk,
          b_address_i    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
          b_q_o          => video_osm_vram_data
-      ); -- i_osm_vram
+      ); -- i_osm_vram_vga
+
+   i_osm_vram_hdmi : entity work.dualport_2clk_ram_byteenable
+      generic map (
+         G_ADDR_WIDTH   => VRAM_ADDR_WIDTH,
+         G_DATA_WIDTH   => 16,
+         G_FALLING_A    => true  -- QNICE expects read/write to happen at the falling clock edge
+      )
+      port map
+      (
+         a_clk_i        => qnice_clk,
+         a_address_i    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
+         a_data_i       => qnice_ramrom_data_o(7 downto 0) & qnice_ramrom_data_o(7 downto 0),   -- 2 copies of the same data
+         a_wren_i       => qnice_vram_we or qnice_vram_attr_we,
+         a_byteenable_i => qnice_vram_attr_we & qnice_vram_we,
+         a_q_o          => open, -- TBD
+
+         b_clk_i        => hdmi_clk,
+         b_address_i    => hdmi_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
+         b_q_o          => hdmi_osm_vram_data
+      ); -- i_osm_vram_hdmi
 
 
    --------------------------------------------------------
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
-   p_video_ce : process (video_clk)
-   begin
-      if rising_edge(video_clk) then
-         video_ce <= video_ce(0) & video_ce(video_ce'left downto 1);
-      end if;
-   end process p_video_ce;
-
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
-         G_VIDEO_MODE       => C_HDMI_720p_50,
+         G_VIDEO_MODE       => VIDEO_MODE,
          G_VGA_DX           => VGA_DX,
          G_VGA_DY           => VGA_DY
       )
       port map (
-         video_clk_i        => video_clk,
-         video_rst_i        => video_rst,
-         video_ce_i         => video_ce(0),
-         video_red_i        => video_red,
-         video_green_i      => video_green,
-         video_blue_i       => video_blue,
-         video_hs_i         => video_hs,
-         video_vs_i         => video_vs,
-         video_de_i         => video_de,
-         audio_clk_i        => main_clk,
-         audio_rst_i        => main_rst,
-         audio_left_i       => main_sid_l,
-         audio_right_i      => main_sid_r,
-         vga_red_o          => vga_red,
-         vga_green_o        => vga_green,
-         vga_blue_o         => vga_blue,
-         vga_hs_o           => vga_hs,
-         vga_vs_o           => vga_vs,
-         vdac_clk_o         => vdac_clk,
-         vdac_syncn_o       => vdac_sync_n,
-         vdac_blankn_o      => vdac_blank_n,
-         pwm_l_o            => pwm_l,
-         pwm_r_o            => pwm_r,
-         hdmi_clk_i         => hdmi_clk,
-         hdmi_rst_i         => hdmi_rst,
-         tmds_clk_i         => tmds_clk,
-         tmds_data_p_o      => tmds_data_p,
-         tmds_data_n_o      => tmds_data_n,
-         tmds_clk_p_o       => tmds_clk_p,
-         tmds_clk_n_o       => tmds_clk_n,
-         osm_clk_i          => video_clk,
-         osm_cfg_enable_i   => video_osm_cfg_enable,
-         osm_cfg_xy_i       => video_osm_cfg_xy,
-         osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
-         osm_vram_addr_o    => video_osm_vram_addr,
-         osm_vram_data_i    => video_osm_vram_data,
-         hr_clk_i           => hr_clk_x1,
-         hr_rst_i           => hr_rst,
-         hr_write_o         => hr_write,
-         hr_read_o          => hr_read,
-         hr_address_o       => hr_address,
-         hr_writedata_o     => hr_writedata,
-         hr_byteenable_o    => hr_byteenable,
-         hr_burstcount_o    => hr_burstcount,
-         hr_readdata_i      => hr_readdata,
-         hr_readdatavalid_i => hr_readdatavalid,
-         hr_waitrequest_i   => hr_waitrequest
+         -- Input from Core (video and audio)
+         video_clk_i              => video_clk,
+         video_rst_i              => video_rst,
+         video_ce_i               => '1',
+         video_red_i              => video_red,
+         video_green_i            => video_green,
+         video_blue_i             => video_blue,
+         video_hs_i               => video_hs,
+         video_vs_i               => video_vs,
+         video_de_i               => video_de,
+         audio_clk_i              => main_clk,
+         audio_rst_i              => main_rst,
+         audio_left_i             => main_sid_l,
+         audio_right_i            => main_sid_r,
+         -- Analog output (VGA and audio jack)
+         vga_red_o                => vga_red,
+         vga_green_o              => vga_green,
+         vga_blue_o               => vga_blue,
+         vga_hs_o                 => vga_hs,
+         vga_vs_o                 => vga_vs,
+         vdac_clk_o               => vdac_clk,
+         vdac_syncn_o             => vdac_sync_n,
+         vdac_blankn_o            => vdac_blank_n,
+         pwm_l_o                  => pwm_l,
+         pwm_r_o                  => pwm_r,
+         -- Digital output (HDMI)
+         hdmi_clk_i               => hdmi_clk,
+         hdmi_rst_i               => hdmi_rst,
+         tmds_clk_i               => tmds_clk,
+         tmds_data_p_o            => tmds_data_p,
+         tmds_data_n_o            => tmds_data_n,
+         tmds_clk_p_o             => tmds_clk_p,
+         tmds_clk_n_o             => tmds_clk_n,
+         -- Connect to QNICE and Video RAM
+         video_osm_cfg_enable_i   => video_osm_cfg_enable,
+         video_osm_cfg_xy_i       => video_osm_cfg_xy,
+         video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
+         video_osm_vram_addr_o    => video_osm_vram_addr,
+         video_osm_vram_data_i    => video_osm_vram_data,
+         hdmi_triple_buffering_i  => hdmi_control_m(C_MENU_TRIPLE_BUFFERING),
+         hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
+         hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
+         hdmi_osm_cfg_dxdy_i      => hdmi_osm_cfg_dxdy,
+         hdmi_osm_vram_addr_o     => hdmi_osm_vram_addr,
+         hdmi_osm_vram_data_i     => hdmi_osm_vram_data,
+         -- Connect to HyperRAM controller
+         hr_clk_i                 => hr_clk_x1,
+         hr_rst_i                 => hr_rst,
+         hr_write_o               => hr_write,
+         hr_read_o                => hr_read,
+         hr_address_o             => hr_address,
+         hr_writedata_o           => hr_writedata,
+         hr_byteenable_o          => hr_byteenable,
+         hr_burstcount_o          => hr_burstcount,
+         hr_readdata_i            => hr_readdata,
+         hr_readdatavalid_i       => hr_readdatavalid,
+         hr_waitrequest_i         => hr_waitrequest
       ); -- i_audio_video_pipeline
 
 
