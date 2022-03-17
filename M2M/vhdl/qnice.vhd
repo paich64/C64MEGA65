@@ -42,10 +42,19 @@ port (
    uart_rxd_i           : in std_logic;            -- receive data, 115.200 baud, 8-N-1, rxd, txd only; rts/cts are not available
    uart_txd_o           : out std_logic;           -- send data, ditto
 
+   -- SD Card (internal on bottom)
    sd_reset_o           : out std_logic;           -- SD card interface via SPI
    sd_clk_o             : out std_logic;
    sd_mosi_o            : out std_logic;
    sd_miso_i            : in std_logic;
+   sd_cd_i              : in std_logic;
+   
+   -- SD Card (external on back)
+   sd2_reset_o          : out std_logic;           -- SD card interface via SPI
+   sd2_clk_o            : out std_logic;
+   sd2_mosi_o           : out std_logic;
+   sd2_miso_i           : in std_logic;
+   sd2_cd_i             : in std_logic;
 
    -- QNICE public registers
    csr_reset_o          : out std_logic;           -- reset the MiSTer core
@@ -97,6 +106,13 @@ signal reset_ctl                 : std_logic;
 signal reset_pre_pore            : std_logic;
 signal reset_post_pore           : std_logic;
 
+-- SD Card multiplexing: SD_* signals are the bottom tray, SD2*_ signals are the back slot
+signal sd_mux_reset_ctrl          : std_logic;                       -- reset QNICE's controller
+signal sd_mux_reset_card          : std_logic;                       -- reset SD card
+signal sd_mux_clk                 : std_logic;
+signal sd_mux_mosi                : std_logic;
+signal sd_mux_miso                : std_logic;
+
 -- QNICE standard MMIO signals
 signal rom_en                    : std_logic;
 signal rom_en_maybe              : std_logic; -- output of standard MMIO module without taking care of MiSTer2MEGA65 specific MMIO
@@ -118,6 +134,13 @@ signal sd_en                     : std_logic;
 signal sd_we                     : std_logic;
 signal sd_reg                    : std_logic_vector(2 downto 0);
 signal sd_data_out               : std_logic_vector(15 downto 0);
+
+-- MEGA65 SD card specific MMIO signals (see sysdef.asm)
+signal sd_mode                    : std_logic;
+signal sd_inuse_rd                : std_logic;                       -- read currently active sd
+signal sd_inuse_wr                : std_logic;                       -- force new active sd
+signal sd_cd_int                  : std_logic;
+signal sd_cd_ext                  : std_logic;
 
 -- M2M specific QNICE MMIO signals
 signal ramrom_en                 : std_logic;                        -- $7000
@@ -209,6 +232,8 @@ begin
    csr_keyboard_o    <= reg_csr(3);
    csr_joy1_o        <= reg_csr(4);
    csr_joy2_o        <= reg_csr(5);
+   sd_mode           <= reg_csr(6);
+   sd_inuse_wr       <= reg_csr(7);
    ramrom_ce_o       <= ramrom_en;
    ramrom_we_o       <= ramrom_we;
    ramrom_addr_o     <= std_logic_vector(to_unsigned(reg_ramrom_4kwin * 4096 + to_integer(unsigned(cpu_addr(11 downto 0))), 28));
@@ -293,22 +318,59 @@ begin
          data_in              => cpu_data_out,
          data_out             => eae_data_out
       );
+      
+   -- Smart SD card multiplexer: handles the two different SD Card slots of the MEGA65 (see also gbc.asm)       
+   i_sdmux : entity work.sdmux
+      port map
+      (
+         -- QNICE system interface
+         sysclk50Mhz_i        => clk50_i,
+         sysreset_i           => reset_ctl,
+         
+         -- Configuration lines to control the behavior of the multiplexer
+         mode_i               => sd_mode,
+         active_o             => sd_inuse_rd,
+         force_i              => sd_inuse_wr,
+         detected_int_o       => sd_cd_int,
+         detected_ext_o       => sd_cd_ext,
+                  
+         -- interface to bottom tray's SD card
+         sd_tray_detect_i     => sd_cd_i,
+         sd_tray_reset_o      => sd_reset_o,
+         sd_tray_clk_o        => sd_clk_o,
+         sd_tray_mosi_o       => sd_mosi_o,
+         sd_tray_miso_i       => sd_miso_i,
+         
+         -- interface to the SD card in the back slot
+         sd_back_detect_i     => sd2_cd_i,
+         sd_back_reset_o      => sd2_reset_o,
+         sd_back_clk_o        => sd2_clk_o,
+         sd_back_mosi_o       => sd2_mosi_o,
+         sd_back_miso_i       => sd2_miso_i,
+         
+         -- interface to the QNICE SD card controller
+         ctrl_reset_o         => sd_mux_reset_ctrl, 
+         ctrl_sd_reset_i      => sd_mux_reset_card,
+         ctrl_sd_clk_i        => sd_mux_clk,
+         ctrl_sd_mosi_i       => sd_mux_mosi,
+         ctrl_sd_miso_o       => sd_mux_miso
+      );      
 
-   -- SD Card
+   -- SD Card: connect QNICE SD Card logic to the smart multiplexer
    sd_card : entity work.sdcard
       port map
       (
          clk                  => clk50_i,
-         reset                => reset_ctl,
+         reset                => sd_mux_reset_ctrl,
          en                   => sd_en,
          we                   => sd_we,
          reg                  => sd_reg,
          data_in              => cpu_data_out,
          data_out             => sd_data_out,
-         sd_reset             => sd_reset_o,
-         sd_clk               => sd_clk_o,
-         sd_mosi              => sd_mosi_o,
-         sd_miso              => sd_miso_i
+         sd_reset             => sd_mux_reset_card,
+         sd_clk               => sd_mux_clk,
+         sd_mosi              => sd_mux_mosi,
+         sd_miso              => sd_mux_miso
       );
     
    -- Standard QNICE-FPGA MMIO controller  
@@ -411,8 +473,12 @@ begin
       
    csr_en                     <= '1' when cpu_addr = x"FFE0" else '0';
    csr_we                     <= csr_en and cpu_data_dir and cpu_data_valid;
-   csr_data_out               <= reg_csr when csr_en = '1' and csr_we = '0' else (others => '0');
-   
+   csr_data_out               <=                  "00000" & -- see sysdef.asm for details about the mapping of the bits
+                                 /* bit 10 */      sd_cd_ext & 
+                                 /* bit 9  */      sd_cd_int &
+                                 /* bit 8  */      sd_inuse_rd &
+                                                   reg_csr(7 downto 0) when csr_en = '1' and csr_we = '0' else (others => '0');
+
    osm_xy_en                  <= '1' when cpu_addr = x"FFE1" else '0';
    osm_xy_we                  <= osm_xy_en and cpu_data_dir and cpu_data_valid;
    osm_xy_data_out            <= osm_xy_o when osm_xy_en = '1' and osm_xy_we = '0' else (others => '0');
@@ -471,7 +537,9 @@ begin
          if reset_ctl = '1' then
 --            reg_csr     <= x"0001"; -- Hold the MiSTer core in reset state, de-couple all peripherals
             reg_csr     <= x"0038"; -- TODO/DEBUG: by default the C64 core is running and the keyboard and the joysticks are active
-            
+                                    -- Default: Auto select SD card: bit 6 = 0
+                                    -- Default: internal card (bottom tray): bit 7 = 0
+
              -- OSM is fullscreen by default
             osm_xy_o    <= x"0000";
             osm_dxdy_o  <= std_logic_vector(to_unsigned(CHARS_DX * 256 + CHARS_DY, 16));

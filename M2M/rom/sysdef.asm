@@ -3,37 +3,54 @@
 ;
 ; System definition file for registers and MMIO
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
 ; Control and status register
 ; ----------------------------------------------------------------------------
 
-M2M$CSR             .EQU 0xFFE0
-    ; Bit      0: Reset the MiSTer core
-    ; Bit      1: Pause the MiSTer core
-    ; Bit      2: Show On-Screen-Menu (OSM) as an overlay over the core output
-    ; Bit      3: Keyboard connection between M65 keyb. and the core
-    ; Bit      4: Joy. port 1 connection between M65 joy. port and core
-    ; Bit      5: Joy. port 2 connection between M65 joy. port and core
-    ; Bits 6..15: RESERVED
+M2M$CSR                 .EQU 0xFFE0
+    ; Bit       0: Reset the MiSTer core
+    ; Bit       1: Pause the MiSTer core
+    ; Bit       2: Show On-Screen-Menu (OSM) as an overlay over core output
+    ; Bit       3: Keyboard connection between M65 keyb. and the core
+    ; Bit       4: Joy. port 1 connection between M65 joy. port and core
+    ; Bit       5: Joy. port 2 connection between M65 joy. port and core
+    ; Bit       6: SD Card: Mode: 0=Auto: SD card automatically switches
+    ;             between the internal card (bottom tray) and the external
+    ;             card (back slot). The external card has higher precedence.
+    ; Bit       7: SD Card: If Mode=1: 0=force internal / 1=force external
+    ; Bit       8: SD Card: Currently active: 0=internal / 1=external
+    ; Bit       9: SD Card: Internal SD card detected
+    ; Bit      10: SD Card: External SD card detected
+    ; Bits 11..15: RESERVED
 
-M2M$CSR_RESET       .EQU 0x0001
-M2M$CSR_UN_RESET    .EQU 0xFFFE
-M2M$CSR_PAUSE       .EQU 0x0002
-M2M$CSR_UN_PAUSE    .EQU 0xFFFD
-M2M$CSR_OSM         .EQU 0x0004
-M2M$CSR_UN_OSM      .EQU 0xFFFB
-M2M$CSR_KBD         .EQU 0x0008
-M2M$CSR_UN_KBD      .EQU 0xFFF7
-M2M$CSR_JOY1        .EQU 0x0010
-M2M$CSR_UN_JOY1     .EQU 0xFFEF
-M2M$CSR_JOY2        .EQU 0x0020
-M2M$CSR_UN_JOY2     .EQU 0xFFDF
+M2M$CSR_RESET           .EQU 0x0001
+M2M$CSR_UN_RESET        .EQU 0xFFFE
+M2M$CSR_PAUSE           .EQU 0x0002
+M2M$CSR_UN_PAUSE        .EQU 0xFFFD
+M2M$CSR_OSM             .EQU 0x0004
+M2M$CSR_UN_OSM          .EQU 0xFFFB
+M2M$CSR_KBD             .EQU 0x0008
+M2M$CSR_UN_KBD          .EQU 0xFFF7
+M2M$CSR_JOY1            .EQU 0x0010
+M2M$CSR_UN_JOY1         .EQU 0xFFEF
+M2M$CSR_JOY2            .EQU 0x0020
+M2M$CSR_UN_JOY2         .EQU 0xFFDF
+M2M$CSR_SD_MODE         .EQU 0x0040
+M2M$CSR_UN_SD_MODE      .EQU 0xFFBF
+M2M$CSR_SD_FORCE        .EQU 0x0080
+M2M$CSR_UN_SD_FORCE     .EQU 0xFF7F
+M2M$CSR_SD_ACTIVE       .EQU 0x0100
+M2M$CSR_UN_SD_ACTIVE    .EQU 0xFEFF
+M2M$CSR_SD_DET_INT      .EQU 0x0200
+M2M$CSR_UN_SD_DET_INT   .EQU 0xFBFF
+M2M$CSR_SD_DET_EXT      .EQU 0x0400
+M2M$CSR_UN_SD_DET_EXT   .EQU 0xF7FF
 
-M2M$CSR_KBD_JOY     .EQU 0x0038
-M2M$CSR_UN_KBD_JOY  .EQU 0xFFC7
+M2M$CSR_KBD_JOY         .EQU 0x0038
+M2M$CSR_UN_KBD_JOY      .EQU 0xFFC7
 
 ; ----------------------------------------------------------------------------
 ; VGA and On-Screen-Menu (OSM)
