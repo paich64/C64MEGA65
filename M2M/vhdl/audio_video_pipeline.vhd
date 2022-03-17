@@ -23,65 +23,66 @@ entity audio_video_pipeline is
    );
    port (
       -- Input from Core (video and audio)
-      video_clk_i            : in  std_logic;
-      video_rst_i            : in  std_logic;
-      video_ce_i             : in  std_logic;
-      video_red_i            : in  std_logic_vector(7 downto 0);
-      video_green_i          : in  std_logic_vector(7 downto 0);
-      video_blue_i           : in  std_logic_vector(7 downto 0);
-      video_hs_i             : in  std_logic;
-      video_vs_i             : in  std_logic;
-      video_de_i             : in  std_logic;
-      audio_clk_i            : in  std_logic;
-      audio_rst_i            : in  std_logic;
-      audio_left_i           : in  signed(15 downto 0); -- Signed PCM format
-      audio_right_i          : in  signed(15 downto 0); -- Signed PCM format
+      video_clk_i              : in  std_logic;
+      video_rst_i              : in  std_logic;
+      video_ce_i               : in  std_logic;
+      video_red_i              : in  std_logic_vector(7 downto 0);
+      video_green_i            : in  std_logic_vector(7 downto 0);
+      video_blue_i             : in  std_logic_vector(7 downto 0);
+      video_hs_i               : in  std_logic;
+      video_vs_i               : in  std_logic;
+      video_de_i               : in  std_logic;
+      audio_clk_i              : in  std_logic;
+      audio_rst_i              : in  std_logic;
+      audio_left_i             : in  signed(15 downto 0); -- Signed PCM format
+      audio_right_i            : in  signed(15 downto 0); -- Signed PCM format
 
       -- Analog output (VGA and audio jack)
-      vga_red_o              : out std_logic_vector(7 downto 0);
-      vga_green_o            : out std_logic_vector(7 downto 0);
-      vga_blue_o             : out std_logic_vector(7 downto 0);
-      vga_hs_o               : out std_logic;
-      vga_vs_o               : out std_logic;
-      vdac_clk_o             : out std_logic;
-      vdac_syncn_o           : out std_logic;
-      vdac_blankn_o          : out std_logic;
-      pwm_l_o                : out std_logic;
-      pwm_r_o                : out std_logic;
+      vga_red_o                : out std_logic_vector(7 downto 0);
+      vga_green_o              : out std_logic_vector(7 downto 0);
+      vga_blue_o               : out std_logic_vector(7 downto 0);
+      vga_hs_o                 : out std_logic;
+      vga_vs_o                 : out std_logic;
+      vdac_clk_o               : out std_logic;
+      vdac_syncn_o             : out std_logic;
+      vdac_blankn_o            : out std_logic;
+      pwm_l_o                  : out std_logic;
+      pwm_r_o                  : out std_logic;
 
       -- Digital output (HDMI)
-      hdmi_clk_i             : in  std_logic;
-      hdmi_rst_i             : in  std_logic;
-      tmds_clk_i             : in  std_logic;
-      tmds_data_p_o          : out std_logic_vector(2 downto 0);
-      tmds_data_n_o          : out std_logic_vector(2 downto 0);
-      tmds_clk_p_o           : out std_logic;
-      tmds_clk_n_o           : out std_logic;
+      hdmi_clk_i               : in  std_logic;
+      hdmi_rst_i               : in  std_logic;
+      tmds_clk_i               : in  std_logic;
+      tmds_data_p_o            : out std_logic_vector(2 downto 0);
+      tmds_data_n_o            : out std_logic_vector(2 downto 0);
+      tmds_clk_p_o             : out std_logic;
+      tmds_clk_n_o             : out std_logic;
 
       -- Connect to QNICE and Video RAM
-      video_osm_cfg_enable_i : in  std_logic;
-      video_osm_cfg_xy_i     : in  std_logic_vector(15 downto 0);
-      video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
-      video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
-      video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
-      hdmi_osm_cfg_enable_i  : in  std_logic;
-      hdmi_osm_cfg_xy_i      : in  std_logic_vector(15 downto 0);
-      hdmi_osm_cfg_dxdy_i    : in  std_logic_vector(15 downto 0);
-      hdmi_osm_vram_addr_o   : out std_logic_vector(15 downto 0);
-      hdmi_osm_vram_data_i   : in  std_logic_vector(15 downto 0);
+      video_osm_cfg_enable_i   : in  std_logic;
+      video_osm_cfg_xy_i       : in  std_logic_vector(15 downto 0);
+      video_osm_cfg_dxdy_i     : in  std_logic_vector(15 downto 0);
+      video_osm_vram_addr_o    : out std_logic_vector(15 downto 0);
+      video_osm_vram_data_i    : in  std_logic_vector(15 downto 0);
+      hdmi_triple_buffering_i  : in  std_logic;
+      hdmi_osm_cfg_enable_i    : in  std_logic;
+      hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
+      hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
+      hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
+      hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
 
       -- Connect to HyperRAM controller
-      hr_clk_i               : in  std_logic;
-      hr_rst_i               : in  std_logic;
-      hr_write_o             : out std_logic;
-      hr_read_o              : out std_logic;
-      hr_address_o           : out std_logic_vector(31 downto 0);
-      hr_writedata_o         : out std_logic_vector(15 downto 0);
-      hr_byteenable_o        : out std_logic_vector(1 downto 0);
-      hr_burstcount_o        : out std_logic_vector(7 downto 0);
-      hr_readdata_i          : in  std_logic_vector(15 downto 0);
-      hr_readdatavalid_i     : in  std_logic;
-      hr_waitrequest_i       : in  std_logic
+      hr_clk_i                 : in  std_logic;
+      hr_rst_i                 : in  std_logic;
+      hr_write_o               : out std_logic;
+      hr_read_o                : out std_logic;
+      hr_address_o             : out std_logic_vector(31 downto 0);
+      hr_writedata_o           : out std_logic_vector(15 downto 0);
+      hr_byteenable_o          : out std_logic_vector(1 downto 0);
+      hr_burstcount_o          : out std_logic_vector(7 downto 0);
+      hr_readdata_i            : in  std_logic_vector(15 downto 0);
+      hr_readdatavalid_i       : in  std_logic;
+      hr_waitrequest_i         : in  std_logic
    );
 end entity audio_video_pipeline;
 
@@ -275,7 +276,7 @@ begin
          i_vdmax           => open,                         -- output
          run               => '1',                          -- input
          freeze            => '0',                          -- input
-         mode              => "00000",                      -- input
+         mode              => "0" & hdmi_triple_buffering_i & "000", -- input
          htotal            => C_HTOTAL,                     -- input
          hsstart           => C_HSSTART,                    -- input
          hsend             => C_HSEND,                      -- input

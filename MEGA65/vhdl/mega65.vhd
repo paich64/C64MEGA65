@@ -201,6 +201,9 @@ signal hdmi_osm_cfg_dxdy      : std_logic_vector(15 downto 0);
 signal hdmi_osm_vram_addr     : std_logic_vector(15 downto 0);
 signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
 
+-- QNICE On Screen Menu selections
+signal hdmi_control_m         : std_logic_vector(255 downto 0);
+
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -248,6 +251,11 @@ signal qnice_c64_mount_buf_ram_we   : std_logic;
 signal qnice_c64_qnice_ce   : std_logic;
 signal qnice_c64_qnice_we   : std_logic;
 signal qnice_c64_qnice_data : std_logic_vector(15 downto 0);
+
+-- QNICE On Screen Menu selections
+signal qnice_control_m : std_logic_vector(255 downto 0);
+
+constant C_MENU_TRIPLE_BUFFERING : natural := 9;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -452,7 +460,7 @@ begin
          -- "d" = directly controled by the firmware
          -- "m" = indirectly controled by the menu system
          control_d_o             => open,
-         control_m_o             => open,
+         control_m_o             => qnice_control_m,
 
          -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
          -- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
@@ -623,17 +631,19 @@ begin
    -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
    i_qnice2hdmi: xpm_cdc_array_single
       generic map (
-         WIDTH => 33
+         WIDTH => 289
       )
       port map (
-         src_clk                => qnice_clk,
-         src_in(15 downto 0)    => qnice_osm_cfg_xy,
-         src_in(31 downto 16)   => qnice_osm_cfg_dxdy,
-         src_in(32)             => qnice_osm_cfg_enable,
-         dest_clk               => hdmi_clk,
-         dest_out(15 downto 0)  => hdmi_osm_cfg_xy,
-         dest_out(31 downto 16) => hdmi_osm_cfg_dxdy,
-         dest_out(32)           => hdmi_osm_cfg_enable
+         src_clk                 => qnice_clk,
+         src_in(15 downto 0)     => qnice_osm_cfg_xy,
+         src_in(31 downto 16)    => qnice_osm_cfg_dxdy,
+         src_in(32)              => qnice_osm_cfg_enable,
+         src_in(288 downto 33)   => qnice_control_m,
+         dest_clk                => hdmi_clk,
+         dest_out(15 downto 0)   => hdmi_osm_cfg_xy,
+         dest_out(31 downto 16)  => hdmi_osm_cfg_dxdy,
+         dest_out(32)            => hdmi_osm_cfg_enable,
+         dest_out(288 downto 33) => hdmi_control_m
       ); -- i_qnice2hdmi
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
@@ -734,61 +744,62 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         video_clk_i            => video_clk,
-         video_rst_i            => video_rst,
-         video_ce_i             => '1',
-         video_red_i            => video_red,
-         video_green_i          => video_green,
-         video_blue_i           => video_blue,
-         video_hs_i             => video_hs,
-         video_vs_i             => video_vs,
-         video_de_i             => video_de,
-         audio_clk_i            => main_clk,
-         audio_rst_i            => main_rst,
-         audio_left_i           => main_sid_l,
-         audio_right_i          => main_sid_r,
+         video_clk_i              => video_clk,
+         video_rst_i              => video_rst,
+         video_ce_i               => '1',
+         video_red_i              => video_red,
+         video_green_i            => video_green,
+         video_blue_i             => video_blue,
+         video_hs_i               => video_hs,
+         video_vs_i               => video_vs,
+         video_de_i               => video_de,
+         audio_clk_i              => main_clk,
+         audio_rst_i              => main_rst,
+         audio_left_i             => main_sid_l,
+         audio_right_i            => main_sid_r,
          -- Analog output (VGA and audio jack)
-         vga_red_o              => vga_red,
-         vga_green_o            => vga_green,
-         vga_blue_o             => vga_blue,
-         vga_hs_o               => vga_hs,
-         vga_vs_o               => vga_vs,
-         vdac_clk_o             => vdac_clk,
-         vdac_syncn_o           => vdac_sync_n,
-         vdac_blankn_o          => vdac_blank_n,
-         pwm_l_o                => pwm_l,
-         pwm_r_o                => pwm_r,
+         vga_red_o                => vga_red,
+         vga_green_o              => vga_green,
+         vga_blue_o               => vga_blue,
+         vga_hs_o                 => vga_hs,
+         vga_vs_o                 => vga_vs,
+         vdac_clk_o               => vdac_clk,
+         vdac_syncn_o             => vdac_sync_n,
+         vdac_blankn_o            => vdac_blank_n,
+         pwm_l_o                  => pwm_l,
+         pwm_r_o                  => pwm_r,
          -- Digital output (HDMI)
-         hdmi_clk_i             => hdmi_clk,
-         hdmi_rst_i             => hdmi_rst,
-         tmds_clk_i             => tmds_clk,
-         tmds_data_p_o          => tmds_data_p,
-         tmds_data_n_o          => tmds_data_n,
-         tmds_clk_p_o           => tmds_clk_p,
-         tmds_clk_n_o           => tmds_clk_n,
+         hdmi_clk_i               => hdmi_clk,
+         hdmi_rst_i               => hdmi_rst,
+         tmds_clk_i               => tmds_clk,
+         tmds_data_p_o            => tmds_data_p,
+         tmds_data_n_o            => tmds_data_n,
+         tmds_clk_p_o             => tmds_clk_p,
+         tmds_clk_n_o             => tmds_clk_n,
          -- Connect to QNICE and Video RAM
-         video_osm_cfg_enable_i => video_osm_cfg_enable,
-         video_osm_cfg_xy_i     => video_osm_cfg_xy,
-         video_osm_cfg_dxdy_i   => video_osm_cfg_dxdy,
-         video_osm_vram_addr_o  => video_osm_vram_addr,
-         video_osm_vram_data_i  => video_osm_vram_data,
-         hdmi_osm_cfg_enable_i  => hdmi_osm_cfg_enable,
-         hdmi_osm_cfg_xy_i      => hdmi_osm_cfg_xy,
-         hdmi_osm_cfg_dxdy_i    => hdmi_osm_cfg_dxdy,
-         hdmi_osm_vram_addr_o   => hdmi_osm_vram_addr,
-         hdmi_osm_vram_data_i   => hdmi_osm_vram_data,
+         video_osm_cfg_enable_i   => video_osm_cfg_enable,
+         video_osm_cfg_xy_i       => video_osm_cfg_xy,
+         video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
+         video_osm_vram_addr_o    => video_osm_vram_addr,
+         video_osm_vram_data_i    => video_osm_vram_data,
+         hdmi_triple_buffering_i  => hdmi_control_m(C_MENU_TRIPLE_BUFFERING),
+         hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
+         hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
+         hdmi_osm_cfg_dxdy_i      => hdmi_osm_cfg_dxdy,
+         hdmi_osm_vram_addr_o     => hdmi_osm_vram_addr,
+         hdmi_osm_vram_data_i     => hdmi_osm_vram_data,
          -- Connect to HyperRAM controller
-         hr_clk_i               => hr_clk_x1,
-         hr_rst_i               => hr_rst,
-         hr_write_o             => hr_write,
-         hr_read_o              => hr_read,
-         hr_address_o           => hr_address,
-         hr_writedata_o         => hr_writedata,
-         hr_byteenable_o        => hr_byteenable,
-         hr_burstcount_o        => hr_burstcount,
-         hr_readdata_i          => hr_readdata,
-         hr_readdatavalid_i     => hr_readdatavalid,
-         hr_waitrequest_i       => hr_waitrequest
+         hr_clk_i                 => hr_clk_x1,
+         hr_rst_i                 => hr_rst,
+         hr_write_o               => hr_write,
+         hr_read_o                => hr_read,
+         hr_address_o             => hr_address,
+         hr_writedata_o           => hr_writedata,
+         hr_byteenable_o          => hr_byteenable,
+         hr_burstcount_o          => hr_burstcount,
+         hr_readdata_i            => hr_readdata,
+         hr_readdatavalid_i       => hr_readdatavalid,
+         hr_waitrequest_i         => hr_waitrequest
       ); -- i_audio_video_pipeline
 
 
