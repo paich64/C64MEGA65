@@ -137,6 +137,9 @@ architecture synthesis of audio_video_pipeline is
    signal hr_wide_readdatavalid  : std_logic;
    signal hr_wide_waitrequest    : std_logic;
 
+   signal video_ce_overlay       : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
+   signal video_ce_hdmi          : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
+
 begin
 
    ---------------------------------------------------------------------------------------------
@@ -166,7 +169,7 @@ begin
       )
       port map (
          vga_clk_i        => video_clk_i,
-         vga_ce_i         => video_ce_i,
+         vga_ce_i         => video_ce_overlay(0),
          vga_red_i        => video_red_i,
          vga_green_i      => video_green_i,
          vga_blue_i       => video_blue_i,
@@ -199,6 +202,14 @@ begin
 
    reset_na <= not (video_rst_i or hdmi_rst_i or hr_rst_i);
 
+   p_video_ce : process (video_clk_i)
+   begin
+      if rising_edge(video_clk_i) then
+         video_ce_overlay <= video_ce_overlay(0) & video_ce_overlay(video_ce_overlay'left downto 1);
+         video_ce_hdmi <= video_ce_hdmi(0) & video_ce_hdmi(video_ce_hdmi'left downto 1);
+      end if;
+   end process p_video_ce;
+
    i_ascal : entity work.ascal
       generic map (
          MASK      => x"ff",
@@ -225,7 +236,7 @@ begin
          i_vs              => video_vs_i,                   -- input
          i_fl              => '0',                          -- input
          i_de              => video_de_i,                   -- input
-         i_ce              => video_ce_i,                   -- input
+         i_ce              => video_ce_hdmi(0),             -- input
          i_clk             => video_clk_i,                  -- input
          o_r               => hdmi_red,                     -- output
          o_g               => hdmi_green,                   -- output

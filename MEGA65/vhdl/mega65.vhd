@@ -106,7 +106,7 @@ constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 5
 -- Rendering constants (in pixels)
 --    VGA_*   size of the final output on the screen
 --    FONT_*  size of one OSM character
-constant VGA_DX               : natural := 658;
+constant VGA_DX               : natural := 768;
 constant VGA_DY               : natural := 540;
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
@@ -180,7 +180,6 @@ signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
 
 -- C64 Video output
-signal video_ce               : std_logic_vector(6 downto 0) := "1010100"; -- Clock divider 3/7
 signal video_red              : std_logic_vector(7 downto 0);
 signal video_green            : std_logic_vector(7 downto 0);
 signal video_blue             : std_logic_vector(7 downto 0);
@@ -727,13 +726,6 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
-   p_video_ce : process (video_clk)
-   begin
-      if rising_edge(video_clk) then
-         video_ce <= video_ce(0) & video_ce(video_ce'left downto 1);
-      end if;
-   end process p_video_ce;
-
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
          G_VIDEO_MODE       => VIDEO_MODE,
@@ -744,7 +736,7 @@ begin
          -- Input from Core (video and audio)
          video_clk_i            => video_clk,
          video_rst_i            => video_rst,
-         video_ce_i             => video_ce(0),
+         video_ce_i             => '1',
          video_red_i            => video_red,
          video_green_i          => video_green,
          video_blue_i           => video_blue,
