@@ -295,7 +295,7 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 ; single-select item, so we need to treat it differently:
                 ; we need to flip its state (unselect), remove the selection
                 ; indicator on screen and notify the listener by calling
-                ; the callback function 
+                ; the callback function
                 MOVE    0, @R7                  ; unselect single-select item
                                                 ; in memory
 
@@ -309,6 +309,7 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 ADD     1, R9
                 MOVE    OPTM_Y, R10             ; R10: y-coord
                 MOVE    @R10, R10
+                ADD     R2, R10
                 ADD     1, R10
                 MOVE    OPTM_FP_PRINTXY, R7     ; delete marker at current pos
                 RSUB    _OPTM_CALL, 1           ; ..on screen
