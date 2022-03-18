@@ -29,10 +29,10 @@ create_generated_clock -name sdcard_clk -source [get_pins */clk_gen/i_clk_qnice/
 ## QNICE's EAE combinatorial division networks take longer than
 ## the regular clock period, so we specify a multicycle path
 ## see also the comments in EAE.vhd and explanations in UG903/chapter 5/Multicycle Paths as well as ug911/page 25
-set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
-   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -setup 3
-set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
-   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -hold 2
+set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]}}] \
+   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -setup 3
+set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]}}] \
+   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -hold 2
 
 # Place HyperRAM close to I/O pins
 startgroup

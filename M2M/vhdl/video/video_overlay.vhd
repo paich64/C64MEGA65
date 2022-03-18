@@ -61,6 +61,7 @@ architecture synthesis of video_overlay is
    signal vga_hs_dd      : std_logic;
    signal vga_vs_dd      : std_logic;
    signal vga_de_dd      : std_logic;
+   signal vga_ce_dd      : std_logic;
 
 begin
 
@@ -134,6 +135,7 @@ begin
          vga_hs_dd <= vga_hs_d;
          vga_vs_dd <= vga_vs_d;
          vga_de_dd <= vga_de_d;
+         vga_ce_dd <= vga_ce_d;
       end if;
    end process; -- p_clear_invisible
 
@@ -155,6 +157,7 @@ begin
          vga_hs_o    <= vga_hs_dd;
          vga_vs_o    <= vga_vs_dd;
          vga_de_o    <= vga_de_dd;
+         vga_ce_o    <= vga_ce_dd;
       end if;
    end process; -- p_output_registers
 
