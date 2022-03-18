@@ -39,7 +39,7 @@ constant CHR_LINE_50 : string := CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_L
 constant SEL_WELCOME : std_logic_vector(15 downto 0) := x"0000";
 constant SCR_WELCOME : string :=
 
-   "Commodore 64 for MEGA65 V0.1 [WIP]\n" &
+   "Commodore 64 for MEGA65 Version 1\n" &
    "MiSTer port 2022 by MJoergen & sy2002\n\n" &
    
    "Powered by MiSTer2MEGA65 V0.1 [WIP]\n" &
@@ -127,7 +127,7 @@ constant OPTM_SIZE         : integer := 13;  -- amount of items including empty 
 constant OPTM_ITEMS        : string :=
 
    " 8: <Mount Drive>\n"   &
-   "\n"                    &
+   " 9: <Mount Drive>\n"   &
    " SID\n"                &
    "\n"                    &
    " 6581\n"               &
@@ -140,19 +140,23 @@ constant OPTM_ITEMS        : string :=
    "\n"                    &
    " Close Menu\n";
         
-constant OPTM_G_MOUNT      : integer := 1;
-constant OPTM_G_SID        : integer := 2;
-constant OPTM_G_AUDIO      : integer := 3;
+constant OPTM_G_MOUNT_8    : integer := 1;
+constant OPTM_G_MOUNT_9    : integer := 2;   -- not used, yet
+constant OPTM_G_SID        : integer := 3;
+constant OPTM_G_AUDIO      : integer := 4;
+
+constant OPTM_DELIT        : integer := 5;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
-constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_MOUNT      + OPTM_G_MOUNT_DRV  + OPTM_G_START,
-                                             OPTM_G_LINE,
+constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_MOUNT_8    + OPTM_G_MOUNT_DRV  + OPTM_G_START,
+                                             OPTM_G_MOUNT_9    + OPTM_G_MOUNT_DRV,
+                                             --OPTM_G_LINE,
                                              OPTM_G_TEXT,
                                              OPTM_G_LINE,
                                              OPTM_G_SID        + OPTM_G_STDSEL,
                                              OPTM_G_SID,
                                              OPTM_G_LINE,
-                                             OPTM_G_TEXT,
+                                             OPTM_DELIT        + OPTM_G_MOUNT_DRV,
                                              OPTM_G_LINE,
                                              OPTM_G_AUDIO      + OPTM_G_STDSEL,
                                              OPTM_G_AUDIO,

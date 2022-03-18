@@ -36,7 +36,6 @@
 ; Firmware: Main Code
 ; ----------------------------------------------------------------------------
 
-C64_RAM         .EQU    0x0100  ; RAM of the Commodore 64
 C64_IEC         .EQU    0x0101  ; IEC bridge
 C64_MOUNTBUF    .EQU    0x0102  ; 171kB buffer to hold mounted disks
 
@@ -76,7 +75,10 @@ C64_IEC_B_DIN   .EQU    0x700B  ; drive buffer: data in (from drive)
 D64_STDSIZE_L   .EQU    0xAB00
 D64_STDSIZE_H   .EQU    0x0002
 
-START_FIRMWARE  MOVE    STR_START, R8
+START_FIRMWARE  RBRA    START_SHELL, 1
+
+
+                MOVE    STR_START, R8
                 SYSCALL(puts, 1)
 
 #ifdef RELEASE
@@ -377,8 +379,6 @@ TMP_DEBUG       .ASCII_W "d64/sidtest.d64"
                 .ORG    0x8000                  ; RAM starts at 0x8000
 #endif
 
-HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
-HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
 FINPUT_BUF      .BLOCK  256
 
 ; M2M shell variables

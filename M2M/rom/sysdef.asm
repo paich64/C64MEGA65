@@ -188,3 +188,21 @@ M2M$CFG_OPTM_START  .EQU 0x0304     ; Position of very first cursor pos
 M2M$CFG_OPTM_ICOUNT .EQU 0x0305     ; Amount of menu items
 M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
 M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item
+
+; ----------------------------------------------------------------------------
+; Virtual Drives Device for MiSTer "SD" interface (vdrives.vhd)
+; ----------------------------------------------------------------------------
+
+VD_IEC_WIN_CAD      .EQU 0x0000     ; control and data registers
+VD_IEC_WIN_DRV      .EQU 0x0001     ; drive 0, next window = drive 1, ...
+
+VD_IEC_MOUNT        .EQU 0x7000     ; image mounted, lowest bit = drive 0
+VD_IEC_RO           .EQU 0x7001     ; read-only for currently mounted drive
+VD_IEC_SIZE_L       .EQU 0x7002     ; image file size, low word
+VD_IEC_SIZE_H       .EQU 0x7003     ; image file size, high word
+VD_IEC_TYPE         .EQU 0x7004     ; image file type (see C64_IMGTYPE_* below)
+VD_IEC_B_ADDR       .EQU 0x7005     ; drive buffer: address
+VD_IEC_B_DOUT       .EQU 0x7006     ; drive buffer: data out (to drive)
+VD_IEC_B_WREN       .EQU 0x7007     ; drive buffer: write enable (also needs ack)
+VD_IEC_VDNUM        .EQU 0x7008     ; number of virtual drives
+VD_IEC_BLKSZ        .EQU 0x7009     ; block size for LBA in bytes
