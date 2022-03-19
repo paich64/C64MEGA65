@@ -374,19 +374,17 @@ _OPTMGK_RET     DECRB
 ; R9: selected item within menu group
 ;     in case of single selected items: 0=not selected, 1=selected
 ;
+; @TODO:
+; R10: 0=selection was done via pressing Return
+;      1=selection was done via pressing Space
+;
 ; For making sure that the hardware can react in "real-time" to menu item
 ; changes, i.e. even before the menu is closed, we are updating the
 ; QNICE M2M$CFM_DATA register each time something changes.
-
-
-; DEBUG
-
-STR_MOUNT_0     .ASCII_W "Drive #8 is currently not mounted.\n"
-STR_MOUNTED     .ASCII_W "Did mount it.\n"
-STR_UNMOUNTED   .ASCII_W "Did unmount it.\n"
-STR_MOUNT_1     .ASCII_W "Drive #8 is currently mounted.\n"
-
 OPTM_CALLBACK   INCRB
+
+                ; @TODO: support this feature and do not hardcode
+                MOVE    0, R10
 
                 ; DEBUG
                 MOVE    R8, @--SP
@@ -408,42 +406,21 @@ OPTM_CALLBACK   INCRB
                 RSUB  	VD_DRVNO, 1 			; is menu item a mount item?
                 RBRA  	_OPTMC_NOMNT, !C  		; no: : proceed to std. beh.
 
-                ; R8 contains the drive number at this point.
-                ; Check, if the drive is mounted: If yes, unmount it and
-                ; reset the menu entry. If no, mount it.
+                ; DEBUG
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
-                MOVE    R8, R0
 
-                RSUB    VD_MOUNTED, 1
-                RBRA    _DBG_1, C
-
-                MOVE    STR_MOUNT_0, R8
-                SYSCALL(puts, 1)
-
-                ; mount by strobing mount signal
-                MOVE    R0, R8
-                MOVE    VD_IEC_SIZE_L, R9
-                MOVE    VD_IEC_SIZE_H, R10
-                MOVE    1, R11
-                RSUB    VD_STROBE_IM, 1
-
-                MOVE    STR_MOUNTED, R8
-                SYSCALL(puts, 1)
-                RBRA    _OPTMC_NOMNT, 1
-
-_DBG_1          MOVE    STR_MOUNT_1, R8
-                SYSCALL(puts, 1)
-
-                ; unmount by strobing mount signal
-                MOVE    R0, R8
-                XOR     R9, R9
-                XOR     R10, R10
-                XOR     R11, R11
-                RSUB    VD_STROBE_IM, 1
-
-                MOVE    STR_UNMOUNTED, R8
-                SYSCALL(puts, 1)               
+                ; Handle mounting
+                ; R8 contains the drive number at this point
+                ; R9: 0=unmount drive, if it has been mounted before
+                ;     1=just replace the disk image, if it has been mounted
+                ;       before without unmounting the drive (aka resetting
+                ;       the drive/"switching the drive on/off")
+                ;
+                ; It is important that the standard behavior runs after the
+                ; mounting is done, this is why we do RSUB and not RBRA
+                MOVE    R10, R9
+                RSUB    HANDLE_MOUNTING, 1
 
                 ; Standard behavior
 _OPTMC_NOMNT    CMP     OPTM_CLOSE, R8          ; CLOSE = no changes: leave

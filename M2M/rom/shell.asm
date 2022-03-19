@@ -34,16 +34,7 @@ _RESET_A_WHILE  SUB     1, R1
                 ; initialize screen library and show welcome screen:
                 ; draw frame and print text
                 RSUB    SCR$INIT, 1             ; retrieve VHDL generics
-                RSUB    SCR$CLR, 1              ; clear screen                                
-                MOVE    SCR$OSM_M_X, R8         ; retrieve frame coordinates
-                MOVE    @R8, R8
-                MOVE    SCR$OSM_M_Y, R9
-                MOVE    @R9, R9
-                MOVE    SCR$OSM_M_DX, R10
-                MOVE    @R10, R10
-                MOVE    SCR$OSM_M_DY, R11
-                MOVE    @R11, R11
-                RSUB    SCR$PRINTFRAME, 1       ; draw frame
+                RSUB    FRAME_FULLSCR, 1        ; draw fullscreen frame
                 MOVE    M2M$RAMROM_DEV, R0      ; Device = config data
                 MOVE    M2M$CONFIG, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0    ; Selector = Welcome screen
@@ -104,6 +95,82 @@ MAIN_LOOP       RSUB    HANDLE_CORE_IO, 1       ; IO handling (e.g. vdrives)
                 RBRA    MAIN_LOOP, 1
 
 ; ----------------------------------------------------------------------------
+; SD card & virtual drive mount handling
+; ----------------------------------------------------------------------------
+
+; Handle mounting:
+; R8 contains the drive number
+; R9: 0=unmount drive, if it has been mounted before
+;     1=just replace the disk image, if it has been mounted
+;       before without unmounting the drive (aka resetting
+;       the drive/"switching the drive on/off")
+HANDLE_MOUNTING INCRB
+
+                RSUB    VD_MOUNTED, 1           ; C=1: the given drive in R8..
+                RBRA    _HM_MOUNTED, C          ; ..is already mounted
+
+                ; Drive in R8 is not yet mounted:
+                ; 1. Hide OSM to enable the full-screen window
+                ; 2. If the SD card is not yet mounted: mount it and handle
+                ;    errors, allow re-tries, etc.
+                ; 3. As soon as the SD card is mounted: FOR NOW - as a first
+                ;    DEBUG VERSION - allow entering of a filename manually
+                ;    and mount the disk image
+                ; 4. Modify the menu, so that the file name of the mounted
+                ;    image is part of the menu
+
+                ; Step #1 - Hide OSM and show full-screen window
+                RSUB    SCR$OSM_OFF, 1
+                RSUB    FRAME_FULLSCR, 1
+                MOVE    1, R8
+                MOVE    1, R9
+                RSUB    SCR$GOTOXY, 1
+                RSUB    SCR$OSM_M_ON, 1
+
+                ; Step #2 - Mount SD card
+                MOVE    HANDLE_DEV, R8          ; device handle
+                CMP     0, @R8
+                RBRA    _HM_SDMOUNTED1, !Z
+
+_HM_SDUNMOUNTED MOVE    1, R9                   ; partition #1 hardcoded
+                SYSCALL(f32_mnt_sd, 1)
+                CMP     0, R9                   ; R9=error code; 0=OK
+                RBRA    _HM_SDMOUNTED2, Z
+
+                ; Mounting did not work - offer retry
+                MOVE    ERR_MOUNT, R8
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    R9, R8
+                MOVE    SCRATCH_HEX, R9
+                RSUB    WORD2HEXSTR, 1
+                MOVE    R9, R8
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    ERR_MOUNT_RET, R8
+                RSUB    SCR$PRINTSTR, 1
+                SYSCALL(exit, 1)
+
+                ; SD card already mounted, but is it still the same card slot?
+_HM_SDMOUNTED1  MOVE    OLD_SDCARD, R0
+                MOVE    M2M$CSR, R1             ; extract currently active SD
+                MOVE    @R1, R1
+                AND     M2M$CSR_SD_ACTIVE, R1
+                CMP     @R0, R1
+                RBRA    _HM_SDMOUNTED2, Z       ; still same slot
+                MOVE    R1, @R0                 ; different slot: remember it
+                RBRA    _HM_SDUNMOUNTED, 1      ; and treat it as unmounted
+
+                ; SD card already mounted and still the same card slot
+_HM_SDMOUNTED2  SYSCALL(exit, 1)                
+
+
+
+                ; Drive in R8 is already mounted
+_HM_MOUNTED     SYSCALL(exit, 1)
+
+                DECRB
+                RET
+
+; ----------------------------------------------------------------------------
 ; Debug mode:
 ; Hold "Run/Stop" + "Cursor Up" and then while holding these, press "Help"
 ; ----------------------------------------------------------------------------
@@ -152,6 +219,24 @@ FATAL           MOVE    R8, R0
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(puts, 1)
                 SYSCALL(exit, 1)
+
+; ----------------------------------------------------------------------------
+; Screen handling
+; ----------------------------------------------------------------------------
+
+FRAME_FULLSCR   SYSCALL(enter, 1)
+                RSUB    SCR$CLR, 1              ; clear screen                                
+                MOVE    SCR$OSM_M_X, R8         ; retrieve frame coordinates
+                MOVE    @R8, R8
+                MOVE    SCR$OSM_M_Y, R9
+                MOVE    @R9, R9
+                MOVE    SCR$OSM_M_DX, R10
+                MOVE    @R10, R10
+                MOVE    SCR$OSM_M_DY, R11
+                MOVE    @R11, R11
+                RSUB    SCR$PRINTFRAME, 1       ; draw frame
+                SYSCALL(leave, 1)
+                RET
 
 ; ----------------------------------------------------------------------------
 ; Strings and Libraries

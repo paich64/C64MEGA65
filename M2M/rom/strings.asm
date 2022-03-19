@@ -24,3 +24,6 @@ ERR_F_MENUSIZE	.ASCII_P "config.vhd: Illegal menu size (OPTM_SIZE): Must be "
 				.ASCII_W "between 1 and 254\n"
 ERR_F_MENUSTART .ASCII_P "config.vhd: No start menu item tag (OPTM_G_START) "
 				.ASCII_W "found in OPTM_GROUPS\n"
+
+ERR_MOUNT       .ASCII_W "Error: Cannot mount SD card!\nError code: "
+ERR_MOUNT_RET   .ASCII_W "\n\nPress Return to retry"

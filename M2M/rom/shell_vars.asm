@@ -18,8 +18,14 @@ OPTM_ICOUNT		.BLOCK 1						; amount of menu items
 OPTM_START 		.BLOCK 1						; initially selected menu item
 OPTM_SELECTED   .BLOCK 1                        ; last options menu selection
 
+SCRATCH_HEX  	.BLOCK 5
+
+; SD card and file handling
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
 HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
+
+OLD_SDCARD 		.BLOCK 1 						; reload if SD card changed				
+												
 
 ; @TODO: We will use the sysinfo device in future to dynamically retrieve
 ; all information needed to run the virtual drive mounting system:

@@ -39,17 +39,22 @@ constant CHR_LINE_50 : string := CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_L
 constant SEL_WELCOME : std_logic_vector(15 downto 0) := x"0000";
 constant SCR_WELCOME : string :=
 
-   "Commodore 64 for MEGA65 Version 1\n" &
-   "MiSTer port 2022 by MJoergen & sy2002\n\n" &
+   "\n Commodore 64 for MEGA65 Version 1\n\n" &
    
-   "Powered by MiSTer2MEGA65 V0.1 [WIP]\n" &
+   " MiSTer port 2022 by MJoergen & sy2002\n" &   
+   " Powered by MiSTer2MEGA65\n\n\n" &
+     
+   " While the C64 is running: Press the HELP key\n" &
+   " to mount drives and to configure the core.\n\n" &
    
-   "\n\nPLACEHOLDER FOR CORE DOCUMENTATION\n\n" &
+   " Both SD card slots are supported: The card\n" &
+   " in the back has higher precedence than the\n" &
+   " card at the bottom of the MEGA65.\n\n" &
+    
+   " Use F1 and F3 to switch between SD cards\n" &
+   " while you are in the file browser.\n" & 
    
-   "Press the HELP key to mount drives\n" &
-   "and to configure the core.\n" &  
-   
-   "\n\nPress Space to continue.\n\n\n";
+   "\n\n Press Space to continue.";
 
 --------------------------------------------------------------------------------------------------------------------
 -- Set start folder for file browser (Selector 0x0100) 

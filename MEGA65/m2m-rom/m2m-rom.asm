@@ -352,10 +352,8 @@ _WAIT_RD_1      CMP     1, @R0
 ; Strings
 ; ----------------------------------------------------------------------------
 
-STR_START       .ASCII_P "                                                  "
-                .ASCII_P "\nC64 for MEGA65 done by MJoergen & sy2002 in 2022"
-                .ASCII_W "\n\n"
-STR_FINPUTD64   .ASCII_W "Enter D64 file name: "                
+STR_START       .ASCII_W "                                 \nC64 for MEGA65\n"
+STR_FINPUTD64   .ASCII_W "Enter D64 file name:\n"                
 STR_OK          .ASCII_W "OK\n"
 STR_ERROR       .ASCII_W "ERROR\n"
 STR_ERR_D64     .ASCII_P "ERROR: For now, only standard D64 files with a "
