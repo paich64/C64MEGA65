@@ -25,6 +25,12 @@ _RESET_A_WHILE  SUB     1, R1
                 RBRA    _RESET_A_WHILE, !Z
                 MOVE    0, @R0                  ; remove reset signal
 
+                ; initialize device (SD card) and file handle
+                MOVE    HANDLE_DEV, R8
+                MOVE    0, @R8
+                MOVE    HANDLE_FILE, R8
+                MOVE    0, @R8
+
                 ; initialize screen library and show welcome screen:
                 ; draw frame and print text
                 RSUB    SCR$INIT, 1             ; retrieve VHDL generics

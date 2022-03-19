@@ -377,6 +377,15 @@ _OPTMGK_RET     DECRB
 ; For making sure that the hardware can react in "real-time" to menu item
 ; changes, i.e. even before the menu is closed, we are updating the
 ; QNICE M2M$CFM_DATA register each time something changes.
+
+
+; DEBUG
+
+STR_MOUNT_0     .ASCII_W "Drive #8 is currently not mounted.\n"
+STR_MOUNTED     .ASCII_W "Did mount it.\n"
+STR_UNMOUNTED   .ASCII_W "Did unmount it.\n"
+STR_MOUNT_1     .ASCII_W "Drive #8 is currently mounted.\n"
+
 OPTM_CALLBACK   INCRB
 
                 ; DEBUG
@@ -404,6 +413,37 @@ OPTM_CALLBACK   INCRB
                 ; reset the menu entry. If no, mount it.
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
+                MOVE    R8, R0
+
+                RSUB    VD_MOUNTED, 1
+                RBRA    _DBG_1, C
+
+                MOVE    STR_MOUNT_0, R8
+                SYSCALL(puts, 1)
+
+                ; mount by strobing mount signal
+                MOVE    R0, R8
+                MOVE    VD_IEC_SIZE_L, R9
+                MOVE    VD_IEC_SIZE_H, R10
+                MOVE    1, R11
+                RSUB    VD_STROBE_IM, 1
+
+                MOVE    STR_MOUNTED, R8
+                SYSCALL(puts, 1)
+                RBRA    _OPTMC_NOMNT, 1
+
+_DBG_1          MOVE    STR_MOUNT_1, R8
+                SYSCALL(puts, 1)
+
+                ; unmount by strobing mount signal
+                MOVE    R0, R8
+                XOR     R9, R9
+                XOR     R10, R10
+                XOR     R11, R11
+                RSUB    VD_STROBE_IM, 1
+
+                MOVE    STR_UNMOUNTED, R8
+                SYSCALL(puts, 1)               
 
                 ; Standard behavior
 _OPTMC_NOMNT    CMP     OPTM_CLOSE, R8          ; CLOSE = no changes: leave

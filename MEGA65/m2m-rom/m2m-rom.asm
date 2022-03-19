@@ -260,7 +260,9 @@ ERROR_END       SYSCALL(puts, 1)
 ; Firmware: Core specific IO handler (called by the Shell)
 ; ----------------------------------------------------------------------------
 
-PREPARE_CORE_IO SYSCALL(enter, 1)
+PREPARE_CORE_IO RET
+
+                SYSCALL(enter, 1)
 
                 ; Switch to IEC device
                 MOVE    M2M$RAMROM_DEV, R8
@@ -322,7 +324,9 @@ _RD_0_OK        ; trigger mount signal
                 SYSCALL(leave, 1)
                 RET
 
-HANDLE_CORE_IO  INCRB
+HANDLE_CORE_IO  RET
+
+                INCRB
 
                 ; check, if sd_rd_i for drive 0 is 1 = drive needs data
 _NEXT_WAIT      MOVE    M2M$RAMROM_DEV, R0      ; select IEC device
