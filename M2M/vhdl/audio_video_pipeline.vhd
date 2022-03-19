@@ -93,7 +93,7 @@ architecture synthesis of audio_video_pipeline is
    constant C_FONT_DX            : natural := 16;
    constant C_FONT_DY            : natural := 16;
 
-   signal reset_na               : std_logic;
+   signal reset_na               : std_logic;            -- Asynchronous reset, active low
 
    signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
    signal hdmi_video_mode        : video_modes_t;
@@ -220,6 +220,7 @@ begin
 
    reset_na <= not (video_rst_i or hdmi_rst_i or hr_rst_i);
 
+   -- Clock enable for Overlay and HDMI video streams
    p_video_ce : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
@@ -328,7 +329,7 @@ begin
       generic map (
          G_SLAVE_ADDRESS_SIZE  => C_AVM_ADDRESS_SIZE,
          G_SLAVE_DATA_SIZE     => C_AVM_DATA_SIZE,
-         G_MASTER_ADDRESS_SIZE => 22,  -- HyperRAM size is 4 MWords = 8 MBbytes.
+         G_MASTER_ADDRESS_SIZE => 22,  -- HyperRAM size is 4 MWords = 8 MBytes.
          G_MASTER_DATA_SIZE    => 16
       )
       port map (
@@ -447,69 +448,6 @@ begin
          out_p   => tmds_clk_p_o,
          out_n   => tmds_clk_n_o
       ); -- GEN_HDMI_CLK
-
-
---   -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
---   i_qnice2vga: xpm_cdc_array_single
---      generic map (
---         WIDTH => 33
---      )
---      port map (
---         src_clk                => qnice_clk,
---         src_in(15 downto 0)    => qnice_osm_cfg_xy,
---         src_in(31 downto 16)   => qnice_osm_cfg_dxdy,
---         src_in(32)             => qnice_osm_cfg_enable,
---         dest_clk               => video_clk,
---         dest_out(15 downto 0)  => video_osm_cfg_xy,
---         dest_out(31 downto 16) => video_osm_cfg_dxdy,
---         dest_out(32)           => video_osm_cfg_enable
---      ); -- i_qnice2vga
---
---   -- Dual port & dual clock screen RAM / video RAM: contains the "ASCII" codes of the characters
---   osm_vram : entity work.dualport_2clk_ram
---      generic map (
---         ADDR_WIDTH   => VRAM_ADDR_WIDTH,
---         DATA_WIDTH   => 8,
---         FALLING_A    => true              -- QNICE expects read/write to happen at the falling clock edge
---      )
---      port map (
---         clock_a      => qnice_clk,
---         address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
---         data_a       => qnice_ramrom_data_o(7 downto 0),
---         wren_a       => qnice_vram_we,
---         q_a          => qnice_vram_data_o,
---
---         clock_b      => video_clk,
---         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
---         q_b          => video_osm_vram_data
---      ); -- osm_vram
---
---   -- Dual port & dual clock attribute RAM: contains inverse attribute, light/dark attrib. and colors of the chars
---   -- bit 7: 1=inverse
---   -- bit 6: 1=dark, 0=bright
---   -- bit 5: background red
---   -- bit 4: background green
---   -- bit 3: background blue
---   -- bit 2: foreground red
---   -- bit 1: foreground green
---   -- bit 0: foreground blue
---   osm_vram_attr : entity work.dualport_2clk_ram
---      generic map (
---         ADDR_WIDTH   => VRAM_ADDR_WIDTH,
---         DATA_WIDTH   => 8,
---         FALLING_A    => true
---      )
---      port map (
---         clock_a      => qnice_clk,
---         address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
---         data_a       => qnice_ramrom_data_o(7 downto 0),
---         wren_a       => qnice_vram_attr_we,
---         q_a          => qnice_vram_attr_data_o,
---
---         clock_b      => video_clk,
---         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
---         q_b          => video_osm_vram_attr
---      ); -- osm_vram_attr
 
 end architecture synthesis;
 

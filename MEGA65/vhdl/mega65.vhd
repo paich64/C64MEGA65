@@ -88,8 +88,8 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
---constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";
-constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";
+--constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
+constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
 -- HDMI 1280x720 @ 60 Hz resolution
 constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
@@ -99,9 +99,6 @@ constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C
 -- in main.vhd and in fpga64_sid_iec.vhd to avoid clock drift at derived clocks
 constant CORE_CLK_SPEED_PAL   : natural := 31_527_778;   -- C64 main clock in PAL mode @ 31,527,778 MHz
 constant CORE_CLK_SPEED_NTSC  : natural := 32_727_264;   -- @TODO: This is MiSTer's value; we will need to adjust it to ours
-
--- QNICE clock speed
-constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- QNICE main clock @ 50 MHz
 
 -- Rendering constants (in pixels)
 --    VGA_*   size of the final output on the screen
@@ -148,7 +145,6 @@ signal hr_rst                 : std_logic;
 signal hdmi_rst               : std_logic;
 signal main_rst               : std_logic;
 signal video_rst              : std_logic;
-signal reset_na               : std_logic;               -- Asynchronous reset
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -202,7 +198,7 @@ signal hdmi_osm_vram_addr     : std_logic_vector(15 downto 0);
 signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
 
 -- QNICE On Screen Menu selections
-signal hdmi_control_m         : std_logic_vector(255 downto 0);
+signal hdmi_osm_control_m     : std_logic_vector(255 downto 0);
 signal hdmi_video_mode        : natural;
 
 ---------------------------------------------------------------------------------------------
@@ -225,14 +221,22 @@ signal qnice_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
 signal qnice_qnice_keys_n     : std_logic_vector(15 downto 0);
 
 -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
--- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
--- ramrom_addr_o is 28-bit because we have a 16-bit window selector and a 4k window: 65536*4096 = 268.435.456 = 2^28
+-- ramrom_addr is 28-bit because we have a 16-bit window selector and a 4k window: 65536*4096 = 268.435.456 = 2^28
 signal qnice_ramrom_dev       : std_logic_vector(15 downto 0);
 signal qnice_ramrom_addr      : std_logic_vector(27 downto 0);
 signal qnice_ramrom_data_o    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_data_i    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_ce        : std_logic;
 signal qnice_ramrom_we        : std_logic;
+
+-- MiSTer2MEGA framework
+constant C_DEV_VRAM_DATA      : std_logic_vector(15 downto 0) := x"0000";
+constant C_DEV_VRAM_ATTR      : std_logic_vector(15 downto 0) := x"0001";
+constant C_DEV_OSM_CONFIG     : std_logic_vector(15 downto 0) := x"0002";
+-- C64 specific
+constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";
+constant C_DEV_C64_IEC        : std_logic_vector(15 downto 0) := x"0101";
+constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";
 
 -- VRAM
 signal qnice_vram_data        : std_logic_vector(15 downto 0);
@@ -254,7 +258,7 @@ signal qnice_c64_qnice_we   : std_logic;
 signal qnice_c64_qnice_data : std_logic_vector(15 downto 0);
 
 -- QNICE On Screen Menu selections
-signal qnice_control_m : std_logic_vector(255 downto 0);
+signal qnice_osm_control_m : std_logic_vector(255 downto 0);
 
 constant C_MENU_TRIPLE_BUFFERING : natural := 9;
 constant C_MENU_50_HZ            : natural := 14;
@@ -462,7 +466,7 @@ begin
          -- "d" = directly controled by the firmware
          -- "m" = indirectly controled by the menu system
          control_d_o             => open,
-         control_m_o             => qnice_control_m,
+         control_m_o             => qnice_osm_control_m,
 
          -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
          -- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
@@ -506,15 +510,15 @@ begin
          -- OSM VRAM data and attributes with device numbers < 0x0100
          -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
          ----------------------------------------------------------------------------
-         when x"0000" =>
+         when C_DEV_VRAM_DATA =>
             qnice_vram_we              <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= x"00" & qnice_vram_data(7 downto 0);
-         when x"0001" =>
+         when C_DEV_VRAM_ATTR =>
             qnice_vram_attr_we         <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= x"00" & qnice_vram_data(15 downto 8);
 
          -- Shell configuration data (config.vhd)
-         when x"0002" =>
+         when C_DEV_OSM_CONFIG =>
             qnice_ramrom_data_i        <= qnice_config_data;
 
          ----------------------------------------------------------------------------
@@ -522,18 +526,18 @@ begin
          ----------------------------------------------------------------------------
 
          -- C64 RAM
-         when x"0100" =>
+         when C_DEV_C64_RAM =>
             qnice_c64_ram_we           <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data;
 
          -- C64 IEC drives
-         when x"0101" =>
+         when C_DEV_C64_IEC =>
             qnice_c64_qnice_ce         <= qnice_ramrom_ce;
             qnice_c64_qnice_we         <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= qnice_c64_qnice_data;
 
          -- Disk mount buffer RAM
-         when x"0102" =>
+         when C_DEV_C64_MOUNT =>
             qnice_c64_mount_buf_ram_we <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= x"00" & qnice_c64_mount_buf_ram_data;
 
@@ -640,12 +644,12 @@ begin
          src_in(15 downto 0)     => qnice_osm_cfg_xy,
          src_in(31 downto 16)    => qnice_osm_cfg_dxdy,
          src_in(32)              => qnice_osm_cfg_enable,
-         src_in(288 downto 33)   => qnice_control_m,
+         src_in(288 downto 33)   => qnice_osm_control_m,
          dest_clk                => hdmi_clk,
          dest_out(15 downto 0)   => hdmi_osm_cfg_xy,
          dest_out(31 downto 16)  => hdmi_osm_cfg_dxdy,
          dest_out(32)            => hdmi_osm_cfg_enable,
-         dest_out(288 downto 33) => hdmi_control_m
+         dest_out(288 downto 33) => hdmi_osm_control_m
       ); -- i_qnice2hdmi
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
@@ -692,7 +696,7 @@ begin
          q_a               => qnice_c64_mount_buf_ram_data
       ); -- mount_buf_ram
 
-
+   -- QNICE-On-Screen-Display Video RAM for VGA output
    i_osm_vram_vga : entity work.dualport_2clk_ram_byteenable
       generic map (
          G_ADDR_WIDTH   => VRAM_ADDR_WIDTH,
@@ -713,6 +717,7 @@ begin
          b_q_o          => video_osm_vram_data
       ); -- i_osm_vram_vga
 
+   -- QNICE-On-Screen-Display Video RAM for HDMI output
    i_osm_vram_hdmi : entity work.dualport_2clk_ram_byteenable
       generic map (
          G_ADDR_WIDTH   => VRAM_ADDR_WIDTH,
@@ -738,12 +743,14 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
-   hdmi_video_mode <= 0 when hdmi_control_m(C_MENU_50_HZ) else 1;
-
+   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_50_HZ) else 1;
 
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
          G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
+                                                                           -- The purpose is to right-shift the position of the OSM
+                                                                           -- on the HDMI output. This will be removed when the
+                                                                           -- M2M framework supports two different OSM VRAMs.
          G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY
@@ -788,7 +795,7 @@ begin
          video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
          video_osm_vram_addr_o    => video_osm_vram_addr,
          video_osm_vram_data_i    => video_osm_vram_data,
-         hdmi_triple_buffering_i  => hdmi_control_m(C_MENU_TRIPLE_BUFFERING),
+         hdmi_triple_buffering_i  => hdmi_osm_control_m(C_MENU_TRIPLE_BUFFERING),
          hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
