@@ -135,6 +135,7 @@ signal qnice_clk              : std_logic;               -- QNICE main clock @ 5
 signal hr_clk_x1              : std_logic;               -- HyperRAM @ 100 MHz
 signal hr_clk_x2              : std_logic;               -- HyperRAM @ 200 MHz
 signal hr_clk_x2_del          : std_logic;               -- HyperRAM @ 200 MHz phase delayed
+signal audio_clk              : std_logic;               -- Audio clock @ 60 MHz
 signal tmds_clk               : std_logic;               -- HDMI pixel clock at 5x speed for TMDS @ 371.25 MHz
 signal hdmi_clk               : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 signal main_clk               : std_logic;               -- C64 main clock @ 31.528 MHz
@@ -142,6 +143,7 @@ signal video_clk              : std_logic;               -- C64 video clock @ 63
 
 signal qnice_rst              : std_logic;
 signal hr_rst                 : std_logic;
+signal audio_rst              : std_logic;
 signal hdmi_rst               : std_logic;
 signal main_rst               : std_logic;
 signal video_rst              : std_logic;
@@ -300,6 +302,9 @@ begin
          hr_clk_x2_o     => hr_clk_x2,       -- HyperRAM's 200 MHz
          hr_clk_x2_del_o => hr_clk_x2_del,   -- HyperRAM's 200 MHz phase delayed
          hr_rst_o        => hr_rst,          -- HyperRAM's reset, synchronized
+
+         audio_clk_o     => audio_clk,       -- Audio's 60 MHz
+         audio_rst_o     => audio_rst,       -- Audio's reset, synchronized
 
          tmds_clk_o      => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
          hdmi_clk_o      => hdmi_clk,        -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
@@ -766,8 +771,8 @@ begin
          video_hs_i               => video_hs,
          video_vs_i               => video_vs,
          video_de_i               => video_de,
-         audio_clk_i              => main_clk,
-         audio_rst_i              => main_rst,
+         audio_clk_i              => audio_clk, -- 60 MHz
+         audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
          audio_right_i            => main_sid_r,
          -- Analog output (VGA and audio jack)
