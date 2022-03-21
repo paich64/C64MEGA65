@@ -113,15 +113,16 @@ HANDLE_MOUNTING INCRB
                 ; 1. Hide OSM to enable the full-screen window
                 ; 2. If the SD card is not yet mounted: mount it and handle
                 ;    errors, allow re-tries, etc.
-                ; 3. As soon as the SD card is mounted: FOR NOW - as a first
-                ;    DEBUG VERSION - allow entering of a filename manually
-                ;    and mount the disk image
-                ; 4. Modify the menu, so that the file name of the mounted
+                ; 3. As soon as the SD card is mounted: Show the file browser
+                ;    and let the user select a disk image
+                ; 4. Copy the disk image into the mount buffer
+                ; 5. Notify MiSTer using the "SD" protocol (see vdrives.vhd)
+                ; 6. Modify the menu, so that the file name of the mounted
                 ;    image is part of the menu
 
                 ; Step #1 - Hide OSM and show full-screen window
                 RSUB    SCR$OSM_OFF, 1
-                RSUB    FRAME_FULLSCR, 1
+_HM_RETRY_MOUNT RSUB    FRAME_FULLSCR, 1
                 MOVE    1, R8
                 MOVE    1, R9
                 RSUB    SCR$GOTOXY, 1
@@ -147,7 +148,13 @@ _HM_SDUNMOUNTED MOVE    1, R9                   ; partition #1 hardcoded
                 RSUB    SCR$PRINTSTR, 1
                 MOVE    ERR_MOUNT_RET, R8
                 RSUB    SCR$PRINTSTR, 1
-                SYSCALL(exit, 1)
+                RSUB    WAIT333MS, 1
+_HM_KEYLOOP     MOVE    M2M$KEYBOARD, R8
+                AND     M2M$KEY_RETURN, @R8
+                RBRA    _HM_KEYLOOP, !Z         ; wait for return; low-active
+                MOVE    HANDLE_DEV, R8
+                MOVE    0, @R8 
+                RBRA    _HM_RETRY_MOUNT, 1
 
                 ; SD card already mounted, but is it still the same card slot?
 _HM_SDMOUNTED1  MOVE    OLD_SDCARD, R0
@@ -159,7 +166,8 @@ _HM_SDMOUNTED1  MOVE    OLD_SDCARD, R0
                 MOVE    R1, @R0                 ; different slot: remember it
                 RBRA    _HM_SDUNMOUNTED, 1      ; and treat it as unmounted
 
-                ; SD card already mounted and still the same card slot
+                ; SD card freshly mounted or already mounted and still
+                ; the same card slot
 _HM_SDMOUNTED2  SYSCALL(exit, 1)                
 
 
