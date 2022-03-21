@@ -72,6 +72,8 @@ entity audio_video_pipeline is
       hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
+      sys_info_vga_o           : out std_logic_vector(79 downto 0);
+      sys_info_hdmi_o          : out std_logic_vector(79 downto 0);
 
       -- Connect to HyperRAM controller
       hr_clk_i                 : in  std_logic;
@@ -145,6 +147,32 @@ architecture synthesis of audio_video_pipeline is
    signal video_ce_hdmi          : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
 
 begin
+
+   -- SHELL_M_XY
+   sys_info_vga_o(15 downto  0) <=
+      X"0000";
+
+   -- SHELL_M_DXDY
+   sys_info_vga_o(31 downto 16) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_X) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+
+   -- SHELL_O_XY
+   sys_info_vga_o(47 downto 32) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_X-20) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+
+   -- SHELL_O_DXDY
+   sys_info_vga_o(63 downto 48) <=
+      std_logic_vector(to_unsigned(20 * 256 + 20, 16));
+
+   -- SYS_DXDY
+   sys_info_vga_o(79 downto 64) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_X) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+
+   sys_info_hdmi_o(15 downto  0) <= X"CCCC"; -- SHELL_M_XY
+   sys_info_hdmi_o(31 downto 16) <= X"CCCC"; -- SHELL_M_DXDY
+   sys_info_hdmi_o(47 downto 32) <= X"CCCC"; -- SHELL_O_XY
+   sys_info_hdmi_o(63 downto 48) <= X"CCCC"; -- SHELL_O_DXDY
+   sys_info_hdmi_o(79 downto 64) <= X"CCCC"; -- SYS_DXDY
 
    hdmi_video_mode <= G_VIDEO_MODE_VECTOR(hdmi_video_mode_i);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;

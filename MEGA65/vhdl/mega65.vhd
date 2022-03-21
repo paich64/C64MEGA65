@@ -238,6 +238,9 @@ constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";
 constant C_DEV_C64_IEC        : std_logic_vector(15 downto 0) := x"0101";
 constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";
 
+signal sys_info_vga  : std_logic_vector(79 downto 0);
+signal sys_info_hdmi : std_logic_vector(79 downto 0);
+
 -- VRAM
 signal qnice_vram_data        : std_logic_vector(15 downto 0);
 signal qnice_vram_we          : std_logic;   -- Writing to bits 7-0
@@ -521,6 +524,29 @@ begin
          when C_DEV_OSM_CONFIG =>
             qnice_ramrom_data_i        <= qnice_config_data;
 
+         -- Read-only System INfo
+         when C_DEV_SYS_INFO =>
+            case qnice_ramrom_addr(27 downto 12) is
+               when X"0010" => -- Graphics card VGA
+                  case qnice_ramrom_addr(11 downto 0) is
+                     when X"000" => qnice_ramrom_data_i <= sys_info_vga(15 downto  0);
+                     when X"001" => qnice_ramrom_data_i <= sys_info_vga(31 downto 16);
+                     when X"002" => qnice_ramrom_data_i <= sys_info_vga(47 downto 32);
+                     when X"003" => qnice_ramrom_data_i <= sys_info_vga(63 downto 48);
+                     when X"004" => qnice_ramrom_data_i <= sys_info_vga(79 downto 64);
+                  end case;
+
+               when X"0011" => -- Graphics card HDMI
+                  case qnice_ramrom_addr(11 downto 0) is
+                     when X"000" => qnice_ramrom_data_i <= sys_info_hdmi(15 downto  0);
+                     when X"001" => qnice_ramrom_data_i <= sys_info_hdmi(31 downto 16);
+                     when X"002" => qnice_ramrom_data_i <= sys_info_hdmi(47 downto 32);
+                     when X"003" => qnice_ramrom_data_i <= sys_info_hdmi(63 downto 48);
+                     when X"004" => qnice_ramrom_data_i <= sys_info_hdmi(79 downto 64);
+                  end case;
+            end case;
+
+
          ----------------------------------------------------------------------------
          -- Commodore 64 specific devices
          ----------------------------------------------------------------------------
@@ -802,6 +828,8 @@ begin
          hdmi_osm_cfg_dxdy_i      => hdmi_osm_cfg_dxdy,
          hdmi_osm_vram_addr_o     => hdmi_osm_vram_addr,
          hdmi_osm_vram_data_i     => hdmi_osm_vram_data,
+         sys_info_vga_o           => sys_info_vga,
+         sys_info_hdmi_o          => sys_info_hdmi,
          -- Connect to HyperRAM controller
          hr_clk_i                 => hr_clk_x1,
          hr_rst_i                 => hr_rst,
