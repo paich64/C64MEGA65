@@ -179,7 +179,15 @@ _HM_SDMOUNTED1  MOVE    SD_ACTIVE, R0
                 RBRA    _HM_SDUNMOUNTED, 1      ; and treat it as unmounted
 
                 ; SD card freshly mounted or already mounted and still
-                ; the same card slot
+                ; the same card slot:
+                ;
+                ; Run file- and directory browser. Returns:
+                ;   R8: pointer to filename string
+                ;   R9: status- and error code (see selectfile.asm)
+                ;
+                ; The status of the device handle HANDLE_DEV will be at the
+                ; subdirectory that has been selected so that a subsequent
+                ; file open can be directly done.
 _HM_SDMOUNTED2  RSUB    SELECT_FILE, 1
 
                 ; Handle SD card change during file-browsing

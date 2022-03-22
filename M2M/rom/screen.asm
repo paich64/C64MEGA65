@@ -178,6 +178,12 @@ _SCR$CLRINNER2  MOVE    M2M$VRAM_DATA, @R0      ; VRAM: data
                 SUB     1, R3
                 RBRA    _SCR$CLRINNER1, !Z
                 
+                ; move cursor to the upper/left inner area of the frame
+                MOVE    SCR$CUR_X, R0
+                MOVE    1, @R0
+                MOVE    SCR$CUR_Y, R0
+                MOVE    1, @R0
+
                 DECRB
                 RET
 
