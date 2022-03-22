@@ -170,8 +170,129 @@ _S_SD_CHANGED
                 RBRA    _S_RET, 1
 
                 ; handle keypress
-_IL_KEYPRESSED  SYSCALL(exit, 1)
+_IL_KEYPRESSED  CMP     M2M$KEY_UP, R8          ; cursor up: prev file
+                RBRA    _IL_CUR_UP, Z
+                CMP     M2M$KEY_DOWN, R8        ; cursor down: next file
+                RBRA    _IL_CUR_DOWN, Z
+                CMP     M2M$KEY_LEFT, R8        ; cursor left: previous page
+                RBRA    _IL_CUR_LEFT, Z
+                CMP     M2M$KEY_RIGHT, R8       ; cursor right: next page
+                RBRA    _IL_CUR_RIGHT, Z
+                CMP     M2M$KEY_RETURN, R8      ; return key
+                RBRA    _IL_KEY_RETURN, Z
+                CMP     M2M$KEY_RUNSTOP, R8     ; Run/Stop key
+                RBRA    _IL_KEY_RUNSTOP, Z
+; @TODO add F1 and F3 to the M2M keyset
+;                CMP     M2M$KEY_F1, R8          ; F1 key: internal SD card
+;                RBRA    _IL_KEY_F1_F3, Z
+;                CMP     M2M$KEY_F3, R8          ; F3 key: external SD card
+;                RBRA    _IL_KEY_F1_F3, Z
+                RBRA    _S_INPUT_LOOP, 1        ; unknown key
 
+                ; CURSOR UP has been pressed
+_IL_CUR_UP      CMP     R4, 0                   ; > 0?
+                RBRA    _IL_CUR_UP_CHK, !N      ; no: check if need to scroll
+                MOVE    R4, R8                  ; yes: deselect current line
+                MOVE    M2M$SA_COL_STD, R9
+                RSUB    SELECT_LINE, 1
+                SUB     1, R4                   ; one line up
+                RBRA    _S_SELECT_LOOP, 1       ; select new line and continue
+_IL_CUR_UP_CHK  CMP     R5, R2                  ; # shown > max rows on scr.?
+                RBRA    _S_INPUT_LOOP, !N       ; no: do not scroll; ign. key
+                MOVE    -1, R9                  ; R9: iterate backward
+                MOVE    1, R10                  ; R10: scroll by one element
+                RBRA    _SCROLL, 1              ; scroll, then input loop
+
+                ; CURSOR DOWN has been pressed: next file
+_IL_CUR_DOWN    MOVE    R1, R8                  ; R1: amount of items in dir..
+                SUB     1, R8                   ; ..-1 as we count from zero
+                CMP     R4, R8                  ; R4 = R1 (bottom reached?)
+                RBRA    _S_INPUT_LOOP, Z        ; yes: ignore key press
+                MOVE    R2, R8                  ; R2: max rows on screen..
+                SUB     1, R8                   ; ..-1 as we count from zero
+                CMP     R4, R8                  ; R4 = R1: scrolling needed?
+                RBRA    _IL_SCRL_DN, Z          ; yes: scroll down
+                MOVE    R4, R8                  ; no: deselect current line
+                MOVE    M2M$SA_COL_STD, R9
+                RSUB    SELECT_LINE, 1
+                ADD     1, R4                   ; one line down
+                RBRA    _S_SELECT_LOOP, 1       ; select new line and continue
+
+                ; scroll down by iterating the currently visible head of the
+                ; SLL by 1 step; if this is not possible: do not scroll,
+                ; because we reached the end of the list
+_IL_SCRL_DN     CMP     R5, R1                  ; all items already shown?
+                RBRA    _S_INPUT_LOOP, Z        ; yes: ignore key press
+                MOVE    1, R9                   ; R9: iterate forward
+                MOVE    1, R10                  ; R10: scroll by one element
+                RBRA    _SCROLL, 1              ; scroll, then input loop
+
+                ; CURSOR LEFT has been pressed: previous page
+                ; check if amount of entries shown minus the amount
+                ; of entries on the screen is larger than zero; if yes, then
+                ; go back one page; if no then go back to the very first entry
+_IL_CUR_LEFT    MOVE    R5, R8                  ; R8: entries shown
+                SUB     R2, R8                  ; R2: max entries on screen
+                RBRA    _S_INPUT_LOOP, N        ; if < 0 then no scroll
+                CMP     R8, R2                  ; R8 > max entries on screen?
+                RBRA    _IL_PAGE_DEFUP, N       ; yes: scroll one page up
+                MOVE    R8, R10                 ; no: move the residual up..
+                RBRA    _IL_PAGE_UP, !Z         ; .. if it is > 0
+                RBRA    _S_INPUT_LOOP, 1
+_IL_PAGE_DEFUP  MOVE    R2, R10                 ; R10: one page up
+_IL_PAGE_UP     MOVE    -1, R9                  ; R9: iterate backward
+                RBRA    _SCROLL, 1              ; scroll, then input loop
+
+                ; CURSOR RIGHT has been pressed: next page
+                ; first: check if amount of entries in the directory minus
+                ; the amount of files already shown is larger than zero;
+                ; if not, then we are already showing all files
+                ; second: check if this difference is larger than the maximum
+                ; amount of files that we can show on one screen; if yes
+                ; then scroll by one screen, if no then scroll by exactly this
+                ; difference
+_IL_CUR_RIGHT   MOVE    R1, R8                  ; R8: entries in current dir.
+                SUB     R5, R8                  ; R5: # of files already shown
+                RBRA    _S_INPUT_LOOP, Z        ; no more files: ignore key
+                CMP     R8, R2                  ; R8 > max rows on screen?
+                RBRA    _IL_PAGE_DEFDN, N       ; yes: scroll one page down
+                MOVE    R8, R10                 ; R10: remaining elm. down
+                RBRA    _IL_PAGE_DN, 1
+_IL_PAGE_DEFDN  MOVE    R2, R10                 ; R10: one page down
+_IL_PAGE_DN     MOVE    1, R9                   ; R9: iterate forward
+                RBRA    _SCROLL, 1              ; scroll, then input loop
+
+                ; this code segment is used by all four scrolling modes:
+                ; up/down and page up/page down; it is meant to called via
+                ; RBRA and not via RSUB because it will return
+                ; to _S_DRAW_DIRLIST
+                ;
+                ; iterates forward or backward depending on R9 being +1 or -1
+                ; the iteration amount if given in R10
+                ; if the element is not found, then a fatal error is raised
+                ; destroys the value of R10
+_SCROLL         MOVE    R3, R8                  ; R8: currently visible head
+                                                ; R9: iteration direction
+                                                ; R10: iteration amount
+                RSUB    SLL$ITERATE, 1          ; find element
+                CMP     0, R11                  ; found element?
+                RBRA    _SCROLL_DO, !Z          ; yes: continue
+                MOVE    ERR_FATAL_ITER, R8      ; no: fatal error and halt
+                XOR     R9, R9
+                RBRA    FATAL, 1
+_SCROLL_DO      CMP     -1, R9                  ; negative iteration dir.?
+                RBRA    _SCROLL_DO2, !Z         ; no: continue
+                XOR     R3, R3                  ; yes: inverse sign of R10
+                SUB     R10, R3
+                MOVE    R3, R10
+_SCROLL_DO2     MOVE    R11, R3                 ; new visible head
+                ADD     R10, R5                 ; R10 more/less visible files
+                SUB     R2, R5                  ; compensate for SHOW_DIR
+                RBRA    _S_DRAW_DIRLIST, 1         ; redraw directory list
+
+_IL_KEY_RETURN
+_IL_KEY_RUNSTOP
+_IL_KEY_F1_F3
 
 _S_RET          MOVE    R9, @--SP               ; bring R9 over "leave"
 				SYSCALL(leave, 1)
