@@ -145,6 +145,42 @@ _SCR$CLR_L      MOVE    M2M$VRAM_DATA, @R0      ; VRAM: data
                 SYSCALL(leave, 1)
                 RET
 
+; clear inner part of the screen (leave the frame)
+SCR$CLRINNER    INCRB
+
+                MOVE    M2M$RAMROM_4KWIN, R0    ; 4k window selector = 0
+                MOVE    0, @R0
+
+                MOVE    M2M$RAMROM_DEV, R0      ; device selector
+                MOVE    M2M$RAMROM_DATA, R1     ; 4k MMIO window
+
+                MOVE    SCR$OSM_M_DX, R2        ; width = DX minus 2 (frame)
+                MOVE    @R2, R2
+                SUB     2, R2
+                MOVE    SCR$OSM_M_DY, R3        ; height = DY minus 2 (frame)
+                MOVE    @R3, R3
+                SUB     2, R3
+
+                ; start address = DX + 1, because we need to skip the frame
+                MOVE    SCR$OSM_M_DX, R4
+                MOVE    @R4, R4
+                ADD     1, R4
+                ADD     R4, R1
+
+_SCR$CLRINNER1  MOVE    R2, R4
+_SCR$CLRINNER2  MOVE    M2M$VRAM_DATA, @R0      ; VRAM: data
+                MOVE    0, @R1                  ; 0 = CLR = space character
+                MOVE    M2M$VRAM_ATTR, @R0      ; VRAM: attributes
+                MOVE    M2M$SA_COL_STD, @R1++
+                SUB     1, R4
+                RBRA    _SCR$CLRINNER2, !Z
+                ADD     2, R1
+                SUB     1, R3
+                RBRA    _SCR$CLRINNER1, !Z
+                
+                DECRB
+                RET
+
 ; ----------------------------------------------------------------------------
 ; Move the internal cursor (the cursor variables) to x|y = R8|R9
 ; ----------------------------------------------------------------------------

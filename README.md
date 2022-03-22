@@ -24,6 +24,26 @@ framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
 FAT32 support (loading loading ROMs, mounting disks) and for the
 on-screen-menu.
 
+Internal reminder / List of stuff that we need to put into the documentation
+----------------------------------------------------------------------------
+
+* While the C64 is running: Press the <kbd>Help</kbd> key to mount drives and
+  to configure the core.
+
+* Both SD card slots are supported: The card in the back has higher precedence
+  than the card at the bottom of the MEGA65. Use <kbd>F1</kbd> and
+  <kbd>F3</kbd> to switch between SD cards while you are in the file browser.
+
+* An already mounted drive can be unmounted (i.e. "switch the drive off"), if
+  you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
+  If you select an already mounted drive with the <kbd>Return</kbd> key
+  instead, then for the C64 this is more like switching a diskette while
+  leaving the drive on.
+
+* The file browser defaults to the folder `/c64` in case this folder exists.
+  Otherwise it starts at the root folder. The file browser only shows files
+  with a valid file extension. Right now this is `.d64` only.
+
 Features
 --------
 

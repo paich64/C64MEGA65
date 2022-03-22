@@ -25,11 +25,23 @@ _RESET_A_WHILE  SUB     1, R1
                 RBRA    _RESET_A_WHILE, !Z
                 MOVE    0, @R0                  ; remove reset signal
 
+                ; log M2M message to serial terminal (not visible to end user)
+                MOVE    LOG_M2M, R8
+                SYSCALL(puts, 1)
+
                 ; initialize device (SD card) and file handle
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8
                 MOVE    HANDLE_FILE, R8
                 MOVE    0, @R8
+
+                ; initialize file browser persistence variables
+                MOVE    M2M$CSR, R8             ; get active SD card
+                MOVE    @R8, R8
+                AND     M2M$CSR_SD_ACTIVE, R8
+                MOVE    SD_ACTIVE, R9
+                MOVE    R8, @R9
+                RSUB    FB_INIT, 1              ; init persistence variables
 
                 ; initialize screen library and show welcome screen:
                 ; draw frame and print text
@@ -157,7 +169,7 @@ _HM_KEYLOOP     MOVE    M2M$KEYBOARD, R8
                 RBRA    _HM_RETRY_MOUNT, 1
 
                 ; SD card already mounted, but is it still the same card slot?
-_HM_SDMOUNTED1  MOVE    OLD_SDCARD, R0
+_HM_SDMOUNTED1  MOVE    SD_ACTIVE, R0
                 MOVE    M2M$CSR, R1             ; extract currently active SD
                 MOVE    @R1, R1
                 AND     M2M$CSR_SD_ACTIVE, R1
@@ -168,11 +180,22 @@ _HM_SDMOUNTED1  MOVE    OLD_SDCARD, R0
 
                 ; SD card freshly mounted or already mounted and still
                 ; the same card slot
-_HM_SDMOUNTED2  SYSCALL(exit, 1)                
+_HM_SDMOUNTED2  RSUB    SELECT_FILE, 1
+
+                ; Handle SD card change during file-browsing
+                CMP     1, R9                   ; SD card changed?
+                RBRA    _HM_SDMOUNTED3, !Z      ; no
+                MOVE    LOG_STR_SD, R8
+                SYSCALL(puts, 1)
+                MOVE    HANDLE_DEV, R8          ; reset device handle
+                MOVE    0, @R8
+                RSUB    FB_INIT, 1              ; reset file browser
+                RBRA    _HM_SDUNMOUNTED, 1      ; re-mount, re-browse files
+
+_HM_SDMOUNTED3  SYSCALL(exit, 1)
 
 
-
-                ; Drive in R8 is already mounted
+                ; Virtual drive (number in R8) is already mounted
 _HM_MOUNTED     SYSCALL(exit, 1)
 
                 DECRB
@@ -211,21 +234,46 @@ START_MONITOR   MOVE    DBG_START1, R8          ; print info message via UART
 
 ; ----------------------------------------------------------------------------
 ; Fatal error:
-; Output message to the screen and to the serial terminal and then quit.
+;
+; Output message to the screen and to the serial terminal and then quit to the
+; QNICE Monitor. This is invisible to end users but might be helpful for
+; debugging purposes, if you are able to connect a JTAG interface.
+;
 ; R8: Pointer to error message from strings.asm
+; R9: if not zero: contains an error code for additional debugging info
 ; ----------------------------------------------------------------------------
 
 FATAL           MOVE    R8, R0
-                RSUB    SCR$CLR, 1
+                RSUB    SCR$CLRINNER, 1
                 MOVE    1, R8
                 MOVE    1, R9
                 RSUB    SCR$GOTOXY, 1
                 MOVE    ERR_FATAL, R8
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(puts, 1)
-                MOVE    R0, R8
+                MOVE    R0, R8                  ; actual error message
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(puts, 1)
+
+                CMP     0, R9
+                RBRA    _FATAL_END, Z
+                MOVE    ERR_CODE, R8
+                RSUB    SCR$PRINTSTR, 1
+                SYSCALL(puts, 1)
+                MOVE    R9, R8
+                MOVE    SCRATCH_HEX, R9
+                RSUB    WORD2HEXSTR, 1
+                MOVE    R9, R8
+                RSUB    SCR$PRINTSTR, 1
+                SYSCALL(puts, 1)
+                MOVE    NEWLINE, R8
+                RSUB    SCR$PRINTSTR, 1
+                SYSCALL(crlf, 1)
+
+_FATAL_END      MOVE    ERR_FATAL_STOP, R8
+                RSUB    SCR$PRINTSTR, 1
+                SYSCALL(puts, 1)
+
                 SYSCALL(exit, 1)
 
 ; ----------------------------------------------------------------------------
@@ -253,6 +301,7 @@ FRAME_FULLSCR   SYSCALL(enter, 1)
 ; "Outsourced" code from shell.asm, i.e. this code directly accesses the
 ; shell.asm environment incl. all variables
 #include "options.asm"
+#include "selectfile.asm"
 #include "strings.asm"
 #include "vdrives.asm"
 

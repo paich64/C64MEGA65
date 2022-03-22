@@ -4,7 +4,7 @@
 ; Variables for shell.asm and its direct includes:
 ; options.asm
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
 
@@ -24,8 +24,12 @@ SCRATCH_HEX  	.BLOCK 5
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
 HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
 
-OLD_SDCARD 		.BLOCK 1 						; reload if SD card changed				
-												
+SD_ACTIVE 		.BLOCK 1 						; currently active SD card
+
+; file browser persistent status
+FB_HEAD         .BLOCK 1                        ; lnkd list: curr. disp. head
+FB_ITEMS_COUNT  .BLOCK 1                        ; overall amount of items
+FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 
 ; @TODO: We will use the sysinfo device in future to dynamically retrieve
 ; all information needed to run the virtual drive mounting system:

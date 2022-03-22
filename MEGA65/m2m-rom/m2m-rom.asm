@@ -349,6 +349,15 @@ _WAIT_RD_1      CMP     1, @R0
                 RET
 
 ; ----------------------------------------------------------------------------
+; Disk and image mounting
+; ----------------------------------------------------------------------------
+                
+; This function is called by the file- and directory browser. It is used to
+; make sure that we only show valid files; right now, this means ".D64" only.
+FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
+                RET
+
+; ----------------------------------------------------------------------------
 ; Strings
 ; ----------------------------------------------------------------------------
 
@@ -414,12 +423,18 @@ HEAP            .BLOCK 1
 ; calculate the address). To see, if there is enough room for the stack
 ; given the HEAP_SIZE do this calculation: Add 16384 words to HEAP which
 ; is currently 0xXXXX and subtract the result from 0xFEE0. This yields
-; currently a stack size of more than 1k words, which is sufficient
+; currently a stack size of more than 1.5k words, which is sufficient
 ; for this program.
 
                 .ORG    0xFEE0                  ; TODO: automate calculation
 #endif
 
-STACK_SIZE      .EQU    1024
+; STACK_SIZE should be a minimum of 768 words after you subtract BROWSE_DEPTH.
+; BROWSE_DEPTH is the maximum depth of subdirectories that you can climb
+; down while browsing for any file using the built-in Shell file- and
+; directory browser.
+; If you are not using the shell, then BROWSE_DEPTH is not used.
+STACK_SIZE      .EQU    1536
+BROWSE_DEPTH    .EQU    512
 
 #include "../../M2M/rom/main_vars.asm"

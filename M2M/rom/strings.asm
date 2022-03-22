@@ -3,11 +3,24 @@
 ;
 ; Hardcoded Shell strings that cannot be changed by config.vhd
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
+NEWLINE  		.ASCII_W "\n"
+
+; The following line is the maximum string length on a PAL output:
+; **********************************************
+
 ; ----------------------------------------------------------------------------
-; Debug Mode
+; File browser
+; ----------------------------------------------------------------------------
+
+FN_ROOT_DIR     .ASCII_W "/"
+FN_UPDIR        .ASCII_W ".."
+FN_ELLIPSIS     .ASCII_W "..." ; hardcoded to a len. of 3, see comment below
+
+; ----------------------------------------------------------------------------
+; Debug Mode and log messages for the serial terminal
 ; (Hold "Run/Stop" + "Cursor Up" and then while holding these, press "Help")
 ; ----------------------------------------------------------------------------
 
@@ -15,15 +28,38 @@ DBG_START1		.ASCII_P "Entering MiSTer2MEGA65 debug mode.\nPress H for "
 				.ASCII_W "help and press C R "
 DBG_START2 		.ASCII_W " to return to the Shell.\n"
 
+LOG_M2M  		.ASCII_P "                                                 \n"
+				.ASCII_P "MiSTer2MEGA65 Firmware and Shell, "
+				.ASCII_P "done by sy2002 & MJoergen in 2022\n"
+				.ASCII_W "https://github.com/sy2002/MiSTer2MEGA65\n\n"
+LOG_STR_SD  	.ASCII_W "SD card has been changed. Re-reading...\n"
+LOG_STR_CD      .ASCII_W "Changing directory to: "
+LOG_STR_ITM_AMT .ASCII_W "Items in current directory (in hex): "
+
+; ----------------------------------------------------------------------------
+; Warnings
+; ----------------------------------------------------------------------------
+
+WRN_MAXFILES    .ASCII_P "Warning: This directory contains more files\n"
+				.ASCII_P "than this core is able to load into memory.\n\n"
+                .ASCII_P "Please split the files into multiple folders.\n\n"
+                .ASCII_P "If you choose to continue by pressing SPACE,\n"
+                .ASCII_P "be aware that random files will be missing.\n\n"
+                .ASCII_W "Press SPACE to continue.\n"
+
 ; ----------------------------------------------------------------------------
 ; Error Messages
 ; ----------------------------------------------------------------------------
 
 ERR_FATAL		.ASCII_W "FATAL ERROR:\n"
-ERR_F_MENUSIZE	.ASCII_P "config.vhd: Illegal menu size (OPTM_SIZE): Must be "
-				.ASCII_W "between 1 and 254\n"
-ERR_F_MENUSTART .ASCII_P "config.vhd: No start menu item tag (OPTM_G_START) "
-				.ASCII_W "found in OPTM_GROUPS\n"
+ERR_CODE        .ASCII_W "Error code: "
+ERR_FATAL_STOP  .ASCII_W "Core stopped. Please reset the machine.\n"
+
+ERR_F_MENUSIZE	.ASCII_P "config.vhd: Illegal menu size (OPTM_SIZE):\n"
+				.ASCII_W "Must be between 1 and 254\n"
+ERR_F_MENUSTART .ASCII_P "config.vhd: No start menu item tag\n"
+				.ASCII_W "(OPTM_G_START) found in OPTM_GROUPS\n"
 
 ERR_MOUNT       .ASCII_W "Error: Cannot mount SD card!\nError code: "
 ERR_MOUNT_RET   .ASCII_W "\n\nPress Return to retry"
+ERR_BROWSE_UNKN .ASCII_W "SD Card: Unknown error while trying to browse.\n"

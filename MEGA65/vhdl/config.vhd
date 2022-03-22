@@ -61,7 +61,7 @@ constant SCR_WELCOME : string :=
 --------------------------------------------------------------------------------------------------------------------
 
 constant SEL_DIR_START : std_logic_vector(15 downto 0) := x"0100";
-constant DIR_START     : string := "/m2m";
+constant DIR_START     : string := "/c64";
 
 --------------------------------------------------------------------------------------------------------------------
 -- Load one or more mandatory or optional BIOS/ROMs  (Selectors 0x0200 .. 0x02FF) 
