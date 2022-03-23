@@ -116,19 +116,15 @@ architecture synthesis of audio_video_pipeline is
    signal pcm_n                    : std_logic_vector(19 downto 0); -- HDMI ACR N value
    signal pcm_cts                  : std_logic_vector(19 downto 0); -- HDMI ACR CTS value
 
-   signal slow_pcm_audio_left      : std_logic_vector(15 downto 0);
-   signal slow_pcm_audio_right     : std_logic_vector(15 downto 0);
-   signal pcm4hdmi_left            : std_logic_vector(15 downto 0);
-   signal pcm4hdmi_right           : std_logic_vector(15 downto 0);
-
-   signal pcm_sample_ready_toggle  : std_logic;
+   signal pcm_audio_left_d         : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right_d        : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_left_dd        : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right_dd       : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_left           : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right          : signed(15 downto 0); -- Signed PCM format
 
    signal pcm_audio_counter        : integer := 0;
    signal pcm_acr_counter          : integer range 0 to pcm_acr_cnt_range := 0;
-
-   signal main_sample_ready_toggle : std_logic := '0';
-   signal last_sample_ready_toggle : std_logic := '0';
-   signal sample_stable_cycles     : integer := 0;
 
    signal reset_na               : std_logic;            -- Asynchronous reset, active low
 
@@ -289,64 +285,20 @@ begin
       end if;
    end process p_pcm_acr;
 
-   -- Kind-of Clock-domain-crossing mechanism 1:1 taken from Paul's MEGA65 code
-   -- The following comment is from Paul, too:
-   --    "We need to pass audio to 12.288 MHz clock domain.
-   --     Easiest way is to hold samples constant for 16 ticks, and
-   --     have a slow toggle
-   --     At 40.5MHz and 48KHz sample rate, we have a ratio of 843.75
-   --     Thus we need to calculate the remainder, so that we can get the
-   --     sample rate EXACTLY 48KHz.
-   --     Otherwise we end up using 844, which gives a sample rate of
-   --     40.5MHz / 844 = 47.986KHz, which might just be enough to throw
-   --     some monitors out, since it means that the CTS / N rates will
-   --     be wrong.
-   --     (Or am I just chasing my tail, because this is only used to set the
-   --     rate at which we LATCH the samples?)"
-   p_cdc_and_oversample : process(audio_clk_i)
-   begin
-      if rising_edge(audio_clk_i) then
-         if pcm_audio_counter < pcm_audio_cnt_interval then
-            pcm_audio_counter <= pcm_audio_counter + 4;
-         else
-            pcm_audio_counter <= pcm_audio_counter - pcm_audio_cnt_interval;
-            main_sample_ready_toggle <= not main_sample_ready_toggle;
-            slow_pcm_audio_left  <= std_logic_vector(audio_left_i);
-            slow_pcm_audio_right <= std_logic_vector(audio_right_i);
-         end if;
-      end if;
-   end process;
-
-
-   -- Feed audio into digital video feed
-   p_pcm : process (pcm_clk)
+   p_sample : process (pcm_clk)
    begin
       if rising_edge(pcm_clk) then
-         -- Receive samples via slow toggle clock from CPU clock domain
-         if last_sample_ready_toggle /= pcm_sample_ready_toggle then
-            sample_stable_cycles <= 0;
-            last_sample_ready_toggle <= pcm_sample_ready_toggle;
-         else
-            sample_stable_cycles <= sample_stable_cycles + 1;
-            if sample_stable_cycles = 8 then
-               pcm4hdmi_left  <= slow_pcm_audio_left;
-               pcm4hdmi_right <= slow_pcm_audio_right;
-            end if;
+         pcm_audio_left_d   <= audio_left_i;
+         pcm_audio_right_d  <= audio_right_i;
+         pcm_audio_left_dd  <= pcm_audio_left_d;
+         pcm_audio_right_dd <= pcm_audio_right_d;
+
+         if pcm_audio_left_d = pcm_audio_left_dd and pcm_audio_right_d = pcm_audio_right_dd then
+            pcm_audio_left  <= pcm_audio_left_dd;
+            pcm_audio_right <= pcm_audio_right_dd;
          end if;
       end if;
-   end process p_pcm;
-
-
-   i_main2pcm : xpm_cdc_array_single
-      generic map (
-         WIDTH => 1
-      )
-      port map (
-         src_clk                => audio_clk_i,
-         src_in(0)              => main_sample_ready_toggle,
-         dest_clk               => pcm_clk,
-         dest_out(0)            => pcm_sample_ready_toggle
-      ); -- i_main2pcm
+   end process p_sample;
 
 
    ---------------------------------------------------------------------------------------------
@@ -541,34 +493,12 @@ begin
          vga_g        => hdmi_osm_green,
          vga_b        => hdmi_osm_blue,
 
---         -- PCM audio
---         pcm_rst      => audio_rst_i,
---         pcm_clk      => audio_clk_i,
---         pcm_clken    => '0',
---         pcm_l        => (others => '0'),
---         pcm_r        => (others => '0'),
---         pcm_acr      => '0',
---         pcm_n        => (others => '0'),
---         pcm_cts      => (others => '0'),
-
          -- PCM audio
-         pcm_rst      => pcm_rst,
          pcm_clk      => pcm_clk,                             -- 256 * 48 kHz = 12.288 MHz
-         pcm_clken    => pcm_clken,                           -- 48 kHz
-
-         -- GBC audio is unsigned, PCM audio is signed
-         --
-         -- We are doing a shift right to avoid overdrive that was observed on some HDMI devices.
-         -- Warning: Doing an arithmetic shift right leads do very bad cracking noises, that can
-         -- be well heard in for example Dig Dug and Super Mario Land 1.
-         --
-         -- Unfortunatelly we do not know a high-quality way of converting the unsigned GBC audio to the
-         -- signed audio that we need here because the GBC audio is not centered around $8000 but its
-         -- centering depends on how many voices are playing. That means that we are not hitting the
-         -- AC zero line. We found this acceptable though, as we do not hear the effect.
-         pcm_l        => "0" & std_logic_vector(pcm4hdmi_left(15 downto 1)),
-         pcm_r        => "0" & std_logic_vector(pcm4hdmi_right(15 downto 1)),
-
+         pcm_rst      => pcm_rst,
+         pcm_clken    => pcm_clken,                           -- 1/256 = 48 kHz
+         pcm_l        => std_logic_vector(pcm_audio_left),
+         pcm_r        => std_logic_vector(pcm_audio_right),
          pcm_acr      => pcm_acr,
          pcm_n        => pcm_n,
          pcm_cts      => pcm_cts,
