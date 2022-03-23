@@ -112,6 +112,10 @@ constant SEL_OPTM_START       : std_logic_vector(15 downto 0) := x"0304";
 constant SEL_OPTM_ICOUNT      : std_logic_vector(15 downto 0) := x"0305";
 constant SEL_OPTM_MOUNT_DRV   : std_logic_vector(15 downto 0) := x"0306";
 constant SEL_OPTM_SINGLESEL   : std_logic_vector(15 downto 0) := x"0307";
+constant SEL_OPTM_MOUNT_STR   : std_logic_vector(15 downto 0) := x"0308";
+
+-- String with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
+constant OPTM_S_MOUNT         : string :=  "<Mount Drive>";
 
 -- Configuration constants for OPTM_GROUPS (do not change their value, shell.asm and menu.asm expect them to be like this)
 constant OPTM_G_TEXT       : integer := 0;                -- text that cannot be selected
@@ -131,8 +135,8 @@ constant OPTM_SIZE         : integer := 13;  -- amount of items including empty 
                                              -- @TODO: There is for sure a more elegant way than this redundant definition
 constant OPTM_ITEMS        : string :=
 
-   " 8: <Mount Drive>\n"   &
-   " 9: <Mount Drive>\n"   &
+   " 8: %s\n"              &                 -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
+   " 9: %s\n"              &                 -- ditto
    " SID\n"                &
    "\n"                    &
    " 6581\n"               &
@@ -198,6 +202,7 @@ begin
       when SEL_WELCOME        => data_o <= str2data(SCR_WELCOME);
       when SEL_DIR_START      => data_o <= str2data(DIR_START);
       when SEL_OPTM_ITEMS     => data_o <= str2data(OPTM_ITEMS);
+      when SEL_OPTM_MOUNT_STR => data_o <= str2data(OPTM_S_MOUNT);
       when SEL_OPTM_GROUPS    => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "000" & x"0" &
                                            std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
       when SEL_OPTM_STDSEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));

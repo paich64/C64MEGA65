@@ -37,7 +37,8 @@ SELECT_FILE		SYSCALL(enter, 1)
 
                 ; load sorted directory list into memory
                 MOVE    HANDLE_DEV, R8
-_S_CD_AND_READ  MOVE    HEAP, R10               ; start address of heap
+_S_CD_AND_READ  MOVE    FB_HEAP, R10            ; start address of heap
+                MOVE    @R10, R10
                 MOVE    HEAP_SIZE, R11          ; maximum memory available
                                                 ; for storing the linked list
                 MOVE    FILTER_FILES, R12     	; do not show ROM file names
@@ -53,7 +54,8 @@ _S_CD_AND_READ  MOVE    HEAP, R10               ; start address of heap
                 ; default path not found, try root instead
 _S_ERR_PNF      ;ADD     1, SP                   ; @TODO
                 MOVE    FN_ROOT_DIR, R9         ; try root
-                MOVE    HEAP, R10
+                MOVE    FB_HEAP, R10
+                MOVE    @R10, R10
                 MOVE    HEAP_SIZE, R11
                 RSUB    DIRBROWSE_READ, 1
                 CMP     0, R11
@@ -71,7 +73,7 @@ _S_WRN_MAX      MOVE    WRN_MAXFILES, R8        ; print warning message
                 RSUB    SCR$PRINTSTR, 1
 _S_WRN_WAIT 	MOVE    M2M$KEYBOARD, R8
                 AND     M2M$KEY_SPACE, @R8
-                RBRA    _HM_KEYLOOP, !Z         ; wait for space; low-active
+                RBRA    _S_WRN_WAIT, !Z         ; wait for space; low-active
                 RSUB    SCR$CLRINNER, 1         ; clear inner part of window
 
                 ; ------------------------------------------------------------
@@ -290,15 +292,87 @@ _SCROLL_DO2     MOVE    R11, R3                 ; new visible head
                 SUB     R2, R5                  ; compensate for SHOW_DIR
                 RBRA    _S_DRAW_DIRLIST, 1         ; redraw directory list
 
-_IL_KEY_RETURN
-_IL_KEY_RUNSTOP
-_IL_KEY_F1_F3
+_IL_KEY_RUNSTOP SYSCALL(exit, 1)
 
-_S_RET          MOVE    R9, @--SP               ; bring R9 over "leave"
+_IL_KEY_F1_F3   SYSCALL(exit, 1)
+
+                ; "Return" has been pressed: change directory or return
+                ; the filename of the selected file.
+                ; Iterate the linked list: find the currently seleted element
+_IL_KEY_RETURN  MOVE    R3, R8                  ; R8: currently visible head
+                MOVE    1, R9                   ; R9: iterate forward
+                MOVE    R4, R10                 ; R10: iterate by R4 elements
+                RSUB    SLL$ITERATE, 1          ; find element
+                CMP     0, R11                  ; found element?
+                RBRA    _ELEMENT_FOUND, !Z      ; yes: continue
+                MOVE    ERR_FATAL_ITER, R8      ; no: fatal error and halt
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+                ; depending on if a directory of a file was selected:
+                ; change directory or load cartridge; we therefore need to
+                ; find the flag that contains the info "directory" or "file"
+_ELEMENT_FOUND  MOVE    R11, R8                 ; R11: selected SLL element
+                ADD     SLL$DATA_SIZE, R8
+                MOVE    @R8, R9
+                MOVE    R11, R8
+                ADD     SLL$OVRHD_SIZE, R8
+                ADD     R9, R8
+                CMP     0, @--R8                ; 0=file, 1=directory
+                RBRA    _RETNAME, Z             ; return name
+
+                ; change directory
+                MOVE    R4, R8                  ; deselect current line
+                MOVE    M2M$SA_COL_STD, R9
+                RSUB    SELECT_LINE, 1
+                MOVE    LOG_STR_CD, R8          ; log directory change to UART
+                SYSCALL(puts, 1)
+                RSUB    SCR$CLRINNER, 1         ; clear inner part of frame
+                ADD     SLL$DATA, R11
+                ADD     1, R11                  ; remove < from name
+                MOVE    R11, R8                 ; remove > from name
+                SYSCALL(strlen, 1)
+                ADD     R9, R8
+                SUB     1, R8
+                MOVE    0, @R8
+                MOVE    R11, R8                 ; R8: clean directory name
+                SYSCALL(puts, 1)                ; log it to UART
+                SYSCALL(crlf, 1)
+
+                MOVE    FB_HEAD, R9             ; reset head for browsing
+                MOVE    0, @R9
+
+                MOVE    FN_UPDIR, R9            ; are we going one dir. up?
+                SYSCALL(strcmp, 1)
+                CMP     0, R10
+                RBRA    _CHANGEDIR, Z           ; yes: get crsr pos from stack
+                ;@TODO
+                ;MOVE    R4, @--SP               ; no: remember cursor pos..
+                ;MOVE    0, @--SP                ; ..and new dir. starts at 0
+
+_CHANGEDIR      MOVE    R8, R9                  ; use this directory
+                MOVE    HANDLE_DEV, R8
+                RBRA    _S_CD_AND_READ, 1       ; create new linked-list
+
+                ;@TODO
+_RETNAME        ;MOVE    R4, @--SP               ; remember cursor position
+                MOVE    FB_HEAD, R8             ; remember currently vis. head
+                MOVE    R3, @R8
+                MOVE    FB_ITEMS_COUNT, R8      ; remember # of items in dir.
+                MOVE    R1, @R8
+                MOVE    FB_ITEMS_SHOWN, R8      ; remember # of items shown
+                MOVE    R5, @R8
+
+                ADD     SLL$DATA, R11
+                MOVE    R11, R8                 ; R8: file name
+                XOR     R9, R9                  ; R9=0: all OK, no error
+
+_S_RET          MOVE    R8, @--SP               ; ; bring R8, R9 over "leave"
+                MOVE    R9, @--SP
 				SYSCALL(leave, 1)
                 MOVE    @SP++, R9
+                MOVE    @SP++, R8
 				RET
-
 
 ; ----------------------------------------------------------------------------
 ; Initialize file browser persistence variables

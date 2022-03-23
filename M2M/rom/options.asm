@@ -119,8 +119,23 @@ _HLP_SSIC1      SUB     1, R4                   ; one less menu item to go
                 ADD     OPTM_IR_LINES, R8
                 MOVE    R9, @R8
 
+                ; Calculate, if the menu is within its heap boundaries
+                MOVE    HEAP, R8
+                MOVE    R2, R9
+                ADD     R10, R9
+                SUB     R8, R9
+                ADD     1, R9
+                RBRA    _HLP_HEAPOK, !N
+
+                ; If we land here, then either MENU_HEAP_SIZE is too small
+                ; to hold the menu structure (unlikely, if nobody heavily 
+                ; modified this value from the default) or we have an error
+                ; that leads to heap corruption
+                MOVE    ERR_FATAL_HEAP, R8      ; R9 contains the overrun
+                RSUB    FATAL, 1
+
                 ; run the menu
-                RSUB    OPTM_SHOW, 1            ; fill VRAM
+_HLP_HEAPOK     RSUB    OPTM_SHOW, 1            ; fill VRAM
                 RSUB    SCR$OSM_O_ON, 1         ; make overlay visible
                 MOVE    OPTM_SELECTED, R9       ; use recently selected line
                 MOVE    @R9, R8
@@ -386,14 +401,6 @@ OPTM_CALLBACK   INCRB
                 ; @TODO: support this feature and do not hardcode
                 MOVE    0, R10
 
-                ; DEBUG
-                MOVE    R8, @--SP
-                SYSCALL(puthex, 1)
-                MOVE    R9, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    @SP++, R8
-
                 ; Special treatment for drive-mount items: Drive-mount items
                 ; are per definition also single-select items
                 MOVE  	R8, R0 					; R8: selected menu group
@@ -405,10 +412,6 @@ OPTM_CALLBACK   INCRB
                 MOVE  	R1, R8  				; R1: selected menu group
                 RSUB  	VD_DRVNO, 1 			; is menu item a mount item?
                 RBRA  	_OPTMC_NOMNT, !C  		; no: : proceed to std. beh.
-
-                ; DEBUG
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
 
                 ; Handle mounting
                 ; R8 contains the drive number at this point

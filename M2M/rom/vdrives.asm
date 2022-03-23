@@ -10,27 +10,6 @@
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
-; Mount/unmount drives and images
-; ----------------------------------------------------------------------------
-
-; Mount drive and image according to the protocol described in vdrives.vhd
-; Does not do any sanity checks and requires that the file that the file
-; handle is representing already has been "preprocessed" (headers, etc.) and
-; that the read pointer points to the first raw byte that represents the image
-; Input:   R8: drive number
-;          R9: valid file handle, where the read pointer already is where
-;              it needs to be
-; Returns: Carry=1, if OK
-VD_MOUNT  		INCRB
-				DECRB
-				RET
-
-
-VD_UNMOUNT  	INCRB
-				DECRB
-				RET
-
-; ----------------------------------------------------------------------------
 ; Query & setter functions
 ; ----------------------------------------------------------------------------
 

@@ -412,7 +412,7 @@ _OPTM_RUN_14    MOVE    R6, R8                  ; R8: return selected group
 
                 CMP     OPTM_CLOSE, R6          ; Close?
                 RBRA    _OPTM_RUN_SEL, !Z       ; no: continue menu loop
-                MOVE    R2, R8                  ; yes: return selected item
+                MOVE    R2, R8                  ; yes: return selected item               
 
 _OPTM_RUN_RET   MOVE    R8, @--SP               ; carry R8 over the LEAVE bump
                 SYSCALL(leave, 1)

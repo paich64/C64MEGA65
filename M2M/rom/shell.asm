@@ -42,6 +42,9 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    SD_ACTIVE, R9
                 MOVE    R8, @R9
                 RSUB    FB_INIT, 1              ; init persistence variables
+                MOVE    FB_HEAP, R8             ; heap for file browsing
+                MOVE    HEAP, @R8
+                ADD     MENU_HEAP_SIZE, @R8
 
                 ; initialize screen library and show welcome screen:
                 ; draw frame and print text
@@ -111,12 +114,17 @@ MAIN_LOOP       RSUB    HANDLE_CORE_IO, 1       ; IO handling (e.g. vdrives)
 ; ----------------------------------------------------------------------------
 
 ; Handle mounting:
-; R8 contains the drive number
-; R9: 0=unmount drive, if it has been mounted before
-;     1=just replace the disk image, if it has been mounted
-;       before without unmounting the drive (aka resetting
-;       the drive/"switching the drive on/off")
-HANDLE_MOUNTING INCRB
+;
+; Input:
+;   R8 contains the drive number
+;   R9: 0=unmount drive, if it has been mounted before
+;       1=just replace the disk image, if it has been mounted
+;         before without unmounting the drive (aka resetting
+;         the drive/"switching the drive on/off")
+HANDLE_MOUNTING SYSCALL(enter, 1)
+
+                MOVE    R8, R7                  ; R7: drive number
+                MOVE    R9, R6                  ; R6: mount mode
 
                 RSUB    VD_MOUNTED, 1           ; C=1: the given drive in R8..
                 RBRA    _HM_MOUNTED, C          ; ..is already mounted
@@ -127,10 +135,11 @@ HANDLE_MOUNTING INCRB
                 ;    errors, allow re-tries, etc.
                 ; 3. As soon as the SD card is mounted: Show the file browser
                 ;    and let the user select a disk image
-                ; 4. Copy the disk image into the mount buffer
+                ; 4. Copy the disk image into the mount buffer and hide
+                ;    the fullscreen OSM afterwards
                 ; 5. Notify MiSTer using the "SD" protocol (see vdrives.vhd)
                 ; 6. Modify the menu, so that the file name of the mounted
-                ;    image is part of the menu
+                ;    image is part of the menu and then show the OSM again
 
                 ; Step #1 - Hide OSM and show full-screen window
                 RSUB    SCR$OSM_OFF, 1
@@ -181,6 +190,8 @@ _HM_SDMOUNTED1  MOVE    SD_ACTIVE, R0
                 ; SD card freshly mounted or already mounted and still
                 ; the same card slot:
                 ;
+                ; Step #3: Show the file browser & let user select disk image
+                ;
                 ; Run file- and directory browser. Returns:
                 ;   R8: pointer to filename string
                 ;   R9: status- and error code (see selectfile.asm)
@@ -190,9 +201,13 @@ _HM_SDMOUNTED1  MOVE    SD_ACTIVE, R0
                 ; file open can be directly done.
 _HM_SDMOUNTED2  RSUB    SELECT_FILE, 1
 
+                ; No error and no special status
+                CMP     0, R9
+                RBRA    _HM_SDMOUNTED3, Z
+
                 ; Handle SD card change during file-browsing
                 CMP     1, R9                   ; SD card changed?
-                RBRA    _HM_SDMOUNTED3, !Z      ; no
+                RBRA    _HM_SDMOUNTED2A, !Z     ; no
                 MOVE    LOG_STR_SD, R8
                 SYSCALL(puts, 1)
                 MOVE    HANDLE_DEV, R8          ; reset device handle
@@ -200,11 +215,136 @@ _HM_SDMOUNTED2  RSUB    SELECT_FILE, 1
                 RSUB    FB_INIT, 1              ; reset file browser
                 RBRA    _HM_SDUNMOUNTED, 1      ; re-mount, re-browse files
 
-_HM_SDMOUNTED3  SYSCALL(exit, 1)
+                ; Cancelled via Run/Stop
+_HM_SDMOUNTED2A CMP     2, R9                   ; Run/Stop?
+                RBRA    _HM_SDMOUNTED2B, !Z     ; no
+                SYSCALL(exit, 1)
 
+                ; Unknown error / fatal
+_HM_SDMOUNTED2B MOVE    ERR_BROWSE_UNKN, R8     ; and R9 contains error code
+                RBRA    FATAL, 1                
+
+                ; Step #4: Copy the disk image into the mount buffer
+_HM_SDMOUNTED3  MOVE    R8, R0                  ; R8: selected file name
+                MOVE    LOG_STR_FILE, R8        ; log to UART
+                SYSCALL(puts, 1)
+                MOVE    R0, R8
+                SYSCALL(puts, 1)
+                SYSCALL(crlf, 1)
+
+                MOVE    VDRIVES_NAMES, R0
+                ADD     R7, R0
+                ; @TODO find a place on the heap, store the (shortened) name
+                ; and then store the pointer here
+                
+                MOVE    R8, R9                  ; R9: file name of disk image
+                MOVE    R7, R8                  ; R8: drive ID to be mounted
+                RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
+                RSUB    SCR$OSM_OFF, 1
+
+                ; Step #5: Notify MiSTer using the "SD" protocol
+                MOVE    R7, R8                  ; R8: drive number
+                MOVE    HANDLE_FILE, R9
+                ADD     FAT32$FDH_SIZE_LO, R9
+                MOVE    @R9, R9                 ; R9: file size: low word
+                MOVE    HANDLE_FILE, R10
+                ADD     FAT32$FDH_SIZE_HI, R10
+                MOVE    @R10, R10               ; R10: file size: high word
+                MOVE    1, R11                  ; R11=1=read only @TODO
+                RSUB    VD_STROBE_IM, 1         ; notify MiSTer
+
+                MOVE    LOG_STR_MOUNT, R8
+                SYSCALL(puts, 1)
+                MOVE    R7, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                ; Step #6: Modify the menu, so that the file name of the
+                ;          mounted image is part of the menu and then show
+                ;          the OSM again
+                MOVE    R5, R8
+                ; @TODO continue here
+                ; we need to remember where the menu stack ends and use this
+                ; remaining stack to store mounted file names
+                ; the pointers 
+                RSUB    OPTM_SHOW, 1
+                RSUB    SCR$OSM_O_ON, 1
+                RBRA    _HM_RET, 1
 
                 ; Virtual drive (number in R8) is already mounted
 _HM_MOUNTED     SYSCALL(exit, 1)
+
+_HM_RET         SYSCALL(leave, 1)
+                RET
+
+; Load disk image to virtual drive buffer (VDRIVES_BUFS)
+;
+; Input:
+;   R8: drive number
+;   R9: file name of disk image
+; And HANDLE_DEV needs to be fully initialized and the status needs to be
+; such, that the directory where R9 resides is active
+LOAD_IMAGE      INCRB
+
+                MOVE    VDRIVES_BUFS, R0
+                ADD     R8, R0
+                MOVE    @R0, R0                 ; R0: device number of buffer
+                MOVE    R0, R8
+
+                MOVE    R8, R1                  ; R1: drive number
+                MOVE    R9, R2                  ; R2: file name
+
+                ; Open file
+                MOVE    HANDLE_DEV, R8
+                MOVE    HANDLE_FILE, R9
+                MOVE    R2, R10
+                XOR     R11, R11
+                SYSCALL(f32_fopen, 1)
+                CMP     0, R10                  ; R10=error code; 0=OK
+                RBRA    _LI_FOPEN_OK, Z
+                MOVE    ERR_FATAL_FNF, R8
+                MOVE    R10, R9
+                RBRA    FATAL, 1
+
+                ; @TODO
+                ; Add callback function that can handle headers, 
+                ; check for filesize, etc.
+                ; The callback function receives the file handle
+                ; In the case of the C64 it will for example checl
+                ; for the standard D64 file size
+
+                ; load disk image into buffer RAM
+_LI_FOPEN_OK    XOR     R1, R1                  ; R1=window: start from 0
+                XOR     R2, R2                  ; R2=start address in window
+                ADD     M2M$RAMROM_DATA, R2
+                MOVE    M2M$RAMROM_DATA, R3     ; R3=end of 4k page reached
+                ADD     0x1000, R3
+
+                MOVE    M2M$RAMROM_DEV, R8
+                MOVE    R0, @R8                 ; mount buffer device handle
+_LI_FREAD_NXTWN MOVE    M2M$RAMROM_4KWIN, R8    ; set 4k window
+                MOVE    R1, @R8
+
+_LI_FREAD_NXTB  MOVE    HANDLE_FILE, R8         ; read next byte to R9
+                SYSCALL(f32_fread, 1)
+                CMP     FAT32$EOF, R10
+                RBRA    _LI_FREAD_EOF, Z
+                CMP     0, R10
+                RBRA    _LI_FREAD_CONT, Z
+                MOVE    ERR_FATAL_LOAD, R8
+                MOVE    R10, R9
+                RBRA    FATAL, 1
+
+_LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
+
+                CMP     R3, R2                  ; end of 4k page reached?
+                RBRA    _LI_FREAD_NXTB, !Z      ; no: read next byte
+                ADD     1, R1                   ; inc. window counter
+                MOVE    M2M$RAMROM_DATA, R2     ; start at beginning of window
+                RBRA    _LI_FREAD_NXTWN, 1      ; set next window
+
+_LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
+                SYSCALL(puts, 1)
 
                 DECRB
                 RET
