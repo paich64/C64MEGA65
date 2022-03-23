@@ -188,6 +188,7 @@ M2M$CFG_OPTM_START  .EQU 0x0304     ; Position of very first cursor pos
 M2M$CFG_OPTM_ICOUNT .EQU 0x0305     ; Amount of menu items
 M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
 M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item
+M2M$CFG_OPTM_MSTR   .EQU 0x0308     ; Mount string to display instead of %s
 
 ; ----------------------------------------------------------------------------
 ; Virtual Drives Device for MiSTer "SD" interface (vdrives.vhd)

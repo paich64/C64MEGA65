@@ -142,7 +142,7 @@ constant OPTM_ITEMS        : string :=
    " 6581\n"               &
    " 8580\n"               &
    "\n"                    &
-   " Triple Buffering\n"   &
+   " Triple %s Buff.\n"    &
    "\n"                    &
    " On\n"                 &
    " Off\n"                & 

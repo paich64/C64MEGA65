@@ -273,7 +273,7 @@ _HLP_S3         SYSCALL(leave, 1)
 ; config.vhd and then modified to point to the right addresses on the heap
 OPT_MENU_DATA   .DW     SCR$CLR, SCR$PRINTFRAME, SCR$PRINTSTR, SCR$PRINTSTRXY
                 .DW     OPT_PRINTLINE, OPTM_SELECT, OPT_MENU_GETKEY
-                .DW     OPTM_CALLBACK,
+                .DW     OPTM_CB_SEL, OPTM_CB_SHOW,
                 .DW     M2M$OPT_SEL_MULTI, 0    ; selection char + zero term.:
                 .DW     M2M$OPT_SEL_SINGLE, 0   ; multi- and single-select
                 .DW     0, 0, 0, 0, 0           ; will be filled dynamically
@@ -384,7 +384,10 @@ _OPTM_GK_3      CMP     M2M$KEY_HELP, R8        ; help (close menu)
 _OPTMGK_RET     DECRB
                 RET
 
+
+; ----------------------------------------------------------------------------
 ; Callback function that is called during the execution of the menu (OPTM_RUN)
+;
 ; R8: selected menu group (as defined in OPTM_IR_GROUPS)
 ; R9: selected item within menu group
 ;     in case of single selected items: 0=not selected, 1=selected
@@ -396,7 +399,9 @@ _OPTMGK_RET     DECRB
 ; For making sure that the hardware can react in "real-time" to menu item
 ; changes, i.e. even before the menu is closed, we are updating the
 ; QNICE M2M$CFM_DATA register each time something changes.
-OPTM_CALLBACK   INCRB
+; ----------------------------------------------------------------------------
+
+OPTM_CB_SEL     INCRB
 
                 ; @TODO: support this feature and do not hardcode
                 MOVE    0, R10
@@ -463,4 +468,32 @@ _OPTMCB_E       SUB     1, R0
                 RBRA    _OPTMCB_A, !Z
 
 _OPTMCB_RET     DECRB
+                RET
+
+
+; ----------------------------------------------------------------------------
+; Callback function that is called during the drawing of the menu (OPTM_SHOW)
+; ----------------------------------------------------------------------------
+
+OPTM_CB_SHOW    INCRB
+
+                MOVE    R8, @--SP
+                SYSCALL(puts, 1)
+                SYSCALL(crlf, 1)
+                MOVE    R9, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    @SP++, R8
+
+;                MOVE    M2M$RAMROM_DEV, R0
+;                MOVE    M2M$CONFIG, @R0
+;                MOVE    M2M$RAMROM_4KWIN, R0
+;                MOVE    M2M$CFG_OPTM_MSTR, @R0
+;                MOVE    M2M$RAMROM_DATA, R8
+;                MOVE    FINPUT_BUF, R9
+;                SYSCALL(strcpy, 1)
+;
+;                MOVE    FINPUT_BUF, R8
+
+                DECRB
                 RET
