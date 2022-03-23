@@ -127,6 +127,8 @@ architecture synthesis of audio_video_pipeline is
    signal pcm_acr_counter          : integer range 0 to pcm_acr_cnt_range := 0;
 
    signal main_sample_ready_toggle : std_logic := '0';
+   signal last_sample_ready_toggle : std_logic := '0';
+   signal sample_stable_cycles     : integer := 0;
 
    signal reset_na               : std_logic;            -- Asynchronous reset, active low
 
@@ -253,6 +255,19 @@ begin
    -- Digital output (HDMI) - Audio part
    ---------------------------------------------------------------------------------------------
 
+   i_audio_clk : entity work.audio_clock
+      generic map (
+         RATIO => 256
+      )
+      port map (
+         audio_clk_i => audio_clk_i,   -- 60 MHz
+         audio_rst_i => audio_rst_i,
+         rst_o       => pcm_rst,
+         clk_o       => pcm_clk,       -- 12.288 MHz
+         clken_o     => pcm_clken      -- 1/256 = 48 kHz
+      ); -- i_audio_clk
+
+
    -- N and CTS values for HDMI Audio Clock Regeneration.
    -- depends on pixel clock and audio sample rate
    pcm_n   <= std_logic_vector(to_unsigned((HDMI_PCM_SAMPLING * 128) / 1000, pcm_n'length)); -- 6144 is correct according to HDMI spec.
@@ -304,22 +319,23 @@ begin
 
 
    -- Feed audio into digital video feed
-   i_audio_tone : entity work.audio_out_tone
-      port map (
-         audio_clk_i            => audio_clk_i,
-         audio_rst_i            => audio_rst_i,
-         select_44100_i         => '0',                    -- use 48 kHz
-         pcm_rst_o              => pcm_rst,
-         pcm_clk_o              => pcm_clk,                -- 256 * 48 kHz = 12.288 MHz
-         pcm_clken_o            => pcm_clken,              -- 48 kHz
+   p_pcm : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         -- Receive samples via slow toggle clock from CPU clock domain
+         if last_sample_ready_toggle /= pcm_sample_ready_toggle then
+            sample_stable_cycles <= 0;
+            last_sample_ready_toggle <= pcm_sample_ready_toggle;
+         else
+            sample_stable_cycles <= sample_stable_cycles + 1;
+            if sample_stable_cycles = 8 then
+               pcm4hdmi_left  <= slow_pcm_audio_left;
+               pcm4hdmi_right <= slow_pcm_audio_right;
+            end if;
+         end if;
+      end if;
+   end process p_pcm;
 
-         audio_left_slow_i      => slow_pcm_audio_left,
-         audio_right_slow_i     => slow_pcm_audio_right,
-         sample_ready_toggle_i  => pcm_sample_ready_toggle,
-
-         pcm_l_o                => pcm4hdmi_left,
-         pcm_r_o                => pcm4hdmi_right
-      ); -- i_audio_tone
 
    i_main2pcm : xpm_cdc_array_single
       generic map (

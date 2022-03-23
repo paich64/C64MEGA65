@@ -24,13 +24,11 @@ use unisim.vcomponents.all;
 
 entity audio_clock is
    generic (
-      FS      : real;     -- NOT USED
       RATIO   : integer   -- clk to fs frequency ratio
    );
    port (
       audio_clk_i    : in  std_logic;        -- reference clock (60 MHz)
       audio_rst_i    : in  std_logic;        -- reference clock reset
-      select_44100_i : in  std_logic;        -- NOT USED
       rst_o          : out std_logic;        -- reset out (from MMCM lock status)
       clk_o          : out std_logic;        -- audio clock out (fs * ratio)
       clken_o        : out std_logic         -- audio clock enable out (fs)
