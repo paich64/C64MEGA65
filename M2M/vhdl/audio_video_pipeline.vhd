@@ -304,6 +304,8 @@ begin
       end if;
    end process p_pcm_acr;
 
+   -- Clock Domain Crossing.
+   -- Only propagate the sample when there is no metastability.
    p_sample : process (pcm_clk)
    begin
       if rising_edge(pcm_clk) then
