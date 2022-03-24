@@ -108,6 +108,7 @@ architecture synthesis of audio_video_pipeline is
    constant pcm_acr_cnt_range      : integer := (HDMI_PCM_SAMPLING * 256) / 1000;
    constant pcm_audio_cnt_interval : integer := (4 * GB_CLK_SPEED) / HDMI_PCM_SAMPLING;
 
+   signal count : integer range 0 to 255;
    signal pcm_rst                  : std_logic;
    signal pcm_clk                  : std_logic;                     -- 256 * 48 kHz = 12.288 MHz
    signal pcm_clken                : std_logic;                     -- 48 kHz (via clock divider)
@@ -251,17 +252,35 @@ begin
    -- Digital output (HDMI) - Audio part
    ---------------------------------------------------------------------------------------------
 
-   i_audio_clk : entity work.audio_clock
+   i_clk_synthetic : entity work.clk_synthetic
       generic map (
-         RATIO => 256
+         G_SRC_FREQ_HZ  => 60_000_000,
+         G_DEST_FREQ_HZ => HDMI_PCM_SAMPLING*256
       )
       port map (
-         audio_clk_i => audio_clk_i,   -- 60 MHz
-         audio_rst_i => audio_rst_i,
-         rst_o       => pcm_rst,
-         clk_o       => pcm_clk,       -- 12.288 MHz
-         clken_o     => pcm_clken      -- 1/256 = 48 kHz
-      ); -- i_audio_clk
+         src_clk_i  => audio_clk_i,
+         src_rst_i  => audio_rst_i,
+         dest_clk_o => pcm_clk,
+         dest_rst_o => pcm_rst
+      ); -- i_clk_synthetic
+
+   p_clken : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         if count = 255 then
+            count     <= 0;
+            pcm_clken <= '1';
+         else
+            count     <= count + 1;
+            pcm_clken <= '0';
+         end if;
+
+         if pcm_rst = '1' then
+            count     <= 0;
+            pcm_clken <= '0';
+         end if;
+      end if;
+   end process p_clken;
 
 
    -- N and CTS values for HDMI Audio Clock Regeneration.
