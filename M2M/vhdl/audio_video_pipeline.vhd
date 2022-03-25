@@ -15,6 +15,9 @@ library work;
 use work.types_pkg.all;
 use work.video_modes_pkg.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity audio_video_pipeline is
    generic (
       G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
@@ -94,6 +97,37 @@ architecture synthesis of audio_video_pipeline is
 
    constant C_FONT_DX            : natural := 16;
    constant C_FONT_DY            : natural := 16;
+
+   ---------------------------------------------------------------------------------------------
+   -- pcm_clk
+   ---------------------------------------------------------------------------------------------
+
+   -- HDMI PCM sampling rate
+   constant HDMI_PCM_SAMPLING      : natural := 48_000;
+   constant GB_CLK_SPEED           : natural := 31_527_778;   -- C64 main clock in PAL mode @ 31,527,778 MHz
+   constant PIXEL_CLK_SPEED        : natural := 74_250_000; -- TBD
+
+   constant pcm_acr_cnt_range      : integer := (HDMI_PCM_SAMPLING * 256) / 1000;
+   constant pcm_audio_cnt_interval : integer := (4 * GB_CLK_SPEED) / HDMI_PCM_SAMPLING;
+
+   signal count : integer range 0 to 255;
+   signal pcm_rst                  : std_logic;
+   signal pcm_clk                  : std_logic;                     -- 256 * 48 kHz = 12.288 MHz
+   signal pcm_clken                : std_logic;                     -- 48 kHz (via clock divider)
+
+   signal pcm_acr                  : std_logic;                     -- HDMI ACR packet strobe (frequency = 128fs/N e.g. 1kHz)
+   signal pcm_n                    : std_logic_vector(19 downto 0); -- HDMI ACR N value
+   signal pcm_cts                  : std_logic_vector(19 downto 0); -- HDMI ACR CTS value
+
+   signal pcm_audio_left_d         : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right_d        : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_left_dd        : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right_dd       : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_left           : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right          : signed(15 downto 0); -- Signed PCM format
+
+   signal pcm_audio_counter        : integer := 0;
+   signal pcm_acr_counter          : integer range 0 to pcm_acr_cnt_range := 0;
 
    signal reset_na               : std_logic;            -- Asynchronous reset, active low
 
@@ -243,7 +277,81 @@ begin
 
 
    ---------------------------------------------------------------------------------------------
-   -- Digital output (HDMI)
+   -- Digital output (HDMI) - Audio part
+   ---------------------------------------------------------------------------------------------
+
+   i_clk_synthetic : entity work.clk_synthetic
+      generic map (
+         G_SRC_FREQ_HZ  => 60_000_000,
+         G_DEST_FREQ_HZ => HDMI_PCM_SAMPLING*256
+      )
+      port map (
+         src_clk_i  => audio_clk_i,
+         src_rst_i  => audio_rst_i,
+         dest_clk_o => pcm_clk,
+         dest_rst_o => pcm_rst
+      ); -- i_clk_synthetic
+
+   p_clken : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         if count = 255 then
+            count     <= 0;
+            pcm_clken <= '1';
+         else
+            count     <= count + 1;
+            pcm_clken <= '0';
+         end if;
+
+         if pcm_rst = '1' then
+            count     <= 0;
+            pcm_clken <= '0';
+         end if;
+      end if;
+   end process p_clken;
+
+
+   -- N and CTS values for HDMI Audio Clock Regeneration.
+   -- depends on pixel clock and audio sample rate
+   pcm_n   <= std_logic_vector(to_unsigned((HDMI_PCM_SAMPLING * 128) / 1000, pcm_n'length)); -- 6144 is correct according to HDMI spec.
+   pcm_cts <= std_logic_vector(to_unsigned(PIXEL_CLK_SPEED / 1000, pcm_cts'length));
+
+   -- ACR packet rate should be 128fs/N = 1kHz
+   -- pcm_clk is at 12.288 MHz
+   p_pcm_acr : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         -- Generate 1KHz ACR pulse train from 12.288MHz
+         if pcm_acr_counter /= (pcm_acr_cnt_range - 1) then
+            pcm_acr_counter <= pcm_acr_counter + 1;
+            pcm_acr <= '0';
+         else
+            pcm_acr <= '1';
+            pcm_acr_counter <= 0;
+         end if;
+      end if;
+   end process p_pcm_acr;
+
+   -- Clock Domain Crossing.
+   -- Only propagate the sample when there is no metastability.
+   p_sample : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         pcm_audio_left_d   <= audio_left_i;
+         pcm_audio_right_d  <= audio_right_i;
+         pcm_audio_left_dd  <= pcm_audio_left_d;
+         pcm_audio_right_dd <= pcm_audio_right_d;
+
+         if pcm_audio_left_d = pcm_audio_left_dd and pcm_audio_right_d = pcm_audio_right_dd then
+            pcm_audio_left  <= pcm_audio_left_dd;
+            pcm_audio_right <= pcm_audio_right_dd;
+         end if;
+      end if;
+   end process p_sample;
+
+
+   ---------------------------------------------------------------------------------------------
+   -- Digital output (HDMI) - Video part
    ---------------------------------------------------------------------------------------------
 
    reset_na <= not (video_rst_i or hdmi_rst_i or hr_rst_i);
@@ -435,14 +543,14 @@ begin
          vga_b        => hdmi_osm_blue,
 
          -- PCM audio
-         pcm_rst      => audio_rst_i,
-         pcm_clk      => audio_clk_i,
-         pcm_clken    => '0',
-         pcm_l        => (others => '0'),
-         pcm_r        => (others => '0'),
-         pcm_acr      => '0',
-         pcm_n        => (others => '0'),
-         pcm_cts      => (others => '0'),
+         pcm_clk      => pcm_clk,                             -- 256 * 48 kHz = 12.288 MHz
+         pcm_rst      => pcm_rst,
+         pcm_clken    => pcm_clken,                           -- 1/256 = 48 kHz
+         pcm_l        => std_logic_vector(pcm_audio_left),
+         pcm_r        => std_logic_vector(pcm_audio_right),
+         pcm_acr      => pcm_acr,
+         pcm_n        => pcm_n,
+         pcm_cts      => pcm_cts,
 
          -- TMDS output (parallel)
          tmds         => hdmi_tmds
