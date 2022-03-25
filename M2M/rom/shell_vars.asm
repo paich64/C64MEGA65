@@ -47,11 +47,7 @@ FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 ;
 ; VDRIVES_BUFS:	 Array of device IDs of size VDRIVES_NUM that contains the
 ;                RAM buffer-devices that will hold the mounted drives
-;
-; VDRIVES_NAMES: Array of pointers to file names of mounted images. The array
-;                needs to be of size VDRIVES_NUM
 VDRIVES_NUM 	.DW 	1
 VDRIVES_MAX  	.EQU    5
 VDRIVES_IEC  	.DW 	0x0101
 VDRIVES_BUFS	.DW		0x0102
-VDRIVES_NAMES   .BLOCK  1

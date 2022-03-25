@@ -109,7 +109,7 @@ M2M$NC_VE_RIGHT     .EQU 182    ; normal vertical line end: right part
 M2M$DIR_L           .EQU 17     ; left char for displaying a directory
 M2M$DIR_R           .EQU 16     ; right char for displaying a directory
 M2M$OPT_SEL_MULTI   .EQU 7      ; selection char for options menu: multi-sel.
-M2M$OPT_SEL_SINGLE  .EQU 35     ; ditto for single select
+M2M$OPT_SEL_SINGLE  .EQU 61     ; ditto for single select
 
 ; ----------------------------------------------------------------------------
 ; Keyboard for the framework (independent from the keyboard of the core)

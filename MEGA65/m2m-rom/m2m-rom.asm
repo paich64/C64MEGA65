@@ -260,7 +260,7 @@ ERROR_END       SYSCALL(puts, 1)
 ; Firmware: Core specific IO handler (called by the Shell)
 ; ----------------------------------------------------------------------------
 
-PREPARE_CORE_IO RET
+P_REPARE_CORE_IO RET
 
                 SYSCALL(enter, 1)
 
@@ -324,7 +324,7 @@ _RD_0_OK        ; trigger mount signal
                 SYSCALL(leave, 1)
                 RET
 
-HANDLE_CORE_IO  RET
+H_ANDLE_CORE_IO  RET
 
                 INCRB
 

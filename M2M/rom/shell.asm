@@ -9,6 +9,18 @@
 ; done by sy2002 in 2021 and licensed under GPL v3
 ; ****************************************************************************
 
+; ----------------------------------------------------------------------------
+; Main Program
+;
+; START_SHELL is called from m2m-rom.asm as the main entry point to the Shell.
+; The call is performed doing an RBRA not an RSUB, so the main program is
+; not supposed to return to the caller.
+; ----------------------------------------------------------------------------
+
+                ; ------------------------------------------------------------
+                ; Reset management
+                ; ------------------------------------------------------------
+
                 ; @TODO: different behavior of C64 core than in the framework
                 ; make reset and pause behavior configurable in config.vhd
                 ; Make sure that SCR$OSM_O_ON (and the others) are behaving
@@ -29,6 +41,10 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    LOG_M2M, R8
                 SYSCALL(puts, 1)
 
+                ; ------------------------------------------------------------
+                ; Initialize variables, libraries, IO and show welcome screen
+                ; ------------------------------------------------------------
+
                 ; initialize device (SD card) and file handle
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8
@@ -43,8 +59,15 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    R8, @R9
                 RSUB    FB_INIT, 1              ; init persistence variables
                 MOVE    FB_HEAP, R8             ; heap for file browsing
-                MOVE    HEAP, @R8
+                MOVE    HEAP, @R8                 
                 ADD     MENU_HEAP_SIZE, @R8
+
+                ; make sure OPTM_HEAP is initialized to zero, as it will be
+                ; calculated and activated inside HELP_MENU
+                MOVE    OPTM_HEAP, R8
+                MOVE    0, @R8
+                MOVE    OPTM_HEAP_SIZE, R8
+                MOVE    0, @R8
 
                 ; initialize screen library and show welcome screen:
                 ; draw frame and print text
@@ -87,8 +110,9 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 ; if drives have been mounted, the mount strobe needs to be
                 ; renewed after a reset, as the reset signal also resets
                 ; the state of vdrives.vhd
-                RSUB    PREPARE_CORE_IO, 1
+                ;RSUB    PREPARE_CORE_IO, 1
 
+                ; ------------------------------------------------------------
                 ; Main loop:
                 ;
                 ; The core is running and QNICE is waiting for triggers to
@@ -99,7 +123,9 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 ; The latter one could also be done via interrupts, but we
                 ; will try to keep it simple in the first iteration and only
                 ; increase complexity by using interrupts if neccessary.
-MAIN_LOOP       RSUB    HANDLE_CORE_IO, 1       ; IO handling (e.g. vdrives)
+                ; ------------------------------------------------------------
+
+MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 RSUB    CHECK_DEBUG, 1          ; (Run/Stop+Cursor Up) + Help
 
                 RSUB    KEYB$SCAN, 1            ; scan for single key presses
@@ -138,8 +164,8 @@ HANDLE_MOUNTING SYSCALL(enter, 1)
                 ; 4. Copy the disk image into the mount buffer and hide
                 ;    the fullscreen OSM afterwards
                 ; 5. Notify MiSTer using the "SD" protocol (see vdrives.vhd)
-                ; 6. Modify the menu, so that the file name of the mounted
-                ;    image is part of the menu and then show the OSM again
+                ; 6. Redraw and show the OSM, including the disk images
+                ;    of the mounted drives
 
                 ; Step #1 - Hide OSM and show full-screen window
                 RSUB    SCR$OSM_OFF, 1
@@ -232,13 +258,45 @@ _HM_SDMOUNTED3  MOVE    R8, R0                  ; R8: selected file name
                 SYSCALL(puts, 1)
                 SYSCALL(crlf, 1)
 
-                MOVE    VDRIVES_NAMES, R0
-                ADD     R7, R0
-                ; @TODO find a place on the heap, store the (shortened) name
-                ; and then store the pointer here
-                
-                MOVE    R8, R9                  ; R9: file name of disk image
-                MOVE    R7, R8                  ; R8: drive ID to be mounted
+                ; remember the file name for displaying it in the OSM
+                ; the convention for the position in the @OPTM_HEAP is:
+                ; virtual drive number times @SCR$OSM_O_DX
+                MOVE    R8, R2                  ; R2: file name
+                MOVE    OPTM_HEAP, R0
+                MOVE    @R0, R0
+                RBRA    _HM_SDMOUNTED5, Z       ; OPTM_HEAP not ready, yet
+                MOVE    R7, R8
+                MOVE    SCR$OSM_O_DX, R9
+                MOVE    @R9, R9
+                SYSCALL(mulu, 1)
+                ADD     R10, R0                 ; R0: string ptr for file name
+                MOVE    R9, R1                  ; R1: maximum string length
+                SUB     2, R1                   ; minus 2 because of frame
+
+                ; if the length of the name is <= the maximum size then just
+                ; copy as is; otherwise copy maximum size + 1 so that the
+                ;  ellipsis is triggered (see _OPTM_CBS_REPL in options.asm)
+                MOVE    R2, R8
+                SYSCALL(strlen, 1)
+                CMP     R9, R1                  ; strlen(name) > maximum?
+                RBRA    _HM_SDMOUNTED4, N       ; yes
+                MOVE    R2, R8
+                MOVE    R0, R9
+                SYSCALL(strcpy, 1)
+                RBRA    _HM_SDMOUNTED5, 1
+
+                ; strlen(name) > maximum: copy maximum + 1 to trigger ellipsis
+_HM_SDMOUNTED4  MOVE    R2, R8
+                MOVE    R0, R9
+                MOVE    R1, R10
+                ADD     1, R10
+                SYSCALL(memcpy, 1)
+                ADD     R10, R9                 ; add zero terminator
+                MOVE    0, @R9
+
+                ; load the disk image to the mount buffer
+_HM_SDMOUNTED5  MOVE    R7, R8                  ; R8: drive ID to be mounted
+                MOVE    R2, R9                  ; R9: file name of disk image                
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
                 RSUB    SCR$OSM_OFF, 1
 
@@ -259,15 +317,8 @@ _HM_SDMOUNTED3  MOVE    R8, R0                  ; R8: selected file name
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
 
-                ; Step #6: Modify the menu, so that the file name of the
-                ;          mounted image is part of the menu and then show
-                ;          the OSM again
-                MOVE    R5, R8
-                ; @TODO continue here
-                ; we need to remember where the menu stack ends and use this
-                ; remaining stack to store mounted file names
-                ; the pointers 
-                RSUB    OPTM_SHOW, 1
+                ; 6. Redraw and show the OSM
+                RSUB    OPTM_SHOW, 1            
                 RSUB    SCR$OSM_O_ON, 1
                 RBRA    _HM_RET, 1
 
@@ -345,6 +396,23 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
 
 _LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
                 SYSCALL(puts, 1)
+
+                DECRB
+                RET
+
+; ----------------------------------------------------------------------------
+; IO Handler:
+; Meant to be polled in the main loop and while waiting for keys in the OSM
+; ----------------------------------------------------------------------------
+
+HANDLE_IO       INCRB
+
+                ; Loop through all VDRIVES and check, read requests
+                MOVE    VD_IEC_WIN_DRV, R0      ; R0: current drive window
+                MOVE    VDRIVES_NUM, R1
+                MOVE    @R1, R1                 ; R1: amount of vdrives
+
+_HANDLE_IO_1                    
 
                 DECRB
                 RET

@@ -135,40 +135,37 @@ constant OPTM_SIZE         : integer := 13;  -- amount of items including empty 
                                              -- @TODO: There is for sure a more elegant way than this redundant definition
 constant OPTM_ITEMS        : string :=
 
-   " 8: %s\n"              &                 -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
-   " 9: %s\n"              &                 -- ditto
+   " 8:%s\n"               &                 -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
+   " \n"                   &
    " SID\n"                &
    "\n"                    &
    " 6581\n"               &
    " 8580\n"               &
    "\n"                    &
-   " Triple %s Buff.\n"    &
+   " HDMI Frequency\n"     &
    "\n"                    &
-   " On\n"                 &
-   " Off\n"                & 
+   " 50 Hz\n"              &
+   " 60 Hz\n"              & 
    "\n"                    &
    " Close Menu\n";
         
 constant OPTM_G_MOUNT_8    : integer := 1;
-constant OPTM_G_MOUNT_9    : integer := 2;   -- not used, yet
+constant OPTM_G_MOUNT_9    : integer := 2;   -- not used, yet; each drive needs a unique group ID
 constant OPTM_G_SID        : integer := 3;
-constant OPTM_G_AUDIO      : integer := 4;
-
-constant OPTM_DELIT        : integer := 5;
+constant OPTM_G_HDMI       : integer := 4;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_MOUNT_8    + OPTM_G_MOUNT_DRV  + OPTM_G_START,
-                                             OPTM_G_MOUNT_9    + OPTM_G_MOUNT_DRV,
-                                             --OPTM_G_LINE,
+                                             OPTM_G_LINE,
                                              OPTM_G_TEXT,
                                              OPTM_G_LINE,
                                              OPTM_G_SID        + OPTM_G_STDSEL,
                                              OPTM_G_SID,
                                              OPTM_G_LINE,
-                                             OPTM_DELIT        + OPTM_G_MOUNT_DRV,
+                                             OPTM_G_TEXT,
                                              OPTM_G_LINE,
-                                             OPTM_G_AUDIO      + OPTM_G_STDSEL,
-                                             OPTM_G_AUDIO,
+                                             OPTM_G_HDMI       + OPTM_G_STDSEL,
+                                             OPTM_G_HDMI,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE
                                            );

@@ -11,6 +11,10 @@
 
 ; ----------------------------------------------------------------------------
 ; Main routine
+;
+; Expects a M2M$KEY_* in R8 and returns immediatelly, if it is not the
+; HELP key. Otherwise it runs the whole OSM logic, manages file browsing
+; for drive mounting and also manages M2M$CFM_DATA.
 ; ----------------------------------------------------------------------------
 
                 ; Check if Help is pressed and if yes, run the Options menu
@@ -387,7 +391,7 @@ _OPTM_FPS_RET   DECRB
 ; Waits until one of the four Option Menu keys is pressed
 ; and returns the OPTM_KEY_* code in R8
 OPT_MENU_GETKEY INCRB
-_OPTMGK_LOOP    RSUB    HANDLE_CORE_IO, 1       ; IO handling (e.g. vdrives)
+_OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 RSUB    KEYB$SCAN, 1            ; wait until key is pressed
                 RSUB    KEYB$GETKEY, 1
                 CMP     0, R8
@@ -567,8 +571,22 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 RSUB    _OPTM_CBS_REPL, 1       ; replace %s with OPTM_S_MOUNT
                 RBRA    _OPTM_CBS_RET, 1
 
-_OPTM_CBS_1     SYSCALL(exit, 1)
-
+                ; the replacement string was placed at R0 by HANDLE_MOUNTING
+                ; in shell.asm; since this is "just" the replacement string
+                ; for the "%s", we need to save it on the stack so that
+                ; _OPTM_CBS_REPL can do its job
+_OPTM_CBS_1     MOVE    R0, R8
+                SYSCALL(strlen, 1)
+                ADD     1, R9                   ; space for zero terminator
+                SUB     R9, SP
+                MOVE    R9, R3                  ; for restoring the stack
+                MOVE    SP, R9
+                SYSCALL(strcpy, 1)
+                MOVE    R9, R8
+                MOVE    R3, @--SP               ; _OPTM_CBS_REPL changes R3
+                RSUB    _OPTM_CBS_REPL, 1
+                MOVE    @SP++, R3
+                ADD     R3, SP
 
 _OPTM_CBS_RET   MOVE    R0, @--SP               ; lift R0 over the leave hump
                 SYSCALL(leave, 1)
@@ -594,7 +612,8 @@ _OPTM_CBS_REPL  MOVE    R8, R6                  ; remember R8
                 RBRA    FATAL, 1
 
                 ; copy the string from 0 to one before %s to the output buf.
-_OPTM_CBSR_1    SUB     R7, R10
+_OPTM_CBSR_1    MOVE    R10, R2                 ; R2: save %s pos, later use
+                SUB     R7, R10
                 MOVE    R7, R8
                 MOVE    R0, R9
                 SYSCALL(memcpy, 1)
@@ -614,16 +633,48 @@ _OPTM_CBSR_1    SUB     R7, R10
                 ADD     R10, R9                 ; prefix string + repl. string
 
                 CMP     R9, R4                  ; is it larger than max width?
-                RBRA    _OPTM_CBSR_2, N         ; yes
+                RBRA    _OPTM_CBSR_3, N         ; yes
                 MOVE    R0, R9                  ; R8 still points to repl. str
                 ADD     R10, R9                 ; ptr to "%"
                 SYSCALL(strcpy, 1)
+
+                ; if we land here, we successfully used "prefix" + "%s"; now
+                ; lets check, if we can add parts or everything of the
+                ; "suffix", i.e. the part after the "%s"
+                MOVE    R0, R8
+                SYSCALL(strlen, 1)
+                MOVE    R9, R3                  ; R3: size of concat string
+                CMP     R3, R4                  ; R3 < max width?
+                RBRA    _OPTM_CBSR_RET, Z       ; no (< means not Z)
+                RBRA    _OPTM_CBSR_RET, N       ; no (< means also not N)
+                
+                ADD     2, R2                   ; R2: first char behind "%s"
+                MOVE    R2, R8
+                SYSCALL(strlen, 1)
+                CMP     0, R9                   ; is there anything to add?
+                RBRA    _OPTM_CBSR_RET, Z       ; no
+
+                SUB     R3, R4                  ; R4 = max amt. chars to add
+
+                ; pick the minimum of (R4: max. amt. chars to add) and
+                ; (R9: size of "suffix") and copy the data into the buffer
+                CMP     R4, R9                  ; R4 > R9?
+                RBRA    _OPTM_CBSR_2, !N        ; no
+                MOVE    R9, R4                  ; yes: then use R9 instead
+_OPTM_CBSR_2    MOVE    R2, R8                  ; first char behind "%s"
+                MOVE    R0, R9
+                ADD     R3, R9                  ; last char of concat string
+                MOVE    R4, R10                 ; amount of chars to copy
+                SYSCALL(memcpy, 1)
+                ADD     R10, R9                 ; add zero terminator
+                MOVE    0, @R9
                 RBRA    _OPTM_CBSR_RET, 1
 
-                ; if we land here, the overall string is too long, so we may
-                ; only copy the maximum amount and we need to add an 
+                ; if we land here, the overall string consisting of the first
+                ; two parts ("prefix" + "%s") is too long, so we may only copy
+                ; the maximum amount and we need to add an
                 ; ellipsis (aka "...") at the end
-_OPTM_CBSR_2    MOVE    R0, R9
+_OPTM_CBSR_3    MOVE    R0, R9
                 ADD     R10, R9
                 MOVE    R4, R5
                 SUB     R10, R5                 ; max amount we can copy
