@@ -14,9 +14,13 @@
 
 #include "menu_vars.asm"
 
+; option menu
 OPTM_ICOUNT		.BLOCK 1						; amount of menu items
 OPTM_START 		.BLOCK 1						; initially selected menu item
 OPTM_SELECTED   .BLOCK 1                        ; last options menu selection
+OPTM_HEAP  		.BLOCK 1 						; pointer to a place that can
+												; be used as a scratch buffer
+OPTM_HEAP_SIZE  .BLOCK 1 						; size of this scratch buffer
 
 SCRATCH_HEX  	.BLOCK 5
 

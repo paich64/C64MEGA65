@@ -31,11 +31,12 @@ _VDA_C1  		OR  	0x0004, SR				; set Carry
 _VDA_RET		DECRB
 				RET
 
-; Return the drive number associated with a menu item:
+; Return the drive number associated with a single-select menu item that
+; as a unique menu group ID
 ; The first menu item in config.vhd with a OPTM_G_MOUNT_DRV flag is drive 0,
 ; the next one drive 1, etc.
 ;
-; Input:   R8: menu item
+; Input:   R8: menu item (menu group ID)
 ; Returns: Carry=1 if any drive number is associated with a menu item
 ;          R8: drive number, starting with 0, only valid if Carry=1
 VD_DRVNO  		INCRB

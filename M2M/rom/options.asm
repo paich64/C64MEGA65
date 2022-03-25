@@ -16,7 +16,7 @@
                 ; Check if Help is pressed and if yes, run the Options menu
 HELP_MENU       SYSCALL(enter, 1)
                 CMP     M2M$KEY_HELP, R8        ; help key pressed?
-                RBRA    _HLP_RET, !Z                
+                RBRA    _HLP_RET_DIRECT, !Z                
 
                 ; Deactivate keyboard and joysticks, so that the key strokes
                 ; done during the OSD is on are not passed along to the core
@@ -125,17 +125,48 @@ _HLP_SSIC1      SUB     1, R4                   ; one less menu item to go
                 ADD     R10, R9
                 SUB     R8, R9
                 ADD     1, R9
-                RBRA    _HLP_HEAPOK, !N
+                CMP     R9, MENU_HEAP_SIZE      ; used heap > heap size?
+                RBRA    _HLP_HEAP1_OK, !N       ; no, all OK
 
                 ; If we land here, then either MENU_HEAP_SIZE is too small
                 ; to hold the menu structure (unlikely, if nobody heavily 
                 ; modified this value from the default) or we have an error
                 ; that leads to heap corruption
-                MOVE    ERR_FATAL_HEAP, R8      ; R9 contains the overrun
+                MOVE    ERR_FATAL_HEAP1, R8     ; R9 contains the overrun
                 RSUB    FATAL, 1
 
+                ; find space for OPTM_HEAP after the above-mentioned data
+_HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
+                SUB     R9, R8
+                MOVE    OPTM_HEAP_SIZE, R10
+                MOVE    R8, @R10
+                MOVE    OPTM_HEAP, R8
+                MOVE    HEAP, @R8
+                ADD     R9, @R8
+
+                ; Check if the planned memory usage in OPTM_HEAP will not
+                ; overwrite FP_HEAP: We will use OPTM_HEAP to store the
+                ; strings that will be displayed instead of the "%s" strings
+                ; from config.vhd. The maximum length per string (rounded up)
+                ; equals to @SCR$OSM_O_DX and the maximum amount of such kind
+                ; of "%s" strings equals to the actual amount of virtual
+                ; drives, i.e. VDRIVES_NUM
+                MOVE    SCR$OSM_O_DX, R8
+                MOVE    @R8, R8
+                MOVE    VDRIVES_NUM, R9
+                MOVE    @R9, R9
+                SYSCALL(mulu, 1)                ; R10 = result lo word of mulu
+                MOVE    OPTM_HEAP_SIZE, R8
+                CMP     R10, @R8                ; demand > heap?
+                RBRA    _HLP_HEAP2_OK, !N       ; no, all OK
+
+                ; If we land here, we have a heap size problem or a bug.
+                ; See above at ERR_FATAL_HEAP1.
+                MOVE    ERR_FATAL_HEAP2, R8     ; R9 contains the overrun
+                RSUB    FATAL, 1 
+
                 ; run the menu
-_HLP_HEAPOK     RSUB    OPTM_SHOW, 1            ; fill VRAM
+_HLP_HEAP2_OK   RSUB    OPTM_SHOW, 1            ; fill VRAM
                 RSUB    SCR$OSM_O_ON, 1         ; make overlay visible
                 MOVE    OPTM_SELECTED, R9       ; use recently selected line
                 MOVE    @R9, R8
@@ -163,7 +194,7 @@ _HLP_RESETPOS   MOVE    OPTM_START, R0
 _HLP_RET        MOVE    M2M$CSR, R0
                 OR      M2M$CSR_KBD_JOY, @R0
 
-                SYSCALL(leave, 1)
+_HLP_RET_DIRECT SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------
@@ -473,27 +504,137 @@ _OPTMCB_RET     DECRB
 
 ; ----------------------------------------------------------------------------
 ; Callback function that is called during the drawing of the menu (OPTM_SHOW)
+; if there is a "%s" within a menu item.
+;
+; menu.asm is not aware of the semantics that we are implementing here:
+; "%s" is meant to use to denote the space where we will either print
+; OPTM_S_MOUNT from config.vhd, which is "<Mount Drive>" by default, if the
+; drive is not mounted, yet, or we print the file name of the disk image,
+; abbreviated to the width of the frame.
+;
+; Input:
+;   R8: pointer to the string that includes the "%s"
+;   R9: index of menu item
+; Output:
+;   R8: Pointer to a completely new string that shall be shown instead of
+;       the original string that contains the "%s"; so do not just replace
+;       the "%s" inside the string but provide a completely new string.
+;       Alternatively, if you do not want to change the string, you can
+;       just return R8 unchanged.
 ; ----------------------------------------------------------------------------
 
-OPTM_CB_SHOW    INCRB
+OPTM_CB_SHOW    SYSCALL(enter, 1)
 
-                MOVE    R8, @--SP
-                SYSCALL(puts, 1)
-                SYSCALL(crlf, 1)
-                MOVE    R9, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
+                MOVE    R8, R0                  ; R0: string pointer
+                MOVE    R0, R7
+
+                ; get menu group ID associated with this menu item
+                ; (mount menu items need to have unique group IDs)
+                MOVE    M2M$RAMROM_DEV, R1
+                MOVE    M2M$CONFIG, @R1
+                MOVE    M2M$RAMROM_4KWIN, R1
+                MOVE    M2M$CFG_OPTM_GROUPS, @R1
+                MOVE    M2M$RAMROM_DATA, R1
+                ADD     R9, R1
+                MOVE    @R1, R1                 ; R1: menu group id
+
+                ; VD_DRVNO checks if the menu item is associated with a
+                ; virtual drive and returns the virtual drive number in R8
+                MOVE    R1, R8
+                RSUB    VD_DRVNO, 1
+                RBRA    _OPTM_CBS_RET, !C
+
+                ; the position of the string for each virtual drive number
+                ; equals virtual drive number times @SCR$OSM_O_DX, because
+                ; each string will be smaller than the width of the menu
+                MOVE    SCR$OSM_O_DX, R9
+                MOVE    @R9, R9
+                SYSCALL(mulu, 1)                ; R10: result lo word of mulu
+                MOVE    OPTM_HEAP, R0           ; R0: string pointer
+                MOVE    @R0, R0
+                ADD     R10, R0
+
+                ; R8 still contains the virtual drive id.
+                ; If the drive is not mounted, then show OPTM_S_MOUNT
+                ; from config.vhd, which is "<Mount Drive>" by default
+                RSUB    VD_MOUNTED, 1
+                RBRA    _OPTM_CBS_1, C          ; yes: mounted
+                MOVE    M2M$RAMROM_DEV, R3
+                MOVE    M2M$CONFIG, @R3
+                MOVE    M2M$RAMROM_4KWIN, R3
+                MOVE    M2M$CFG_OPTM_MSTR, @R3
+                MOVE    M2M$RAMROM_DATA, R8
+                RSUB    _OPTM_CBS_REPL, 1       ; replace %s with OPTM_S_MOUNT
+                RBRA    _OPTM_CBS_RET, 1
+
+_OPTM_CBS_1     SYSCALL(exit, 1)
+
+
+_OPTM_CBS_RET   MOVE    R0, @--SP               ; lift R0 over the leave hump
+                SYSCALL(leave, 1)
                 MOVE    @SP++, R8
-
-;                MOVE    M2M$RAMROM_DEV, R0
-;                MOVE    M2M$CONFIG, @R0
-;                MOVE    M2M$RAMROM_4KWIN, R0
-;                MOVE    M2M$CFG_OPTM_MSTR, @R0
-;                MOVE    M2M$RAMROM_DATA, R8
-;                MOVE    FINPUT_BUF, R9
-;                SYSCALL(strcpy, 1)
-;
-;                MOVE    FINPUT_BUF, R8
-
-                DECRB
                 RET
+
+                ; subroutine within OPTM_CB_SHOW: expects R0 to point to
+                ; the heap buffer where the ouput string shall land and
+                ; expects the input string that has the "%s" that shall
+                ; be replaced in R7 and actual replacement for the "%s"
+                ; is expected in R8
+_OPTM_CBS_REPL  MOVE    R8, R6                  ; remember R8
+                MOVE    R7, R8                  ; find "%s" in R7
+                MOVE    _OPTM_CBS_S, R9
+                SYSCALL(strstr, 1)
+                CMP     0, R10                  ; R10: position of %s
+                RBRA    _OPTM_CBSR_1, !Z
+
+                ; if "%s" is not being found at this place, then something
+                ; went wrong terribly
+                MOVE    ERR_FATAL_INST, R8
+                MOVE    1, R9
+                RBRA    FATAL, 1
+
+                ; copy the string from 0 to one before %s to the output buf.
+_OPTM_CBSR_1    SUB     R7, R10
+                MOVE    R7, R8
+                MOVE    R0, R9
+                SYSCALL(memcpy, 1)
+
+                ; the maximum width that we have to display the string is
+                ; @SCR$OSM_O_DX minus 2 because of the frame
+                MOVE    SCR$OSM_O_DX, R4
+                MOVE    @R4, R4
+                SUB     2, R4                   ; R4: max width
+
+                ; overwrite the "%s" from the "%" on with new string, make
+                ; sure that we are not longer than the max width, which is
+                ; @SCR$OSM_O_DX
+                ; R10 contains the length of the string before the %s
+                MOVE    R6, R8                  ; replacement string
+                SYSCALL(strlen, 1)
+                ADD     R10, R9                 ; prefix string + repl. string
+
+                CMP     R9, R4                  ; is it larger than max width?
+                RBRA    _OPTM_CBSR_2, N         ; yes
+                MOVE    R0, R9                  ; R8 still points to repl. str
+                ADD     R10, R9                 ; ptr to "%"
+                SYSCALL(strcpy, 1)
+                RBRA    _OPTM_CBSR_RET, 1
+
+                ; if we land here, the overall string is too long, so we may
+                ; only copy the maximum amount and we need to add an 
+                ; ellipsis (aka "...") at the end
+_OPTM_CBSR_2    MOVE    R0, R9
+                ADD     R10, R9
+                MOVE    R4, R5
+                SUB     R10, R5                 ; max amount we can copy
+                MOVE    R5, R10         
+                SYSCALL(memcpy, 1)
+                ADD     R10, R9                 ; add zero terminator
+                MOVE    0, @R9
+                SUB     3, R9                   ; add ellipsis
+                MOVE    FN_ELLIPSIS, R8
+                SYSCALL(strcpy, 1)
+
+_OPTM_CBSR_RET  RET
+
+_OPTM_CBS_S     .ASCII_W "%s"

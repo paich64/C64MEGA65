@@ -160,6 +160,9 @@ OPTM_SHOW       SYSCALL(enter, 1)
                 ; (In case there are %s, they will be drawn as %s)
                 ; ------------------------------------------------------------
 
+                ; the coordinates are relative to the top/left of the screen
+                ; and not relative to the top/left of the "window"/"frame"
+                ; that is drawn around the menu
                 MOVE    OPTM_X, R8
                 MOVE    @R8, R8
                 MOVE    OPTM_Y, R9
@@ -190,16 +193,7 @@ OPTM_SHOW       SYSCALL(enter, 1)
                 ; newline (i.e. increment the index of the menu item)
                 XOR     R5, R5                  ; R5 = index of menu item
                 MOVE    R0, R7                  ; R7 = start of current str
-_OPTM_HM_0      
-
-                ; DEBUG
-                MOVE    R8, @--SP
-                MOVE    R0, R8
-                SYSCALL(puts, 1)
-                SYSCALL(crlf, 1)
-                MOVE    @SP++, R8
-
-                CMP     0, @R0                  ; end of string reached?
+_OPTM_HM_0      CMP     0, @R0                  ; end of string reached?
                 RBRA    _OPTM_SHOW_0, Z         ; yes
                 CMP     0x005C, @R0             ; search newline: backslash
                 RBRA    _OPTM_HM_1, !Z          ; no
@@ -209,14 +203,7 @@ _OPTM_HM_0
                 ADD     1, R0                   ; skip character
                 MOVE    R0, R7                  ; R7 starts from the new line
                 ADD     1, R5                   ; next index of menu item
-                RBRA    _OPTM_HM_0, 1
-
-;                ; DEBUG
-;                MOVE    R8, @--SP
-;                MOVE    R0, R8
-;                SYSCALL(puts, 1)
-;                SYSCALL(crlf, 1)
-;                MOVE    @SP++, R8
+                RBRA    _OPTM_HM_0, 1                
 
                 ; search for %s in the string
 _OPTM_HM_1      CMP     '%', @R0                ; search for "%s"
@@ -253,14 +240,26 @@ _OPTM_HM_1      CMP     '%', @R0                ; search for "%s"
                 SYSCALL(memcpy, 1)
                 MOVE    R11, R8
                 ADD     R10, R8
-                ADD     1, R8
                 MOVE    0, @R8
 
                 MOVE    R7, @--SP               ; save ptr to current line
+
                 MOVE    OPTM_CLBK_SHOW, R7      ; call callback function
                 MOVE    R11, R8
                 MOVE    R5, R9
                 RSUB    _OPTM_CALL, 1
+
+                ; print string from callback, which is in R8
+                MOVE    OPTM_FP_PRINTXY, R7
+                MOVE    OPTM_X, R9
+                MOVE    @R9, R9
+                ADD     1, R9                   ; add 1 to x because of frame
+                MOVE    OPTM_Y, R10
+                MOVE    @R10, R10
+                ADD     R5, R10                 ; R5 is # of menu item, so..
+                ADD     1, R10                  ; ..add 1 to y b/c of frame
+                RSUB    _OPTM_CALL, 1
+
                 MOVE    @SP++, R7               ; restore ptr
 
                 ADD     R6, SP                  ; restore stack
@@ -278,10 +277,10 @@ _OPTM_HM_2      ADD     1, R0
                 ; Tag selected menu items and draw lines
                 ; ------------------------------------------------------------
 
-_OPTM_SHOW_0    ;@TODO CONTINUE HERE
-                MOVE    0x1234, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(exit, 1)
+_OPTM_SHOW_0    MOVE    OPTM_DATA, R0           ; R0: string to be printed
+                MOVE    @R0, R0
+                ADD     OPTM_IR_ITEMS, R0
+                MOVE    @R0, R0
 
                 MOVE    OPTM_X, R5              ; R5: current x-pos
                 MOVE    @R5, R5
