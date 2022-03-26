@@ -41,6 +41,9 @@ entity clk is
       hdmi_clk_o      : out std_logic;   -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
       hdmi_rst_o      : out std_logic;   -- HDMI's reset, synchronized
 
+      audio_clk_o     : out std_logic;   -- Audio's 60 MHz clock
+      audio_rst_o     : out std_logic;   -- Audio's reset, synchronized
+
       main_clk_o      : out std_logic;   -- main's 31.528 MHz clock
       main_rst_o      : out std_logic;   -- main's reset, synchronized
 
@@ -61,10 +64,15 @@ signal qnice_clk_mmcm     : std_logic;
 signal hr_clk_x1_mmcm     : std_logic;
 signal hr_clk_x2_mmcm     : std_logic;
 signal hr_clk_x2_del_mmcm : std_logic;
+signal audio_clk_mmcm     : std_logic;
 signal tmds_clk_mmcm      : std_logic;
 signal hdmi_clk_mmcm      : std_logic;
 signal main_clk_mmcm      : std_logic;
 signal video_clk_mmcm     : std_logic;
+
+signal qnice_locked       : std_logic;
+signal hdmi_locked        : std_logic;
+signal c64_locked         : std_logic;
 
 begin
 
@@ -80,25 +88,29 @@ begin
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
          DIVCLK_DIVIDE        => 1,
-         CLKFBOUT_MULT_F      => 8.0,        -- 800 MHz
+         CLKFBOUT_MULT_F      => 12.0,       -- 1200 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 16.000,     -- QNICE @ 50 MHz
+         CLKOUT0_DIVIDE_F     => 24.000,     -- QNICE @ 50 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 8,          -- HyperRAM @ 100 MHz
+         CLKOUT1_DIVIDE       => 12,          -- HyperRAM @ 100 MHz
          CLKOUT1_PHASE        => 0.000,
          CLKOUT1_DUTY_CYCLE   => 0.500,
          CLKOUT1_USE_FINE_PS  => FALSE,
-         CLKOUT2_DIVIDE       => 4,          -- HyperRAM @ 200 MHz
+         CLKOUT2_DIVIDE       => 6,          -- HyperRAM @ 200 MHz
          CLKOUT2_PHASE        => 0.000,
          CLKOUT2_DUTY_CYCLE   => 0.500,
          CLKOUT2_USE_FINE_PS  => FALSE,
-         CLKOUT3_DIVIDE       => 4,          -- HyperRAM @ 200 MHz phase delayed
+         CLKOUT3_DIVIDE       => 6,          -- HyperRAM @ 200 MHz phase delayed
          CLKOUT3_PHASE        => 180.000,
          CLKOUT3_DUTY_CYCLE   => 0.500,
-         CLKOUT3_USE_FINE_PS  => FALSE
+         CLKOUT3_USE_FINE_PS  => FALSE,
+         CLKOUT4_DIVIDE       => 20,         -- Audio @ 60 MHz
+         CLKOUT4_PHASE        => 180.000,
+         CLKOUT4_DUTY_CYCLE   => 0.500,
+         CLKOUT4_USE_FINE_PS  => FALSE
       )
       port map (
          -- Output clocks
@@ -107,6 +119,7 @@ begin
          CLKOUT1             => hr_clk_x1_mmcm,
          CLKOUT2             => hr_clk_x2_mmcm,
          CLKOUT3             => hr_clk_x2_del_mmcm,
+         CLKOUT4             => audio_clk_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb1,
          CLKIN1              => sys_clk_i,
@@ -127,7 +140,7 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => open,
+         LOCKED              => qnice_locked,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
@@ -183,7 +196,7 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => open,
+         LOCKED              => hdmi_locked,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
@@ -236,7 +249,7 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => open,
+         LOCKED              => c64_locked,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
@@ -289,6 +302,12 @@ begin
          O => hr_clk_x2_del_o
       );
 
+   audio_clk_bufg : BUFG
+      port map (
+         I => audio_clk_mmcm,
+         O => audio_clk_o
+      );
+
    tmds_clk_bufg : BUFG
       port map (
          I => tmds_clk_mmcm,
@@ -317,58 +336,69 @@ begin
    -- Reset generation
    -------------------------------------
 
-   i_xpm_cdc_sync_rst_qnice : xpm_cdc_sync_rst
+   i_xpm_cdc_async_rst_qnice : xpm_cdc_async_rst
       generic map (
-         INIT_SYNC_FF => 1  -- Enable simulation init values
+         RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => qnice_clk_o,      -- 1-bit input: Destination clock.
-         dest_rst => qnice_rst_o       -- 1-bit output: src_rst synchronized to the destination clock domain.
+         src_arst  => not (qnice_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => qnice_clk_o,      -- 1-bit input: Destination clock.
+         dest_arst => qnice_rst_o       -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
 
-   i_xpm_cdc_sync_rst_hr : xpm_cdc_sync_rst
+   i_xpm_cdc_async_rst_hr : xpm_cdc_async_rst
       generic map (
-         INIT_SYNC_FF => 1  -- Enable simulation init values
+         RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => hr_clk_x1_o,      -- 1-bit input: Destination clock.
-         dest_rst => hr_rst_o          -- 1-bit output: src_rst synchronized to the destination clock domain.
+         src_arst  => not (qnice_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => hr_clk_x1_o,      -- 1-bit input: Destination clock.
+         dest_arst => hr_rst_o          -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
 
-   i_xpm_cdc_sync_rst_hdmi : xpm_cdc_sync_rst
+   i_xpm_cdc_async_rst_audio : xpm_cdc_async_rst
       generic map (
-         INIT_SYNC_FF => 1  -- Enable simulation init values
+         RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => hdmi_clk_o,       -- 1-bit input: Destination clock.
-         dest_rst => hdmi_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
+         src_arst  => not (qnice_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => audio_clk_o,      -- 1-bit input: Destination clock.
+         dest_arst => audio_rst_o       -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
 
-   i_xpm_cdc_sync_rst_main : xpm_cdc_sync_rst
+   i_xpm_cdc_async_rst_hdmi : xpm_cdc_async_rst
       generic map (
-         INIT_SYNC_FF => 1  -- Enable simulation init values
+         RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => main_clk_o,       -- 1-bit input: Destination clock.
-         dest_rst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
+         src_arst  => not (hdmi_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => hdmi_clk_o,       -- 1-bit input: Destination clock.
+         dest_arst => hdmi_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
 
-   i_xpm_cdc_sync_rst_video : xpm_cdc_sync_rst
+   i_xpm_cdc_async_rst_main : xpm_cdc_async_rst
       generic map (
-         INIT_SYNC_FF => 1  -- Enable simulation init values
+         RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_rst  => not sys_rstn_i,   -- 1-bit input: Source reset signal.
-         dest_clk => video_clk_o,      -- 1-bit input: Destination clock.
-         dest_rst => video_rst_o       -- 1-bit output: src_rst synchronized to the destination clock dovideo.
+         src_arst  => not (c64_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
+         dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
+                                       -- This output is registered.
+      );
+
+   i_xpm_cdc_async_rst_video : xpm_cdc_async_rst
+      generic map (
+         RST_ACTIVE_HIGH => 1
+      )
+      port map (
+         src_arst  => not (c64_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => video_clk_o,      -- 1-bit input: Destination clock.
+         dest_arst => video_rst_o       -- 1-bit output: src_rst synchronized to the destination clock dovideo.
                                        -- This output is registered.
       );
 

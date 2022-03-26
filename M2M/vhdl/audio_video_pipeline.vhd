@@ -15,10 +15,14 @@ library work;
 use work.types_pkg.all;
 use work.video_modes_pkg.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity audio_video_pipeline is
    generic (
-      G_VIDEO_MODE           : video_modes_t;   -- Desired video format of HDMI output.
-      G_VGA_DX               : natural;         -- Actual format of video from Core (in pixels).
+      G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
+      G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
+      G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural
    );
    port (
@@ -65,11 +69,14 @@ entity audio_video_pipeline is
       video_osm_vram_addr_o    : out std_logic_vector(15 downto 0);
       video_osm_vram_data_i    : in  std_logic_vector(15 downto 0);
       hdmi_triple_buffering_i  : in  std_logic;
+      hdmi_video_mode_i        : in  natural;
       hdmi_osm_cfg_enable_i    : in  std_logic;
       hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
       hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
+      sys_info_vga_o           : out std_logic_vector(79 downto 0);
+      sys_info_hdmi_o          : out std_logic_vector(79 downto 0);
 
       -- Connect to HyperRAM controller
       hr_clk_i                 : in  std_logic;
@@ -91,26 +98,58 @@ architecture synthesis of audio_video_pipeline is
    constant C_FONT_DX            : natural := 16;
    constant C_FONT_DY            : natural := 16;
 
-   signal reset_na               : std_logic;
+   ---------------------------------------------------------------------------------------------
+   -- pcm_clk
+   ---------------------------------------------------------------------------------------------
+
+   -- HDMI PCM sampling rate
+   constant HDMI_PCM_SAMPLING      : natural := 48_000;
+   constant GB_CLK_SPEED           : natural := 31_527_778;   -- C64 main clock in PAL mode @ 31,527,778 MHz
+   constant PIXEL_CLK_SPEED        : natural := 74_250_000; -- TBD
+
+   constant pcm_acr_cnt_range      : integer := (HDMI_PCM_SAMPLING * 256) / 1000;
+   constant pcm_audio_cnt_interval : integer := (4 * GB_CLK_SPEED) / HDMI_PCM_SAMPLING;
+
+   signal count : integer range 0 to 255;
+   signal pcm_rst                  : std_logic;
+   signal pcm_clk                  : std_logic;                     -- 256 * 48 kHz = 12.288 MHz
+   signal pcm_clken                : std_logic;                     -- 48 kHz (via clock divider)
+
+   signal pcm_acr                  : std_logic;                     -- HDMI ACR packet strobe (frequency = 128fs/N e.g. 1kHz)
+   signal pcm_n                    : std_logic_vector(19 downto 0); -- HDMI ACR N value
+   signal pcm_cts                  : std_logic_vector(19 downto 0); -- HDMI ACR CTS value
+
+   signal pcm_audio_left_d         : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right_d        : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_left_dd        : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right_dd       : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_left           : signed(15 downto 0); -- Signed PCM format
+   signal pcm_audio_right          : signed(15 downto 0); -- Signed PCM format
+
+   signal pcm_audio_counter        : integer := 0;
+   signal pcm_acr_counter          : integer range 0 to pcm_acr_cnt_range := 0;
+
+   signal reset_na               : std_logic;            -- Asynchronous reset, active low
 
    signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
+   signal hdmi_video_mode        : video_modes_t;
 
    constant C_AVM_ADDRESS_SIZE   : integer := 19;
    constant C_AVM_DATA_SIZE      : integer := 128;
-   constant C_HTOTAL             : integer := G_VIDEO_MODE.H_PIXELS + G_VIDEO_MODE.H_FP + G_VIDEO_MODE.H_PULSE + G_VIDEO_MODE.H_BP;
-   constant C_HSSTART            : integer := G_VIDEO_MODE.H_PIXELS + G_VIDEO_MODE.H_FP;
-   constant C_HSEND              : integer := G_VIDEO_MODE.H_PIXELS + G_VIDEO_MODE.H_FP + G_VIDEO_MODE.H_PULSE;
-   constant C_HDISP              : integer := G_VIDEO_MODE.H_PIXELS;
-   constant C_VTOTAL             : integer := G_VIDEO_MODE.V_PIXELS + G_VIDEO_MODE.V_FP + G_VIDEO_MODE.V_PULSE + G_VIDEO_MODE.V_BP;
-   constant C_VSSTART            : integer := G_VIDEO_MODE.V_PIXELS + G_VIDEO_MODE.V_FP;
-   constant C_VSEND              : integer := G_VIDEO_MODE.V_PIXELS + G_VIDEO_MODE.V_FP + G_VIDEO_MODE.V_PULSE;
-   constant C_VDISP              : integer := G_VIDEO_MODE.V_PIXELS;
+   signal hdmi_htotal            : integer;
+   signal hdmi_hsstart           : integer;
+   signal hdmi_hsend             : integer;
+   signal hdmi_hdisp             : integer;
+   signal hdmi_vtotal            : integer;
+   signal hdmi_vsstart           : integer;
+   signal hdmi_vsend             : integer;
+   signal hdmi_vdisp             : integer;
 
    -- Auto-calculate display dimensions based on an 4:3 aspect ratio
-   constant C_HMIN               : integer := (G_VIDEO_MODE.H_PIXELS-G_VIDEO_MODE.V_PIXELS*4/3)/2;
-   constant C_HMAX               : integer := (G_VIDEO_MODE.H_PIXELS+G_VIDEO_MODE.V_PIXELS*4/3)/2-1;
-   constant C_VMIN               : integer := 0;
-   constant C_VMAX               : integer := G_VIDEO_MODE.V_PIXELS-1;
+   signal hdmi_hmin              : integer;
+   signal hdmi_hmax              : integer;
+   signal hdmi_vmin              : integer;
+   signal hdmi_vmax              : integer;
 
    -- After video_rescaler
    signal hdmi_red               : unsigned(7 downto 0);
@@ -142,6 +181,46 @@ architecture synthesis of audio_video_pipeline is
    signal video_ce_hdmi          : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
 
 begin
+
+   -- SHELL_M_XY
+   sys_info_vga_o(15 downto  0) <=
+      X"0000";
+
+   -- SHELL_M_DXDY
+   sys_info_vga_o(31 downto 16) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+
+   -- SHELL_O_XY
+   sys_info_vga_o(47 downto 32) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-20) * 256, 16));
+
+   -- SHELL_O_DXDY
+   sys_info_vga_o(63 downto 48) <=
+      std_logic_vector(to_unsigned(20 * 256 + 20, 16));
+
+   -- SYS_DXDY
+   sys_info_vga_o(79 downto 64) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+
+   sys_info_hdmi_o(15 downto  0) <= X"CCCC"; -- SHELL_M_XY
+   sys_info_hdmi_o(31 downto 16) <= X"CCCC"; -- SHELL_M_DXDY
+   sys_info_hdmi_o(47 downto 32) <= X"CCCC"; -- SHELL_O_XY
+   sys_info_hdmi_o(63 downto 48) <= X"CCCC"; -- SHELL_O_DXDY
+   sys_info_hdmi_o(79 downto 64) <= X"CCCC"; -- SYS_DXDY
+
+   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(hdmi_video_mode_i);
+   hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
+   hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;
+   hdmi_hsend      <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE;
+   hdmi_hdisp      <= hdmi_video_mode.H_PIXELS;
+   hdmi_vtotal     <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP + hdmi_video_mode.V_PULSE + hdmi_video_mode.V_BP;
+   hdmi_vsstart    <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP;
+   hdmi_vsend      <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP + hdmi_video_mode.V_PULSE;
+   hdmi_vdisp      <= hdmi_video_mode.V_PIXELS;
+   hdmi_hmin       <= (hdmi_video_mode.H_PIXELS-hdmi_video_mode.V_PIXELS*4/3)/2;
+   hdmi_hmax       <= (hdmi_video_mode.H_PIXELS+hdmi_video_mode.V_PIXELS*4/3)/2-1;
+   hdmi_vmin       <= 0;
+   hdmi_vmax       <= hdmi_video_mode.V_PIXELS-1;
 
    ---------------------------------------------------------------------------------------------
    -- Analog output (VGA and audio jack)
@@ -198,11 +277,86 @@ begin
 
 
    ---------------------------------------------------------------------------------------------
-   -- Digital output (HDMI)
+   -- Digital output (HDMI) - Audio part
+   ---------------------------------------------------------------------------------------------
+
+   i_clk_synthetic : entity work.clk_synthetic
+      generic map (
+         G_SRC_FREQ_HZ  => 60_000_000,
+         G_DEST_FREQ_HZ => HDMI_PCM_SAMPLING*256
+      )
+      port map (
+         src_clk_i  => audio_clk_i,
+         src_rst_i  => audio_rst_i,
+         dest_clk_o => pcm_clk,
+         dest_rst_o => pcm_rst
+      ); -- i_clk_synthetic
+
+   p_clken : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         if count = 255 then
+            count     <= 0;
+            pcm_clken <= '1';
+         else
+            count     <= count + 1;
+            pcm_clken <= '0';
+         end if;
+
+         if pcm_rst = '1' then
+            count     <= 0;
+            pcm_clken <= '0';
+         end if;
+      end if;
+   end process p_clken;
+
+
+   -- N and CTS values for HDMI Audio Clock Regeneration.
+   -- depends on pixel clock and audio sample rate
+   pcm_n   <= std_logic_vector(to_unsigned((HDMI_PCM_SAMPLING * 128) / 1000, pcm_n'length)); -- 6144 is correct according to HDMI spec.
+   pcm_cts <= std_logic_vector(to_unsigned(PIXEL_CLK_SPEED / 1000, pcm_cts'length));
+
+   -- ACR packet rate should be 128fs/N = 1kHz
+   -- pcm_clk is at 12.288 MHz
+   p_pcm_acr : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         -- Generate 1KHz ACR pulse train from 12.288MHz
+         if pcm_acr_counter /= (pcm_acr_cnt_range - 1) then
+            pcm_acr_counter <= pcm_acr_counter + 1;
+            pcm_acr <= '0';
+         else
+            pcm_acr <= '1';
+            pcm_acr_counter <= 0;
+         end if;
+      end if;
+   end process p_pcm_acr;
+
+   -- Clock Domain Crossing.
+   -- Only propagate the sample when there is no metastability.
+   p_sample : process (pcm_clk)
+   begin
+      if rising_edge(pcm_clk) then
+         pcm_audio_left_d   <= audio_left_i;
+         pcm_audio_right_d  <= audio_right_i;
+         pcm_audio_left_dd  <= pcm_audio_left_d;
+         pcm_audio_right_dd <= pcm_audio_right_d;
+
+         if pcm_audio_left_d = pcm_audio_left_dd and pcm_audio_right_d = pcm_audio_right_dd then
+            pcm_audio_left  <= pcm_audio_left_dd;
+            pcm_audio_right <= pcm_audio_right_dd;
+         end if;
+      end if;
+   end process p_sample;
+
+
+   ---------------------------------------------------------------------------------------------
+   -- Digital output (HDMI) - Video part
    ---------------------------------------------------------------------------------------------
 
    reset_na <= not (video_rst_i or hdmi_rst_i or hr_rst_i);
 
+   -- Clock enable for Overlay and HDMI video streams
    p_video_ce : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
@@ -277,18 +431,18 @@ begin
          run               => '1',                          -- input
          freeze            => '0',                          -- input
          mode              => "0" & hdmi_triple_buffering_i & "000", -- input
-         htotal            => C_HTOTAL,                     -- input
-         hsstart           => C_HSSTART,                    -- input
-         hsend             => C_HSEND,                      -- input
-         hdisp             => C_HDISP,                      -- input
-         vtotal            => C_VTOTAL,                     -- input
-         vsstart           => C_VSSTART,                    -- input
-         vsend             => C_VSEND,                      -- input
-         vdisp             => C_VDISP,                      -- input
-         hmin              => C_HMIN,                       -- input
-         hmax              => C_HMAX,                       -- input
-         vmin              => C_VMIN,                       -- input
-         vmax              => C_VMAX,                       -- input
+         htotal            => hdmi_htotal,                  -- input
+         hsstart           => hdmi_hsstart,                 -- input
+         hsend             => hdmi_hsend,                   -- input
+         hdisp             => hdmi_hdisp,                   -- input
+         vtotal            => hdmi_vtotal,                  -- input
+         vsstart           => hdmi_vsstart,                 -- input
+         vsend             => hdmi_vsend,                   -- input
+         vdisp             => hdmi_vdisp,                   -- input
+         hmin              => hdmi_hmin,                    -- input
+         hmax              => hdmi_hmax,                    -- input
+         vmin              => hdmi_vmin,                    -- input
+         vmax              => hdmi_vmax,                    -- input
          format            => "01",                         -- input
          poly_clk          => '0',                          -- input
          poly_dw           => (others => '0'),              -- input
@@ -311,7 +465,7 @@ begin
       generic map (
          G_SLAVE_ADDRESS_SIZE  => C_AVM_ADDRESS_SIZE,
          G_SLAVE_DATA_SIZE     => C_AVM_DATA_SIZE,
-         G_MASTER_ADDRESS_SIZE => 22,  -- HyperRAM size is 4 MWords = 8 MBbytes.
+         G_MASTER_ADDRESS_SIZE => 22,  -- HyperRAM size is 4 MWords = 8 MBytes.
          G_MASTER_DATA_SIZE    => 16
       )
       port map (
@@ -340,6 +494,7 @@ begin
 
    i_video_overlay_hdmi : entity work.video_overlay
       generic  map (
+         G_SHIFT          => G_SHIFT_HDMI,   -- Deprecated. Will be removed in future release
          G_VGA_DX         => G_VGA_DX,  -- TBD
          G_VGA_DY         => G_VGA_DY,  -- TBD
          G_FONT_DX        => C_FONT_DX,
@@ -372,11 +527,11 @@ begin
       port map (
          select_44100 => '0',
          dvi          => '0',
-         vic          => std_logic_vector(to_unsigned(G_VIDEO_MODE.CEA_CTA_VIC, 8)),
-         aspect       => G_VIDEO_MODE.ASPECT,
-         pix_rep      => G_VIDEO_MODE.PIXEL_REP,
-         vs_pol       => G_VIDEO_MODE.V_POL,
-         hs_pol       => G_VIDEO_MODE.H_POL,
+         vic          => std_logic_vector(to_unsigned(hdmi_video_mode.CEA_CTA_VIC, 8)),
+         aspect       => hdmi_video_mode.ASPECT,
+         pix_rep      => hdmi_video_mode.PIXEL_REP,
+         vs_pol       => hdmi_video_mode.V_POL,
+         hs_pol       => hdmi_video_mode.H_POL,
 
          vga_rst      => hdmi_rst_i,
          vga_clk      => hdmi_clk_i,
@@ -388,14 +543,14 @@ begin
          vga_b        => hdmi_osm_blue,
 
          -- PCM audio
-         pcm_rst      => audio_rst_i,
-         pcm_clk      => audio_clk_i,
-         pcm_clken    => '0',
-         pcm_l        => (others => '0'),
-         pcm_r        => (others => '0'),
-         pcm_acr      => '0',
-         pcm_n        => (others => '0'),
-         pcm_cts      => (others => '0'),
+         pcm_clk      => pcm_clk,                             -- 256 * 48 kHz = 12.288 MHz
+         pcm_rst      => pcm_rst,
+         pcm_clken    => pcm_clken,                           -- 1/256 = 48 kHz
+         pcm_l        => std_logic_vector(pcm_audio_left),
+         pcm_r        => std_logic_vector(pcm_audio_right),
+         pcm_acr      => pcm_acr,
+         pcm_n        => pcm_n,
+         pcm_cts      => pcm_cts,
 
          -- TMDS output (parallel)
          tmds         => hdmi_tmds
@@ -429,69 +584,6 @@ begin
          out_p   => tmds_clk_p_o,
          out_n   => tmds_clk_n_o
       ); -- GEN_HDMI_CLK
-
-
---   -- Clock domain crossing: QNICE to QNICE-On-Screen-Display
---   i_qnice2vga: xpm_cdc_array_single
---      generic map (
---         WIDTH => 33
---      )
---      port map (
---         src_clk                => qnice_clk,
---         src_in(15 downto 0)    => qnice_osm_cfg_xy,
---         src_in(31 downto 16)   => qnice_osm_cfg_dxdy,
---         src_in(32)             => qnice_osm_cfg_enable,
---         dest_clk               => video_clk,
---         dest_out(15 downto 0)  => video_osm_cfg_xy,
---         dest_out(31 downto 16) => video_osm_cfg_dxdy,
---         dest_out(32)           => video_osm_cfg_enable
---      ); -- i_qnice2vga
---
---   -- Dual port & dual clock screen RAM / video RAM: contains the "ASCII" codes of the characters
---   osm_vram : entity work.dualport_2clk_ram
---      generic map (
---         ADDR_WIDTH   => VRAM_ADDR_WIDTH,
---         DATA_WIDTH   => 8,
---         FALLING_A    => true              -- QNICE expects read/write to happen at the falling clock edge
---      )
---      port map (
---         clock_a      => qnice_clk,
---         address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
---         data_a       => qnice_ramrom_data_o(7 downto 0),
---         wren_a       => qnice_vram_we,
---         q_a          => qnice_vram_data_o,
---
---         clock_b      => video_clk,
---         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
---         q_b          => video_osm_vram_data
---      ); -- osm_vram
---
---   -- Dual port & dual clock attribute RAM: contains inverse attribute, light/dark attrib. and colors of the chars
---   -- bit 7: 1=inverse
---   -- bit 6: 1=dark, 0=bright
---   -- bit 5: background red
---   -- bit 4: background green
---   -- bit 3: background blue
---   -- bit 2: foreground red
---   -- bit 1: foreground green
---   -- bit 0: foreground blue
---   osm_vram_attr : entity work.dualport_2clk_ram
---      generic map (
---         ADDR_WIDTH   => VRAM_ADDR_WIDTH,
---         DATA_WIDTH   => 8,
---         FALLING_A    => true
---      )
---      port map (
---         clock_a      => qnice_clk,
---         address_a    => qnice_ramrom_addr(VRAM_ADDR_WIDTH-1 downto 0),
---         data_a       => qnice_ramrom_data_o(7 downto 0),
---         wren_a       => qnice_vram_attr_we,
---         q_a          => qnice_vram_attr_data_o,
---
---         clock_b      => video_clk,
---         address_b    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),       -- same address as VRAM
---         q_b          => video_osm_vram_attr
---      ); -- osm_vram_attr
 
 end architecture synthesis;
 

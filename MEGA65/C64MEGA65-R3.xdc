@@ -18,6 +18,7 @@ create_generated_clock -name qnice_clk     [get_pins */clk_gen/i_clk_qnice/CLKOU
 create_generated_clock -name hr_clk_x1     [get_pins */clk_gen/i_clk_qnice/CLKOUT1]
 create_generated_clock -name hr_clk_x2     [get_pins */clk_gen/i_clk_qnice/CLKOUT2]
 create_generated_clock -name hr_clk_x2_del [get_pins */clk_gen/i_clk_qnice/CLKOUT3]
+create_generated_clock -name audio_clk     [get_pins */clk_gen/i_clk_qnice/CLKOUT4]
 create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
 create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
 create_generated_clock -name main_clk      [get_pins */clk_gen/i_clk_c64/CLKOUT0]
@@ -29,10 +30,10 @@ create_generated_clock -name sdcard_clk -source [get_pins */clk_gen/i_clk_qnice/
 ## QNICE's EAE combinatorial division networks take longer than
 ## the regular clock period, so we specify a multicycle path
 ## see also the comments in EAE.vhd and explanations in UG903/chapter 5/Multicycle Paths as well as ug911/page 25
-set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
-   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -setup 3
-set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
-   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -hold 2
+set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]}}] \
+   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -setup 3
+set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]}}] \
+   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -hold 2
 
 # Place HyperRAM close to I/O pins
 startgroup
@@ -48,6 +49,8 @@ set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks video_clk]
 set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks video_clk]
 set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks video_clk]
 set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks video_clk]
+
+set_false_path -from [get_clocks main_clk]     -to [get_clocks audio_clk]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
