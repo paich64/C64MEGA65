@@ -17,7 +17,8 @@
 ; returns a string pointer to the filename.
 ;
 ; Input:
-;   @TODO Stack frame and maximum browsing depth
+;   Expects FB_STACK to be initialized (as well as the stack itself) and
+;   B_STACK_SIZE to contain the correct number.
 ; Output:
 ;   R8: Pointer to filename (zero terminated string), if R9=0
 ;   R9: 0=OK (no error)
@@ -26,6 +27,12 @@
 ; ----------------------------------------------------------------------------
 
 SELECT_FILE		SYSCALL(enter, 1)
+
+                ; stack handling
+                MOVE    FB_MAINSTACK, R0        ; remember the original stack
+                MOVE    SP, @R0
+                MOVE    FB_STACK, R0
+                MOVE    @R0, SP                 ; restore the own stack
 
                 ; if we already have run the browser before, then let us
                 ; continue where we left off
@@ -60,7 +67,7 @@ _S_CD_AND_READ  MOVE    FB_HEAP, R10            ; start address of heap
                 RBRA    _S_ERR_UNKNOWN, 1
 
                 ; default path not found, try root instead
-_S_ERR_PNF      ;ADD     1, SP                   ; @TODO
+_S_ERR_PNF      ADD     1, SP                   ; see comment in shell.asm
                 MOVE    FN_ROOT_DIR, R9         ; try root
                 MOVE    FB_HEAP, R10
                 MOVE    @R10, R10
@@ -104,8 +111,7 @@ _S_BROWSE_SETUP MOVE    R0, R8
                 SUB     2, R2                   ; (frame is 2 rows high)
                 MOVE    R0, R3                  ; R3: currently visible head
 
-                MOVE    0, R4                   ; @TODO
-                ;MOVE    @SP++, R4               ; R4: currently selected ..
+                MOVE    @SP++, R4               ; R4: currently selected ..
                                                 ; .. line inside window
 
                 XOR     R5, R5                  ; R5: counts the amount of ..
@@ -167,14 +173,14 @@ _S_INPUT_LOOP   RSUB    KEYB$SCAN, 1
                 ; to the caller signalling that the SD card changed
                 MOVE    M2M$CSR, R8             ; reset to auto/smart sd mode
                 AND     M2M$CSR_UN_SD_MODE, @R8
-_S_SD_CHANGED
-#ifdef RELEASE   
-                ;@TODO STACK HANDLING             
-                ;MOVE    VAR$STACK_START, SP
-#else
-                ; in DEBUG mode, we accept the stack leak, because we do
-                ; not have the address of the stack handy
-#endif
+
+                MOVE    FB_STACK_INIT, R8
+                MOVE    @R8, SP
+                MOVE    0, @--SP                ; see comment in shell.asm
+                MOVE    0, @--SP
+                MOVE    FB_STACK, R8
+                MOVE    SP, @R8
+
                 RSUB    WAIT1SEC, 1             ; debounce SD insert process
                 MOVE    1, R9                   ; 1=SD card changed
                 RBRA    _S_RET, 1
@@ -354,16 +360,15 @@ _ELEMENT_FOUND  MOVE    R11, R8                 ; R11: selected SLL element
                 SYSCALL(strcmp, 1)
                 CMP     0, R10
                 RBRA    _CHANGEDIR, Z           ; yes: get crsr pos from stack
-                ;@TODO
-                ;MOVE    R4, @--SP               ; no: remember cursor pos..
-                ;MOVE    0, @--SP                ; ..and new dir. starts at 0
+
+                MOVE    R4, @--SP               ; no: remember cursor pos..
+                MOVE    0, @--SP                ; ..and new dir. starts at 0
 
 _CHANGEDIR      MOVE    R8, R9                  ; use this directory
                 MOVE    HANDLE_DEV, R8
                 RBRA    _S_CD_AND_READ, 1       ; create new linked-list
 
-                ;@TODO
-_RETNAME        ;MOVE    R4, @--SP               ; remember cursor position
+_RETNAME        MOVE    R4, @--SP               ; remember cursor position
                 MOVE    FB_HEAD, R8             ; remember currently vis. head
                 MOVE    R3, @R8
                 MOVE    FB_ITEMS_COUNT, R8      ; remember # of items in dir.
@@ -375,7 +380,26 @@ _RETNAME        ;MOVE    R4, @--SP               ; remember cursor position
                 MOVE    R11, R8                 ; R8: file name
                 XOR     R9, R9                  ; R9=0: all OK, no error
 
-_S_RET          MOVE    R8, @--SP               ; ; bring R8, R9 over "leave"
+_S_RET          ; stack handling
+                MOVE    FB_STACK_INIT, R0       ; R0: initial pos of local st.
+                MOVE    FB_STACK, R1            ; R1: current pos of local st.
+                MOVE    SP, @R1                 ; make local stack persistent                
+                MOVE    FB_MAINSTACK, R2        ; R2: global stack position
+       
+                MOVE    @R0, R3                 ; check for stack overflow
+                SUB     @R1, R3
+                ADD     1, R3
+                CMP     B_STACK_SIZE, R3        ; local st. size > actual use?
+                RBRA    _S_RET_1, N             ; yes: all good
+
+                ; stack overflow
+                MOVE    ERR_FATAL_BSTCK, R8
+                MOVE    R3, R9
+                RBRA    FATAL, 1
+
+_S_RET_1        MOVE    @R2, SP                 ; restore global stack
+
+                MOVE    R8, @--SP               ; bring R8, R9 over "leave"
                 MOVE    R9, @--SP
 				SYSCALL(leave, 1)
                 MOVE    @SP++, R9

@@ -32,6 +32,9 @@ SD_ACTIVE 		.BLOCK 1 						; currently active SD card
 
 ; file browser persistent status
 FB_HEAP  		.BLOCK 1  						; heap used by file browser
+FB_STACK  		.BLOCK 1  						; local stack used by  browser
+FB_STACK_INIT  	.BLOCK 1 						; initial local browser stack
+FB_MAINSTACK    .BLOCK 1 						; stack of main program
 FB_HEAD         .BLOCK 1                        ; lnkd list: curr. disp. head
 FB_ITEMS_COUNT  .BLOCK 1                        ; overall amount of items
 FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far

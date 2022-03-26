@@ -132,7 +132,7 @@ HEAP            .BLOCK 1
 ; can use as RAM: 0xFEE0
 ; The stack starts at 0xFEE0 (search var VAR$STACK_START in osm_rom.lis to
 ; calculate the address). To see, if there is enough room for the stack
-; given the HEAP_SIZE do this calculation: Add 16384 words to HEAP which
+; given the HEAP_SIZE do this calculation: Add 29696 words to HEAP which
 ; is currently 0xXXXX and subtract the result from 0xFEE0. This yields
 ; currently a stack size of more than 1.5k words, which is sufficient
 ; for this program.
@@ -140,12 +140,12 @@ HEAP            .BLOCK 1
                 .ORG    0xFEE0                  ; TODO: automate calculation
 #endif
 
-; STACK_SIZE should be a minimum of 768 words after you subtract BROWSE_DEPTH.
-; BROWSE_DEPTH is the maximum depth of subdirectories that you can climb
-; down while browsing for any file using the built-in Shell file- and
-; directory browser.
-; If you are not using the shell, then BROWSE_DEPTH is not used.
+; STACK_SIZE: Size of the global stack and should be a minimum of 768 words
+; after you subtract B_STACK_SIZE.
+; B_STACK_SIZE: Size of local stack of the the file- and directory browser. It
+; should also have a minimum size of 768 words. If you are not using the
+; Shell, then B_STACK_SIZE is not used.
 STACK_SIZE      .EQU    1536
-BROWSE_DEPTH    .EQU    512
+B_STACK_SIZE    .EQU    768
 
 #include "../../M2M/rom/main_vars.asm"

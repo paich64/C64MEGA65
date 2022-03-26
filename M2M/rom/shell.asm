@@ -62,6 +62,20 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    HEAP, @R8                 
                 ADD     MENU_HEAP_SIZE, @R8
 
+                ; The file browser remembers the cursor position of all nested
+                ; directories so that when we climb up the directory tree, the
+                ; cursor selects the correct item on the screen. We assume to
+                ; be two levels deep at the beginning. This is why we push two
+                ; 0 on the stack and remove one of them, inside SELECT_FILE
+                ; in case we revert back to the root folder.
+                MOVE    0, @--SP
+                MOVE    0, @--SP
+                MOVE    FB_STACK_INIT, R8       ; used to restore FB_STACK
+                MOVE    SP, @R8
+                MOVE    FB_STACK, R8
+                MOVE    SP, @R8                
+                SUB     B_STACK_SIZE, SP        ; reserve memory on the stack
+
                 ; make sure OPTM_HEAP is initialized to zero, as it will be
                 ; calculated and activated inside HELP_MENU
                 MOVE    OPTM_HEAP, R8
@@ -126,14 +140,18 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 ; ------------------------------------------------------------
 
 MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
-                RSUB    CHECK_DEBUG, 1          ; (Run/Stop+Cursor Up) + Help
 
                 RSUB    KEYB$SCAN, 1            ; scan for single key presses
                 RSUB    KEYB$GETKEY, 1
 
+                RSUB    CHECK_DEBUG, 1          ; (Run/Stop+Cursor Up) + Help
                 RSUB    HELP_MENU, 1            ; check/manage help menu
 
                 RBRA    MAIN_LOOP, 1
+
+                ; The main loop is an infinite loop therefore we do not need
+                ; to restore the stack by adding back BROWSE_DEPTH to the
+                ; stack pointer.
 
 ; ----------------------------------------------------------------------------
 ; SD card & virtual drive mount handling
@@ -635,7 +653,7 @@ FATAL           MOVE    R8, R0
                 RSUB    SCR$CLR, 1
                 MOVE    SCR$ILX, R8             ; keep 1 space left margin
                 MOVE    1, @R8
-                
+
                 ; output error message
                 MOVE    ERR_FATAL, R8
                 RSUB    SCR$PRINTSTR, 1
