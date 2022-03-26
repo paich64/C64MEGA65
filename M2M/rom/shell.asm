@@ -470,17 +470,6 @@ HANDLE_DRV_RD   SYSCALL(enter, 1)
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R2                  ; R2=start offs in 4k win
 
-                ; DEBUG
-                MOVE    R11, R8
-                SYSCALL(puthex, 1)
-                MOVE    R0, R8
-                SYSCALL(puthex, 1)
-                MOVE    R1, R8
-                SYSCALL(puthex, 1)
-                MOVE    R2, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-
                 ; transmit data to internal buffer of drive
                 MOVE    R11, R8
                 MOVE    VD_IEC_ACK, R9          ; ackknowledge sd_rd_i
@@ -499,7 +488,7 @@ _HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
                 RBRA    _HDR_SEND_DONE, Z       ; yes
 
                 MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
-                ADD     R8, R9                  ; select right ID for vdrive
+                ADD     R11, R9                 ; select right ID for vdrive
                 MOVE    @R9, @R3                ; select device
                 MOVE    R1, @R4                 ; select window in RAM
                 MOVE    @R5++, R12              ; R12=next byte from disk img
@@ -518,10 +507,6 @@ _HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
                 XOR     0, R9
                 RSUB    VD_CAD_WRITE, 1
 
-                ; DEBUG
-                MOVE    R12, R8
-                SYSCALL(puthex, 1)
-
                 ADD     1, R6                   ; next byte
 
                 CMP     R5, R7                  ; window boundary reached?
@@ -535,10 +520,6 @@ _HDR_SEND_DONE  MOVE    R11, R8                 ; virtual drive ID
                 MOVE    VD_IEC_ACK, R9          ; unassert ACK
                 MOVE    0, R10
                 RSUB    VD_DRV_WRITE, 1
-
-                ; DEBUG
-                SYSCALL(crlf, 1)
-                SYSCALL(crlf, 1)
 
                 SYSCALL(leave, 1)
                 RET
