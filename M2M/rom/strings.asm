@@ -54,9 +54,9 @@ WRN_MAXFILES    .ASCII_P "Warning: This directory contains more files\n"
 ; Error Messages
 ; ----------------------------------------------------------------------------
 
-ERR_FATAL		.ASCII_W "FATAL ERROR:\n"
+ERR_FATAL		.ASCII_W "\nFATAL ERROR:\n\n"
 ERR_CODE        .ASCII_W "Error code: "
-ERR_FATAL_STOP  .ASCII_W "Core stopped. Please reset the machine.\n"
+ERR_FATAL_STOP  .ASCII_W "\nCore stopped. Please reset the machine.\n"
 
 ERR_F_MENUSIZE	.ASCII_P "config.vhd: Illegal menu size (OPTM_SIZE):\n"
 				.ASCII_W "Must be between 1 and 254\n"
@@ -69,10 +69,10 @@ ERR_BROWSE_UNKN .ASCII_W "SD Card: Unknown error while trying to browse.\n"
 ERR_FATAL_ITER  .ASCII_W "Corrupt memory structure: Linked-list boundary\n"
 ERR_FATAL_FNF   .ASCII_W "File selected in the browser not found.\n"
 ERR_FATAL_LOAD  .ASCII_W "SD Card: Unkown error while loading disk image\n"
-ERR_FATAL_HEAP1 .ASCII_W "Heap corruption: Hint: MENU_HEAP_SIZE"
-ERR_FATAL_HEAP2 .ASCII_W "Heap corruption: Hint: OPTM_HEAP_SIZE"
+ERR_FATAL_HEAP1 .ASCII_W "Heap corruption: Hint: MENU_HEAP_SIZE\n"
+ERR_FATAL_HEAP2 .ASCII_W "Heap corruption: Hint: OPTM_HEAP_SIZE\n"
 
-ERR_FATAL_INST  .ASCII_W "Instable system state."
+ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 
 ; Error codes for ERR_FATAL_INST: They will help to debug the situation,
 ; because we will at least know, where the instable system state occured

@@ -33,21 +33,57 @@ _VDA_RET		DECRB
 
 ; Return the menu group ID of a single-select menu item that corresponds
 ; to the given virtual drive ID
+;
+; The first menu item in config.vhd with a OPTM_G_MOUNT_DRV flag is drive 0,
+; the next one drive 1, etc.
+;
 ; Input: 		R8: virtual drive ID
 ; Output:  		Carry=1 if any menu item is associated with virtual drive ID
 ;               R8: menu group ID, only valid if Carry=1
 ;  				R9: menu item index starting from 0 for the first item
 VD_MENGRP  		INCRB
 
-				MOVE  	1, R8
-				MOVE  	0, R9
+				XOR  	R0, R0  				; R0: current menu item index
+				MOVE    -1, R1  				; R1: vdrive counter
+				MOVE  	OPTM_ICOUNT, R2 		; R2: amount of menu items				
+				MOVE  	@R2, R2
+
+				MOVE  	M2M$RAMROM_DEV, R3 		; select configuration device
+				MOVE  	M2M$CONFIG, @R3
+				MOVE  	M2M$RAMROM_4KWIN, R3  	; select drv. mount items
+				MOVE  	M2M$CFG_OPTM_MOUNT, @R3
+				MOVE  	M2M$RAMROM_DATA, R3  	; R3: drive mount items
+
+_VDMENGRP_1		CMP  	1, @R3  				; current item a drive?
+				RBRA  	_VDMENGRP_2, !Z  		; no
+				ADD  	1, R1  					; yes: increase vdrive counter
+				CMP  	R8, R1  				; found vdrive we look for?
+				RBRA  	_VDMENGRP_3, Z
+
+_VDMENGRP_2		ADD  	1, R3  					; next item in vdrive array
+				ADD 	1, R0  					; next menu item index
+				CMP  	R0, R2 					; R0=R2 means one itm too much
+				RBRA  	_VDMENGRP_4, Z
+				RBRA  	_VDMENGRP_1, 1
+
+				; success
+_VDMENGRP_3 	MOVE  	M2M$RAMROM_4KWIN, R4  	; select drv. mount items
+				MOVE  	M2M$CFG_OPTM_GROUPS, @R4
+				MOVE  	@R3, R8  				; R8: group ID
+				MOVE  	R0, R9 					; R9: index
 				RBRA  	_VDD_C1, 1
+
+				; failure
+_VDMENGRP_4 	MOVE  	0xEEEE, R8
+				MOVE  	0xEEEE, R9
+				RBRA  	_VDD_C0, 1
 
 				; DECRB and 
                 ; RET done via _VDD_C0 and _VDD_C1
 
 ; Return the drive number associated with a single-select menu item that
 ; as a unique menu group ID
+;
 ; The first menu item in config.vhd with a OPTM_G_MOUNT_DRV flag is drive 0,
 ; the next one drive 1, etc.
 ;

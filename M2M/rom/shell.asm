@@ -627,10 +627,16 @@ START_MONITOR   MOVE    DBG_START1, R8          ; print info message via UART
 ; ----------------------------------------------------------------------------
 
 FATAL           MOVE    R8, R0
-                RSUB    SCR$CLRINNER, 1
-                MOVE    1, R8
-                MOVE    1, R9
-                RSUB    SCR$GOTOXY, 1
+
+                ; make sure we have a large window where we can print
+                ; the error message
+                RSUB    SCR$OSM_OFF, 1          ; hide opt. menu just in case
+                RSUB    SCR$OSM_M_ON, 1
+                RSUB    SCR$CLR, 1
+                MOVE    SCR$ILX, R8             ; keep 1 space left margin
+                MOVE    1, @R8
+                
+                ; output error message
                 MOVE    ERR_FATAL, R8
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(puts, 1)

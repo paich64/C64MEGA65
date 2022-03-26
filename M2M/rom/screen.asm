@@ -142,6 +142,14 @@ _SCR$CLR_L      MOVE    M2M$VRAM_DATA, @R0      ; VRAM: data
                 SUB     1, R2
                 RBRA    _SCR$CLR_L, !Z
 
+                ; reset internal cursor and left margin
+                MOVE    SCR$CUR_X, R0
+                MOVE    0, @R0
+                MOVE    SCR$CUR_Y, R0
+                MOVE    0, @R0             
+                MOVE    SCR$ILX, R0
+                MOVE    0, @R0
+
                 SYSCALL(leave, 1)
                 RET
 
