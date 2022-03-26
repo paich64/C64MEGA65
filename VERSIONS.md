@@ -30,13 +30,14 @@ WIP Sound output via 3.5mm jack and via HDMI
 * Joystick support
 WIP On-Screen-Menu via Help button to mount drives and to configure options
 WIP SID 6581 and 8580
-WIP C1541 read-only support: Mount standard `*.D64` via SD card
+WIP C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
 WIP Drive led during virtual disk access
 
 ## Constraints (What is not yet working)
 * HyperRAM device support to QNICE
 * 2 graphic cards to QNICE
 * NTSC
+* Support two drives: 8 and 9
 * Writing to virtual disks
 * More sophisticated scalers and scandoublers
 * Tape mounting via SD card

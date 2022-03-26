@@ -50,4 +50,4 @@ FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 VDRIVES_NUM 	.DW 	1
 VDRIVES_MAX  	.EQU    5
 VDRIVES_IEC  	.DW 	0x0101
-VDRIVES_BUFS	.DW		0x0102
+VDRIVES_BUFS	.DW		0x0102, 0, 0, 0, 0

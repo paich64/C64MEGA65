@@ -201,3 +201,38 @@ VD_CAD_WRITE 	INCRB
 
 				DECRB
 				RET
+
+; VDrives device: Read a value from the virtual drive specific registers
+; Input:   R8: Virtual drive number
+;          R9: Register number
+; Output:  R8: Value
+VD_DRV_READ		INCRB
+
+				MOVE  	M2M$RAMROM_DEV, R0
+				MOVE  	VDRIVES_IEC, R1
+				MOVE  	@R1, @R0
+				MOVE  	M2M$RAMROM_4KWIN, R0
+				MOVE  	VD_IEC_WIN_DRV, @R0
+				ADD  	R8, @R0 				; drive windows are ascending
+				MOVE  	@R9, R8
+
+				DECRB
+				RET
+
+; VDrives device: Write a value to the virtual drive specific registers
+; Input:   R8:  Virtual drive number
+;          R9:  Register number
+;  		   R10: Value
+; Output:  Nothing, leaves R8..R10 unchanged
+VD_DRV_WRITE	INCRB
+
+				MOVE  	M2M$RAMROM_DEV, R0
+				MOVE  	VDRIVES_IEC, R1
+				MOVE  	@R1, @R0
+				MOVE  	M2M$RAMROM_4KWIN, R0
+				MOVE  	VD_IEC_WIN_DRV, @R0
+				ADD  	R8, @R0 				; drive windows are ascending
+				MOVE  	R10, @R9
+
+				DECRB
+				RET

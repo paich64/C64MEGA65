@@ -429,14 +429,118 @@ _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
 
 HANDLE_IO       INCRB
 
-                ; Loop through all VDRIVES and check, read requests
-                MOVE    VD_IEC_WIN_DRV, R0      ; R0: current drive window
+                ; Loop through all VDRIVES and check for read requests
+                XOR     R0, R0                  ; R0: number of virtual drive
                 MOVE    VDRIVES_NUM, R1
                 MOVE    @R1, R1                 ; R1: amount of vdrives
 
-_HANDLE_IO_1                    
+                ; read request pending?
+_HANDLE_IO_1    MOVE    R0, R8
+                MOVE    VD_IEC_RD, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8                   ; read request?
+                RBRA    _HANDLE_IO_NXT, !Z      ; no: next drive, if any
+
+                ; handle read request
+                MOVE    R0, R8
+                RSUB    HANDLE_DRV_RD, 1
+
+                ; next drive, if applicable
+_HANDLE_IO_NXT  ADD     1, R0                   ; next drive
+                CMP     R0, R1                  ; done?
+                RBRA    _HANDLE_IO_1, !Z        ; no, continue
 
                 DECRB
+                RET
+
+; Handle read request from drive number in R8
+HANDLE_DRV_RD   SYSCALL(enter, 1)
+
+                MOVE    R8, R11                 ; R11: virtual drive ID
+
+                MOVE    VD_IEC_SIZEB, R9        ; virtual drive ID still in R8
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R0                  ; R0=# bytes to be transmitted
+                MOVE    R11, R8
+                MOVE    VD_IEC_4K_WIN, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R1                  ; R1=start 4k win of transmis.
+                MOVE    R11, R8
+                MOVE    VD_IEC_4K_OFFS, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R2                  ; R2=start offs in 4k win
+
+                ; DEBUG
+                MOVE    R11, R8
+                SYSCALL(puthex, 1)
+                MOVE    R0, R8
+                SYSCALL(puthex, 1)
+                MOVE    R1, R8
+                SYSCALL(puthex, 1)
+                MOVE    R2, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                ; transmit data to internal buffer of drive
+                MOVE    R11, R8
+                MOVE    VD_IEC_ACK, R9          ; ackknowledge sd_rd_i
+                MOVE    1, R10
+                RSUB    VD_DRV_WRITE, 1
+
+                MOVE    M2M$RAMROM_DEV, R3      ; R3=device selector
+                MOVE    M2M$RAMROM_4KWIN, R4    ; R4=window selector
+                MOVE    M2M$RAMROM_DATA, R5     ; R5=data window
+                ADD     R2, R5                  ; start offset within window
+                XOR     R6, R6                  ; R6=# transmitted bytes
+                MOVE    M2M$RAMROM_DATA, R7     ; R7=end of window marker
+                ADD     0x1000, R7
+
+_HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
+                RBRA    _HDR_SEND_DONE, Z       ; yes
+
+                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
+                ADD     R8, R9                  ; select right ID for vdrive
+                MOVE    @R9, @R3                ; select device
+                MOVE    R1, @R4                 ; select window in RAM
+                MOVE    @R5++, R12              ; R12=next byte from disk img
+
+                MOVE    VD_IEC_B_ADDR, R8       ; write buffer: address
+                MOVE    R6, R9
+                RSUB    VD_CAD_WRITE, 1
+
+                MOVE    VD_IEC_B_DOUT, R8      ; write buffer: data out
+                MOVE    R12, R9
+                RSUB    VD_CAD_WRITE, 1
+
+                MOVE    VD_IEC_B_WREN, R8      ; strobe write enable
+                MOVE    1, R9
+                RSUB    VD_CAD_WRITE, 1
+                XOR     0, R9
+                RSUB    VD_CAD_WRITE, 1
+
+                ; DEBUG
+                MOVE    R12, R8
+                SYSCALL(puthex, 1)
+
+                ADD     1, R6                   ; next byte
+
+                CMP     R5, R7                  ; window boundary reached?
+                RBRA    _HDR_SEND_LOOP, !Z      ; no
+                ADD     1, R1                   ; next window
+                MOVE    M2M$RAMROM_DATA, R5     ; byte zero in next window
+                RBRA    _HDR_SEND_LOOP, 1
+
+                ; unassert ACK
+_HDR_SEND_DONE  MOVE    R11, R8                 ; virtual drive ID
+                MOVE    VD_IEC_ACK, R9          ; unassert ACK
+                MOVE    0, R10
+                RSUB    VD_DRV_WRITE, 1
+
+                ; DEBUG
+                SYSCALL(crlf, 1)
+                SYSCALL(crlf, 1)
+
+                SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------
