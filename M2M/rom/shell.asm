@@ -227,10 +227,9 @@ _HM_SDMOUNTED1  MOVE    SD_ACTIVE, R0
                 MOVE    M2M$CSR, R1             ; extract currently active SD
                 MOVE    @R1, R1
                 AND     M2M$CSR_SD_ACTIVE, R1
-                CMP     @R0, R1
-                RBRA    _HM_SDMOUNTED2, Z       ; still same slot
-                MOVE    R1, @R0                 ; different slot: remember it
-                RBRA    _HM_SDUNMOUNTED, 1      ; and treat it as unmounted
+                CMP     @R0, R1                 ; did the card change?
+                RBRA    _HM_SDMOUNTED2, Z       ; no, continue with browser
+                RBRA    _HM_SDCHANGED, 1        ; yes, re-init and re-mount
 
                 ; SD card freshly mounted or already mounted and still
                 ; the same card slot:
@@ -253,20 +252,48 @@ _HM_SDMOUNTED2  RSUB    SELECT_FILE, 1
                 ; Handle SD card change during file-browsing
                 CMP     1, R9                   ; SD card changed?
                 RBRA    _HM_SDMOUNTED2A, !Z     ; no
-                MOVE    LOG_STR_SD, R8
+
+_HM_SDCHANGED   MOVE    LOG_STR_SD, R8
                 SYSCALL(puts, 1)
                 MOVE    HANDLE_DEV, R8          ; reset device handle
                 MOVE    0, @R8
-                RSUB    FB_INIT, 1              ; reset file browser
+                RSUB    FB_RE_INIT, 1           ; reset file browser
+
+                MOVE    SD_ACTIVE, R0
+                MOVE    M2M$CSR, R1             ; extract currently active SD
+                MOVE    @R1, R1
+                AND     M2M$CSR_SD_ACTIVE, R1
+                MOVE    R1, @R0                 ; remember new SD card
+
                 RBRA    _HM_SDUNMOUNTED, 1      ; re-mount, re-browse files
 
                 ; Cancelled via Run/Stop
 _HM_SDMOUNTED2A CMP     2, R9                   ; Run/Stop?
-                RBRA    _HM_SDMOUNTED2B, !Z     ; no
-                SYSCALL(exit, 1)
+                RBRA    _HM_SDMOUNTED2C, !Z     ; no            
+                RSUB    SCR$OSM_OFF, 1          ; hide the big window
+
+                MOVE    R7, R8                  ; R7: virtual drive number
+                RSUB    VD_MENGRP, 1            ; get index of menu item
+                RBRA    _HM_SDMOUNTED2B, C
+
+                MOVE    ERR_FATAL_INST, R8
+                MOVE    ERR_FATAL_INST3, R9
+                RBRA    FATAL, 1 
+
+_HM_SDMOUNTED2B MOVE    R9, R10                 ; menu index
+
+                MOVE    R7, R8
+                RSUB    VD_MOUNTED, 1           ; carry contains mount status
+                MOVE    SR, R9
+                SHR     2, R9
+                AND     1, R9                   ; R9 contains mount status
+
+                MOVE    R10, R8                 ; menu index
+                RSUB    _HM_SETMENU, 1          ; see comment at _HM_MOUNTED
+                RBRA    _HM_SDMOUNTED7, 1       ; return to OSM
 
                 ; Unknown error / fatal
-_HM_SDMOUNTED2B MOVE    ERR_BROWSE_UNKN, R8     ; and R9 contains error code
+_HM_SDMOUNTED2C MOVE    ERR_BROWSE_UNKN, R8     ; and R9 contains error code
                 RBRA    FATAL, 1                
 
                 ; Step #4: Copy the disk image into the mount buffer
@@ -355,7 +382,7 @@ _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
                 SYSCALL(crlf, 1)
 
                 ; 6. Redraw and show the OSM
-                RSUB    OPTM_SHOW, 1            
+_HM_SDMOUNTED7  RSUB    OPTM_SHOW, 1            
                 RSUB    SCR$OSM_O_ON, 1
                 RBRA    _HM_RET, 1
 
@@ -387,20 +414,43 @@ _HM_MOUNTED     MOVE    R7, R8                  ; R7: virtual drive number
                 MOVE    ERR_FATAL_INST2, R9
                 RBRA    FATAL, 1 
 
-_HM_MOUNTED_1   MOVE    OPTM_DATA, R8
+_HM_MOUNTED_1   MOVE    R9, R8                  ; menu index
+                MOVE    1, R9                   ; set as "mounted"
+                RSUB    _HM_SETMENU, 1
+                RBRA    _HM_START_MOUNT, 1      ; show browser and mount
+
+_HM_RET         SYSCALL(leave, 1)
+                RET
+
+; helper function that executes the menu and data structure modification
+; described above in the comment near _HM_MOUNTED
+; Input:
+;   R8: Index of menu item to change
+;   R9: 0=unset / 1=set
+_HM_SETMENU     SYSCALL(enter, 1)
+
+                MOVE    R8, R0                  ; R0: menu index
+                MOVE    R9, R1                  ; R1: mode
+
+                MOVE    OPTM_DATA, R8
                 MOVE    @R8, R8
                 ADD     OPTM_IR_STDSEL, R8
                 MOVE    @R8, R8
-                ADD     R9, R8                  ; R9 contains menu index
-                MOVE    R9, R11                 ; save menu index
-                MOVE    1, @R8                  ; re-set single-select flag
+                ADD     R0, R8                  ; R0 contains menu index
+                MOVE    R0, R11                 ; save menu index
+                MOVE    R1, @R8                 ; re-set single-select flag
+
+                MOVE    0, R8                   ; R8 = space (unset)
+                CMP     0, R1
+                RBRA    _HM_SETMENU_1, Z
 
                 MOVE    OPTM_DATA, R8           ; R8: single-select char
                 MOVE    @R8, R8
                 MOVE    OPTM_IR_SEL, R8
                 MOVE    @R8, R8
                 ADD     2, R8
-                MOVE    OPTM_X, R9              ; R9: x-pos
+
+_HM_SETMENU_1   MOVE    OPTM_X, R9              ; R9: x-pos
                 MOVE    @R9, R9
                 ADD     1, R9                   ; x-pos on screen b/c frame
                 MOVE    OPTM_Y, R10             ; R10: y-pos
@@ -409,9 +459,7 @@ _HM_MOUNTED_1   MOVE    OPTM_DATA, R8
                 ADD     1, R10                  ; y-pos on screen b/c frame
                 RSUB    SCR$PRINTSTRXY, 1
 
-                RBRA    _HM_START_MOUNT, 1      ; show browser and mount
-
-_HM_RET         SYSCALL(leave, 1)
+                SYSCALL(leave, 1)
                 RET
 
 ; Load disk image to virtual drive buffer (VDRIVES_BUFS)

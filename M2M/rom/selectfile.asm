@@ -42,9 +42,9 @@ SELECT_FILE		SYSCALL(enter, 1)
                 MOVE    FB_HEAP, R10
                 RBRA    _S_BROWSE_START, 1
 
-				; retrieve default file browsing start path from config.vhd
+                ; retrieve default file browsing start path from config.vhd
 				; DIRBROWSE_READ expects the start path in R9
-_S_START	    MOVE  	M2M$RAMROM_DEV, R9
+_S_START        MOVE  	M2M$RAMROM_DEV, R9
 				MOVE  	M2M$CONFIG, @R9
 				MOVE  	M2M$RAMROM_4KWIN, R9
 				MOVE  	M2M$CFG_DIR_START, @R9
@@ -168,21 +168,13 @@ _S_INPUT_LOOP   RSUB    KEYB$SCAN, 1
 
                 MOVE    R8, @R9                 ; remember new active card
 
-                ; SD card changed: initialize stack pointer because we use
-                ; the stack for remembering subdirectories and then return
-                ; to the caller signalling that the SD card changed
+                ; SD card changed
                 MOVE    M2M$CSR, R8             ; reset to auto/smart sd mode
                 AND     M2M$CSR_UN_SD_MODE, @R8
 
-                MOVE    FB_STACK_INIT, R8
-                MOVE    @R8, SP
-                MOVE    0, @--SP                ; see comment in shell.asm
-                MOVE    0, @--SP
-                MOVE    FB_STACK, R8
-                MOVE    SP, @R8
-
                 RSUB    WAIT1SEC, 1             ; debounce SD insert process
-                MOVE    1, R9                   ; 1=SD card changed
+                XOR     R8, R8                  ; do not return any filename
+                MOVE    1, R9                   ; R9=1: SD card changed
                 RBRA    _S_RET, 1
 
                 ; handle keypress
@@ -306,7 +298,19 @@ _SCROLL_DO2     MOVE    R11, R3                 ; new visible head
                 SUB     R2, R5                  ; compensate for SHOW_DIR
                 RBRA    _S_DRAW_DIRLIST, 1         ; redraw directory list
 
-_IL_KEY_RUNSTOP SYSCALL(exit, 1)
+                ; browsing interrupted by Run/Stop:
+                ; remember where we are and exit
+_IL_KEY_RUNSTOP MOVE    R4, @--SP               ; remember cursor position
+                MOVE    FB_HEAD, R8             ; remember currently vis. head
+                MOVE    R3, @R8
+                MOVE    FB_ITEMS_COUNT, R8      ; remember # of items in dir.
+                MOVE    R1, @R8
+                MOVE    FB_ITEMS_SHOWN, R8      ; remember # of items shown
+                MOVE    R5, @R8
+
+                XOR     R8, R8                  ; do not return any filename
+                MOVE    2, R9                   ; R9=2: Run/Stop
+                RBRA    _S_RET, 1
 
 _IL_KEY_F1_F3   SYSCALL(exit, 1)
 
@@ -388,7 +392,11 @@ _S_RET          ; stack handling
        
                 MOVE    @R0, R3                 ; check for stack overflow
                 SUB     @R1, R3
-                ADD     1, R3
+                ADD     2, R3                   ; two additional words given..
+                                                ; ..during initialization..
+                                                ; ..can lead to "-1" or "-2"..
+                                                ; ..when stack is dirty, so..
+                                                ; ..compensate this
                 CMP     B_STACK_SIZE, R3        ; local st. size > actual use?
                 RBRA    _S_RET_1, N             ; yes: all good
 
@@ -397,6 +405,7 @@ _S_RET          ; stack handling
                 MOVE    R3, R9
                 RBRA    FATAL, 1
 
+                ; stack OK: return
 _S_RET_1        MOVE    @R2, SP                 ; restore global stack
 
                 MOVE    R8, @--SP               ; bring R8, R9 over "leave"
@@ -418,6 +427,22 @@ FB_INIT         INCRB
                 MOVE    0, @R0
                 MOVE    FB_ITEMS_SHOWN, R0      ; no dir. items shown so far
                 MOVE    0, @R0
+
+                DECRB
+                RET
+
+; use re-init when the local stack is already initialized; for example in
+; re-mount situations due to SD card changes
+FB_RE_INIT      INCRB
+
+                RSUB    FB_INIT, 1
+
+                MOVE    FB_STACK_INIT, R0
+                MOVE    @R0, R0
+                MOVE    0, @--R0                ; see comment in shell.asm
+                MOVE    0, @--R0
+                MOVE    FB_STACK, R1
+                MOVE    R0, @R1
 
                 DECRB
                 RET

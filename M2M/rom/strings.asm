@@ -79,3 +79,4 @@ ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 ; because we will at least know, where the instable system state occured
 ERR_FATAL_INST1 .EQU 1 ; options.asm: 	_OPTM_CBS_REPL
 ERR_FATAL_INST2 .EQU 2 ; shell.asm:     _HM_MOUNTED
+ERR_FATAL_INST3 .EQU 3 ; shell.asm: 	_HM_SDMOUNTED2A

@@ -6,6 +6,12 @@ on your MEGA65! It can run a ton of games and demos and it offers convenient
 features.
 
 ## TODOs before release
+* File Browser:
+  - Error if wrong D64 file size
+  - Filter files (needs subdir flag, framework needs to offer convenient
+    file extension checker)
+  - F1/F3 for manual SD card selection
+* Unmount whole disk drive via Space in OSM
 * Do all "WIP" and "TBD"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
@@ -23,12 +29,12 @@ features.
 
 ## Features
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
-WIP PAL 720 x 576 pixels (4:3) @ 50 Hz via VGA: for a true retro feeling
-WIP 720p @ 60 Hz (16:9) @ 60 Hz via HDMI: for convenience
-WIP Sound output via 3.5mm jack and via HDMI
+* PAL 720 x 576 pixels (4:3) @ 50 Hz via VGA: for a true retro feeling
+* 720p @ 50 Hz or 60 Hz (16:9) via HDMI: for convenience
+* Sound output via 3.5mm jack and via HDMI
 * MEGA65 keyboard support (including cursor keys)
 * Joystick support
-WIP On-Screen-Menu via Help button to mount drives and to configure options
+* On-Screen-Menu via Help button to mount drives and to configure options
 WIP SID 6581 and 8580
 WIP C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
 WIP Drive led during virtual disk access

@@ -51,8 +51,8 @@ constant SCR_WELCOME : string :=
    " in the back has higher precedence than the\n" &
    " card at the bottom of the MEGA65.\n\n" &
     
-   " Use F1 and F3 to switch between SD cards\n" &
-   " while you are in the file browser.\n" & 
+--   " Use F1 and F3 to switch between SD cards\n" &
+--   " while you are in the file browser.\n" & 
    
    "\n\n Press Space to continue.";
 
