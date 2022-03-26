@@ -188,11 +188,11 @@ begin
 
    -- SHELL_M_DXDY
    sys_info_vga_o(31 downto 16) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_X) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
 
    -- SHELL_O_XY
    sys_info_vga_o(47 downto 32) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_X-20) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-20) * 256, 16));
 
    -- SHELL_O_DXDY
    sys_info_vga_o(63 downto 48) <=
@@ -200,7 +200,7 @@ begin
 
    -- SYS_DXDY
    sys_info_vga_o(79 downto 64) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_X) * 256 + (G_VGA_DY/C_FONT_DY), 16));
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
 
    sys_info_hdmi_o(15 downto  0) <= X"CCCC"; -- SHELL_M_XY
    sys_info_hdmi_o(31 downto 16) <= X"CCCC"; -- SHELL_M_DXDY

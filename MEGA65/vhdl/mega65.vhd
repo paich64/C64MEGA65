@@ -235,6 +235,9 @@ signal qnice_ramrom_we        : std_logic;
 constant C_DEV_VRAM_DATA      : std_logic_vector(15 downto 0) := x"0000";
 constant C_DEV_VRAM_ATTR      : std_logic_vector(15 downto 0) := x"0001";
 constant C_DEV_OSM_CONFIG     : std_logic_vector(15 downto 0) := x"0002";
+constant C_DEV_SYS_INFO       : std_logic_vector(15 downto 0) := x"00FF";
+constant C_SYS_VGA            : std_logic_vector(15 downto 0) := x"0010";
+constant C_SYS_HDMI           : std_logic_vector(15 downto 0) := x"0011";
 -- C64 specific
 constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";
 constant C_DEV_C64_IEC        : std_logic_vector(15 downto 0) := x"0101";
@@ -539,6 +542,7 @@ begin
                      when X"002" => qnice_ramrom_data_i <= sys_info_vga(47 downto 32);
                      when X"003" => qnice_ramrom_data_i <= sys_info_vga(63 downto 48);
                      when X"004" => qnice_ramrom_data_i <= sys_info_vga(79 downto 64);
+                     when others => null;
                   end case;
 
                when X"0011" => -- Graphics card HDMI
@@ -548,7 +552,10 @@ begin
                      when X"002" => qnice_ramrom_data_i <= sys_info_hdmi(47 downto 32);
                      when X"003" => qnice_ramrom_data_i <= sys_info_hdmi(63 downto 48);
                      when X"004" => qnice_ramrom_data_i <= sys_info_hdmi(79 downto 64);
+                     when others => null;
                   end case;
+
+               when others => null;
             end case;
 
 
