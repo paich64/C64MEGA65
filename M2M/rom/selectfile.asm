@@ -27,9 +27,17 @@
 
 SELECT_FILE		SYSCALL(enter, 1)
 
+                ; if we already have run the browser before, then let us
+                ; continue where we left off
+                MOVE    FB_HEAD, R8
+                CMP     0, @R8
+                RBRA    _S_START, Z
+                MOVE    FB_HEAP, R10
+                RBRA    _S_BROWSE_START, 1
+
 				; retrieve default file browsing start path from config.vhd
 				; DIRBROWSE_READ expects the start path in R9
-				MOVE  	M2M$RAMROM_DEV, R9
+_S_START	    MOVE  	M2M$RAMROM_DEV, R9
 				MOVE  	M2M$CONFIG, @R9
 				MOVE  	M2M$RAMROM_4KWIN, R9
 				MOVE  	M2M$CFG_DIR_START, @R9

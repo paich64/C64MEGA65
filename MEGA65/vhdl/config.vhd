@@ -127,7 +127,10 @@ constant OPTM_G_MOUNT_DRV  : integer := 16#8800#;         -- line item means: mo
 constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 
 -- Size of menu and menu items
--- End each line with a \n and make sure empty lines / separator lines are only consisting of a "\n"
+-- CAUTION: 1. End each line (also the last one) with a \n and make sure empty lines / separator lines are only consisting of a "\n"
+--             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
+--          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
+--             otherwise you will experience visual glitches.
 constant OPTM_SIZE         : integer := 13;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
                                              -- Important: make sure that SHELL_O_DY in mega65.vhd is equal to OPTM_SIZE + 2,

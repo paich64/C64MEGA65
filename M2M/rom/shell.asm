@@ -144,6 +144,7 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
 ; Input:
 ;   R8 contains the drive number
 ;   R9: 0=unmount drive, if it has been mounted before
+;       @TODO:
 ;       1=just replace the disk image, if it has been mounted
 ;         before without unmounting the drive (aka resetting
 ;         the drive/"switching the drive on/off")
@@ -168,7 +169,7 @@ HANDLE_MOUNTING SYSCALL(enter, 1)
                 ;    of the mounted drives
 
                 ; Step #1 - Hide OSM and show full-screen window
-                RSUB    SCR$OSM_OFF, 1
+_HM_START_MOUNT RSUB    SCR$OSM_OFF, 1
 _HM_RETRY_MOUNT RSUB    FRAME_FULLSCR, 1
                 MOVE    1, R8
                 MOVE    1, R9
@@ -294,8 +295,15 @@ _HM_SDMOUNTED4  MOVE    R2, R8
                 ADD     R10, R9                 ; add zero terminator
                 MOVE    0, @R9
 
+                ; set "%s is replaced" flag for filename string to zero                
+_HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
+                MOVE    @R8, R8
+                SUB     1, R8
+                ADD     R0, R8
+                MOVE    0, @R8
+
                 ; load the disk image to the mount buffer
-_HM_SDMOUNTED5  MOVE    R7, R8                  ; R8: drive ID to be mounted
+                MOVE    R7, R8                  ; R8: drive ID to be mounted
                 MOVE    R2, R9                  ; R9: file name of disk image                
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
                 CMP     0, R8                   ; everything OK?
@@ -334,7 +342,56 @@ _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
                 RBRA    _HM_RET, 1
 
                 ; Virtual drive (number in R8) is already mounted
-_HM_MOUNTED     SYSCALL(exit, 1)
+                ; @TODO: Support two cases:
+                ; R9=0 (see function description above) and R9=1
+                ; Right now we just switch the disk image in the drive, i.e
+                ; we are hardcoded performing the case R9=1
+
+                ; Make sure the current drive stays selected in M2M$CFM_DATA.
+                ; The standard semantics of menu.asm is that single-select
+                ; menu items are toggle-items, so a second drive mount is
+                ; toggling the single-select item to OFF. We are re-setting
+                ; the OPTM_IR_STDSEL data structure to make sure that
+                ; M2M$CFM_DATA is correctly treated inside OPTM_CB_SEL in
+                ; options.asm. It is actually options.asm that adds drive
+                ; mounting semantics to the rather generic menu.asm.
+                ; This also makes sure that re-opening the menu shows the
+                ; visual representation of "successfuly mounted".
+                ;
+                ; But menu.asm already has deleted the visual representation
+                ; at this point, so we need to hack the visual representation
+                ; of the currently open menu and actually print it.
+_HM_MOUNTED     MOVE    R7, R8                  ; R7: virtual drive number
+                RSUB    VD_MENGRP, 1            ; get index of menu item
+                RBRA    _HM_MOUNTED_1, C
+
+                MOVE    ERR_FATAL_INST, R8
+                MOVE    ERR_FATAL_INST2, R9
+                RBRA    FATAL, 1 
+
+_HM_MOUNTED_1   MOVE    OPTM_DATA, R8
+                MOVE    @R8, R8
+                ADD     OPTM_IR_STDSEL, R8
+                MOVE    @R8, R8
+                ADD     R9, R8                  ; R9 contains menu index
+                MOVE    R9, R11                 ; save menu index
+                MOVE    1, @R8                  ; re-set single-select flag
+
+                MOVE    OPTM_DATA, R8           ; R8: single-select char
+                MOVE    @R8, R8
+                MOVE    OPTM_IR_SEL, R8
+                MOVE    @R8, R8
+                ADD     2, R8
+                MOVE    OPTM_X, R9              ; R9: x-pos
+                MOVE    @R9, R9
+                ADD     1, R9                   ; x-pos on screen b/c frame
+                MOVE    OPTM_Y, R10             ; R10: y-pos
+                MOVE    @R10, R10
+                ADD     R11, R10                ; add menu index
+                ADD     1, R10                  ; y-pos on screen b/c frame
+                RSUB    SCR$PRINTSTRXY, 1
+
+                RBRA    _HM_START_MOUNT, 1      ; show browser and mount
 
 _HM_RET         SYSCALL(leave, 1)
                 RET
@@ -453,7 +510,10 @@ _HANDLE_IO_NXT  ADD     1, R0                   ; next drive
                 DECRB
                 RET
 
-; Handle read request from drive number in R8
+; Handle read request from drive number in R8:
+;
+; Transfer the data requested by the core from the linear disk image buffer
+; to the internal buffer inside the core
 HANDLE_DRV_RD   SYSCALL(enter, 1)
 
                 MOVE    R8, R11                 ; R11: virtual drive ID

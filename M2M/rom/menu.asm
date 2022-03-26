@@ -428,9 +428,7 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 MOVE    0, @R7                  ; unselect single-select item
                                                 ; in memory
 
-                XOR     R9, R9                  ; R8 still contains group id
-                MOVE    OPTM_CLBK_SEL, R7       ; call callback
-                RSUB    _OPTM_CALL, 1
+                MOVE    R8, @--SP               ; R8 still contains group id
 
                 MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete
                 MOVE    OPTM_X, R9              ; R9: x-coord
@@ -443,6 +441,11 @@ _OTM_RUN_6      CMP     OPTM_KEY_SELECT, R8     ; key: select?
                 MOVE    OPTM_FP_PRINTXY, R7     ; delete marker at current pos
                 RSUB    _OPTM_CALL, 1           ; ..on screen
 
+                MOVE    @SP++, R8               ; group id
+                XOR     R9, R9                  
+                MOVE    OPTM_CLBK_SEL, R7       ; call callback
+                RSUB    _OPTM_CALL, 1
+                
                 RBRA    _OPTM_RUN_SEL, 1        ; continue main loop of menu
 
                 ; proceed in case of multi-sel. with the not yet selected item

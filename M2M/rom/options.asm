@@ -454,16 +454,17 @@ OPTM_CB_SEL     INCRB
                 RBRA  	_OPTMC_NOMNT, !C  		; no: : proceed to std. beh.
 
                 ; Handle mounting
-                ; R8 contains the drive number at this point
-                ; R9: 0=unmount drive, if it has been mounted before
-                ;     1=just replace the disk image, if it has been mounted
-                ;       before without unmounting the drive (aka resetting
-                ;       the drive/"switching the drive on/off")
+                ; Input:
+                ;   R8 contains the drive number at this point
+                ;   R9: 0=unmount drive, if it has been mounted before
+                ;       1=just replace the disk image, if it has been mounted
+                ;         before without unmounting the drive (aka resetting
+                ;         the drive/"switching the drive on/off")
                 ;
                 ; It is important that the standard behavior runs after the
                 ; mounting is done, this is why we do RSUB and not RBRA
                 MOVE    R10, R9
-                RSUB    HANDLE_MOUNTING, 1
+                RSUB    HANDLE_MOUNTING, 1                
 
                 ; Standard behavior
 _OPTMC_NOMNT    CMP     OPTM_CLOSE, R8          ; CLOSE = no changes: leave
@@ -558,6 +559,7 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 MOVE    @R0, R0
                 ADD     R10, R0
 
+                ; Case #1: Drive is not mounted
                 ; R8 still contains the virtual drive id.
                 ; If the drive is not mounted, then show OPTM_S_MOUNT
                 ; from config.vhd, which is "<Mount Drive>" by default
@@ -571,11 +573,27 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 RSUB    _OPTM_CBS_REPL, 1       ; replace %s with OPTM_S_MOUNT
                 RBRA    _OPTM_CBS_RET, 1
 
+                ; Case #2: Drive is mounted: Show name of disk image
                 ; the replacement string was placed at R0 by HANDLE_MOUNTING
                 ; in shell.asm; since this is "just" the replacement string
                 ; for the "%s", we need to save it on the stack so that
                 ; _OPTM_CBS_REPL can do its job
-_OPTM_CBS_1     MOVE    R0, R8
+
+                ; Check, if we already did replace "%s" during a former
+                ; callback: we use the last byte within the current line
+                ; of the scratch buffer as flag. We can do this, because the
+                ; scratch buffer is 2 bytes longer than the maximum length
+                ; of the string; one of these bytes is used for the zero
+                ; terminator in case of a long string and one is used for
+                ; this flag.
+_OPTM_CBS_1     MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
+                MOVE    @R8, R8
+                SUB     1, R8
+                ADD     R0, R8
+                CMP     1, @R8                  ; did we replace earlier?
+                RBRA    _OPTM_CBS_RET, Z        ; yes: return
+
+                MOVE    R0, R8
                 SYSCALL(strlen, 1)
                 ADD     1, R9                   ; space for zero terminator
                 SUB     R9, SP
@@ -587,6 +605,12 @@ _OPTM_CBS_1     MOVE    R0, R8
                 RSUB    _OPTM_CBS_REPL, 1
                 MOVE    @SP++, R3
                 ADD     R3, SP
+
+                MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
+                MOVE    @R8, R8
+                SUB     1, R8
+                ADD     R0, R8
+                MOVE    1, @R8
 
 _OPTM_CBS_RET   MOVE    R0, @--SP               ; lift R0 over the leave hump
                 SYSCALL(leave, 1)
@@ -608,7 +632,7 @@ _OPTM_CBS_REPL  MOVE    R8, R6                  ; remember R8
                 ; if "%s" is not being found at this place, then something
                 ; went wrong terribly
                 MOVE    ERR_FATAL_INST, R8
-                MOVE    1, R9
+                MOVE    ERR_FATAL_INST1, R9
                 RBRA    FATAL, 1
 
                 ; copy the string from 0 to one before %s to the output buf.

@@ -71,4 +71,10 @@ ERR_FATAL_FNF   .ASCII_W "File selected in the browser not found.\n"
 ERR_FATAL_LOAD  .ASCII_W "SD Card: Unkown error while loading disk image\n"
 ERR_FATAL_HEAP1 .ASCII_W "Heap corruption: Hint: MENU_HEAP_SIZE"
 ERR_FATAL_HEAP2 .ASCII_W "Heap corruption: Hint: OPTM_HEAP_SIZE"
+
 ERR_FATAL_INST  .ASCII_W "Instable system state."
+
+; Error codes for ERR_FATAL_INST: They will help to debug the situation,
+; because we will at least know, where the instable system state occured
+ERR_FATAL_INST1 .EQU 1 ; options.asm: 	_OPTM_CBS_REPL
+ERR_FATAL_INST2 .EQU 2 ; shell.asm:     _HM_MOUNTED
