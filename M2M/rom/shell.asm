@@ -45,6 +45,15 @@ _RESET_A_WHILE  SUB     1, R1
                 ; Initialize variables, libraries, IO and show welcome screen
                 ; ------------------------------------------------------------
 
+                ; @TODO these hardcoded values need to be retrieved via
+                ; the SYS_INFO device and/or other means
+                MOVE    VDRIVES_NUM, R8
+                MOVE    1, @R8                  ; 1 virtual drive
+                MOVE    VDRIVES_IEC, R8
+                MOVE    0x0101, @R8             ; IEC device sits at 0x0101
+                MOVE    VDRIVES_BUFS, R8
+                MOVE    0x0102, @R8             ; RAM buf for dev. 0 at 0x0102
+
                 ; initialize device (SD card) and file handle
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8

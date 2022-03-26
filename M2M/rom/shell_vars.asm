@@ -39,9 +39,6 @@ FB_HEAD         .BLOCK 1                        ; lnkd list: curr. disp. head
 FB_ITEMS_COUNT  .BLOCK 1                        ; overall amount of items
 FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 
-; @TODO: We will use the sysinfo device in future to dynamically retrieve
-; all information needed to run the virtual drive mounting system:
-;
 ; VDRIVES_NUM:	 Amount of virtual, mountable drives; needs to correlate with
 ;              	 the actual hardware in vdrives.vhd and the menu items tagged
 ;              	 with OPTM_G_MOUNT_DRV in config.vhd
@@ -50,7 +47,7 @@ FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 ;
 ; VDRIVES_BUFS:	 Array of device IDs of size VDRIVES_NUM that contains the
 ;                RAM buffer-devices that will hold the mounted drives
-VDRIVES_NUM 	.DW 	1
+VDRIVES_NUM 	.BLOCK 	1
 VDRIVES_MAX  	.EQU    5
-VDRIVES_IEC  	.DW 	0x0101
-VDRIVES_BUFS	.DW		0x0102, 0, 0, 0, 0
+VDRIVES_IEC  	.BLOCK  1
+VDRIVES_BUFS	.BLOCK  VDRIVES_MAX
