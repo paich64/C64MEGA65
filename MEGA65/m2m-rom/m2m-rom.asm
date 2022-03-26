@@ -351,10 +351,36 @@ _WAIT_RD_1      CMP     1, @R0
 ; ----------------------------------------------------------------------------
 ; Disk and image mounting
 ; ----------------------------------------------------------------------------
-                
-; This function is called by the file- and directory browser. It is used to
-; make sure that we only show valid files; right now, this means ".D64" only.
+
+; FILTER_FILES callback function:
+;
+; Called by the file- and directory browser. Used to make sure that the 
+; browser is only showing valid files and directories.
+;
+; Input:
+;   R8: Name of the file in capital letters
+;   R9: 0=file, 1=directory
+; Output:
+;   R8: 0=do not filter file, i.e. show file
 FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
+                RET
+
+; PREP_LOAD_IMAGE callback function:
+;
+; Some images need to be parsed, for example to extract configuration data or
+; to move the file read pointer to the start position of the actual data.
+; Sanity checks ("is this a valid file") can also be implemented here.
+; Last but not least: The mount system supports the concept of a 2-bit
+; "image type". In case this is used at the core of your choice, make sure
+; you return the correct image type.
+;
+; Input:
+;   R8: File handle: You are allowed to modify the read pointer of the handle
+; Output:
+;   R8: 0=OK, error code otherwise
+;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
+PREP_LOAD_IMAGE XOR     R8, R8                  ; no errors
+                XOR     R9, R9                  ; image type hardcoded to 0
                 RET
 
 ; ----------------------------------------------------------------------------

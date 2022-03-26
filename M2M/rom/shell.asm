@@ -298,7 +298,17 @@ _HM_SDMOUNTED4  MOVE    R2, R8
 _HM_SDMOUNTED5  MOVE    R7, R8                  ; R8: drive ID to be mounted
                 MOVE    R2, R9                  ; R9: file name of disk image                
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
-                RSUB    SCR$OSM_OFF, 1
+                CMP     0, R8                   ; everything OK?
+                RBRA    _HM_SDMOUNTED6, Z       ; yes
+
+                ; loading the disk image did not work
+                ; none of the errors that LOAD_IMAGE returns is fatal, so we
+                ; will show an error message to the user and then we will
+                ; let him chose another file
+                SYSCALL(exit, 1)                
+
+_HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
+                RSUB    SCR$OSM_OFF, 1          ; hide the big window
 
                 ; Step #5: Notify MiSTer using the "SD" protocol
                 MOVE    R7, R8                  ; R8: drive number
@@ -309,6 +319,7 @@ _HM_SDMOUNTED5  MOVE    R7, R8                  ; R8: drive ID to be mounted
                 ADD     FAT32$FDH_SIZE_HI, R10
                 MOVE    @R10, R10               ; R10: file size: high word
                 MOVE    1, R11                  ; R11=1=read only @TODO
+                MOVE    R6, R12                 ; R12: disk image type
                 RSUB    VD_STROBE_IM, 1         ; notify MiSTer
 
                 MOVE    LOG_STR_MOUNT, R8
@@ -333,9 +344,14 @@ _HM_RET         SYSCALL(leave, 1)
 ; Input:
 ;   R8: drive number
 ;   R9: file name of disk image
+;
 ; And HANDLE_DEV needs to be fully initialized and the status needs to be
 ; such, that the directory where R9 resides is active
-LOAD_IMAGE      INCRB
+;
+; Output:
+;   R8: 0=OK, error code otherwise
+;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
+LOAD_IMAGE      SYSCALL(enter, 1)
 
                 MOVE    VDRIVES_BUFS, R0
                 ADD     R8, R0
@@ -357,15 +373,17 @@ LOAD_IMAGE      INCRB
                 MOVE    R10, R9
                 RBRA    FATAL, 1
 
-                ; @TODO
-                ; Add callback function that can handle headers, 
-                ; check for filesize, etc.
-                ; The callback function receives the file handle
-                ; In the case of the C64 it will for example checl
-                ; for the standard D64 file size
+                ; Callback function that can handle headers, sanity check
+                ; the disk image, determine the type of the disk image, etc.
+_LI_FOPEN_OK    MOVE    HANDLE_FILE, R8
+                RSUB    PREP_LOAD_IMAGE, 1
+                MOVE    R8, R6                  ; R6: error code=0 (means OK)
+                MOVE    R9, R7                  ; R7: img type or error msg
+                CMP     0, R6                   ; everything OK?
+                RBRA    _LI_FREAD_RET, !Z       ; no
 
                 ; load disk image into buffer RAM
-_LI_FOPEN_OK    XOR     R1, R1                  ; R1=window: start from 0
+                XOR     R1, R1                  ; R1=window: start from 0
                 XOR     R2, R2                  ; R2=start address in window
                 ADD     M2M$RAMROM_DATA, R2
                 MOVE    M2M$RAMROM_DATA, R3     ; R3=end of 4k page reached
@@ -397,7 +415,11 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
 _LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
                 SYSCALL(puts, 1)
 
-                DECRB
+_LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
+                MOVE    R7, @--SP               ; the "leave hump"
+                SYSCALL(leave, 1)
+                MOVE    @SP++, R9               ; R9: image type
+                MOVE    @SP++, R8               ; R8: status/error code
                 RET
 
 ; ----------------------------------------------------------------------------

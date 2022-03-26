@@ -118,7 +118,8 @@ VD_MOUNTED		INCRB
 ; Input:   R8: drive number
 ; 		   R9/R10: low/high words of image size
 ;		   R11: 1=read only
-; Returns: R8 .. R11: unchanged
+;  		   R12: disk image type
+; Returns: R8 .. R12: unchanged
 VD_STROBE_IM 	INCRB
 
 				; save original register values
@@ -126,8 +127,9 @@ VD_STROBE_IM 	INCRB
 				MOVE  	R9, R1  				; R1: file size: low word
 				MOVE  	R10, R2  				; R2: file size: high word
 				MOVE  	R11, R3  				; R3: read-only flag
+				MOVE  	R12, R4  				; R4: disk image type
 
-				; set file size and read-only registers
+				; set file size, read-only and disk image type registers
                 MOVE    VD_IEC_SIZE_L, R8
                 MOVE    R1, R9
                 RSUB    VD_CAD_WRITE, 1
@@ -137,8 +139,11 @@ VD_STROBE_IM 	INCRB
                 MOVE    VD_IEC_RO, R8
                 MOVE    R3, R9
                 RSUB    VD_CAD_WRITE, 1
+                MOVE  	VD_IEC_TYPE, R8
+                MOVE  	R4, R9
+                RSUB  	VD_CAD_WRITE, 1
 
-                ; create bitmask for setting and deletig image mount bit
+                ; create bitmask for setting and deleting image mount bit
                 MOVE  	1, R6
 				AND  	0xFFFD, SR  			; clear X
 				SHL  	R0, R6  				; R6: set flag, drive 0 = LSB
@@ -159,6 +164,7 @@ VD_STROBE_IM 	INCRB
 				MOVE  	R1, R9
 				MOVE  	R2, R10
 				MOVE  	R3, R11
+				MOVE    R4, R12
 
 				DECRB
 				RET
