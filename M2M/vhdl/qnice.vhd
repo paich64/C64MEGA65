@@ -22,17 +22,7 @@ generic (
    G_VGA_DX          : natural;                          -- output screen width in pixel
    G_VGA_DY          : natural;                          -- ditto height
    G_FONT_DX         : natural;                          -- character width in pixel
-   G_FONT_DY         : natural;                          -- ditto height         
-   
-   -- x|y start positions and dx|dy dimensions of the two standard windows of the Shell: main window and options menu
-   G_SHELL_M_X       : integer;
-   G_SHELL_M_Y       : integer;
-   G_SHELL_M_DX      : integer;
-   G_SHELL_M_DY      : integer;
-   G_SHELL_O_X       : integer;
-   G_SHELL_O_Y       : integer;
-   G_SHELL_O_DX      : integer;
-   G_SHELL_O_DY      : integer   
+   G_FONT_DY         : natural                           -- ditto height
 );
 port (
    -- QNICE MEGA65 hardware interface

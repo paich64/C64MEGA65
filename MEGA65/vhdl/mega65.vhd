@@ -114,19 +114,6 @@ constant CHARS_DY             : natural := VGA_DY / FONT_DY;
 constant CHAR_MEM_SIZE        : natural := CHARS_DX * CHARS_DY;
 constant VRAM_ADDR_WIDTH      : natural := f_log2(CHAR_MEM_SIZE);
 
--- Shell rendering constants (in characters)
--- The Shell uses the OSM mechanism to display itself
--- SHELL_M_* full screen menu and file browser
-constant SHELL_M_X            : integer := 0;
-constant SHELL_M_Y            : integer := 0;
-constant SHELL_M_DX           : integer := CHARS_DX;
-constant SHELL_M_DY           : integer := CHARS_DY;
--- SHELL_O_* (smaller) on-screen menu, overlayed on top of the cores video.
-constant SHELL_O_X            : integer := CHARS_DX - 20;
-constant SHELL_O_Y            : integer := 0;
-constant SHELL_O_DX           : integer := 20;
-constant SHELL_O_DY           : integer := 20;
-
 ---------------------------------------------------------------------------------------------
 -- Clocks and active high reset signals for each clock domain
 ---------------------------------------------------------------------------------------------
@@ -435,15 +422,7 @@ begin
          G_VGA_DX                => VGA_DX,
          G_VGA_DY                => VGA_DY,
          G_FONT_DX               => FONT_DX,
-         G_FONT_DY               => FONT_DY,
-         G_SHELL_M_X             => SHELL_M_X,
-         G_SHELL_M_Y             => SHELL_M_Y,
-         G_SHELL_M_DX            => SHELL_M_DX,
-         G_SHELL_M_DY            => SHELL_M_DY,
-         G_SHELL_O_X             => SHELL_O_X,
-         G_SHELL_O_Y             => SHELL_O_Y,
-         G_SHELL_O_DX            => SHELL_O_DX,
-         G_SHELL_O_DY            => SHELL_O_DY
+         G_FONT_DY               => FONT_DY
       )
       port map (
          clk50_i                 => qnice_clk,
