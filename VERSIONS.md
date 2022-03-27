@@ -10,7 +10,6 @@ features.
   - Error if wrong D64 file size
   - Filter files (needs subdir flag, framework needs to offer convenient
     file extension checker)
-  - F1/F3 for manual SD card selection
 * Unmount whole disk drive via Space in OSM
 * Do all "WIP" and "TBD"
 * Debounce the joystick and the MEGA65's reset button
@@ -28,13 +27,11 @@ features.
 * MEGA65 keyboard support (including cursor keys)
 * Joystick support
 * On-Screen-Menu via Help button to mount drives and to configure options
-WIP SID 6581 and 8580
-WIP C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
+* SID 6581 and 8580
+* C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
 WIP Drive led during virtual disk access
 
 ## Constraints (What is not yet working)
-* HyperRAM device support to QNICE
-* 2 graphic cards to QNICE
 * NTSC
 * Support two drives: 8 and 9
 * Writing to virtual disks
@@ -52,5 +49,9 @@ WIP Drive led during virtual disk access
 	* IEC port (for example to plug in a real C1541)	
 	* C1581 via MEGA65's disk drive
 	* REU via expansion port
-* Internal TODOs: 
+* 2 graphic cards to QNICE: Utilize full 16:9 screen real estate for file-
+  and directory browsing and core configuration on HDMI while saving screen
+  real estate on 4:3 VGA
+* Internal TODOs:
+  * HyperRAM device support to QNICE
   * Line 65 in fdc1772.v: back to 2 or work with generic?
