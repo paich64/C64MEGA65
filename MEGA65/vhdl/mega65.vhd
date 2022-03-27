@@ -116,6 +116,10 @@ constant VGA_DY               : natural := 540;
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
 
+-- OSM size: Important: Make sure that the OSM's height (OSM_DY) equals config.vhd's OPTM_SIZE + 2
+constant OSM_DX               : natural := 20;
+constant OSM_DY               : natural := 15;
+
 -- Constants for the OSM screen memory
 constant CHARS_DX             : natural := VGA_DX / FONT_DX;
 constant CHARS_DY             : natural := VGA_DY / FONT_DY;
@@ -794,7 +798,9 @@ begin
                                                                            -- M2M framework supports two different OSM VRAMs.
          G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
          G_VGA_DX            => VGA_DX,
-         G_VGA_DY            => VGA_DY
+         G_VGA_DY            => VGA_DY,
+         G_OSM_DX            => OSM_DX,
+         G_OSM_DY            => OSM_DY         
       )
       port map (
          -- Input from Core (video and audio)

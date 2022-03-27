@@ -23,7 +23,9 @@ entity audio_video_pipeline is
       G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
       G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
       G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
-      G_VGA_DY               : natural
+      G_VGA_DY               : natural;
+      G_OSM_DX               : natural;
+      G_OSM_DY               : natural
    );
    port (
       -- Input from Core (video and audio)
@@ -192,11 +194,11 @@ begin
 
    -- SHELL_O_XY
    sys_info_vga_o(47 downto 32) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-20) * 256, 16));
+      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-G_OSM_DX) * 256, 16));
 
    -- SHELL_O_DXDY
    sys_info_vga_o(63 downto 48) <=
-      std_logic_vector(to_unsigned(20 * 256 + 15, 16));
+      std_logic_vector(to_unsigned(G_OSM_DX * 256 + G_OSM_DY, 16));
 
    -- SYS_DXDY
    sys_info_vga_o(79 downto 64) <=

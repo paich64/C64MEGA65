@@ -12,8 +12,8 @@
 
 SCR$INIT        INCRB
 
-                MOVE    M2M$RAMROM_4KWIN, R0    ; Select Sys Info windows for VGA graphics 0
-                MOVE    M2M$SYS_VGA, R1
+                MOVE    M2M$RAMROM_4KWIN, R0    ; select system info window..
+                MOVE    M2M$SYS_VGA, R1         ; .. for VGA graphics 0
                 MOVE    R1, @R0
                 MOVE    M2M$RAMROM_DEV, R0
                 MOVE    M2M$SYS_INFO, R1
@@ -80,8 +80,8 @@ SCR$INIT        INCRB
 
 SCR$OSM_M_ON    INCRB
 
-                MOVE    M2M$RAMROM_4KWIN, R0    ; Select Sys Info windows for VGA graphics 0
-                MOVE    M2M$SYS_VGA, R1
+                MOVE    M2M$RAMROM_4KWIN, R0    ; select system info window..
+                MOVE    M2M$SYS_VGA, R1         ; .. for VGA graphics 0
                 MOVE    R1, @R0
                 MOVE    M2M$RAMROM_DEV, R0
                 MOVE    M2M$SYS_INFO, R1
@@ -106,8 +106,8 @@ SCR$OSM_M_ON    INCRB
 
 SCR$OSM_O_ON    INCRB
 
-                MOVE    M2M$RAMROM_4KWIN, R0    ; Select Sys Info windows for VGA graphics 0
-                MOVE    M2M$SYS_VGA, R1
+                MOVE    M2M$RAMROM_4KWIN, R0    ; select system info window..
+                MOVE    M2M$SYS_VGA, R1         ; .. for VGA graphics 0
                 MOVE    R1, @R0
                 MOVE    M2M$RAMROM_DEV, R0
                 MOVE    M2M$SYS_INFO, R1

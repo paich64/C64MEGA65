@@ -133,7 +133,7 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 --             otherwise you will experience visual glitches.
 constant OPTM_SIZE         : integer := 13;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
-                                             -- Important: make sure that SHELL_O_DY in mega65.vhd is equal to OPTM_SIZE + 2,
+                                             -- Important: make sure that OSM_DY in mega65.vhd is equal to OPTM_SIZE + 2,
                                              -- so that the On-Screen window has the correct length
                                              -- @TODO: There is for sure a more elegant way than this redundant definition
 constant OPTM_ITEMS        : string :=
