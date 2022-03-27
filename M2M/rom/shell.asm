@@ -214,6 +214,7 @@ _HM_SDUNMOUNTED MOVE    1, R9                   ; partition #1 hardcoded
                 RBRA    _HM_SDMOUNTED2, Z
 
                 ; Mounting did not work - offer retry
+                RSUB    SCR$CLRINNER, 1
                 MOVE    ERR_MOUNT, R8
                 RSUB    SCR$PRINTSTR, 1
                 MOVE    R9, R8

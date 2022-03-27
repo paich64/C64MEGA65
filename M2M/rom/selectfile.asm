@@ -166,13 +166,10 @@ _S_INPUT_LOOP   RSUB    KEYB$SCAN, 1
                 CMP     R8, @R9
                 RBRA    _S_INPUT_LOOP, Z        ; SD card did not change
 
+                ; SD card changed
                 MOVE    R8, @R9                 ; remember new active card
 
-                ; SD card changed
-                MOVE    M2M$CSR, R8             ; reset to auto/smart sd mode
-                AND     M2M$CSR_UN_SD_MODE, @R8
-
-                RSUB    WAIT1SEC, 1             ; debounce SD insert process
+_S_SD_CHANGED   RSUB    WAIT1SEC, 1             ; debounce SD insert process
                 XOR     R8, R8                  ; do not return any filename
                 MOVE    1, R9                   ; R9=1: SD card changed
                 RBRA    _S_RET, 1
@@ -190,11 +187,10 @@ _IL_KEYPRESSED  CMP     M2M$KEY_UP, R8          ; cursor up: prev file
                 RBRA    _IL_KEY_RETURN, Z
                 CMP     M2M$KEY_RUNSTOP, R8     ; Run/Stop key
                 RBRA    _IL_KEY_RUNSTOP, Z
-; @TODO add F1 and F3 to the M2M keyset
-;                CMP     M2M$KEY_F1, R8          ; F1 key: internal SD card
-;                RBRA    _IL_KEY_F1_F3, Z
-;                CMP     M2M$KEY_F3, R8          ; F3 key: external SD card
-;                RBRA    _IL_KEY_F1_F3, Z
+                CMP     M2M$KEY_F1, R8          ; F1 key: internal SD card
+                RBRA    _IL_KEY_F1_F3, Z
+                CMP     M2M$KEY_F3, R8          ; F3 key: external SD card
+                RBRA    _IL_KEY_F1_F3, Z
                 RBRA    _S_INPUT_LOOP, 1        ; unknown key
 
                 ; CURSOR UP has been pressed
@@ -312,7 +308,26 @@ _IL_KEY_RUNSTOP MOVE    R4, @--SP               ; remember cursor position
                 MOVE    2, R9                   ; R9=2: Run/Stop
                 RBRA    _S_RET, 1
 
-_IL_KEY_F1_F3   SYSCALL(exit, 1)
+                ; let the user switch SD cards: F1=internal / F3=external
+_IL_KEY_F1_F3   MOVE    0, R9                   ; R9 = chosen SD card, 0=int
+                CMP     M2M$KEY_F3, R8
+                RBRA    _IL_SD_INT, !Z          ; not F3: skip
+                MOVE    M2M$CSR_SD_ACTIVE, R9   ; R9 = external SD card
+_IL_SD_INT      MOVE    SD_ACTIVE, R10          ; curr. active equ. keypress?
+                CMP     @R10, R9
+                RBRA    _S_INPUT_LOOP, Z        ; yes: ignore keypress
+
+                MOVE    M2M$CSR, R9             ; switch sd mode to manual
+                OR      M2M$CSR_SD_MODE, @R9
+                CMP     M2M$KEY_F3, R8          ; F3: switch to external
+                RBRA    _IL_SD_INT2, !Z
+                OR      M2M$CSR_SD_FORCE, @R9
+                MOVE    M2M$CSR_SD_ACTIVE, @R10 ; remember new active: ext.
+                RBRA    _S_SD_CHANGED, 1
+
+_IL_SD_INT2     AND     M2M$CSR_UN_SD_FORCE, @R9 ; F1: switch to internal
+                MOVE    0, @R10                 ; remember new active: int.
+                RBRA    _S_SD_CHANGED, 1
 
                 ; "Return" has been pressed: change directory or return
                 ; the filename of the selected file.

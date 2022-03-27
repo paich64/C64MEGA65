@@ -3,7 +3,7 @@
 --
 -- Configuration data for the Shell
 --
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2021 and licensed under GPL v3
+-- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -50,9 +50,10 @@ constant SCR_WELCOME : string :=
    " Both SD card slots are supported: The card\n" &
    " in the back has higher precedence than the\n" &
    " card at the bottom of the MEGA65.\n\n" &
-    
---   " Use F1 and F3 to switch between SD cards\n" &
---   " while you are in the file browser.\n" & 
+   
+   " While you are in the file browser:\n" &
+   "   F1: Switch to internal SD card\n" &
+   "   F3: Switch to external SD card\n" & 
    
    "\n\n Press Space to continue.";
 
