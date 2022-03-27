@@ -23,12 +23,13 @@ entity main is
 
       -- MiSTer core main clock speed:      
       -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
-      clk_main_speed_i        : in natural;    
-
+      clk_main_speed_i        : in natural;
+      
+      c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
+         
       -- M2M Keyboard interface
       kb_key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in std_logic;               -- low active: debounced feedback: is kb_key_num_i pressed right now?
-
 
       -- MEGA65 joysticks
       joy_1_up_n_i            : in std_logic;
@@ -257,7 +258,7 @@ begin
          audio_l     => c64_sid_l,
          audio_r     => c64_sid_r,
          sid_filter  => "11",          -- filter enable = true for both SIDs, low bit = left SID
-         sid_ver     => "00",          -- SID version, 0=6581, 1=8580, low bit = left SID
+         sid_ver     => c64_sid_ver_i, -- SID version, 0=6581, 1=8580, low bit = left SID
          sid_mode    => "000",         -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
          sid_cfg     => "0000",        -- filter type: 0=Default, 1=Custom 1, 2=Custom 2, 3=Custom 3, lower two bits = left SID
 

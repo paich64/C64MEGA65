@@ -168,6 +168,9 @@ signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data o
 signal main_ram_we            : std_logic;                     -- C64 RAM write enable
 signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data in
 
+-- QNICE On Screen Menu selections
+signal main_osm_control_m     : std_logic_vector(255 downto 0);
+
 -- SID Audio
 signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
@@ -233,6 +236,7 @@ constant C_DEV_OSM_CONFIG     : std_logic_vector(15 downto 0) := x"0002";
 constant C_DEV_SYS_INFO       : std_logic_vector(15 downto 0) := x"00FF";
 constant C_SYS_VGA            : std_logic_vector(15 downto 0) := x"0010";
 constant C_SYS_HDMI           : std_logic_vector(15 downto 0) := x"0011";
+
 -- C64 specific
 constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";
 constant C_DEV_C64_IEC        : std_logic_vector(15 downto 0) := x"0101";
@@ -263,8 +267,8 @@ signal qnice_c64_qnice_data : std_logic_vector(15 downto 0);
 -- QNICE On Screen Menu selections
 signal qnice_osm_control_m : std_logic_vector(255 downto 0);
 
-constant C_MENU_TRIPLE_BUFFERING : natural := 9;
-constant C_MENU_50_HZ            : natural := 14;
+constant C_MENU_8580       : natural := 5;
+constant C_MENU_60_HZ      : natural := 10;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -352,6 +356,8 @@ begin
          -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
          c64_ntsc_i           => c64_ntsc,
          clk_main_speed_i     => c64_clock_speed,
+         
+         c64_sid_ver_i        => main_osm_control_m(C_MENU_8580) & main_osm_control_m(C_MENU_8580), 
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
@@ -527,7 +533,7 @@ begin
          when C_DEV_OSM_CONFIG =>
             qnice_ramrom_data_i        <= qnice_config_data;
 
-         -- Read-only System INfo
+         -- Read-only System Info
          when C_DEV_SYS_INFO =>
             case qnice_ramrom_addr(27 downto 12) is
                when X"0010" => -- Graphics card VGA
@@ -622,7 +628,7 @@ begin
    -- Clock domain crossing: QNICE to C64
    i_qnice2main: xpm_cdc_array_single
       generic map (
-         WIDTH => 5
+         WIDTH => 261
       )
       port map (
          src_clk                => qnice_clk,
@@ -631,12 +637,14 @@ begin
          src_in(2)              => qnice_csr_keyboard_on,
          src_in(3)              => qnice_csr_joy1_on,
          src_in(4)              => qnice_csr_joy2_on,
+         src_in(260 downto 5)   => qnice_osm_control_m,
          dest_clk               => main_clk,
          dest_out(0)            => main_qnice_reset,
          dest_out(1)            => main_qnice_pause,
          dest_out(2)            => main_csr_keyboard_on,
          dest_out(3)            => main_csr_joy1_on,
-         dest_out(4)            => main_csr_joy2_on
+         dest_out(4)            => main_csr_joy2_on,
+         dest_out(260 downto 5) => main_osm_control_m
       ); -- i_qnice2main
 
    -- Clock domain crossing: C64 to QNICE
@@ -776,7 +784,7 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
-   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_50_HZ) else 1;
+   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_60_HZ) else 1;
 
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
@@ -828,7 +836,7 @@ begin
          video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
          video_osm_vram_addr_o    => video_osm_vram_addr,
          video_osm_vram_data_i    => video_osm_vram_data,
-         hdmi_triple_buffering_i  => hdmi_osm_control_m(C_MENU_TRIPLE_BUFFERING),
+         hdmi_triple_buffering_i  => '0',
          hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,

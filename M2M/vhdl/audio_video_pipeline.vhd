@@ -196,7 +196,7 @@ begin
 
    -- SHELL_O_DXDY
    sys_info_vga_o(63 downto 48) <=
-      std_logic_vector(to_unsigned(20 * 256 + 20, 16));
+      std_logic_vector(to_unsigned(20 * 256 + 15, 16));
 
    -- SYS_DXDY
    sys_info_vga_o(79 downto 64) <=

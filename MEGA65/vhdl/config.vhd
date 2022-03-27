@@ -39,7 +39,7 @@ constant CHR_LINE_50 : string := CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_L
 constant SEL_WELCOME : std_logic_vector(15 downto 0) := x"0000";
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 Version 1\n\n" &
+   "\n Commodore 64 for MEGA65 Version [WIP]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
