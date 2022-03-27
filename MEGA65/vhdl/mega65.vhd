@@ -99,7 +99,7 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
--- HDMI 1280x720 @ 60 Hz resolution
+-- HDMI 1280x720 @ 60 Hz resolution = mode 0, 1280x720 @ 50 Hz resolution = mode 1
 constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
 
 -- C64 core clock speeds
@@ -107,6 +107,8 @@ constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C
 -- in main.vhd and in fpga64_sid_iec.vhd to avoid clock drift at derived clocks
 constant CORE_CLK_SPEED_PAL   : natural := 31_527_778;   -- C64 main clock in PAL mode @ 31,527,778 MHz
 constant CORE_CLK_SPEED_NTSC  : natural := 32_727_264;   -- @TODO: This is MiSTer's value; we will need to adjust it to ours
+
+constant HDMI_CLK_SPEED       : natural := 74_250_000;
 
 -- Rendering constants (in pixels)
 --    VGA_*   size of the final output on the screen
@@ -792,6 +794,7 @@ begin
 
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
+         G_HDMI_CLK_SPEED    => HDMI_CLK_SPEED,
          G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
                                                                            -- The purpose is to right-shift the position of the OSM
                                                                            -- on the HDMI output. This will be removed when the
