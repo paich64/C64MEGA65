@@ -1,5 +1,3 @@
-**WARNING: Heavily work-in-progress. Currently this is not even in an alpha state.**
-
 Commodore 64 for MEGA65
 =======================
 
@@ -24,159 +22,95 @@ framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
 FAT32 support (loading loading ROMs, mounting disks) and for the
 on-screen-menu.
 
-Internal reminder / List of stuff that we need to put into the documentation
-----------------------------------------------------------------------------
-
-* While the C64 is running: Press the <kbd>Help</kbd> key to mount drives and
-  to configure the core.
-
-* Both SD card slots are supported: The card in the back has higher precedence
-  than the card at the bottom of the MEGA65. Use <kbd>F1</kbd> and
-  <kbd>F3</kbd> to switch between SD cards while you are in the file browser.
-
-* An already mounted drive can be unmounted (i.e. "switch the drive off"), if
-  you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
-  If you select an already mounted drive with the <kbd>Return</kbd> key
-  instead, then for the C64 this is more like switching a diskette while
-  leaving the drive on.
-
-* The file browser defaults to the folder `/c64` in case this folder exists.
-  Otherwise it starts at the root folder. The file browser only shows files
-  with a valid file extension. Right now this is `.d64` only.
-
 Features
 --------
 
-We are striving for a retro C64 PAL experience in step #1:
+With our [Release 1](VERSIONS.md), we are striving for a **retro C64 PAL
+experience**: Just the machine itself plus a C1541. No frills. The C64 runs
+the original Commodore KERNAL and the C1541 runs the original Commodore DOS,
+which leads to authentic loading speeds. You will be surprised, how slowly
+the C64/C1541 were loading... :-)
 
-- C64 modes
-- Similar to 6581 and 8580 SID filters.
-- C64 cartridges (real hardware) via the MEGA65's hardware Expansion Port
-- C1541 read-only support in raw GCR mode (*.D64, *.G64)
-- Pause option when OSD is opened.
+### Video and Audio
 
-In step #2 we might want to add the MEGA65 SID and emulated cartridge support:
+* HDMI: The core outputs 1280×720 pixels (720p) at 50 Hz and HDMI audio at
+  a sampling rate of 48 kHz. This is supported by a vast majority of monitors
+  and TVs. In case of compatibility problems, you can switch the HDMI video
+  out to 60 Hz (without affecting the PAL core's internal 50 Hz), but this
+  would lead to a slightly jerky experience when it comes to scrolling and
+  other fast movements on the screen. The 4:3 ascpect ratio of
+  the C64's output is preserved during upscaling, so that even though 720p
+  is a 16:9 picture, the C64 looks pixel perfect and authentic on HDMI.
+  
+* VGA: For a true retro feeling, we are providing a 4:3 image via the
+  MEGA65's VGA port, so that you can connect real CRT monitors or older
+  4:3 LCD/TFT displays. The resolution is 720x576 pixels and the frequency
+  is 50 Hz in PAL mode.
+  
+### Convenience
 
-- (SOON?) loadable Kernal/C1541 ROMs.
-- (SOON?) write/format support in raw GCR mode (*.D64, *.G64)
-- (SOON?) C1581 read/write support (*.D81 disk images on the SD card)
-- (SOON?) C1581 support via MEGA65's hardware disk drive
-- (SOON?) Add MEGA65 SID which sounds better and more realistic than MiSTer's SID
-- (SOON?) Amost all cartridge formats (*.CRT as images on the SD card)
-- (SOON?) Real Cartridges using the MEGA65's cartridge port
-- (LATER?) Dual SID with several degree of mixing 6581/8580 from stereo to mono.
-
-Unclear, what a step #3 might look like:
-
-- (LATER?) Parallel C1541 port for faster (~20x) loading time using DolphinDOS.
-- (LATER?) External IEC through USER_IO port.
-- (LATER?) REU 16MB and GeoRAM 4MB memory expanders.
-- (LATER?) OPL2 sound expander.
-- (LATER?) 4 joysticks mode.
-- (LATER?) RS232 with VIC-1011 and UP9600 modes either internal or through USER_IO.
-- (LATER?) Special reduced border mode for 16:9 display.
-- (LATER?) C128/Smart Turbo mode up to 4x.
-- (LATER?) Real-time clock
+* On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
+  and to configure the core
+* Realtime switching between a 6581 SID and 8580 SID
+* CRT filter: Optional visual scanlines so that the output looks more like
+  an old monitor or TV
+* Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
+  the C64's output and zoom in, so that the 16:9 screen real-estate is
+  utilized more efficiently. Great for games.
+* Audio processing: Optionally improve the raw audio output of the system
 
 Installation
 ------------
 
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+1. [Download @TODO LINK](https://github.com/MJoergen/C64MEGA65/edit/dev-mount/README.md)
+   the ZIP file that contains the bitstream and the core file and unpack it.
+2. Choose the right subfolder depending on the type of your MEGA65:
+   `R2` or `R3`. If you are not sure which one to choose, it likely that
+   you have an `R3`. You will need the `.cor` file.
+3. Read the section "How do I install an alternative MEGA65 core?" on the
+   [alternative MEGA65 cores](https://sy2002.github.io/m65cores/index.html)
+   website or read the section "Bitstream Utility" in the
+   [MEGA65 Starter Guide](https://files.mega65.org/news/MEGA65-Starter-Guide.pdf).
+4. The core supports FAT32 formatted SD cards to mount `.D64` disk images
+   for the C1541 at drive 8.
+5. If you put your disk images into a folder called `/c64`, then the core will
+   display this folder on startup. Otherwise the root folder will be shown.
 
+If you are a developer and/or have a JTAG adaptor connected to your MEGA65,
+then you can use the `.bit` file from the ZIP instead of the `.cor` file:
+Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
+syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
+into the FPGA of the MEGA65 and automatically started.
 
-# Here comes COPY/PASTE from MiSTer
+How to use the file- and directory browser for mounting a disk image
+--------------------------------------------------------------------
 
-TODO: Needs to be adjusted.
-
-### Keyboard
-* F2,F4,F6,F8,Left/Up keys automatically activate Shift key.
-* F9 - arrow-up key.
-* F10 - = key.
-* F11 - restore key. Also special key in AR/FC carts.
-* Alt - C= key.
-
-![keyboard-mapping](https://github.com/mister-devel/C64_MiSTer/blob/master/keymap.gif)
-
-### Using without keyboard
-If your joystick/gamepad has more than 4 buttons then you can have some limited usage of keybiard.
-Joystick buttons **Mod1** and **Mod2** adds 12 frequently used keys to skip the intros and start the game.
-Considering default button maps RLDU,Fire1,Fire2,Fire3,Paddle Btn, following keys are possible to enter:
-* With holding **Mod1**: Cursor RLDU, Enter, Space, Esc, Alt+ESC(LOAD"*" then RUN)
-* With holding **Mod2**: 1,2,3,4,5,0,Y,N
-* With holding **Mod1+Mod2**: F1,F2,F3,F4,F5,F6,F7,F8
-
-With maps above and using Dolphin DOS you can issue **F7** to list the files on disk, then move cursor to required file, then issue **Alt+ESC** to load it and run.
-
-### Loadable ROM
-Alternative ROM can loaded from OSD: Hardware->Load System ROM.
-Format is simple concatenation of BASIC + Kernal.rom + C1541.rom
-
-To create the ROM in DOS or Windows, gather your files in one place and use the following command from the DOS prompt. 
-The easiest place to acquire the ROM files is from the VICE distribution. BASIC and KERNAL are in the C64 directory,
-and dos1541 is in the Drives directory.
-
-`COPY BASIC + KERNAL + dos1541 MYOWN.ROM /B`
-
-To use JiffyDOS or another alternative kernel, replace the filenames with the name of your ROM or BIN file.  (Note, you muse use the 1541-II ROM. The ROM for the original 1541 only covers half the drive ROM and does not work with emulators.)
-
-`COPY /B BASIC.bin +JiffyDOS_C64.bin +JiffyDOS_1541-II.bin MYOWN.ROM`
-
-To confirm you have the correct image, the BOOT.ROM created must be exactly 32768 or 49152(in case of 32KB C1541 ROM) bytes long. 
-
-There are 2 loadable ROM sets are provided: **DolphinDOS v2.0** and **SpeedDOS v2.7**. Both ROMs support parallel Disk Port. DolphinDOS is fastest one.
-
-For **C1581** you can use separate ROM with size up to 32768 bytes.
-
-### Autoload the cartridge
-In OSD->Hardware page you can choose Boot Cartridge, so everytime core loaded, this cartridge will be loaded too.
-
-### Parallel port for disks.
-Are you tired from long loading times and fast loaders aren't really fast when comparing to other systems? 
-
-Here is the solution:
-In OSD->System page choose **Expansion: Fast Disks**. Then load [DolphinDOS_2.0.rom](releases/DolphinDOS_2.0.rom). You will get about **20x times faster** loading from disks!
-
-### Turbo modes
-
-**C128 mode:** this is C128 compatible turbo mode available in C64 mode on Commodore 128 and can be controlled from software, so games written with this turbo mode support will take advantage of this.
-
-**Smart mode:** In this mode any access to disk will disable turbo mode for short time enough to finish disk operations, thus you will have turbo mode without loosing disk operations.
-
-### RS232
-
-Primary function of RS232 is emulated dial-up connection to old-fashioned BBS. **CCGMS Ultimate** is recommended (Don't use CCGMS 2021 - it's buggy version). It supports both standard 2400 VIC-1011 and more advanced UP9600 modes.
-
-**Note:** DolphinDOS and SpeedDOS kernals have no RS232 routines so most RS232 software don't work with these kernals!
-
-### GeoRAM
-Supported up to 4MB of memory. GeoRAM is connected if no other cart is loaded. It's automatically disabled when cart is loaded, then enabled when cart unloaded.
-
-### REU
-Supported standard 512KB, expanded 2MB with wrapping inside 512KB blocks (for compatibility) and linear 16MB size with full 16MB counter wrap.
-Support for REU files.
-
-GeoRAM and REU don't conflict each other and can be both enabled.
-
-### USER_IO pins
-
-| USER_IO | USB 3.0 name | Signal name |
-|:-------:|:-------------|:------------|
-|   0     |    D+        | RS232 RX    |
-|   1     |    D-        | RS232 TX    |
-|   2     |    TX-       | IEC /CLK    |
-|   3     |    GND_d     | IEC /RESET  |
-|   4     |    RX+       | IEC /DATA   |
-|   5     |    RX-       | IEC /ATN    |
-
-All signals are 3.3V LVTTL and must be properly converted to required levels!
-
-### Real-time clock
-
-RTC is PCF8583 connected to tape port.
-To get real time in GEOS, copy CP-CLOCK64-1.3 from supplied [disk](https://github.com/mister-devel/C64_MiSTer/blob/master/releases/CP-ClockF83_1.3.D64) to GEOS system disk.
-
-### Raw GCR mode
-
-C1541 implementation works in raw GCR mode (D64 format is converted to GCR and then back when saved), so some non-standard tracks are supported if G64 file format is used. Support formatting and some copiers using raw track copy. Speed zones aren't supported (yet), but system follows the speed setting, so variable speed within a track should work.
-Protected disk in most cases won't work yet and still require further tuning of access times to comply with different protections.
-
+* Long filename support
+* Alphabetically sorted file- and directory listings
+* Navigate up/down using the <kbd>Cursor up</kbd> and
+  <kbd>Cursor down</kbd> keys
+* Page up and page down using the <kbd>Cursor left</kbd> and
+  <kbd>Cursor right</kbd> keys
+* <kbd>Return</kbd> mounts a disk image
+* <kbd>Run/Stop</kbd> exits the file browser without mounting
+* Remembers the browsing history, i.e. even while you climb directory trees,
+  when you mount the next image, the file selection cursor stands where you
+  left off. This is very convenient for mounting multiple subsequent
+  disks of a demo in a row.
+* Support for both SD card slots: The back slot has precedence over the bottom
+  slot: As soon as you insert a card to the back slot, this card is being
+  used. SD card changes are detected in real-time; also while being in the
+  file browser.
+* While being in the browser you can use <kbd>F1</kbd> to manually select
+  the internal SD card (bottom tray) and <kbd>F3</kbd> to select the
+  external SD card (back slot).
+* An already mounted drive can be unmounted (i.e. "switch the drive off"), if
+  you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
+  If you select an already mounted drive with the <kbd>Return</kbd> key
+  instead, then for the C64 this is more like switching a diskette while
+  leaving the drive on. Use the latter mechanism via <kbd>Return</kbd> when
+  a game or a demo asks you to turn the disk or to insert another disk.
+* The file browser defaults to the folder `/c64` in case this folder exists.
+  Otherwise it starts at the root folder.
+* The file browser only shows files with a valid file extension.
+  Currently, we only suppoert `.d64`.
