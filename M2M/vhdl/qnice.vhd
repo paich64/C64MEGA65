@@ -294,7 +294,7 @@ begin
          data_out             => eae_data_out
       );
       
-   -- Smart SD card multiplexer: handles the two different SD Card slots of the MEGA65 (see also gbc.asm)       
+   -- Smart SD card multiplexer: handles the two different SD Card slots of the MEGA65 (see also sysdef.asm)       
    i_sdmux : entity work.sdmux
       port map
       (
@@ -404,7 +404,7 @@ begin
          reset_pre_pore       => reset_pre_pore,
          reset_post_pore      => reset_post_pore,
                                  
-         -- QNICE hardware unsupported by gbc4MEGA65
+         -- QNICE hardware unsupported by MiSTer2MEGA65
          til_reg0_enable      => open,
          til_reg1_enable      => open,         
          kbd_en               => open,

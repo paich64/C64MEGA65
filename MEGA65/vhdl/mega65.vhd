@@ -69,7 +69,7 @@ port (
    -- 3.5mm analog audio jack
    pwm_l          : out std_logic;
    pwm_r          : out std_logic;
-
+   
    -- Joysticks
    joy_1_up_n     : in std_logic;
    joy_1_down_n   : in std_logic;
@@ -167,6 +167,7 @@ signal main_csr_joy2_on       : std_logic;
 signal main_key_num           : integer range 0 to 79;
 signal main_key_pressed_n     : std_logic;
 signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
+signal main_drive_led         : std_logic;
 
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
@@ -394,6 +395,9 @@ begin
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
          sid_r                => main_sid_r,
+         
+         -- C64 drive led
+         drive_led_o          => main_drive_led,         
 
          -- C64 RAM
          c64_ram_addr_o       => main_ram_addr,
@@ -425,6 +429,8 @@ begin
          enable_core_i        => main_csr_keyboard_on,
          key_num_o            => main_key_num,
          key_pressed_n_o      => main_key_pressed_n,
+         
+         drive_led_i          => main_drive_led,       
 
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n

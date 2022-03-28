@@ -55,6 +55,9 @@ entity main is
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);
       sid_r                   : out signed(15 downto 0);
+      
+      -- C64 drive led
+      drive_led_o             : out std_logic;
 
       -- C64 RAM: No address latching necessary and the chip can always be enabled
       c64_ram_addr_o          : out unsigned(15 downto 0);  -- C64 address bus
@@ -143,7 +146,6 @@ signal alo                 : std_logic_vector(15 downto 0);
 signal aro                 : std_logic_vector(15 downto 0);
 
 -- IEC drives
-signal iec_led             : std_logic;
 signal iec_drive_ce        : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
 signal iec_dce_sum         : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
 
@@ -527,7 +529,7 @@ begin
          sd_buff_wr     => iec_sd_buf_wr_i,
 
          -- drive led
-         led            => iec_led,             -- not used, right now
+         led            => drive_led_o,
 
          -- Parallel C1541 port
          par_stb_i      => iec_par_stb_i,

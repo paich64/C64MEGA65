@@ -11,7 +11,6 @@ features.
   - Filter files (needs subdir flag, framework needs to offer convenient
     file extension checker)
 * Unmount whole disk drive via Space in OSM
-* Do all "WIP" and "TBD"
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
 * Check directory structure and headers of source files.
@@ -29,7 +28,7 @@ features.
 * On-Screen-Menu via Help button to mount drives and to configure options
 * SID 6581 and 8580
 * C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
-WIP Drive led during virtual disk access
+* Drive led during virtual disk access
 
 ## Constraints (What is not yet working)
 * NTSC
