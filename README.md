@@ -51,12 +51,12 @@ the C64/C1541 were loading... :-)
 
 * On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
   and to configure the core
-* Realtime switching between a 6581 SID and 8580 SID
+* Realtime switching between a 6581 SID and a 8580 SID
 * CRT filter: Optional visual scanlines so that the output looks more like
   an old monitor or TV
 * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
   the C64's output and zoom in, so that the 16:9 screen real-estate is
-  utilized more efficiently. Great for games.
+  better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
 
 Installation
@@ -104,6 +104,8 @@ How to use the file- and directory browser for mounting a disk image
 * While being in the browser you can use <kbd>F1</kbd> to manually select
   the internal SD card (bottom tray) and <kbd>F3</kbd> to select the
   external SD card (back slot).
+* The disk image is internally buffered, that means you can remove or
+  switch the SD card even while the C64 is accessing the disk.
 * An already mounted drive can be unmounted (i.e. "switch the drive off"), if
   you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
   If you select an already mounted drive with the <kbd>Return</kbd> key
