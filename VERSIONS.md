@@ -6,6 +6,7 @@ on your MEGA65! It can run a ton of games and demos and it offers convenient
 features.
 
 ## TODOs before release
+
 * File Browser:
   - Error if wrong D64 file size
   - Filter files (needs subdir flag, framework needs to offer convenient
@@ -14,22 +15,38 @@ features.
 * Debounce the joystick and the MEGA65's reset button
   (add to MiSTer2MEGA65 from gbc4mega65)
 * Check directory structure and headers of source files.
-* Review all documentation and README's.
-* CRT filter(s): Deft says MEGA65's looks better than MiSTer's, maybe offer MEGA65 only or both
+* Review all documentation and README's
+* Bug: Reset problem
+* Bug: Screen flicker
+* Feature: CRT mode
+* Feature: crop/zoom
+* Feature: audio processing
 
 ## Features
+
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
 * PAL 720 x 576 pixels (4:3) @ 50 Hz via VGA: for a true retro feeling
 * 720p @ 50 Hz or 60 Hz (16:9) via HDMI: for convenience
 * Sound output via 3.5mm jack and via HDMI
+* SID 6581 and 8580
 * MEGA65 keyboard support (including cursor keys)
 * Joystick support
 * On-Screen-Menu via Help button to mount drives and to configure options
-* SID 6581 and 8580
 * C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
 * Drive led during virtual disk access
+WIP CRT filter: Optional visual scanlines so that the output looks more like an
+  old monitor or TV
+WIP * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
+  the C64's output and zoom in, so that the 16:9 screen real-estate is
+  utilized more efficiently. Great for games.
+WIP Audio processing: Optionally improve the raw audio output of the system
 
-## Constraints (What is not yet working)
+## Constraints (What is not yet working) & Roadmap
+
+We are planning to improve this core steadily. The MiSTer core offers much
+more features than our current Release 1 of the port. Here is a list of
+features that we are planning to deliver at a later stage:
+
 * NTSC
 * Support two drives: 8 and 9
 * Writing to virtual disks
