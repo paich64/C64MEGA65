@@ -443,15 +443,15 @@ OPTM_CB_SEL     INCRB
 
                 ; Special treatment for drive-mount items: Drive-mount items
                 ; are per definition also single-select items
-                MOVE  	R8, R0 					; R8: selected menu group
-                MOVE  	R0, R1  				; R1: save selected group
-                AND  	OPTM_SINGLESEL, R0 		; single-select item?
-                RBRA  	_OPTMC_NOMNT, Z 		; no: proceed to std. beh.
-                RSUB  	VD_ACTIVE, 1  			; are there any vdrives?
-                RBRA  	_OPTMC_NOMNT, !C   		; no: proceed to std. beh.
-                MOVE  	R1, R8  				; R1: selected menu group
-                RSUB  	VD_DRVNO, 1 			; is menu item a mount item?
-                RBRA  	_OPTMC_NOMNT, !C  		; no: : proceed to std. beh.
+                MOVE    R8, R0                  ; R8: selected menu group
+                MOVE    R0, R1                  ; R1: save selected group
+                AND     OPTM_SINGLESEL, R0      ; single-select item?
+                RBRA    _OPTMC_NOMNT, Z         ; no: proceed to std. beh.
+                RSUB    VD_ACTIVE, 1            ; are there any vdrives?
+                RBRA    _OPTMC_NOMNT, !C        ; no: proceed to std. beh.
+                MOVE    R1, R8                  ; R1: selected menu group
+                RSUB    VD_DRVNO, 1             ; is menu item a mount item?
+                RBRA    _OPTMC_NOMNT, !C        ; no: : proceed to std. beh.
 
                 ; Handle mounting
                 ; Input:

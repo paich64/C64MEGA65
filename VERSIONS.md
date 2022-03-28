@@ -16,6 +16,8 @@ features.
   (add to MiSTer2MEGA65 from gbc4mega65)
 * Check directory structure and headers of source files.
 * Review all documentation and README's
+* Robustness: Do the final heap/stack sanity check in m2m-rom.asm and replace
+  0xXXXX by the calculated values
 * Bug: Reset problem
 * Bug: Screen flicker
 * Feature: CRT mode

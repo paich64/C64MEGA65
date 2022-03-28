@@ -26,7 +26,7 @@
 ;       2=Cancelled via Run/Stop
 ; ----------------------------------------------------------------------------
 
-SELECT_FILE		SYSCALL(enter, 1)
+SELECT_FILE     SYSCALL(enter, 1)
 
                 ; stack handling
                 MOVE    FB_MAINSTACK, R0        ; remember the original stack
@@ -43,12 +43,12 @@ SELECT_FILE		SYSCALL(enter, 1)
                 RBRA    _S_BROWSE_START, 1
 
                 ; retrieve default file browsing start path from config.vhd
-				; DIRBROWSE_READ expects the start path in R9
-_S_START        MOVE  	M2M$RAMROM_DEV, R9
-				MOVE  	M2M$CONFIG, @R9
-				MOVE  	M2M$RAMROM_4KWIN, R9
-				MOVE  	M2M$CFG_DIR_START, @R9
-				MOVE  	M2M$RAMROM_DATA, R9
+                ; DIRBROWSE_READ expects the start path in R9
+_S_START        MOVE    M2M$RAMROM_DEV, R9
+                MOVE    M2M$CONFIG, @R9
+                MOVE    M2M$RAMROM_4KWIN, R9
+                MOVE    M2M$CFG_DIR_START, @R9
+                MOVE    M2M$RAMROM_DATA, R9
 
                 ; load sorted directory list into memory
                 MOVE    HANDLE_DEV, R8
@@ -56,7 +56,7 @@ _S_CD_AND_READ  MOVE    FB_HEAP, R10            ; start address of heap
                 MOVE    @R10, R10
                 MOVE    HEAP_SIZE, R11          ; maximum memory available
                                                 ; for storing the linked list
-                MOVE    FILTER_FILES, R12     	; do not show ROM file names
+                MOVE    FILTER_FILES, R12       ; do not show ROM file names
                 RSUB    DIRBROWSE_READ, 1       ; read directory content
                 CMP     0, R11                  ; errors?
                 RBRA    _S_BROWSE_START, Z      ; no
@@ -86,7 +86,7 @@ _S_ERR_UNKNOWN  MOVE    ERR_BROWSE_UNKN, R8
                 ; warn, that we are not showing all files
 _S_WRN_MAX      MOVE    WRN_MAXFILES, R8        ; print warning message
                 RSUB    SCR$PRINTSTR, 1
-_S_WRN_WAIT 	MOVE    M2M$KEYBOARD, R8
+_S_WRN_WAIT     MOVE    M2M$KEYBOARD, R8
                 AND     M2M$KEY_SPACE, @R8
                 RBRA    _S_WRN_WAIT, !Z         ; wait for space; low-active
                 RSUB    SCR$CLRINNER, 1         ; clear inner part of window
@@ -425,10 +425,10 @@ _S_RET_1        MOVE    @R2, SP                 ; restore global stack
 
                 MOVE    R8, @--SP               ; bring R8, R9 over "leave"
                 MOVE    R9, @--SP
-				SYSCALL(leave, 1)
+                SYSCALL(leave, 1)
                 MOVE    @SP++, R9
                 MOVE    @SP++, R8
-				RET
+                RET
 
 ; ----------------------------------------------------------------------------
 ; Initialize file browser persistence variables
