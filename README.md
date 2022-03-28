@@ -1,6 +1,6 @@
-**WARNING: Heavily work-in-progress. Currently this is not even in an alpha state.**
+**WARNING: Work-in-progress. The core has not been released, yet.**
 
-**Watch this [YouTube Video](https://youtu.be/wsS1iiozeXA) for a status update as of February 2022.**
+**Watch this [YouTube Video](https://youtu.be/HKkYDu7BpdU) for a status update as of end of March 2022.**
 
 The development is actually taking place in the [develop branch](https://github.com/MJoergen/C64MEGA65/tree/develop) of this repository. Click [here](https://github.com/MJoergen/C64MEGA65/tree/develop) to learn more.
 
