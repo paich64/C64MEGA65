@@ -15,7 +15,6 @@ features.
   (add to MiSTer2MEGA65 from gbc4mega65)
 * Check directory structure and headers of source files.
 * Review all documentation and README's.
-* Search and replace "gbc4MEGA65" in all source files.
 * CRT filter(s): Deft says MEGA65's looks better than MiSTer's, maybe offer MEGA65 only or both
 
 ## Features
