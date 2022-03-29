@@ -180,6 +180,14 @@ signal iec_rom_addr_i      : std_logic_vector(15 downto 0);
 signal iec_rom_data_i      : std_logic_vector(7 downto 0);
 signal iec_rom_wr_i        : std_logic;
 
+constant C_DEBUG_MODE             : boolean := false;
+attribute mark_debug              : boolean;
+attribute mark_debug of c64_hsync : signal is C_DEBUG_MODE;
+attribute mark_debug of c64_vsync : signal is C_DEBUG_MODE;
+attribute mark_debug of c64_r     : signal is C_DEBUG_MODE;
+attribute mark_debug of c64_g     : signal is C_DEBUG_MODE;
+attribute mark_debug of c64_b     : signal is C_DEBUG_MODE;
+
 begin
    -- MiSTer Commodore 64 core / main machine
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
