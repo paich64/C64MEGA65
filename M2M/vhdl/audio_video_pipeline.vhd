@@ -181,26 +181,6 @@ architecture synthesis of audio_video_pipeline is
    signal video_ce_overlay       : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
    signal video_ce_hdmi          : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
 
-   constant C_DEBUG_MODE                       : boolean := false;
-   attribute mark_debug                        : boolean;
-   attribute mark_debug of video_rc_ce         : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_pix_x      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_pix_y      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_red        : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_green      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_blue       : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_hs         : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_vs         : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_rc_de         : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_luma_selector : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_luma          : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_luma_red      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_luma_green    : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_luma_blue     : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_crt_red       : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_crt_green     : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_crt_blue      : signal is C_DEBUG_MODE;
-
 begin
 
    -- SHELL_M_XY
