@@ -1932,6 +1932,13 @@ BEGIN
   BEGIN
     IF o_reset_na='0' THEN
       o_acpt<=0;
+      o_ad<=0;
+      o_adturn<='0';
+      o_hacpt<=x"000";
+      o_hacc_next<=0;
+      o_vacpt<=x"000";
+      o_pshift<=0;
+      o_sh<='0';
       o_copy<=sWAIT;
       o_state<=sDISP;
       o_read<='0';
