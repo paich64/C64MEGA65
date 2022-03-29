@@ -1220,6 +1220,7 @@ BEGIN
       i_wdelay<=0;
       i_hburst<=0;
       i_hbcpt<=0;
+      i_acpt<=0;
       
     ELSIF rising_edge(i_clk) THEN
       i_push<='0';
@@ -1930,6 +1931,7 @@ BEGIN
     VARIABLE off_v : natural RANGE 0 TO 15;
   BEGIN
     IF o_reset_na='0' THEN
+      o_acpt<=0;
       o_copy<=sWAIT;
       o_state<=sDISP;
       o_read<='0';
