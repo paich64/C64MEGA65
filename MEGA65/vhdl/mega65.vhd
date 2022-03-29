@@ -123,7 +123,7 @@ constant FONT_DY              : natural := 16;
 
 -- OSM size: Important: Make sure that the OSM's height (OSM_DY) equals config.vhd's OPTM_SIZE + 2
 constant OSM_DX               : natural := 20;
-constant OSM_DY               : natural := 15;
+constant OSM_DY               : natural := 17 + 2;
 
 -- Constants for the OSM screen memory
 constant CHARS_DX             : natural := VGA_DX / FONT_DX;
@@ -270,15 +270,18 @@ signal qnice_c64_mount_buf_ram_data : std_logic_vector(7 downto 0);  -- Disk mou
 signal qnice_c64_mount_buf_ram_we   : std_logic;
 
 -- QNICE signals passed down to main.vhd to handle IEC drives using vdrives.vhd
-signal qnice_c64_qnice_ce   : std_logic;
-signal qnice_c64_qnice_we   : std_logic;
-signal qnice_c64_qnice_data : std_logic_vector(15 downto 0);
+signal qnice_c64_qnice_ce     : std_logic;
+signal qnice_c64_qnice_we     : std_logic;
+signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
 -- QNICE On Screen Menu selections
-signal qnice_osm_control_m : std_logic_vector(255 downto 0);
+signal qnice_osm_control_m    : std_logic_vector(255 downto 0);
 
-constant C_MENU_8580       : natural := 5;
-constant C_MENU_60_HZ      : natural := 10;
+constant C_MENU_8580          : natural := 7;
+constant C_MENU_CRT_EMULATION : natural := 11;
+constant C_MENU_HDMI_ZOOM     : natural := 12;
+constant C_MENU_HDMI_60HZ     : natural := 13;
+constant C_MENU_IMPROVE_AUDIO : natural := 14;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -760,7 +763,7 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
-   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_60_HZ) else 1;
+   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_HDMI_60HZ) else 1;
 
    i_audio_video_pipeline : entity work.audio_video_pipeline
       generic map (
