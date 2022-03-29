@@ -251,9 +251,9 @@ begin
          RST                 => '0'
       ); -- i_clk_c64
 
-   p_main_clk : process (video_clk)
+   p_main_clk : process (video_clk_o)
    begin
-      if rising_edge(video_clk) then
+      if rising_edge(video_clk_o) then
          main_clk <= not main_clk;
       end if;
    end process p_main_clk;

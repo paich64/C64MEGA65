@@ -21,8 +21,9 @@ create_generated_clock -name hr_clk_x2_del [get_pins */clk_gen/i_clk_qnice/CLKOU
 create_generated_clock -name audio_clk     [get_pins */clk_gen/i_clk_qnice/CLKOUT4]
 create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
 create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
-create_generated_clock -name main_clk      [get_pins */clk_gen/i_clk_c64/CLKOUT0]
-create_generated_clock -name video_clk     [get_pins */clk_gen/i_clk_c64/CLKOUT1]
+create_generated_clock -name video_clk     [get_pins */clk_gen/i_clk_c64/CLKOUT0]
+
+create_generated_clock -name main_clk   -source [get_pins */clk_gen/i_clk_c64/CLKOUT0] -divide_by 2 [get_pins MEGA65/clk_gen/main_clk_reg/Q]
 
 ## Clock divider sdcardclk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins */clk_gen/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins MEGA65/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
