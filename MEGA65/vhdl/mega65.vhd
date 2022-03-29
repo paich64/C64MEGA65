@@ -818,7 +818,6 @@ begin
          video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
          video_osm_vram_addr_o    => video_osm_vram_addr,
          video_osm_vram_data_i    => video_osm_vram_data,
-         hdmi_triple_buffering_i  => '0',
          hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
