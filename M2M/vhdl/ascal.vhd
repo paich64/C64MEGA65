@@ -1115,15 +1115,27 @@ ARCHITECTURE rtl OF ascal IS
    attribute mark_debug of avl_write_sr    : signal is C_DEBUG_MODE;
    attribute mark_debug of avl_write_sync2 : signal is C_DEBUG_MODE;
    attribute mark_debug of avl_write_sync  : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_acpt          : signal is C_DEBUG_MODE;
    attribute mark_debug of o_copylev       : signal is C_DEBUG_MODE;
    attribute mark_debug of o_copy          : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_copyv         : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_dcpt          : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_hacc          : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_hacpt         : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_hfrac         : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_hsize         : signal is C_DEBUG_MODE;
    attribute mark_debug of o_hsp           : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_ihsize        : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_ivsize        : signal is C_DEBUG_MODE;
    attribute mark_debug of o_readack       : signal is C_DEBUG_MODE;
    attribute mark_debug of o_readdataack   : signal is C_DEBUG_MODE;
    attribute mark_debug of o_readlev       : signal is C_DEBUG_MODE;
    attribute mark_debug of o_read_pre      : signal is C_DEBUG_MODE;
    attribute mark_debug of o_reset_na      : signal is C_DEBUG_MODE;
    attribute mark_debug of o_state         : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_vacc          : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_vacpt         : signal is C_DEBUG_MODE;
+   attribute mark_debug of o_vsize         : signal is C_DEBUG_MODE;
   -- 4 DSP 18*18 + 18*18
   FUNCTION poly_lerp(a : poly_phase_t;
                      b : poly_phase_t;
