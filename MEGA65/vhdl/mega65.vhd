@@ -122,7 +122,7 @@ constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
 
 -- OSM size: Important: Make sure that the OSM's height (OSM_DY) equals config.vhd's OPTM_SIZE + 2
-constant OSM_DX               : natural := 20;
+constant OSM_DX               : natural := 22;
 constant OSM_DY               : natural := 17 + 2;
 
 -- Constants for the OSM screen memory
