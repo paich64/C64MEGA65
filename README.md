@@ -26,10 +26,15 @@ Features
 --------
 
 With our [Release 1](VERSIONS.md), we are striving for a **retro C64 PAL
-experience**: Just the machine itself plus a C1541. No frills. The C64 runs
-the original Commodore KERNAL and the C1541 runs the original Commodore DOS,
-which leads to authentic loading speeds. You will be surprised, how slowly
-the C64/C1541 were loading... :-)
+experience**: The core turns your MEGA65 into a Commodore 64, with a
+C1541 drive and a pair of Joysticks. No frills. The C64 runs the original
+Commodore KERNAL and the C1541 runs the original Commodore DOS, which leads to
+authentic loading speeds. You will be surprised, how slowly the C64/C1541
+were loading... :-)
+
+And you will be amazed by the 99.9% compatibility that this core has when it
+comes to games, demos and other demanding C64 software. Some demos are even
+recognizing this core as genuine C64 hardware.
 
 ### Video and Audio
 

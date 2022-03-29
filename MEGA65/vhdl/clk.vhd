@@ -67,7 +67,7 @@ signal hr_clk_x2_del_mmcm : std_logic;
 signal audio_clk_mmcm     : std_logic;
 signal tmds_clk_mmcm      : std_logic;
 signal hdmi_clk_mmcm      : std_logic;
-signal main_clk_mmcm      : std_logic;
+signal main_clk           : std_logic;
 signal video_clk_mmcm     : std_logic;
 
 signal qnice_locked       : std_logic;
@@ -211,24 +211,19 @@ begin
          STARTUP_WAIT         => FALSE,
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
-         DIVCLK_DIVIDE        => 6,
-         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
+         DIVCLK_DIVIDE        => 3,
+         CLKFBOUT_MULT_F      => 41.750,     -- 1391.6666 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 30.000,     -- 31.528 MHz (31.5277777778)
+         CLKOUT0_DIVIDE_F     => 22.125,     -- 62.900188 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
-         CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 15,         -- 63.056 MHz
-         CLKOUT1_PHASE        => 0.000,
-         CLKOUT1_DUTY_CYCLE   => 0.500,
-         CLKOUT1_USE_FINE_PS  => FALSE
+         CLKOUT0_USE_FINE_PS  => FALSE
       )
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb3_mmcm,
-         CLKOUT0             => main_clk_mmcm,
-         CLKOUT1             => video_clk_mmcm,
+         CLKOUT0             => video_clk_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb3,
          CLKIN1              => sys_clk_i,
@@ -255,6 +250,13 @@ begin
          PWRDWN              => '0',
          RST                 => '0'
       ); -- i_clk_c64
+
+   p_main_clk : process (video_clk_o)
+   begin
+      if rising_edge(video_clk_o) then
+         main_clk <= not main_clk;
+      end if;
+   end process p_main_clk;
 
    -------------------------------------
    -- Output buffering
@@ -322,7 +324,7 @@ begin
 
    main_clk_bufg : BUFG
       port map (
-         I => main_clk_mmcm,
+         I => main_clk,
          O => main_clk_o
       );
 
