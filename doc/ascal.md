@@ -80,7 +80,7 @@ is to be expected, and can be safely ignored in this situation.
 
 ## Data flow
 
-* The video data stream enters on the input clock domain `i_clk` and is the
+* The video data stream enters on the input clock domain `i_clk` and is then
   written into `i_dpram` internal Dual Port memory (in lines 1691-1699).
 * From there it is read out using the `avl_clk` clock domain in line 1701
 * and written to the external memory using the `avl_*` port signals.
@@ -132,6 +132,6 @@ three clock cycles later.
 Let the input dimensions be 384x540 and the output dimensions be 960x720. Then the
 10'th output pixel corresponds to (10\*2\*384+960+384)/(2\*960) = 4.7'th input pixel.
 So `o_hacpt=4`. The fractional part is either 0.7\*2\*960 = 1344, which is the
-value of `o_hacc`. Or it is 0.7\*16 = 11.2, so `o_hfrac(0)` = 0xb00 three clock
+value of `o_hacc`. Or it is 0.7\*16 = 11.2, so `o_hfrac(0) = 0xb00` three clock
 cycles later.
 
