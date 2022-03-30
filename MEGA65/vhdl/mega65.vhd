@@ -412,7 +412,6 @@ begin
          vga_blue_o           => video_blue,
          vga_vs_o             => video_vs,
          vga_hs_o             => video_hs,
-         vga_de_o             => video_de,
 
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -812,7 +811,6 @@ begin
          video_blue_i             => video_blue,
          video_hs_i               => video_hs,
          video_vs_i               => video_vs,
-         video_de_i               => video_de,
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
@@ -867,7 +865,6 @@ begin
          video_blue_i             => video_blue,
          video_hs_i               => video_hs,
          video_vs_i               => video_vs,
-         video_de_i               => video_de,
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,

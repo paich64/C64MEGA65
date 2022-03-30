@@ -53,7 +53,6 @@ entity main is
       vga_blue_o              : out std_logic_vector(7 downto 0);
       vga_vs_o                : out std_logic;
       vga_hs_o                : out std_logic;
-      vga_de_o                : out std_logic;
 
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);
@@ -80,51 +79,16 @@ end entity main;
 
 architecture synthesis of main is
 
-   component video_mixer is
-      port (
-         CLK_VIDEO   : in  std_logic;
-         CE_PIXEL    : out std_logic;
-         ce_pix      : in  std_logic;
-         scandoubler : in  std_logic;
-         hq2x        : in  std_logic;
-         gamma_bus   : inout std_logic_vector(21 downto 0);
-         R           : in  unsigned(7 downto 0);
-         G           : in  unsigned(7 downto 0);
-         B           : in  unsigned(7 downto 0);
-         HSync       : in  std_logic;
-         VSync       : in  std_logic;
-         HBlank      : in  std_logic;
-         VBlank      : in  std_logic;
-         HDMI_FREEZE : in  std_logic;
-         freeze_sync : out std_logic;
-         VGA_R       : out std_logic_vector(7 downto 0);
-         VGA_G       : out std_logic_vector(7 downto 0);
-         VGA_B       : out std_logic_vector(7 downto 0);
-         VGA_VS      : out std_logic;
-         VGA_HS      : out std_logic;
-         VGA_DE      : out std_logic
-      );
-   end component video_mixer;
+-- amount of virtual drives
+constant VDNUM : natural := 1;
 
 -- MiSTer C64 signals
 signal c64_pause           : std_logic;
-signal ce_pix              : std_logic;
 signal c64_hsync           : std_logic;
 signal c64_vsync           : std_logic;
 signal c64_r               : unsigned(7 downto 0);
 signal c64_g               : unsigned(7 downto 0);
 signal c64_b               : unsigned(7 downto 0);
-
--- MiSTer video pipeline signals
-signal vs_hsync            : std_logic;
-signal vs_vsync            : std_logic;
-signal vs_hblank           : std_logic;
-signal vs_vblank           : std_logic;
-signal div                 : integer range 0 to 7;
-signal mix_r               : std_logic_vector(7 downto 0);
-signal mix_g               : std_logic_vector(7 downto 0);
-signal mix_b               : std_logic_vector(7 downto 0);
-signal mix_vga_de          : std_logic;
 
 -- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
 signal cia1_pa_i           : std_logic_vector(7 downto 0);
@@ -225,11 +189,11 @@ begin
          -- The hsync frequency is 15.64 kHz (period 63.94 us).
          -- The hsync pulse width is 12.69 us.
          ntscMode    => c64_ntsc_i,
-         hsync       => c64_hsync,
-         vsync       => c64_vsync,
-         r           => c64_r,
-         g           => c64_g,
-         b           => c64_b,
+         hsync       => vga_hs_o,
+         vsync       => vga_vs_o,
+         r           => vga_red_o,
+         g           => vga_green_o,
+         b           => vga_blue_o,
 
          -- cartridge port
          game        => '1',              -- low active, 1 is default so that KERNAL ROM can be read
@@ -387,93 +351,6 @@ begin
 
    sid_l <= signed(alo);
    sid_r <= signed(aro);
-
-   --------------------------------------------------------------------------------------------------
-   -- MiSTer video signal processing pipeline
-   --
-   -- We configured it (hardcoded) to perform a scan-doubling, but there are many more things
-   -- we could do here, including to make sure that we output an old composite signal instead of VGA
-   --------------------------------------------------------------------------------------------------
-
-   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
-   i_video_sync : entity work.video_sync
-      port map (
-         clk32     => clk_main_i,
-         pause     => c64_pause,
-         hsync     => c64_hsync,
-         vsync     => c64_vsync,
-         ntsc      => c64_ntsc_i,
-         wide      => '0',
-         hsync_out => vs_hsync,
-         vsync_out => vs_vsync,
-         hblank    => vs_hblank,
-         vblank    => vs_vblank
-      ); -- i_video_sync
-
-   p_div : process (clk_video_i)
-   begin
-      if rising_edge(clk_video_i) then
-         div <= div + 1;
-      end if;
-   end process p_div;
-   ce_pix <= '1' when div = 0 else '0';
-
-   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ clk_video_i).
-   -- According to the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
-   -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
-   -- a horizontal period of 32.00 us. The difference here is 0.1 %.
-   -- The ratio between clk_video_i and the pixel frequency is 7/3.
-   --
-   -- Using a logic analyzer it's observed that the output has the following parameters:
-   -- H_PIXELS = 658 pixels (1536 clock cycles)
-   -- H_PULSE  =  65 pixels ( 152 clock cycles)
-   -- H_BP     = 105 pixels ( 244 clock cycles)
-   -- H_FP     =  36 pixels (  84 clock cycles)
-   -- TOTAL    = 864 pixels (2016 clock cycles)
-   -- V_PIXELS = 540 lines
-   -- V_PULSE  =   8 lines
-   -- V_BP     =  17 lines
-   -- V_FP     =  59 lines
-   -- TOTAL    = 624 lines
-
-   i_video_mixer : video_mixer
-      port map (
-         CLK_VIDEO   => clk_video_i,      -- 63.056 MHz
-         CE_PIXEL    => open,
-         ce_pix      => ce_pix,
-         scandoubler => '1',
-         hq2x        => '0',
-         gamma_bus   => open,
-         R           => c64_r,
-         G           => c64_g,
-         B           => c64_b,
-         HSync       => vs_hsync,
-         VSync       => vs_vsync,
-         HBlank      => vs_hblank,
-         VBlank      => vs_vblank,
-         HDMI_FREEZE => '0',
-         freeze_sync => open,
-         VGA_R       => mix_r,
-         VGA_G       => mix_g,
-         VGA_B       => mix_b,
-         VGA_VS      => vga_vs_o,
-         VGA_HS      => vga_hs_o,
-         VGA_DE      => mix_vga_de
-      );
-
-   vga_de_o <= mix_vga_de;
-   vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
-   begin
-      if mix_vga_de = '1' then
-         vga_red_o   <= mix_r;
-         vga_green_o <= mix_g;
-         vga_blue_o  <= mix_b;
-      else
-         vga_red_o   <= (others => '0');
-         vga_green_o <= (others => '0');
-         vga_blue_o  <= (others => '0');
-      end if;
-   end process;
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer IEC drives

@@ -63,7 +63,45 @@ architecture synthesis of analog_pipeline is
    constant C_FONT_DX            : natural := 16;
    constant C_FONT_DY            : natural := 16;
 
+   -- MiSTer video pipeline signals
+   signal vs_hsync            : std_logic;
+   signal vs_vsync            : std_logic;
+   signal vs_hblank           : std_logic;
+   signal vs_vblank           : std_logic;
+   signal div                 : integer range 0 to 7;
+   signal mix_r               : std_logic_vector(7 downto 0);
+   signal mix_g               : std_logic_vector(7 downto 0);
+   signal mix_b               : std_logic_vector(7 downto 0);
+   signal mix_vga_de          : std_logic;
+   signal ce_pix              : std_logic;
+
    signal video_ce_overlay       : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
+
+   component video_mixer is
+      port (
+         CLK_VIDEO   : in  std_logic;
+         CE_PIXEL    : out std_logic;
+         ce_pix      : in  std_logic;
+         scandoubler : in  std_logic;
+         hq2x        : in  std_logic;
+         gamma_bus   : inout std_logic_vector(21 downto 0);
+         R           : in  unsigned(7 downto 0);
+         G           : in  unsigned(7 downto 0);
+         B           : in  unsigned(7 downto 0);
+         HSync       : in  std_logic;
+         VSync       : in  std_logic;
+         HBlank      : in  std_logic;
+         VBlank      : in  std_logic;
+         HDMI_FREEZE : in  std_logic;
+         freeze_sync : out std_logic;
+         VGA_R       : out std_logic_vector(7 downto 0);
+         VGA_G       : out std_logic_vector(7 downto 0);
+         VGA_B       : out std_logic_vector(7 downto 0);
+         VGA_VS      : out std_logic;
+         VGA_HS      : out std_logic;
+         VGA_DE      : out std_logic
+      );
+   end component video_mixer;
 
 begin
 
@@ -109,6 +147,93 @@ begin
    ---------------------------------------------------------------------------------------------
    -- Video output (VGA)
    ---------------------------------------------------------------------------------------------
+
+   --------------------------------------------------------------------------------------------------
+   -- MiSTer video signal processing pipeline
+   --
+   -- We configured it (hardcoded) to perform a scan-doubling, but there are many more things
+   -- we could do here, including to make sure that we output an old composite signal instead of VGA
+   --------------------------------------------------------------------------------------------------
+
+--   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
+--   i_video_sync : entity work.video_sync
+--      port map (
+--         clk32     => clk_main_i,
+--         pause     => c64_pause,
+--         hsync     => c64_hsync,
+--         vsync     => c64_vsync,
+--         ntsc      => c64_ntsc_i,
+--         wide      => '0',
+--         hsync_out => vs_hsync,
+--         vsync_out => vs_vsync,
+--         hblank    => vs_hblank,
+--         vblank    => vs_vblank
+--      ); -- i_video_sync
+
+   p_div : process (video_clk_i)
+   begin
+      if rising_edge(video_clk_i) then
+         div <= div + 1;
+      end if;
+   end process p_div;
+   ce_pix <= '1' when div = 0 else '0';
+
+   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ clk_video_i).
+   -- According to the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
+   -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
+   -- a horizontal period of 32.00 us. The difference here is 0.1 %.
+   -- The ratio between clk_video_i and the pixel frequency is 7/3.
+   --
+   -- Using a logic analyzer it's observed that the output has the following parameters:
+   -- H_PIXELS = 658 pixels (1536 clock cycles)
+   -- H_PULSE  =  65 pixels ( 152 clock cycles)
+   -- H_BP     = 105 pixels ( 244 clock cycles)
+   -- H_FP     =  36 pixels (  84 clock cycles)
+   -- TOTAL    = 864 pixels (2016 clock cycles)
+   -- V_PIXELS = 540 lines
+   -- V_PULSE  =   8 lines
+   -- V_BP     =  17 lines
+   -- V_FP     =  59 lines
+   -- TOTAL    = 624 lines
+
+   i_video_mixer : video_mixer
+      port map (
+         CLK_VIDEO   => video_clk_i,      -- 63.056 MHz
+         CE_PIXEL    => open,
+         ce_pix      => ce_pix,
+         scandoubler => '1',
+         hq2x        => '0',
+         gamma_bus   => open,
+         R           => unsigned(video_red_i),
+         G           => unsigned(video_green_i),
+         B           => unsigned(video_blue_i),
+         HSync       => vs_hsync,
+         VSync       => vs_vsync,
+         HBlank      => vs_hblank,
+         VBlank      => vs_vblank,
+         HDMI_FREEZE => '0',
+         freeze_sync => open,
+         VGA_R       => mix_r,
+         VGA_G       => mix_g,
+         VGA_B       => mix_b,
+         VGA_VS      => vga_vs_o,
+         VGA_HS      => vga_hs_o,
+         VGA_DE      => mix_vga_de
+      );
+
+   vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
+   begin
+      if mix_vga_de = '1' then
+         vga_red_o   <= mix_r;
+         vga_green_o <= mix_g;
+         vga_blue_o  <= mix_b;
+      else
+         vga_red_o   <= (others => '0');
+         vga_green_o <= (others => '0');
+         vga_blue_o  <= (others => '0');
+      end if;
+   end process vga_data_enable;
+
 
    -- Clock enable for Overlay video streams
    p_video_ce : process (video_clk_i)
