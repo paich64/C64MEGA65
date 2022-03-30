@@ -132,7 +132,7 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : integer := 17;  -- amount of items including empty lines:
+constant OPTM_SIZE         : integer := 22;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
                                              -- Important: make sure that OSM_DY in mega65.vhd is equal to OPTM_SIZE + 2,
                                              -- so that the On-Screen window has the correct length
@@ -148,21 +148,26 @@ constant OPTM_ITEMS        : string :=
    " 6581\n"               &
    " 8580\n"               &
    "\n"                    &
-   " Settings\n"           &
+   " Flicker-free HDMI\n"  &
    "\n"                    &
-   " CRT Emulation\n"      &
+   " Best: 50.125 Hz\n"    &
+   " OK: C64 0.25% slow\n" &
+   " Off: 60 Hz\n"         &
+   "\n"                    &
+   " Post-processing\n"    &
+   "\n"                    &
+   " CRT emulation\n"      &
    " Zoom-in on HDMI\n"    &
-   " Force 60Hz on HDMI\n" &
-   " Improve Audio\n"      &
+   " Audio improvements\n" &
    "\n"                    &
    " Close Menu\n";
         
 constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
 constant OPTM_G_SID           : integer := 3;
-constant OPTM_G_CRT_EMULATION : integer := 4;
-constant OPTM_G_HDMI_ZOOM     : integer := 5;
-constant OPTM_G_HDMI_60HZ     : integer := 6;
+constant OPTM_G_ANTI_FLICKER  : integer := 4;
+constant OPTM_G_CRT_EMULATION : integer := 5;
+constant OPTM_G_HDMI_ZOOM     : integer := 6;
 constant OPTM_G_IMPROVE_AUDIO : integer := 7;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
@@ -177,9 +182,14 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_TEXT,
                                              OPTM_G_LINE,
                                              OPTM_G_TEXT,
                                              OPTM_G_LINE,
+                                             OPTM_G_ANTI_FLICKER,
+                                             OPTM_G_ANTI_FLICKER + OPTM_G_STDSEL,
+                                             OPTM_G_ANTI_FLICKER,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
                                              OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
                                              OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL   + OPTM_G_STDSEL,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE

@@ -7,6 +7,11 @@ features.
 
 ## TODOs before release
 
+* Flicker-free HDMI: Implement the three menu options:
+  - "Best: 50.125 Hz" means "C64 at original speed and HDMI at 50.125 Hz"
+  - "OK: C64 0.25% slow" means "C64 0.25% slow and HDMI at 50 Hz"
+   " Off: 60 Hz" means "C64 at original speed and HDMI at 60 Hz"
+
 * File Browser:
   - Add QNICE's cycler-counter and implement a smart wait time, if somebody
     tries to mount a drive before 5 seconds have passed since the SD card's

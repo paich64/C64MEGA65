@@ -123,7 +123,7 @@ constant FONT_DY              : natural := 16;
 
 -- OSM size: Important: Make sure that the OSM's height (OSM_DY) equals config.vhd's OPTM_SIZE + 2
 constant OSM_DX               : natural := 22;
-constant OSM_DY               : natural := 17 + 2;
+constant OSM_DY               : natural := 22 + 2;
 
 -- Constants for the OSM screen memory
 constant CHARS_DX             : natural := VGA_DX / FONT_DX;
@@ -278,10 +278,10 @@ signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 signal qnice_osm_control_m    : std_logic_vector(255 downto 0);
 
 constant C_MENU_8580          : natural := 7;
-constant C_MENU_CRT_EMULATION : natural := 11;
-constant C_MENU_HDMI_ZOOM     : natural := 12;
 constant C_MENU_HDMI_60HZ     : natural := 13;
-constant C_MENU_IMPROVE_AUDIO : natural := 14;
+constant C_MENU_CRT_EMULATION : natural := 17;
+constant C_MENU_HDMI_ZOOM     : natural := 18;
+constant C_MENU_IMPROVE_AUDIO : natural := 19;
 
 -- HyperRAM
 signal hr_write         : std_logic;
