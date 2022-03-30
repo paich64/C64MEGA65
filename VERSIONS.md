@@ -12,6 +12,12 @@ features.
   - "OK: C64 0.25% slow" means "C64 0.25% slow and HDMI at 50 Hz"
    " Off: 60 Hz" means "C64 at original speed and HDMI at 60 Hz"
 
+* 15KHz RGB mode over VGA
+
+* Menu: White color (or yellow; experiment) for headlines in the menu.
+  Alternative could be dotted or dashed lines; so that there is more clarity,
+  which menu items belong together.
+
 * File Browser:
   - Add QNICE's cycler-counter and implement a smart wait time, if somebody
     tries to mount a drive before 5 seconds have passed since the SD card's

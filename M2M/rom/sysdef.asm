@@ -78,6 +78,8 @@ M2M$SA_FG_BLUE      .EQU 0x01
 ; Screen attributes: Common bit-combinations
 M2M$SA_COL_STD      .EQU 0x0B   ; cyan font on blue background
 M2M$SA_COL_STD_INV  .EQU 0x8B   ; inverse standard
+M2M$SA_COL_TTLE     .EQU 0x0E   ; Title: dark yellow on blue background
+M2M$SA_COL_TTLE_INV .EQU 0x8E   ; inverse Title
 M2M$SA_COL_SEL      .EQU 0x0F   ; selection: white font on blue background
 
 ; Special characters in font Anikki-16x16

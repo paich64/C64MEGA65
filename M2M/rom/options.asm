@@ -345,8 +345,11 @@ _PRINTLN_L      MOVE    M2M$NC_SH, @R3++
                 RET
 
 ; Selects/unselects menu item in R8 (counting from 0 and counting also
-; non-selectable menu entries such as lines)
-; R9=0: unselect   R9=1: select
+; non-selectable menu entries such as lines) and highlights headlines/titles
+; R9=0: unselect
+; R9=1: select
+; R9=2: print headline/title highlighted
+; R9=3: select highlighted headline/title
 OPTM_SELECT     INCRB
 
                 MOVE    OPTM_X, R0              ; R0: x start coordinate
@@ -360,11 +363,21 @@ OPTM_SELECT     INCRB
                 MOVE    @R2, R2
                 SUB     2, R2
 
-                CMP     R9, 0                   ; R3: attribute to apply
-                RBRA    _OPTM_FPS_1, Z
-                MOVE    M2M$SA_COL_STD_INV, R3
+                ; define attribute to apply
+                MOVE    M2M$SA_COL_STD, R3      ; unselect = standard text
+                CMP     OPTM_SEL_STD, R9        ; unselect/standard?
+                RBRA    _OPTM_FPS_2, Z          ; yes
+                CMP     OPTM_SEL_SEL, R9        ; select?
+                RBRA    _OPTM_FPS1A, !Z         ; no
+                MOVE    M2M$SA_COL_STD_INV, R3  ; yes, select
                 RBRA    _OPTM_FPS_2, 1
-_OPTM_FPS_1     MOVE    M2M$SA_COL_STD, R3
+_OPTM_FPS1A     CMP     OPTM_SEL_TLL, R9        ; headline/title?
+                RBRA    _OPTM_FPS1B, !Z         ; no
+                MOVE    M2M$SA_COL_TTLE, R3     ; yes, headline/title
+                RBRA    _OPTM_FPS_2, 1
+_OPTM_FPS1B     CMP     OPTM_SEL_TLLSEL, R9     ; selected headline/title?
+                RBRA    _OPTM_FPS_2, !Z         ; no: default to standard text
+                MOVE    M2M$SA_COL_TTLE_INV, R3 ; yes, selected headl./title          
 
 _OPTM_FPS_2     MOVE    SCR$SYS_DX, R8          ; R10: start address in ..
                 MOVE    @R8, R8
