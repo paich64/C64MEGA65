@@ -29,7 +29,11 @@ features.
   - Debounce the joystick and the MEGA65's reset button
     (add to MiSTer2MEGA65 from gbc4mega65)
     => needs to go to the framework, too
-
+  - Implement a hard reset as described in
+    https://www.c64-wiki.com/wiki/Reset_Button
+    because right now, Games like URIDIUM can prevent us from resetting
+    (we need to re-load the core)
+    
 * Code consistency and "niceness":
   - Check directory structure and headers of source files.
   - Review all documentation and README's
