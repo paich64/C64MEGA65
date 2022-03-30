@@ -14,10 +14,6 @@ features.
 
 * 15KHz RGB mode over VGA
 
-* Menu: White color (or yellow; experiment) for headlines in the menu.
-  Alternative could be dotted or dashed lines; so that there is more clarity,
-  which menu items belong together.
-
 * File Browser:
   - Add QNICE's cycler-counter and implement a smart wait time, if somebody
     tries to mount a drive before 5 seconds have passed since the SD card's
