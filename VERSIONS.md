@@ -33,7 +33,7 @@ features.
     https://www.c64-wiki.com/wiki/Reset_Button
     because right now, Games like URIDIUM can prevent us from resetting
     (we need to re-load the core)
-    
+
 * Code consistency and "niceness":
   - Check directory structure and headers of source files.
   - Review all documentation and README's
@@ -63,12 +63,12 @@ features.
 * On-Screen-Menu via Help button to mount drives and to configure options
 * C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
 * Drive led during virtual disk access
-WIP CRT filter: Optional visual scanlines so that the output looks more like an
+* CRT filter: Optional visual scanlines so that the output looks more like an
   old monitor or TV
-WIP * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
+* Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   utilized more efficiently. Great for games.
-WIP Audio processing: Optionally improve the raw audio output of the system
+* Audio processing: Optionally improve the raw audio output of the system
 
 ## Constraints (What is not yet working) & Roadmap
 
