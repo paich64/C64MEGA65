@@ -795,16 +795,8 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
-   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_HDMI_60HZ) else 1;
-
-   i_audio_video_pipeline : entity work.audio_video_pipeline
+   i_analog_pipeline : entity work.analog_pipeline
       generic map (
-         G_HDMI_CLK_SPEED    => HDMI_CLK_SPEED,
-         G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
-                                                                           -- The purpose is to right-shift the position of the OSM
-                                                                           -- on the HDMI output. This will be removed when the
-                                                                           -- M2M framework supports two different OSM VRAMs.
-         G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY,
          G_OSM_DX            => OSM_DX,
@@ -838,6 +830,49 @@ begin
          pwm_l_o                  => pwm_l,
          pwm_r_o                  => pwm_r,
 
+         -- Connect to QNICE and Video RAM
+         video_osm_cfg_enable_i   => video_osm_cfg_enable,
+         video_osm_cfg_xy_i       => video_osm_cfg_xy,
+         video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
+         video_osm_vram_addr_o    => video_osm_vram_addr,
+         video_osm_vram_data_i    => video_osm_vram_data,
+
+         -- System info device
+         sys_info_vga_o           => sys_info_vga
+      ); -- i_analog_pipeline
+
+
+   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_HDMI_60HZ) else 1;
+
+   i_digital_pipeline : entity work.digital_pipeline
+      generic map (
+         G_HDMI_CLK_SPEED    => HDMI_CLK_SPEED,
+         G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
+                                                                           -- The purpose is to right-shift the position of the OSM
+                                                                           -- on the HDMI output. This will be removed when the
+                                                                           -- M2M framework supports two different OSM VRAMs.
+         G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
+         G_VGA_DX            => VGA_DX,
+         G_VGA_DY            => VGA_DY,
+         G_OSM_DX            => OSM_DX,
+         G_OSM_DY            => OSM_DY
+      )
+      port map (
+         -- Input from Core (video and audio)
+         video_clk_i              => video_clk,
+         video_rst_i              => video_rst,
+         video_ce_i               => '1',
+         video_red_i              => video_red,
+         video_green_i            => video_green,
+         video_blue_i             => video_blue,
+         video_hs_i               => video_hs,
+         video_vs_i               => video_vs,
+         video_de_i               => video_de,
+         audio_clk_i              => audio_clk, -- 60 MHz
+         audio_rst_i              => audio_rst,
+         audio_left_i             => main_sid_l,
+         audio_right_i            => main_sid_r,
+
          -- Digital output (HDMI)
          hdmi_clk_i               => hdmi_clk,
          hdmi_rst_i               => hdmi_rst,
@@ -848,11 +883,6 @@ begin
          tmds_clk_n_o             => tmds_clk_n,
 
          -- Connect to QNICE and Video RAM
-         video_osm_cfg_enable_i   => video_osm_cfg_enable,
-         video_osm_cfg_xy_i       => video_osm_cfg_xy,
-         video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
-         video_osm_vram_addr_o    => video_osm_vram_addr,
-         video_osm_vram_data_i    => video_osm_vram_data,
          hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
@@ -876,7 +906,7 @@ begin
          hr_readdata_i            => hr_readdata,
          hr_readdatavalid_i       => hr_readdatavalid,
          hr_waitrequest_i         => hr_waitrequest
-      ); -- i_audio_video_pipeline
+      ); -- i_digital_pipeline
 
 
    --------------------------------------------------------

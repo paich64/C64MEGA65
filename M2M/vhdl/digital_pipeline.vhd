@@ -18,11 +18,11 @@ use work.video_modes_pkg.all;
 library xpm;
 use xpm.vcomponents.all;
 
-entity audio_video_pipeline is
+entity digital_pipeline is
    generic (
-      G_HDMI_CLK_SPEED       : natural;              -- HDMI clock speed in Hz    
+      G_HDMI_CLK_SPEED       : natural;              -- HDMI clock speed in Hz
       G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
-      G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.      
+      G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
       G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural;
       G_OSM_DX               : natural;              -- On-Screen-Menu width and height
@@ -44,18 +44,6 @@ entity audio_video_pipeline is
       audio_left_i             : in  signed(15 downto 0); -- Signed PCM format
       audio_right_i            : in  signed(15 downto 0); -- Signed PCM format
 
-      -- Analog output (VGA and audio jack)
-      vga_red_o                : out std_logic_vector(7 downto 0);
-      vga_green_o              : out std_logic_vector(7 downto 0);
-      vga_blue_o               : out std_logic_vector(7 downto 0);
-      vga_hs_o                 : out std_logic;
-      vga_vs_o                 : out std_logic;
-      vdac_clk_o               : out std_logic;
-      vdac_syncn_o             : out std_logic;
-      vdac_blankn_o            : out std_logic;
-      pwm_l_o                  : out std_logic;
-      pwm_r_o                  : out std_logic;
-
       -- Digital output (HDMI)
       hdmi_clk_i               : in  std_logic;
       hdmi_rst_i               : in  std_logic;
@@ -66,18 +54,12 @@ entity audio_video_pipeline is
       tmds_clk_n_o             : out std_logic;
 
       -- Connect to QNICE and Video RAM
-      video_osm_cfg_enable_i   : in  std_logic;
-      video_osm_cfg_xy_i       : in  std_logic_vector(15 downto 0);
-      video_osm_cfg_dxdy_i     : in  std_logic_vector(15 downto 0);
-      video_osm_vram_addr_o    : out std_logic_vector(15 downto 0);
-      video_osm_vram_data_i    : in  std_logic_vector(15 downto 0);
       hdmi_video_mode_i        : in  natural;
       hdmi_osm_cfg_enable_i    : in  std_logic;
       hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
       hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
-      sys_info_vga_o           : out std_logic_vector(79 downto 0);
       sys_info_hdmi_o          : out std_logic_vector(79 downto 0);
 
       -- Connect to HyperRAM controller
@@ -93,9 +75,9 @@ entity audio_video_pipeline is
       hr_readdatavalid_i       : in  std_logic;
       hr_waitrequest_i         : in  std_logic
    );
-end entity audio_video_pipeline;
+end entity digital_pipeline;
 
-architecture synthesis of audio_video_pipeline is
+architecture synthesis of digital_pipeline is
 
    constant C_FONT_DX            : natural := 16;
    constant C_FONT_DY            : natural := 16;
@@ -108,7 +90,7 @@ architecture synthesis of audio_video_pipeline is
    -- If this should ever be switchable, don't forget that the signal "select_44100" in
    -- i_vga_to_hdmi would need to be adjusted, too
    constant HDMI_PCM_SAMPLING    : natural := 48_000;
-   
+
    constant pcm_acr_cnt_range    : integer := (HDMI_PCM_SAMPLING * 256) / 1000;
 
    signal count                  : integer range 0 to 255;
@@ -178,36 +160,29 @@ architecture synthesis of audio_video_pipeline is
    signal hr_wide_readdatavalid  : std_logic;
    signal hr_wide_waitrequest    : std_logic;
 
-   signal video_ce_overlay       : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
-   signal video_ce_hdmi          : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
+   signal video_ce               : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
 
 begin
 
    -- SHELL_M_XY
-   sys_info_vga_o(15 downto  0) <=
+   sys_info_hdmi_o(15 downto  0) <=
       X"0000";
 
    -- SHELL_M_DXDY
-   sys_info_vga_o(31 downto 16) <=
+   sys_info_hdmi_o(31 downto 16) <=
       std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
 
    -- SHELL_O_XY
-   sys_info_vga_o(47 downto 32) <=
+   sys_info_hdmi_o(47 downto 32) <=
       std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-G_OSM_DX) * 256, 16));
 
    -- SHELL_O_DXDY
-   sys_info_vga_o(63 downto 48) <=
+   sys_info_hdmi_o(63 downto 48) <=
       std_logic_vector(to_unsigned(G_OSM_DX * 256 + G_OSM_DY, 16));
 
    -- SYS_DXDY
-   sys_info_vga_o(79 downto 64) <=
+   sys_info_hdmi_o(79 downto 64) <=
       std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
-
-   sys_info_hdmi_o(15 downto  0) <= X"CCCC"; -- SHELL_M_XY
-   sys_info_hdmi_o(31 downto 16) <= X"CCCC"; -- SHELL_M_DXDY
-   sys_info_hdmi_o(47 downto 32) <= X"CCCC"; -- SHELL_O_XY
-   sys_info_hdmi_o(63 downto 48) <= X"CCCC"; -- SHELL_O_DXDY
-   sys_info_hdmi_o(79 downto 64) <= X"CCCC"; -- SYS_DXDY
 
    hdmi_video_mode <= G_VIDEO_MODE_VECTOR(hdmi_video_mode_i);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
@@ -222,59 +197,6 @@ begin
    hdmi_hmax       <= (hdmi_video_mode.H_PIXELS+hdmi_video_mode.V_PIXELS*4/3)/2-1;
    hdmi_vmin       <= 0;
    hdmi_vmax       <= hdmi_video_mode.V_PIXELS-1;
-
-   ---------------------------------------------------------------------------------------------
-   -- Analog output (VGA and audio jack)
-   ---------------------------------------------------------------------------------------------
-
-   -- Convert the C64's PCM output to pulse density modulation
-   i_pcm2pdm : entity work.pcm_to_pdm
-      port map
-      (
-         cpuclock         => audio_clk_i,
-         pcm_left         => audio_left_i,
-         pcm_right        => audio_right_i,
-         -- Pulse Density Modulation (PDM is supposed to sound better than PWM on MEGA65)
-         pdm_left         => pwm_l_o,
-         pdm_right        => pwm_r_o,
-         audio_mode       => '0'         -- 0=PDM, 1=PWM
-      ); -- i_pcm2pdm
-
-
-   i_video_overlay_video : entity work.video_overlay
-      generic  map (
-         G_VGA_DX         => G_VGA_DX,
-         G_VGA_DY         => G_VGA_DY,
-         G_FONT_DX        => C_FONT_DX,
-         G_FONT_DY        => C_FONT_DY
-      )
-      port map (
-         vga_clk_i        => video_clk_i,
-         vga_ce_i         => video_ce_overlay(0),
-         vga_red_i        => video_red_i,
-         vga_green_i      => video_green_i,
-         vga_blue_i       => video_blue_i,
-         vga_hs_i         => video_hs_i,
-         vga_vs_i         => video_vs_i,
-         vga_de_i         => video_de_i,
-         vga_cfg_enable_i => video_osm_cfg_enable_i,
-         vga_cfg_xy_i     => video_osm_cfg_xy_i,
-         vga_cfg_dxdy_i   => video_osm_cfg_dxdy_i,
-         vga_vram_addr_o  => video_osm_vram_addr_o,
-         vga_vram_data_i  => video_osm_vram_data_i,
-         vga_ce_o         => open,
-         vga_red_o        => vga_red_o,
-         vga_green_o      => vga_green_o,
-         vga_blue_o       => vga_blue_o,
-         vga_hs_o         => vga_hs_o,
-         vga_vs_o         => vga_vs_o,
-         vga_de_o         => open
-      ); -- i_video_overlay_video
-
-   -- Make the VDAC output the image
-   vdac_syncn_o  <= '0';
-   vdac_blankn_o <= '1';
-   vdac_clk_o    <= not video_clk_i;
 
 
    ---------------------------------------------------------------------------------------------
@@ -350,6 +272,7 @@ begin
       end if;
    end process p_sample;
 
+
    ---------------------------------------------------------------------------------------------
    -- Digital output (HDMI) - Video part
    ---------------------------------------------------------------------------------------------
@@ -360,8 +283,7 @@ begin
    p_video_ce : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
-         video_ce_overlay <= video_ce_overlay(0) & video_ce_overlay(video_ce_overlay'left downto 1);
-         video_ce_hdmi <= video_ce_hdmi(0) & video_ce_hdmi(video_ce_hdmi'left downto 1);
+         video_ce <= video_ce(0) & video_ce(video_ce'left downto 1);
       end if;
    end process p_video_ce;
 
@@ -377,10 +299,10 @@ begin
          BYTESWAP  => true,
          ADAPTIVE  => true,         -- Needed for advanced scanlines emulation in polyphase mode
          PALETTE   => false,        -- Not needed: Only useful for the framebuffer mode, where the scaler is used to upscale a framebuffer in RAM, without using the scaler input.
-         PALETTE2  => false,        -- Not needed: Same, for framebuffer 256 colours mode. 
+         PALETTE2  => false,        -- Not needed: Same, for framebuffer 256 colours mode.
          FRAC      => 6,            -- 2^value subpixels; MiSTer starts to settle on FRAC => 8, but this older version of ascal does not seem to support 8 (at C64 still at 6)
          OHRES     => 2048,         -- Maximum horizontal output resolution. (There is no parameter for vertical resolution.)
-         IHRES     => 1024,         -- Maximum horizontal input resolution. (Also here no paramter for vertical.)
+         IHRES     => 1024,         -- Maximum horizontal input resolution. (Also here no parameter for vertical.)
          N_DW      => C_AVM_DATA_SIZE,
          N_AW      => C_AVM_ADDRESS_SIZE,
          N_BURST   => 256           -- 256 bytes per burst
@@ -394,9 +316,9 @@ begin
          i_vs              => video_vs_i,                   -- input
          i_fl              => '0',                          -- input
          i_de              => video_de_i,                   -- input
-         i_ce              => video_ce_hdmi(0),             -- input
+         i_ce              => video_ce(0),                  -- input
          i_clk             => video_clk_i,                  -- input
-         
+
          -- Output video
          o_r               => hdmi_red,                     -- output
          o_g               => hdmi_green,                   -- output
@@ -407,18 +329,18 @@ begin
          o_vbl             => open,                         -- output
          o_ce              => '1',                          -- input
          o_clk             => hdmi_clk_i,                   -- input
-         
+
          -- Border colour R G B
          o_border          => X"000000",                    -- input
-         
+
          -- Framebuffer mode
          o_fb_ena          => '0',                          -- input: do not use framebuffer mode
          o_fb_hsize        => 0,                            -- input
          o_fb_vsize        => 0,                            -- input
-         o_fb_format       => "000101",                     -- input: 101=24bpp: 8-bit for R, G and B 
+         o_fb_format       => "000101",                     -- input: 101=24bpp: 8-bit for R, G and B
          o_fb_base         => x"0000_0000",                 -- input
          o_fb_stride       => (others => '0'),              -- input
-         
+
          -- Framebuffer palette in 8bpp mode
          pal1_clk          => '0',                          -- input
          pal1_dw           => x"000000000000",              -- input
@@ -426,36 +348,36 @@ begin
          pal1_a            => "0000000",                    -- input
          pal1_wr           => '0',                          -- input
          pal_n             => '0',                          -- input
-                  
+
          pal2_clk          => '0',                          -- input
          pal2_dw           => x"000000",                    -- input
          pal2_dr           => open,                         -- output
          pal2_a            => "00000000",                   -- input
          pal2_wr           => '0',                          -- input
-         
+
          -- Low lag PLL tuning
          o_lltune          => open,                         -- output
-         
+
          -- Input video parameters
          iauto             => '1',                          -- input
          himin             => 0,                            -- input
          himax             => 0,                            -- input
          vimin             => 0,                            -- input
          vimax             => 0,                            -- input
-         
+
          -- Detected input image size
          i_hdmax           => open,                         -- output
          i_vdmax           => open,                         -- output
-         
+
          -- Output video parameters
          run               => '1',                          -- input
          freeze            => '0',                          -- input
          mode              => "00000",                      -- input: mode(2 downto 0)="000": "Nearest" interpolation, mode(3)=0: no triple buffering, mode(4) currently unused by ascal
-         
+
          -- SYNC  |_________________________/"""""""""\_______|
          -- DE    |""""""""""""""""""\________________________|
          -- RGB   |    <#IMAGE#>      ^HDISP                  |
-         --            ^HMIN   ^HMAX        ^HSSTART  ^HSEND  ^HTOTAL         
+         --            ^HMIN   ^HMAX        ^HSSTART  ^HSEND  ^HTOTAL
          htotal            => hdmi_htotal,                  -- input
          hsstart           => hdmi_hsstart,                 -- input
          hsend             => hdmi_hsend,                   -- input
@@ -468,16 +390,16 @@ begin
          hmax              => hdmi_hmax,                    -- input
          vmin              => hdmi_vmin,                    -- input
          vmax              => hdmi_vmax,                    -- input
-         
+
          -- Scaler format. 00=16bpp 565, 01=24bpp 10=32bpp
          format            => "01",                         -- input: 24bpp
-         
-         -- Polyphase filter coefficients (not used by us)         
+
+         -- Polyphase filter coefficients (not used by us)
          poly_clk          => '0',                          -- input
          poly_dw           => (others => '0'),              -- input
          poly_a            => (others => '0'),              -- input
          poly_wr           => '0',                          -- input
-         
+
          -- Avalon Memory interface
          avl_clk           => hr_clk_i,                     -- input
          avl_waitrequest   => hr_wide_waitrequest,          -- input
@@ -489,7 +411,7 @@ begin
          avl_write         => hr_wide_write,                -- output
          avl_read          => hr_wide_read,                 -- output
          avl_byteenable    => hr_wide_byteenable,           -- output
-         
+
          -- Asynchronous reset, active low
          reset_na          => reset_na                      -- input
       ); -- i_ascal
@@ -524,7 +446,7 @@ begin
          m_avm_waitrequest_i   => hr_waitrequest_i
       ); -- i_avm_decrease
 
-   i_video_overlay_hdmi : entity work.video_overlay
+   i_video_overlay : entity work.video_overlay
       generic  map (
          G_SHIFT          => G_SHIFT_HDMI,   -- Deprecated. Will be removed in future release
          G_VGA_DX         => G_VGA_DX,  -- TBD
@@ -553,7 +475,7 @@ begin
          vga_hs_o         => hdmi_osm_hs,
          vga_vs_o         => hdmi_osm_vs,
          vga_de_o         => hdmi_osm_de
-      ); -- i_video_overlay_hdmi
+      ); -- i_video_overlay
 
    i_vga_to_hdmi : entity work.vga_to_hdmi
       port map (
@@ -587,6 +509,7 @@ begin
          -- TMDS output (parallel)
          tmds         => hdmi_tmds
       ); -- i_vga_to_hdmi
+
 
    ---------------------------------------------------------------------------------------------
    -- tmds_clk (HDMI)
