@@ -52,6 +52,17 @@ recognizing this core as genuine C64 hardware.
   4:3 LCD/TFT displays. The resolution is 720x576 pixels and the frequency
   is 50 Hz in PAL mode.
   
+* Retro 15KHz RGB over VGA: This is for the ultimate retro experience:
+  Connect an old Scart TV (for example using
+  [this](https://ultimatemister.com/product/rgb-scart-cable/)
+  cable) or an old RGB-capable monitor (by soldering your own cable)
+  to MEGA65's VGA port.
+  
+#### Flicker-free HDMI
+
+@TODO document "Best", "OK" and "Off" here and describe the respective
+ideas behind these settings
+  
 ### Convenience
 
 * On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
