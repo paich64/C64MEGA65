@@ -86,7 +86,8 @@ _S_ERR_UNKNOWN  MOVE    ERR_BROWSE_UNKN, R8
                 ; warn, that we are not showing all files
 _S_WRN_MAX      MOVE    WRN_MAXFILES, R8        ; print warning message
                 RSUB    SCR$PRINTSTR, 1
-_S_WRN_WAIT     MOVE    M2M$KEYBOARD, R8
+_S_WRN_WAIT     RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
+                MOVE    M2M$KEYBOARD, R8
                 AND     M2M$KEY_SPACE, @R8
                 RBRA    _S_WRN_WAIT, !Z         ; wait for space; low-active
                 RSUB    SCR$CLRINNER, 1         ; clear inner part of window
@@ -152,8 +153,8 @@ _S_SELECT_LOOP  MOVE    R4, R8                  ; invert currently sel. line
                 RSUB    SELECT_LINE, 1
 
                 ; non-blocking mechanism to read keys from the MEGA65 keyboard
-                ; @TODO: make sure to poll IO
-_S_INPUT_LOOP   RSUB    KEYB$SCAN, 1
+_S_INPUT_LOOP   RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
+                RSUB    KEYB$SCAN, 1
                 RSUB    KEYB$GETKEY, 1
                 CMP     0, R8                   ; has a key been pressed?
                 RBRA    _IL_KEYPRESSED, !Z      ; yes: handle key press

@@ -560,7 +560,7 @@ _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
 ; Meant to be polled in the main loop and while waiting for keys in the OSM
 ; ----------------------------------------------------------------------------
 
-HANDLE_IO       INCRB
+HANDLE_IO       SYSCALL(enter, 1)
 
                 ; Loop through all VDRIVES and check for read requests
                 XOR     R0, R0                  ; R0: number of virtual drive
@@ -583,7 +583,7 @@ _HANDLE_IO_NXT  ADD     1, R0                   ; next drive
                 CMP     R0, R1                  ; done?
                 RBRA    _HANDLE_IO_1, !Z        ; no, continue
 
-                DECRB
+                SYSCALL(leave, 1)
                 RET
 
 ; Handle read request from drive number in R8:
