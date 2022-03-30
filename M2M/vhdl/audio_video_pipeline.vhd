@@ -376,7 +376,7 @@ begin
          BYTESWAP  => true,
          PALETTE   => false,        -- Not needed: Only useful for the framebuffer mode, where the scaler is used to upscale a framebuffer in RAM, without using the scaler input.
          PALETTE2  => false,        -- Not needed: Same, for framebuffer 256 colours mode. 
-         FRAC      => 4,
+         FRAC      => 6,            -- MiSTer uses FRAC => 6, so do we; 4 means 16 subpixels, 6 means 64, 8 means 256
          OHRES     => 2048,         -- Maximum horizontal output resolution. (There is no parameter for vertical resolution.)
          IHRES     => 1024,         -- Maximum horizontal input resolution. (Also here no paramter for vertical.)
          N_DW      => C_AVM_DATA_SIZE,

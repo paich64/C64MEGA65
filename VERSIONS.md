@@ -8,21 +8,44 @@ features.
 ## TODOs before release
 
 * File Browser:
+  - Add QNICE's cycler-counter and implement a smart wait time, if somebody
+    tries to mount a drive before 5 seconds have passed since the SD card's
+    reset signal gone to zero. This should increase the amount of cards
+    that are readable/mountable greatly and doing it smartly (by looking at
+    QNICE's cycle counter) is not as intrusive as letting the user wait for
+    5 seconds hardcoded...
+  - Refactor hardcoded VDrives, buffer RAM's etc. and use
+    our new SYSINFO device instead
   - Error if wrong D64 file size
   - Filter files (needs subdir flag, framework needs to offer convenient
     file extension checker)
-* Unmount whole disk drive via Space in OSM
-* Debounce the joystick and the MEGA65's reset button
-  (add to MiSTer2MEGA65 from gbc4mega65)
-* Check directory structure and headers of source files.
-* Review all documentation and README's
-* Robustness: Do the final heap/stack sanity check in m2m-rom.asm and replace
-  0xXXXX by the calculated values
-* Bug: Reset problem
-* Bug: Screen flicker
-* Feature: CRT mode
-* Feature: crop/zoom
-* Feature: audio processing
+  - Unmount whole disk drive via Space in OSM
+  - Make sure that the MiSTer2MEGA65 framework is updated accordingly
+    as soon as all of this works
+
+* General robustness:
+  - Do the final heap/stack sanity check in m2m-rom.asm and replace
+    0xXXXX by the calculated values
+  - Debounce the joystick and the MEGA65's reset button
+    (add to MiSTer2MEGA65 from gbc4mega65)
+    => needs to go to the framework, too
+
+* Code consistency and "niceness":
+  - Check directory structure and headers of source files.
+  - Review all documentation and README's
+  - run    grep -irn mark_debug .
+    in these folders and remove all debug signals:
+    M2M/vhdl
+    MEGA65/vhdl
+    (C64_MiSTerMEGA65 is already clean.)
+
+* Bugs:
+   - Reset problem => might be already solved in the meantime?
+
+* MiSTer Features:
+   - CRT mode
+   - crop/zoom
+   - audio processing
 
 ## Features
 
