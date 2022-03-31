@@ -42,8 +42,8 @@ So to summarize, the C64 core has the following output:
 * The display area is 320x200 pixels
 
 ## Comparison with other documentation
-Now compare the above numbers with the following [link ("6569
-PAL-B")](http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt):
+Now compare the above numbers with the following
+[link](http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt) (see "6569 PAL-B"):
 * Left border : 48 pixels (0x18-0x1e0+0x1f8)
 * Screen : 320 pixels (0x158-0x18)
 * Right border : 36 pixels (0x17c-0x158)
