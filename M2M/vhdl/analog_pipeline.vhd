@@ -20,6 +20,7 @@ entity analog_pipeline is
    );
    port (
       -- Input from Core (video and audio)
+      main_clk_i               : in  std_logic;
       video_clk_i              : in  std_logic;
       video_rst_i              : in  std_logic;
       video_ce_i               : in  std_logic;
@@ -28,7 +29,6 @@ entity analog_pipeline is
       video_blue_i             : in  std_logic_vector(7 downto 0);
       video_hs_i               : in  std_logic;
       video_vs_i               : in  std_logic;
-      video_de_i               : in  std_logic;
       audio_clk_i              : in  std_logic;
       audio_rst_i              : in  std_logic;
       audio_left_i             : in  signed(15 downto 0); -- Signed PCM format
@@ -75,6 +75,12 @@ architecture synthesis of analog_pipeline is
    signal mix_vga_de          : std_logic;
    signal ce_pix              : std_logic;
 
+   signal vga_red             : std_logic_vector(7 downto 0);
+   signal vga_green           : std_logic_vector(7 downto 0);
+   signal vga_blue            : std_logic_vector(7 downto 0);
+   signal vga_hs              : std_logic;
+   signal vga_vs              : std_logic;
+
    signal video_ce_overlay       : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
 
    component video_mixer is
@@ -102,6 +108,14 @@ architecture synthesis of analog_pipeline is
          VGA_DE      : out std_logic
       );
    end component video_mixer;
+
+   constant C_DEBUG_MODE               : boolean := false;
+   attribute mark_debug                : boolean;
+   attribute mark_debug of vga_red_o   : signal is C_DEBUG_MODE;
+   attribute mark_debug of vga_green_o : signal is C_DEBUG_MODE;
+   attribute mark_debug of vga_blue_o  : signal is C_DEBUG_MODE;
+   attribute mark_debug of vga_hs_o    : signal is C_DEBUG_MODE;
+   attribute mark_debug of vga_vs_o    : signal is C_DEBUG_MODE;
 
 begin
 
@@ -155,20 +169,20 @@ begin
    -- we could do here, including to make sure that we output an old composite signal instead of VGA
    --------------------------------------------------------------------------------------------------
 
---   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
---   i_video_sync : entity work.video_sync
---      port map (
---         clk32     => clk_main_i,
---         pause     => c64_pause,
---         hsync     => c64_hsync,
---         vsync     => c64_vsync,
---         ntsc      => c64_ntsc_i,
---         wide      => '0',
---         hsync_out => vs_hsync,
---         vsync_out => vs_vsync,
---         hblank    => vs_hblank,
---         vblank    => vs_vblank
---      ); -- i_video_sync
+   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
+   i_video_sync : entity work.video_sync
+      port map (
+         clk32     => main_clk_i,
+         pause     => '0',
+         hsync     => video_hs_i,
+         vsync     => video_vs_i,
+         ntsc      => '0',
+         wide      => '0',
+         hsync_out => vs_hsync,
+         vsync_out => vs_vsync,
+         hblank    => vs_hblank,
+         vblank    => vs_vblank
+      ); -- i_video_sync
 
    p_div : process (video_clk_i)
    begin
@@ -216,21 +230,21 @@ begin
          VGA_R       => mix_r,
          VGA_G       => mix_g,
          VGA_B       => mix_b,
-         VGA_VS      => vga_vs_o,
-         VGA_HS      => vga_hs_o,
+         VGA_VS      => vga_vs,
+         VGA_HS      => vga_hs,
          VGA_DE      => mix_vga_de
       );
 
    vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
    begin
       if mix_vga_de = '1' then
-         vga_red_o   <= mix_r;
-         vga_green_o <= mix_g;
-         vga_blue_o  <= mix_b;
+         vga_red   <= mix_r;
+         vga_green <= mix_g;
+         vga_blue  <= mix_b;
       else
-         vga_red_o   <= (others => '0');
-         vga_green_o <= (others => '0');
-         vga_blue_o  <= (others => '0');
+         vga_red   <= (others => '0');
+         vga_green <= (others => '0');
+         vga_blue  <= (others => '0');
       end if;
    end process vga_data_enable;
 
@@ -254,12 +268,12 @@ begin
       port map (
          vga_clk_i        => video_clk_i,
          vga_ce_i         => video_ce_overlay(0),
-         vga_red_i        => video_red_i,
-         vga_green_i      => video_green_i,
-         vga_blue_i       => video_blue_i,
-         vga_hs_i         => video_hs_i,
-         vga_vs_i         => video_vs_i,
-         vga_de_i         => video_de_i,
+         vga_red_i        => mix_r,
+         vga_green_i      => mix_g,
+         vga_blue_i       => mix_b,
+         vga_hs_i         => vga_hs,
+         vga_vs_i         => vga_vs,
+         vga_de_i         => mix_vga_de,
          vga_cfg_enable_i => video_osm_cfg_enable_i,
          vga_cfg_xy_i     => video_osm_cfg_xy_i,
          vga_cfg_dxdy_i   => video_osm_cfg_dxdy_i,

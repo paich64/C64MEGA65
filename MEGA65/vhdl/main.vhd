@@ -144,6 +144,10 @@ signal iec_rom_addr_i      : std_logic_vector(15 downto 0);
 signal iec_rom_data_i      : std_logic_vector(7 downto 0);
 signal iec_rom_wr_i        : std_logic;
 
+signal vga_red             : unsigned(7 downto 0);
+signal vga_green           : unsigned(7 downto 0);
+signal vga_blue            : unsigned(7 downto 0);
+
 constant C_DEBUG_MODE             : boolean := false;
 attribute mark_debug              : boolean;
 attribute mark_debug of c64_hsync : signal is C_DEBUG_MODE;
@@ -153,6 +157,7 @@ attribute mark_debug of c64_g     : signal is C_DEBUG_MODE;
 attribute mark_debug of c64_b     : signal is C_DEBUG_MODE;
 
 begin
+
    -- MiSTer Commodore 64 core / main machine
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
       port map (
@@ -191,9 +196,9 @@ begin
          ntscMode    => c64_ntsc_i,
          hsync       => vga_hs_o,
          vsync       => vga_vs_o,
-         r           => vga_red_o,
-         g           => vga_green_o,
-         b           => vga_blue_o,
+         r           => vga_red,
+         g           => vga_green,
+         b           => vga_blue,
 
          -- cartridge port
          game        => '1',              -- low active, 1 is default so that KERNAL ROM can be read
@@ -274,6 +279,11 @@ begin
          cass_sense  => '0',
          cass_read   => '0'
       );
+
+   vga_red_o   <= std_logic_vector(vga_red);
+   vga_green_o <= std_logic_vector(vga_green);
+   vga_blue_o  <= std_logic_vector(vga_blue);
+
 
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;

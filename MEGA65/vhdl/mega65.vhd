@@ -803,6 +803,7 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
+         main_clk_i               => main_clk,
          video_clk_i              => video_clk,
          video_rst_i              => video_rst,
          video_ce_i               => '1',
@@ -865,6 +866,7 @@ begin
          video_blue_i             => video_blue,
          video_hs_i               => video_hs,
          video_vs_i               => video_vs,
+         video_de_i               => '0', -- TBD
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
