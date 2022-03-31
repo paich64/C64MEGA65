@@ -79,5 +79,9 @@ The following resources and tools were invaluable for developing C64MEGA65:
     Special thanks to Erik Van den Broeck for the excellent HTML version:
     http://users.telenet.be/kim1-6502/6502/proman.html
 
+  * The MOS 6567/6569 video controller and its application in the Commodore 64
+    by Christian Bauer: For making sure our video pipeline is accurate
+    http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
+
   * DirMaster by Style
     https://style64.org/dirmaster

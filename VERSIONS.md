@@ -79,6 +79,8 @@ features.
 
 ## Constraints (What is not yet working) & Roadmap
 
+### Feature Roadmap
+
 We are planning to improve this core steadily. The MiSTer core offers much
 more features than our current Release 1 of the port. Here is a list of
 features that we are planning to deliver at a later stage:
@@ -100,9 +102,17 @@ features that we are planning to deliver at a later stage:
 	* IEC port (for example to plug in a real C1541)	
 	* C1581 via MEGA65's disk drive
 	* REU via expansion port
-* 2 graphic cards to QNICE: Utilize full 16:9 screen real estate for file-
-  and directory browsing and core configuration on HDMI while saving screen
-  real estate on 4:3 VGA
-* Internal TODOs:
-  * HyperRAM device support to QNICE
-  * Line 65 in fdc1772.v: back to 2 or work with generic?
+* Utilize full 16:9 screen real estate for file-and directory browsing and
+  core configuration on HDMI while saving screen real estate on 4:3 VGA
+
+### Technical Roadmap
+
+To implement some of the above-mentioned features and also to improve the
+robustness, performance and stability of the whole system, we will need
+to implement certain technical improvements in the "backend":
+
+* Update to newer ascal version (wait until MiSTer did the same upstream)
+* Re-do QNICE's SD Card controller: Go from SPI to native
+* Enhance QNICE's FAT32 library so that it supports writing
+* HyperRAM device support to QNICE
+* Line 65 in fdc1772.v: back to 2 or work with generic?
