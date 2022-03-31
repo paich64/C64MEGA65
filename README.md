@@ -60,6 +60,11 @@ recognizing this core as genuine C64 hardware.
   
 #### Flicker-free HDMI
 
+When you use an emulator on your computer, you very probably will
+experience flickering and tearing .
+
+==============================================================================
+
 @TODO document "Best", "OK" and "Off" here and describe the respective
 ideas behind these settings
   
@@ -74,6 +79,38 @@ ideas behind these settings
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
+
+### Constraints and Roadmap
+
+Our Release 1 is - well - a Release 1. Thanks to all the folks who
+[contributed](AUTHORS) to the core, it is incredibly compatible to an original
+Commodore 64. With our Release 1 you can play nearly all the avilable games
+and watch kind of all demos ever written for the C64. It happens more often
+than not, that the core is recognized as real hardware by software.
+
+At this moment, our MEGA65 version of the core is not supporting
+some of the very nice hardware offerings that the MEGA65 makes, such as:
+
+* Mouse / Paddles
+* Expansion port: Support hardware cartridges
+* IEC port: Support real drives, printers, ...
+* Use the MEGA65's drive as a C1581
+
+Also, some things that folks would consider as "basic stuff" are not
+supported, yet such as:
+
+* NTSC mode
+* Mounting tapes (`*.tap`)
+* Mounting cartridges (`*.crt`)
+* Writing to mounted disks (all file operations are read-only)
+
+The MiSTer core, which is the basis of this MEGA65 core offers a ton of
+additional convenience features and nerdy stuff. We are not yet supporting
+most of it. Have a look at our [Roadmap](VERSIONS.md#feature-roadmap)
+to learn more.
+
+Since we do this as a hobby, it might take a year or longer until these
+things are supported. So please bear with us or [help us](CONTRIBUTE.md).
 
 Installation
 ------------
