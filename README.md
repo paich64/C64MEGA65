@@ -82,7 +82,7 @@ to provide you with a similar 100% flicker-free, tearing-free, stuttering-free
 experience. Press the <kbd>Help</kbd> button on your MEGA65 while the
 Commodore 64 is running to open the on-screen-menu and choose:
 
-* **Best: 50.125 Hz\n**: With this option, we are torturing your HDMI display
+* **Best: 50.125 Hz**: With this option, we are torturing your HDMI display
   with the odd frequency that the Commodore 64 actually creates. If this
   works on your screen, then this is for sure the best option. But we assume
   that many displays are defaulting to 50 Hz when being fed 50.125 Hz. You
