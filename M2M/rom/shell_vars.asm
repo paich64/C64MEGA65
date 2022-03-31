@@ -30,6 +30,9 @@ HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
 
+SD_CYC_MID      .BLOCK 1                        ; cycle counter for SD card..
+                                                ; .."stability workaround"
+
 ; file browser persistent status
 FB_HEAP         .BLOCK 1                        ; heap used by file browser
 FB_STACK        .BLOCK 1                        ; local stack used by  browser

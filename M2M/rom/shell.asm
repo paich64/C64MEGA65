@@ -41,6 +41,15 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    LOG_M2M, R8
                 SYSCALL(puts, 1)
 
+                ; remember cycle counter for SD Card "stabilization" via
+                ; waiting at least three seconds before allowing to mount it
+                ; IO$CYC_MID updates with 50 MHz / 65535 = 763 Hz
+                ; 3 seconds are 2289 updates of IO$CYC_MID
+                ; 2289 = 0x08F1
+                MOVE    SD_CYC_MID, R8      
+                MOVE    IO$CYC_MID, R9
+                MOVE    @R9, @R8
+
                 ; ------------------------------------------------------------
                 ; Initialize variables, libraries, IO and show welcome screen
                 ; ------------------------------------------------------------
@@ -120,20 +129,34 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 CMP     M2M$KEY_SPACE, R8
                 RBRA    START_SPACE, !Z         ; loop until Space was pressed
 
+                ; Are 3 seconds already over or was the user quite fast when
+                ; pressing space? This is the SD card "stability" workaround
+                MOVE    SD_CYC_MID, R4
+                MOVE    @R4, R4
+                MOVE    IO$CYC_MID, R5
+                MOVE    @R5, R0
+                SUB     R4, R0
+                MOVE    0x08F1, R1
+                CMP     R0, R1                  ; less or equal 3 seconds?
+                RBRA    _START_CONT, N          ; no: go to main loop
+
+                RSUB    SCR$CLRINNER, 1
+                MOVE    STR_INITWAIT, R8
+                RSUB    SCR$PRINTSTR, 1             
+_START_WAIT     MOVE    @R5, R0
+                SUB     R4, R0
+                CMP     R0, R1
+                RBRA    _START_WAIT, !N
+
                 ; Hide OSM and connect keyboard and joysticks to the core
-                RSUB    SCR$OSM_OFF, 1
+_START_CONT     RSUB    SCR$OSM_OFF, 1
 
                 ; Avoid that the keypress to exit the splash screen gets
                 ; noticed by the core: Wait 1 second and only after that
                 ; connect the keyboard and the joysticks to the core
                 RSUB    WAIT333MS, 1
                 MOVE    M2M$CSR, R0
-                OR      M2M$CSR_KBD_JOY, @R0
-
-                ; if drives have been mounted, the mount strobe needs to be
-                ; renewed after a reset, as the reset signal also resets
-                ; the state of vdrives.vhd
-                ;RSUB    PREPARE_CORE_IO, 1
+                OR      M2M$CSR_KBD_JOY, @R0                
 
                 ; ------------------------------------------------------------
                 ; Main loop:
