@@ -80,7 +80,7 @@ When using VGA or Retro 15 KHz RGB, you are safe by definition, if your
 monitor plays along. For users of HDMI, we are offering two options
 to provide you with a similar 100% flicker-free, tearing-free, stuttering-free
 experience. Press the <kbd>Help</kbd> button on your MEGA65 while the
-Commodore 64 is running and choose:
+Commodore 64 is running to open the on-screen-menu and choose:
 
 * **Best: 50.125 Hz\n**: With this option, we are torturing your HDMI display
   with the odd frequency that the Commodore 64 actually creates. If this
