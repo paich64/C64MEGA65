@@ -176,8 +176,12 @@ into the FPGA of the MEGA65 and automatically started.
 How to use the file- and directory browser for mounting a disk image
 --------------------------------------------------------------------
 
-* Long filename support
-* Alphabetically sorted file- and directory listings
+Thanks to long filename support and alphabetically sorted file- and directory
+listings, mounting a disk image is straightforward. Press MEGA65's
+<kbd>Help</kbd> key to open the on-screen-menu while the C64 is running
+and select `8:<Mount Drive>` using the cursor keys and <kbd>Return</kbd>.
+Here is how the browser works:
+
 * Navigate up/down using the <kbd>Cursor up</kbd> and
   <kbd>Cursor down</kbd> keys
 * Page up and page down using the <kbd>Cursor left</kbd> and
