@@ -6,25 +6,32 @@ Every four clock cycles a new pixel is generated.
 
 ### Horizontal timing
 All values are relative to rising edge of hsync:
-* Hsync start : 0 pixels
-* Left border start : 89 pixels
-* Hsync end : 100 pixels
-* Display area start : 139 pixels
-* Right border start : 459 pixels
-* Blanking start : 497 pixels
-* Hsync start : 504 pixels
+| Event              | pixels  |
+| -----              | ------: |
+| Hsync start        |   0     |
+| Left border start  |  89     |
+| Hsync end          | 100     |
+| Display area start | 139     |
+| Right border start | 459     |
+| Blanking start     | 497     |
+| Hsync start        | 504     |
 
 Therefore:
-* Size of left border : 50 pixels
-* Size of right border : 38 pixels
+| Size          | pixels  |
+| -----         | ------: |
+| Left border   |  50     |
+| Right border  |  38     |
 
 ### Vertical timing
 All values are relative to rising edge of vsync:
-* Vsync start : line 0
-* Vsync end : line 0
-* Display area start : line 63
-* Display area end : line 262
-* Vsync start : line 312
+
+| Event              | pixels  |
+| -----              | ------: |
+| Vsync start        |   0     |
+| Vsync end          |   1     |
+| Display area start |  63     |
+| Display area end   | 262     |
+| Vsync start        | 312     |
 
 The above shows that the C64 core does not implement vertical blanking, i.e.
 the border is displayed for all 112 lines outside the display area.
