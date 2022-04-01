@@ -5,7 +5,7 @@
 ;
 ; Expects that an on-screen-display is already active and uses the facilities
 ; of screen.asm for displaying everything. The file selectfile.asm needs the
-; environment of shell.asm and HANDLE_DEV needs to be valid.
+; environment of shell.asm.
 ;
 ; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
@@ -17,8 +17,13 @@
 ; returns a string pointer to the filename.
 ;
 ; Input:
-;   Expects FB_STACK to be initialized (as well as the stack itself) and
-;   B_STACK_SIZE to contain the correct number.
+;   * HANDLE_DEV needs to be valid.
+;   * Expects FB_STACK to be initialized (as well as the stack itself)
+;   * B_STACK_SIZE needs to contain the correct number
+;   * SD_WAIT needs to be defined (.EQU) and SD_CYC_MID & SD_CYC_HI need
+;     to contain the initial cycle counter values
+;   * SD_WAIT_DONE needs to be initialized to zero for the very first start
+;     of the system and after each reset
 ; Output:
 ;   R8: Pointer to filename (zero terminated string), if R9=0
 ;   R9: 0=OK (no error)
@@ -34,9 +39,44 @@ SELECT_FILE     SYSCALL(enter, 1)
                 MOVE    FB_STACK, R0
                 MOVE    @R0, SP                 ; restore the own stack
 
+                ; Perform the SD card "stability" workaround (see shell.asm)
+                MOVE    SD_WAIT_DONE, R8        ; successfully waited before?
+                CMP     0, @R8
+                RBRA    _S_CONT_CHECK, !Z       ; yes
+
+                MOVE    SD_CYC_HI, R8           ; did we wait veeeery long?
+                MOVE    IO$CYC_HI, R9
+                MOVE    @R9, R9
+                SUB     @R8, R9
+                RBRA    _S_SD_WAITDONE, !Z      ; yes
+
+                MOVE    SD_CYC_MID, R8
+                MOVE    @R8, R8
+                MOVE    IO$CYC_MID, R9
+                MOVE    @R9, R10
+                SUB     R8, R10
+                MOVE    SD_WAIT, R11
+                CMP     R10, R11                ; less or equal wait time?
+                RBRA    _S_SD_WAITDONE, N       ; no: proceed with browser
+
+                RSUB    SCR$CLRINNER, 1         
+                MOVE    STR_INITWAIT, R8
+                RSUB    SCR$PRINTSTR, 1         ; Show "Please wait"-message
+                MOVE    SD_CYC_MID, R8
+                MOVE    @R8, R8
+                MOVE    IO$CYC_MID, R9                
+_S_SD_WAIT      MOVE    @R9, R10
+                SUB     R8, R10
+                CMP     R10, R11
+                RBRA    _S_SD_WAIT, !N
+                RSUB    SCR$CLRINNER, 1
+
+_S_SD_WAITDONE  MOVE    SD_WAIT_DONE, R8        ; remember that we waited
+                MOVE    1, @R8                
+
                 ; if we already have run the browser before, then let us
                 ; continue where we left off
-                MOVE    FB_HEAD, R8
+_S_CONT_CHECK   MOVE    FB_HEAD, R8
                 CMP     0, @R8
                 RBRA    _S_START, Z
                 MOVE    FB_HEAP, R10

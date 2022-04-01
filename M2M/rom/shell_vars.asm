@@ -30,8 +30,11 @@ HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
 
+; SD card "stability" workaround
+SD_WAIT         .EQU 0x08F1                     ; 3 seconds @ 50 MHz
 SD_CYC_MID      .BLOCK 1                        ; cycle counter for SD card..
-                                                ; .."stability workaround"
+SD_CYC_HI       .BLOCK 1                        ; .."stability workaround"
+SD_WAIT_DONE    .BLOCK 1                        ; initial waiting done
 
 ; file browser persistent status
 FB_HEAP         .BLOCK 1                        ; heap used by file browser
