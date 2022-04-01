@@ -15,7 +15,6 @@ features.
 * 15KHz RGB mode over VGA
 
 * File Browser:
-  - Error if wrong D64 file size
   - Unmount whole disk drive via Space in OSM
   - Make sure that the MiSTer2MEGA65 framework is updated accordingly
     as soon as all of this works

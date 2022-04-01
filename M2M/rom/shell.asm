@@ -421,7 +421,25 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 ; none of the errors that LOAD_IMAGE returns is fatal, so we
                 ; will show an error message to the user and then we will
                 ; let him chose another file
-                SYSCALL(exit, 1)                
+                RSUB    SCR$CLRINNER, 1         ; print error message
+                MOVE    R8, R0
+                MOVE    R9, R1
+                MOVE    WRN_ERROR_CODE, R8
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    R0, R8
+                MOVE    SCRATCH_HEX, R9
+                RSUB    WORD2HEXSTR, 1
+                MOVE    R9, R8
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    R1, R8
+                RSUB    SCR$PRINTSTR, 1
+_HM_SDMOUNTED5A RSUB    HANDLE_IO, 1            ; wait for Space to be pressed
+                RSUB    KEYB$SCAN, 1
+                RSUB    KEYB$GETKEY, 1
+                CMP     M2M$KEY_SPACE, R8
+                RBRA    _HM_SDMOUNTED5A, !Z
+                RSUB    SCR$CLRINNER, 1         ; next try
+                RBRA    _HM_SDMOUNTED2, 1
 
 _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
                 RSUB    SCR$OSM_OFF, 1          ; hide the big window
