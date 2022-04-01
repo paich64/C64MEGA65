@@ -97,8 +97,8 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
---constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
-constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
+constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
+--constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
 -- HDMI 1280x720 @ 60 Hz resolution = mode 0, 1280x720 @ 50 Hz resolution = mode 1
 constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
@@ -123,7 +123,7 @@ constant FONT_DY              : natural := 16;
 
 -- OSM size: Important: Make sure that the OSM's height (OSM_DY) equals config.vhd's OPTM_SIZE + 2
 constant OSM_DX               : natural := 22;
-constant OSM_DY               : natural := 22 + 2;
+constant OSM_DY               : natural := 27 + 2;
 
 -- Constants for the OSM screen memory
 constant CHARS_DX             : natural := VGA_DX / FONT_DX;
@@ -239,7 +239,7 @@ signal qnice_ramrom_data_i    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_ce        : std_logic;
 signal qnice_ramrom_we        : std_logic;
 
--- MiSTer2MEGA framework
+-- Devices: MiSTer2MEGA framework
 constant C_DEV_VRAM_DATA      : std_logic_vector(15 downto 0) := x"0000";
 constant C_DEV_VRAM_ATTR      : std_logic_vector(15 downto 0) := x"0001";
 constant C_DEV_OSM_CONFIG     : std_logic_vector(15 downto 0) := x"0002";
@@ -247,13 +247,25 @@ constant C_DEV_SYS_INFO       : std_logic_vector(15 downto 0) := x"00FF";
 constant C_SYS_VGA            : std_logic_vector(15 downto 0) := x"0010";
 constant C_SYS_HDMI           : std_logic_vector(15 downto 0) := x"0011";
 
--- C64 specific
-constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";
-constant C_DEV_C64_IEC        : std_logic_vector(15 downto 0) := x"0101";
-constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";
+-- Commodore 64 specific devices
+constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";     -- C64's main RAM
+constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
 
-signal sys_info_vga  : std_logic_vector(79 downto 0);
-signal sys_info_hdmi : std_logic_vector(79 downto 0);
+-- Virtual drive management system (handled by vdrives.vhd and the firmware)
+-- If you are not using virtual drives, make sure that:
+--    C_VDNUM        is 0
+--    C_VD_DEVICE    is x"EEEE"
+--    C_VD_BUFFER    is (x"EEEE", x"EEEE")
+-- Otherwise make sure that you wire C_VD_DEVICE in the qnice_ramrom_devices process and that you
+-- have as many appropriately sized RAM buffers for disk images as you have drives
+type vd_buf_array is array(natural range <>) of std_logic_vector;
+constant C_VDNUM              : natural := 1;                                 -- amount of virtual drives; if more than 5: also adjust VDRIVES_MAX in M2M/rom/shell_vars.asm, maximum is 15
+constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := x"0101";     -- device number of vdrives.vhd device
+constant C_VD_BUFFER          : vd_buf_array := (C_DEV_C64_MOUNT, x"EEEE");   -- Finish the array using x"EEEE"
+
+-- Sysinfo device for the two graphics adaptors that the firmware uses for the on-screen-display 
+signal sys_info_vga           : std_logic_vector(79 downto 0);
+signal sys_info_hdmi          : std_logic_vector(79 downto 0);
 
 -- VRAM
 signal qnice_vram_data        : std_logic_vector(15 downto 0);
@@ -279,9 +291,10 @@ signal qnice_osm_control_m    : std_logic_vector(255 downto 0);
 
 constant C_MENU_8580          : natural := 7;
 constant C_MENU_HDMI_60HZ     : natural := 13;
-constant C_MENU_CRT_EMULATION : natural := 17;
-constant C_MENU_HDMI_ZOOM     : natural := 18;
-constant C_MENU_IMPROVE_AUDIO : natural := 19;
+constant C_MENU_VGA_RETRO     : natural := 18;
+constant C_MENU_CRT_EMULATION : natural := 22;
+constant C_MENU_HDMI_ZOOM     : natural := 23;
+constant C_MENU_IMPROVE_AUDIO : natural := 24;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -360,6 +373,9 @@ begin
 
    -- main.vhd contains the actual Commodore 64 MiSTer core
    i_main : entity work.main
+      generic map (
+         G_VDNUM              => C_VDNUM
+      )
       port map (
          clk_main_i           => main_clk,
          clk_video_i          => video_clk,
@@ -550,10 +566,24 @@ begin
          when C_DEV_OSM_CONFIG =>
             qnice_ramrom_data_i        <= qnice_config_data;
 
-         -- Read-only System Info
+         -- Read-only System Info (constants are defined in sysdef.asm)
          when C_DEV_SYS_INFO =>
             case qnice_ramrom_addr(27 downto 12) is
-               when X"0010" => -- Graphics card VGA
+               -- Virtual drives
+               when x"0000" =>
+                  case qnice_ramrom_addr(11 downto 0) is
+                     when x"000" => qnice_ramrom_data_i <= std_logic_vector(to_unsigned(C_VDNUM, 16));
+                     when x"001" => qnice_ramrom_data_i <= C_VD_DEVICE;
+                     
+                     when others =>
+                        if qnice_ramrom_addr(11 downto 4) = x"10" then
+                           qnice_ramrom_data_i <= C_VD_BUFFER(to_integer(unsigned(qnice_ramrom_addr(3 downto 0))));
+                        end if;
+                     
+                  end case;
+
+               -- Graphics card VGA
+               when X"0010" =>
                   case qnice_ramrom_addr(11 downto 0) is
                      when X"000" => qnice_ramrom_data_i <= sys_info_vga(15 downto  0);
                      when X"001" => qnice_ramrom_data_i <= sys_info_vga(31 downto 16);
@@ -563,7 +593,8 @@ begin
                      when others => null;
                   end case;
 
-               when X"0011" => -- Graphics card HDMI
+               -- Graphics card HDMI
+               when X"0011" =>
                   case qnice_ramrom_addr(11 downto 0) is
                      when X"000" => qnice_ramrom_data_i <= sys_info_hdmi(15 downto  0);
                      when X"001" => qnice_ramrom_data_i <= sys_info_hdmi(31 downto 16);
@@ -586,7 +617,7 @@ begin
             qnice_ramrom_data_i        <= x"00" & qnice_c64_ram_data;
 
          -- C64 IEC drives
-         when C_DEV_C64_IEC =>
+         when C_VD_DEVICE =>
             qnice_c64_qnice_ce         <= qnice_ramrom_ce;
             qnice_c64_qnice_we         <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= qnice_c64_qnice_data;

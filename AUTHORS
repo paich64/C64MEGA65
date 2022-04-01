@@ -50,6 +50,9 @@ Other than that and our own work, C64MEGA65 uses:
   * Debouncer: I/O debouncing used for the joysticks, done by Scott Larson
     https://www.digikey.com/eewiki/pages/viewpage.action?pageId=4980758
 
+  * Optimal choice of MiSTer video post-processing filters, done by KiDra
+    @TODO: Ask KiDra, if he wants a website to be listed here, or not
+
   * Anikki-16x16 font, archived and provided by k80w
     https://github.com/k80w/consolefonts
 
@@ -62,6 +65,9 @@ Other than that and our own work, C64MEGA65 uses:
 The following resources and tools were invaluable for developing C64MEGA65:
 ---------------------------------------------------------------------------
 
+  * Website "Codebase 64": Invaluable resource for all nitty-gritty details
+    https://codebase64.org
+
   * Book "Die Floppy 1541" by Karsten Schramm
     Special thanks to Spiro Trikaliotis, who made it legally available online:
     https://spiro.trikaliotis.net/Book#vic1541
@@ -72,6 +78,10 @@ The following resources and tools were invaluable for developing C64MEGA65:
   * "MCS6500, MICROCOMPUTER FAMILY PROGRAMMING MANUAL" by MOS Technology
     Special thanks to Erik Van den Broeck for the excellent HTML version:
     http://users.telenet.be/kim1-6502/6502/proman.html
+
+  * The MOS 6567/6569 video controller and its application in the Commodore 64
+    by Christian Bauer: For making sure our video pipeline is accurate
+    http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
 
   * DirMaster by Style
     https://style64.org/dirmaster

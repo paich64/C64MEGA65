@@ -13,6 +13,9 @@ use ieee.numeric_std.all;
 use work.vdrives_pkg.all;
 
 entity main is
+   generic (
+      G_VDNUM                 : natural                     -- amount of virtual drives     
+   );
    port (
       clk_main_i              : in std_logic;
       clk_video_i             : in std_logic;
@@ -103,9 +106,6 @@ architecture synthesis of main is
       );
    end component video_mixer;
 
--- amount of virtual drives
-constant VDNUM : natural := 1;
-
 -- MiSTer C64 signals
 signal c64_pause           : std_logic;
 signal ce_pix              : std_logic;
@@ -149,27 +149,27 @@ signal aro                 : std_logic_vector(15 downto 0);
 signal iec_drive_ce        : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
 signal iec_dce_sum         : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
 
-signal iec_img_mounted_i   : std_logic_vector(VDNUM - 1 downto 0);
+signal iec_img_mounted_i   : std_logic_vector(G_VDNUM - 1 downto 0);
 signal iec_img_readonly_i  : std_logic;
 signal iec_img_size_i      : std_logic_vector(31 downto 0);
 signal iec_img_type_i      : std_logic_vector(1 downto 0);
 
-signal iec_drives_reset    : std_logic_vector(VDNUM - 1 downto 0);
-signal vdrives_mounted_o   : std_logic_vector(VDNUM - 1 downto 0);
+signal iec_drives_reset    : std_logic_vector(G_VDNUM - 1 downto 0);
+signal vdrives_mounted_o   : std_logic_vector(G_VDNUM - 1 downto 0);
 
 signal c64_iec_clk_o       : std_logic;
 signal c64_iec_clk_i       : std_logic;
 signal c64_iec_atn_o       : std_logic;
 signal c64_iec_data_o      : std_logic;
 signal c64_iec_data_i      : std_logic;
-signal iec_sd_lba_o        : vd_vec_array(VDNUM - 1 downto 0)(31 downto 0);
-signal iec_sd_blk_cnt_o    : vd_vec_array(VDNUM - 1 downto 0)(5 downto 0);
-signal iec_sd_rd_o         : vd_std_array(VDNUM - 1 downto 0);
-signal iec_sd_wr_o         : vd_std_array(VDNUM - 1 downto 0);
-signal iec_sd_ack_i        : vd_std_array(VDNUM - 1 downto 0);
+signal iec_sd_lba_o        : vd_vec_array(G_VDNUM - 1 downto 0)(31 downto 0);
+signal iec_sd_blk_cnt_o    : vd_vec_array(G_VDNUM - 1 downto 0)(5 downto 0);
+signal iec_sd_rd_o         : vd_std_array(G_VDNUM - 1 downto 0);
+signal iec_sd_wr_o         : vd_std_array(G_VDNUM - 1 downto 0);
+signal iec_sd_ack_i        : vd_std_array(G_VDNUM - 1 downto 0);
 signal iec_sd_buf_addr_i   : std_logic_vector(13 downto 0);
 signal iec_sd_buf_data_i   : std_logic_vector(7 downto 0);
-signal iec_sd_buf_data_o   : vd_vec_array(VDNUM - 1 downto 0)(7 downto 0);
+signal iec_sd_buf_data_o   : vd_vec_array(G_VDNUM - 1 downto 0)(7 downto 0);
 signal iec_sd_buf_wr_i     : std_logic;
 signal iec_par_stb_i       : std_logic;
 signal iec_par_stb_o       : std_logic;
@@ -494,7 +494,7 @@ begin
 	--        "P2oPQ,Enable Drive #8,If Mounted,Always,Never;"
 	--        "P2oNO,Enable Drive #9,If Mounted,Always,Never;"
 	--        This code currently only implements the "If Mounted" option       
-   g_iec_drv_reset : for i in 0 to VDNUM - 1 generate
+   g_iec_drv_reset : for i in 0 to G_VDNUM - 1 generate
       iec_drives_reset(i) <= reset_i or not vdrives_mounted_o(i);
    end generate g_iec_drv_reset;
       
@@ -502,7 +502,7 @@ begin
       generic map (
          PARPORT        => 0,                -- Parallel C1541 port for faster (~20x) loading time using DolphinDOS
          DUALROM        => 0,
-         DRIVES         => VDNUM
+         DRIVES         => G_VDNUM
       )
       port map (
          clk            => clk_main_i,
@@ -578,7 +578,7 @@ begin
 
    i_vdrives : entity work.vdrives
       generic map (
-         VDNUM                => VDNUM,               -- only one drive
+         VDNUM                => G_VDNUM,             -- amount of virtual drives
          BLKSZ                => 1                    -- 1 = 256 bytes block size
       )
       port map (

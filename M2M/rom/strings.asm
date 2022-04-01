@@ -40,6 +40,12 @@ LOG_STR_LOADOK  .ASCII_W "Successfully loaded disk image to buffer RAM.\n"
 LOG_STR_MOUNT   .ASCII_W "Mounted disk image for drive #"
 
 ; ----------------------------------------------------------------------------
+; Infos
+; ----------------------------------------------------------------------------
+
+STR_INITWAIT    .ASCII_W "Initializing. Please wait..."
+
+; ----------------------------------------------------------------------------
 ; Warnings
 ; ----------------------------------------------------------------------------
 
@@ -49,6 +55,10 @@ WRN_MAXFILES    .ASCII_P "Warning: This directory contains more files\n"
                 .ASCII_P "If you choose to continue by pressing SPACE,\n"
                 .ASCII_P "be aware that random files will be missing.\n\n"
                 .ASCII_W "Press SPACE to continue.\n"
+
+WRN_ERROR_CODE  .ASCII_W "Error code: "
+WRN_WRONG_D64   .ASCII_P "\n\nD64 file size must be exactly 174848 bytes."
+                .ASCII_W "\n\nPress SPACE to continue.\n"
 
 ; ----------------------------------------------------------------------------
 ; Error Messages
@@ -72,6 +82,8 @@ ERR_FATAL_LOAD  .ASCII_W "SD Card: Unkown error while loading disk image\n"
 ERR_FATAL_HEAP1 .ASCII_W "Heap corruption: Hint: MENU_HEAP_SIZE\n"
 ERR_FATAL_HEAP2 .ASCII_W "Heap corruption: Hint: OPTM_HEAP_SIZE\n"
 ERR_FATAL_BSTCK .ASCII_W "Stack overflow: Hint: B_STACK_SIZE\n"
+ERR_FATAL_VDMAX .ASCII_W "Too many virtual drives: Hint: VDRIVES_MAX\n"
+ERR_FATAL_VDBUF .ASCII_W "Not enough buffers for virtual drives.\n"
 
 ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 

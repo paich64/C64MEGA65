@@ -12,18 +12,9 @@ features.
   - "OK: C64 0.25% slow" means "C64 0.25% slow and HDMI at 50 Hz"
    " Off: 60 Hz" means "C64 at original speed and HDMI at 60 Hz"
 
+* 15KHz RGB mode over VGA
+
 * File Browser:
-  - Add QNICE's cycler-counter and implement a smart wait time, if somebody
-    tries to mount a drive before 5 seconds have passed since the SD card's
-    reset signal gone to zero. This should increase the amount of cards
-    that are readable/mountable greatly and doing it smartly (by looking at
-    QNICE's cycle counter) is not as intrusive as letting the user wait for
-    5 seconds hardcoded...
-  - Refactor hardcoded VDrives, buffer RAM's etc. and use
-    our new SYSINFO device instead
-  - Error if wrong D64 file size
-  - Filter files (needs subdir flag, framework needs to offer convenient
-    file extension checker)
   - Unmount whole disk drive via Space in OSM
   - Make sure that the MiSTer2MEGA65 framework is updated accordingly
     as soon as all of this works
@@ -77,6 +68,8 @@ features.
 
 ## Constraints (What is not yet working) & Roadmap
 
+### Feature Roadmap
+
 We are planning to improve this core steadily. The MiSTer core offers much
 more features than our current Release 1 of the port. Here is a list of
 features that we are planning to deliver at a later stage:
@@ -98,9 +91,17 @@ features that we are planning to deliver at a later stage:
 	* IEC port (for example to plug in a real C1541)	
 	* C1581 via MEGA65's disk drive
 	* REU via expansion port
-* 2 graphic cards to QNICE: Utilize full 16:9 screen real estate for file-
-  and directory browsing and core configuration on HDMI while saving screen
-  real estate on 4:3 VGA
-* Internal TODOs:
-  * HyperRAM device support to QNICE
-  * Line 65 in fdc1772.v: back to 2 or work with generic?
+* Utilize full 16:9 screen real estate for file-and directory browsing and
+  core configuration on HDMI while saving screen real estate on 4:3 VGA
+
+### Technical Roadmap
+
+To implement some of the above-mentioned features and also to improve the
+robustness, performance and stability of the whole system, we will need
+to implement certain technical improvements in the "backend":
+
+* Update to newer ascal version (wait until MiSTer did the same upstream)
+* Re-do QNICE's SD Card controller: Go from SPI to native
+* Enhance QNICE's FAT32 library so that it supports writing
+* HyperRAM device support to QNICE
+* Line 65 in fdc1772.v: back to 2 or work with generic?

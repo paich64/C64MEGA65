@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#define RELEASE
+#undef RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -52,7 +52,24 @@ START_FIRMWARE  RBRA    START_SHELL, 1
 ;   R9: 0=file, 1=directory
 ; Output:
 ;   R8: 0=do not filter file, i.e. show file
-FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
+FILTER_FILES    INCRB
+                MOVE    R9, R0
+                
+                CMP     1, R9                   ; do not filter directories
+                RBRA    _FFILES_RET_0, Z
+
+                ; does this file have the ".D64" file extension?
+                MOVE    C64_IMGFILE_D64, R9
+                RSUB    M2M$CHK_EXT, 1
+                RBRA    _FFILES_RET_0, C        ; yes: do not filter it
+
+                MOVE    1, R8                   ; no: filter it
+                RBRA    _FFILES_RET, 1
+
+_FFILES_RET_0   XOR     R8, R8
+
+_FFILES_RET     MOVE    R0, R9
+                DECRB
                 RET
 
 ; PREP_LOAD_IMAGE callback function:
@@ -69,13 +86,41 @@ FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
 ; Output:
 ;   R8: 0=OK, error code otherwise
 ;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
-PREP_LOAD_IMAGE XOR     R8, R8                  ; no errors
-                XOR     R9, R9                  ; image type hardcoded to 0
+PREP_LOAD_IMAGE INCRB
+
+                MOVE    R8, R0
+                MOVE    R0, R1
+
+                ADD     FAT32$FDH_SIZE_LO, R0
+                MOVE    @R0, R0                 ; low word of file size
+                ADD     FAT32$FDH_SIZE_HI, R1
+                MOVE    @R1, R1                 ; high word of file size
+
+                CMP     D64_STDSIZE_L, R0       ; check filesize
+                RBRA    _PREP_LI_ERR, !Z
+                CMP     D64_STDSIZE_H, R1
+                RBRA    _PREP_LI_ERR, !Z
+
+                ; filesize correct
+                XOR     R8, R8                  ; no errors
+                MOVE    C64_IMGTYPE_D64, R9     ; image type hardcoded to D64
+                RBRA    _PREP_LI_RET, 1
+
+                ; filesize wrong
+_PREP_LI_ERR    MOVE    1, R8                   ; R8: error code
+                MOVE    WRN_WRONG_D64, R9       ; R9: error message
+
+_PREP_LI_RET    DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
+
+; Disk image file extensions (need to be upper case)
+C64_IMGFILE_D64  .ASCII_W ".D64"
+C64_IMGFILE_G64  .ASCII_W ".G64"
+C64_IMGFILE_D81  .ASCII_W ".D81"
 
 ; C64 disk image types
 C64_IMGTYPE_D64 .EQU    0x0000  ; 1541 emulated GCR: D64

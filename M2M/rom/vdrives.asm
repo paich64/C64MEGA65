@@ -227,7 +227,7 @@ VD_STROBE_IM    INCRB
 VD_CAD_READ     INCRB
 
                 MOVE    M2M$RAMROM_DEV, R0
-                MOVE    VDRIVES_IEC, R1
+                MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
                 MOVE    VD_IEC_WIN_CAD, @R0
@@ -244,7 +244,7 @@ VD_CAD_READ     INCRB
 VD_CAD_WRITE    INCRB
 
                 MOVE    M2M$RAMROM_DEV, R0
-                MOVE    VDRIVES_IEC, R1
+                MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
                 MOVE    VD_IEC_WIN_CAD, @R0
@@ -260,7 +260,7 @@ VD_CAD_WRITE    INCRB
 VD_DRV_READ     INCRB
 
                 MOVE    M2M$RAMROM_DEV, R0
-                MOVE    VDRIVES_IEC, R1
+                MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
                 MOVE    VD_IEC_WIN_DRV, @R0
@@ -278,7 +278,7 @@ VD_DRV_READ     INCRB
 VD_DRV_WRITE    INCRB
 
                 MOVE    M2M$RAMROM_DEV, R0
-                MOVE    VDRIVES_IEC, R1
+                MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
                 MOVE    VD_IEC_WIN_DRV, @R0

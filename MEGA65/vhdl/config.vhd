@@ -124,6 +124,7 @@ constant OPTM_G_CLOSE      : integer := 16#00FF#;         -- menu items that clo
 constant OPTM_G_STDSEL     : integer := 16#0100#;         -- item within a group that is selected by default
 constant OPTM_G_LINE       : integer := 16#0200#;         -- draw a line at this position
 constant OPTM_G_START      : integer := 16#0400#;         -- selector / cursor position after startup (only use once!)
+constant OPTM_G_HEADLINE   : integer := 16#1000#;         -- like OPTM_G_TEXT but will be shown in a brigher color
 constant OPTM_G_MOUNT_DRV  : integer := 16#8800#;         -- line item means: mount drive; first occurance = drive 0, second = drive 1, ...
 constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 
@@ -132,7 +133,7 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : integer := 22;  -- amount of items including empty lines:
+constant OPTM_SIZE         : integer := 27;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
                                              -- Important: make sure that OSM_DY in mega65.vhd is equal to OPTM_SIZE + 2,
                                              -- so that the On-Screen window has the correct length
@@ -154,10 +155,15 @@ constant OPTM_ITEMS        : string :=
    " OK: C64 0.25% slow\n" &
    " Off: 60 Hz\n"         &
    "\n"                    &
+   " VGA connector\n"      &
+   "\n"                    &
+   " Normal VGA output\n"  &
+   " Retro 15KHz RGB\n"    &
+   "\n"                    &
    " Post-processing\n"    &
    "\n"                    &
    " CRT emulation\n"      &
-   " Zoom-in on HDMI\n"    &
+   " HDMI: Zoom-in\n"      &
    " Audio improvements\n" &
    "\n"                    &
    " Close Menu\n";
@@ -166,27 +172,33 @@ constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
 constant OPTM_G_SID           : integer := 3;
 constant OPTM_G_ANTI_FLICKER  : integer := 4;
-constant OPTM_G_CRT_EMULATION : integer := 5;
-constant OPTM_G_HDMI_ZOOM     : integer := 6;
-constant OPTM_G_IMPROVE_AUDIO : integer := 7;
+constant OPTM_G_VGA_RETRO     : integer := 5;
+constant OPTM_G_CRT_EMULATION : integer := 6;
+constant OPTM_G_HDMI_ZOOM     : integer := 7;
+constant OPTM_G_IMPROVE_AUDIO : integer := 8;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
-constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_TEXT,
+constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_MOUNT_8       + OPTM_G_MOUNT_DRV   + OPTM_G_START,
                                              OPTM_G_LINE,
-                                             OPTM_G_TEXT,
+                                             OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_SID           + OPTM_G_STDSEL,
                                              OPTM_G_SID,
                                              OPTM_G_LINE,
-                                             OPTM_G_TEXT,
+                                             OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_ANTI_FLICKER,
                                              OPTM_G_ANTI_FLICKER + OPTM_G_STDSEL,
                                              OPTM_G_ANTI_FLICKER,
                                              OPTM_G_LINE,
-                                             OPTM_G_TEXT,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_VGA_RETRO    + OPTM_G_STDSEL,
+                                             OPTM_G_VGA_RETRO,
+                                             OPTM_G_LINE,
+                                             OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
@@ -225,7 +237,8 @@ begin
       when SEL_DIR_START      => data_o <= str2data(DIR_START);
       when SEL_OPTM_ITEMS     => data_o <= str2data(OPTM_ITEMS);
       when SEL_OPTM_MOUNT_STR => data_o <= str2data(OPTM_S_MOUNT);
-      when SEL_OPTM_GROUPS    => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "000" & x"0" &
+      when SEL_OPTM_GROUPS    => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
+                                           std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
                                            std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
       when SEL_OPTM_STDSEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
       when SEL_OPTM_LINES     => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
