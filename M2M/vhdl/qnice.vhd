@@ -368,6 +368,21 @@ begin
          data_out             => cyc_count_data_out
       );   
     
+   -- Cycle Counter: used by the M2M firmware for measuring delays
+   i_cyc_count: entity work.cycle_counter
+      port map (
+         clk                  => clk50_i,
+         impulse              => '1',
+         reset                => reset_ctl,
+         
+         -- cycle counter's registers
+         en                   => cyc_count_en,
+         we                   => cyc_count_we,
+         reg                  => cyc_count_reg,
+         data_in              => cpu_data_out,
+         data_out             => cyc_count_data_out
+      );   
+    
    -- Standard QNICE-FPGA MMIO controller  
    mmio_std : entity work.mmio_mux
       generic map
