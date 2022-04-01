@@ -69,15 +69,6 @@ _RESET_A_WHILE  SUB     1, R1
                 ; Initialize variables, libraries, IO and show welcome screen
                 ; ------------------------------------------------------------
 
-                ; @TODO these hardcoded values need to be retrieved via
-                ; the SYS_INFO device and/or other means
-                MOVE    VDRIVES_NUM, R8
-                MOVE    1, @R8                  ; 1 virtual drive
-                MOVE    VDRIVES_IEC, R8
-                MOVE    0x0101, @R8             ; IEC device sits at 0x0101
-                MOVE    VDRIVES_BUFS, R8
-                MOVE    0x0102, @R8             ; RAM buf for dev. 0 at 0x0102
-
                 ; initialize device (SD card) and file handle
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8
@@ -116,10 +107,52 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    OPTM_HEAP_SIZE, R8
                 MOVE    0, @R8
 
-                ; initialize screen library and show welcome screen:
-                ; draw frame and print text
+                ; initialize screen library and draw the OSM frame
                 RSUB    SCR$INIT, 1             ; retrieve VHDL generics
                 RSUB    FRAME_FULLSCR, 1        ; draw fullscreen frame
+
+                ; use the sysinfo device to initialize the vdrives system:
+                ; get the amount of virtual drives, the device id of the
+                ; vdrives.vhd device and an array of RAM buffers for
+                ; the disk images
+                MOVE    M2M$RAMROM_DEV, R8
+                MOVE    M2M$SYS_INFO, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    M2M$SYS_VDRIVES, @R8
+                MOVE    VD_NUM, R8
+                MOVE    VDRIVES_NUM, R0         ; number of virtual drives
+                MOVE    @R8, @R0
+                MOVE    @R0, R0
+                MOVE    VDRIVES_MAX, R1
+                CMP     R0, @R1                 ; vdrives > maximum?
+                RBRA    START_VD, !N            ; no: continue
+
+                MOVE    ERR_FATAL_VDMAX, R8     ; yes: stop core
+                MOVE    R0, R9
+                RBRA    FATAL, 1
+
+START_VD        MOVE    VD_DEVICE, R1           ; device id of vdrives.vhd
+                MOVE    VDRIVES_DEVICE, R2
+                MOVE    @R1, @R2
+
+                XOR     R1, R1                  ; loop var for buffer array
+                MOVE    VD_RAM_BUFFERS, R2      ; Source data from config.vhd
+                MOVE    VDRIVES_BUFS, R3        ; Dest. buf. in shell_vars.asm
+
+START_VD_CPY_1  MOVE    @R2++, @R3
+
+                RBRA    START_VD_CPY_F, Z       ; illegal values for buffer..
+                CMP     0xEEEE, @R3++           ; ..ptrs indicate that there..
+                RBRA    START_VD_CPY_2, !Z      ; ..are not enough of them:
+START_VD_CPY_F  MOVE    ERR_FATAL_VDBUF, R8     ; stop core
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+START_VD_CPY_2  ADD     1, R1
+                CMP     R0, R1
+                RBRA    START_VD_CPY_1, !Z
+
+                ; Show the welcome screen                
                 MOVE    M2M$RAMROM_DEV, R0      ; Device = config data
                 MOVE    M2M$CONFIG, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0    ; Selector = Welcome screen

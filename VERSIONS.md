@@ -15,14 +15,6 @@ features.
 * 15KHz RGB mode over VGA
 
 * File Browser:
-  - Add QNICE's cycler-counter and implement a smart wait time, if somebody
-    tries to mount a drive before 5 seconds have passed since the SD card's
-    reset signal gone to zero. This should increase the amount of cards
-    that are readable/mountable greatly and doing it smartly (by looking at
-    QNICE's cycle counter) is not as intrusive as letting the user wait for
-    5 seconds hardcoded...
-  - Refactor hardcoded VDrives, buffer RAM's etc. and use
-    our new SYSINFO device instead
   - Error if wrong D64 file size
   - Filter files (needs subdir flag, framework needs to offer convenient
     file extension checker)

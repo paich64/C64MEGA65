@@ -78,6 +78,8 @@ ERR_FATAL_LOAD  .ASCII_W "SD Card: Unkown error while loading disk image\n"
 ERR_FATAL_HEAP1 .ASCII_W "Heap corruption: Hint: MENU_HEAP_SIZE\n"
 ERR_FATAL_HEAP2 .ASCII_W "Heap corruption: Hint: OPTM_HEAP_SIZE\n"
 ERR_FATAL_BSTCK .ASCII_W "Stack overflow: Hint: B_STACK_SIZE\n"
+ERR_FATAL_VDMAX .ASCII_W "Too many virtual drives: Hint: VDRIVES_MAX\n"
+ERR_FATAL_VDBUF .ASCII_W "Not enough buffers for virtual drives.\n"
 
 ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 
