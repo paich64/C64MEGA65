@@ -96,7 +96,7 @@ _S_CD_AND_READ  MOVE    FB_HEAP, R10            ; start address of heap
                 MOVE    @R10, R10
                 MOVE    HEAP_SIZE, R11          ; maximum memory available
                                                 ; for storing the linked list
-                MOVE    FILTER_FILES, R12       ; do not show ROM file names
+                MOVE    FILTER_FILES, R12       ; filter unwanted files
                 RSUB    DIRBROWSE_READ, 1       ; read directory content
                 CMP     0, R11                  ; errors?
                 RBRA    _S_BROWSE_START, Z      ; no

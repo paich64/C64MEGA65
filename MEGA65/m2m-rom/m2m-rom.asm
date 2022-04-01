@@ -52,7 +52,23 @@ START_FIRMWARE  RBRA    START_SHELL, 1
 ;   R9: 0=file, 1=directory
 ; Output:
 ;   R8: 0=do not filter file, i.e. show file
-FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
+FILTER_FILES    INCRB
+                MOVE    R9, R0
+                
+                CMP     1, R9                   ; do not filter directories
+                RBRA    _FFILES_RET_0, Z
+
+                MOVE    C64_IMGFILE_D64, R9
+                RSUB    M2M$CHK_EXT, 1
+                RBRA    _FFILES_RET_0, C
+
+                MOVE    1, R8                   ; filter non ".D64" files
+                RBRA    _FFILES_RET, 1
+
+_FFILES_RET_0   XOR     R8, R8
+
+_FFILES_RET     MOVE    R0, R9
+                DECRB
                 RET
 
 ; PREP_LOAD_IMAGE callback function:
@@ -76,6 +92,11 @@ PREP_LOAD_IMAGE XOR     R8, R8                  ; no errors
 ; ----------------------------------------------------------------------------
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
+
+; Disk image file extensions (need to be upper case)
+C64_IMGFILE_D64  .ASCII_W ".D64"
+C64_IMGFILE_G64  .ASCII_W ".G64"
+C64_IMGFILE_D81  .ASCII_W ".D81"
 
 ; C64 disk image types
 C64_IMGTYPE_D64 .EQU    0x0000  ; 1541 emulated GCR: D64
