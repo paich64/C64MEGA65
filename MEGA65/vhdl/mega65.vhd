@@ -70,7 +70,7 @@ port (
    -- 3.5mm analog audio jack
    pwm_l          : out std_logic;
    pwm_r          : out std_logic;
-   
+
    -- Joysticks
    joy_1_up_n     : in std_logic;
    joy_1_down_n   : in std_logic;
@@ -263,7 +263,7 @@ constant C_VDNUM              : natural := 1;                                 --
 constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := x"0101";     -- device number of vdrives.vhd device
 constant C_VD_BUFFER          : vd_buf_array := (C_DEV_C64_MOUNT, x"EEEE");   -- Finish the array using x"EEEE"
 
--- Sysinfo device for the two graphics adaptors that the firmware uses for the on-screen-display 
+-- Sysinfo device for the two graphics adaptors that the firmware uses for the on-screen-display
 signal sys_info_vga           : std_logic_vector(79 downto 0);
 signal sys_info_hdmi          : std_logic_vector(79 downto 0);
 
@@ -385,8 +385,8 @@ begin
          -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
          c64_ntsc_i           => c64_ntsc,
          clk_main_speed_i     => c64_clock_speed,
-         
-         c64_sid_ver_i        => main_osm_control_m(C_MENU_8580) & main_osm_control_m(C_MENU_8580), 
+
+         c64_sid_ver_i        => main_osm_control_m(C_MENU_8580) & main_osm_control_m(C_MENU_8580),
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,
@@ -417,9 +417,9 @@ begin
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
          sid_r                => main_sid_r,
-         
+
          -- C64 drive led
-         drive_led_o          => main_drive_led,         
+         drive_led_o          => main_drive_led,
 
          -- C64 RAM
          c64_ram_addr_o       => main_ram_addr,
@@ -451,9 +451,9 @@ begin
          enable_core_i        => main_csr_keyboard_on,
          key_num_o            => main_key_num,
          key_pressed_n_o      => main_key_pressed_n,
-         
+
          -- control the drive led on the MEGA65 keyboard
-         drive_led_i          => main_drive_led,       
+         drive_led_i          => main_drive_led,
 
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n
@@ -488,13 +488,13 @@ begin
          sd_mosi_o               => SD_MOSI,
          sd_miso_i               => SD_MISO,
          sd_cd_i                 => SD_CD,
-            
+
          -- SD Card (external on back)
          sd2_reset_o             => SD2_RESET,
          sd2_clk_o               => SD2_CLK,
          sd2_mosi_o              => SD2_MOSI,
          sd2_miso_i              => SD2_MISO,
-         sd2_cd_i                => SD2_CD,         
+         sd2_cd_i                => SD2_CD,
 
          -- QNICE public registers
          csr_reset_o             => qnice_csr_reset,
@@ -575,12 +575,12 @@ begin
                   case qnice_ramrom_addr(11 downto 0) is
                      when x"000" => qnice_ramrom_data_i <= std_logic_vector(to_unsigned(C_VDNUM, 16));
                      when x"001" => qnice_ramrom_data_i <= C_VD_DEVICE;
-                     
+
                      when others =>
                         if qnice_ramrom_addr(11 downto 4) = x"10" then
                            qnice_ramrom_data_i <= C_VD_BUFFER(to_integer(unsigned(qnice_ramrom_addr(3 downto 0))));
                         end if;
-                     
+
                   end case;
 
                -- Graphics card VGA
@@ -808,7 +808,7 @@ begin
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY,
          G_OSM_DX            => OSM_DX,
-         G_OSM_DY            => OSM_DY         
+         G_OSM_DY            => OSM_DY
       )
       port map (
          -- Input from Core (video and audio)
@@ -860,7 +860,7 @@ begin
          hdmi_osm_vram_addr_o     => hdmi_osm_vram_addr,
          hdmi_osm_vram_data_i     => hdmi_osm_vram_data,
 
-         -- System info device         
+         -- System info device
          sys_info_vga_o           => sys_info_vga,
          sys_info_hdmi_o          => sys_info_hdmi,
 

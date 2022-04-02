@@ -70,6 +70,6 @@ License & Credit
 
 * We will give you credit in the AUTHORS file.
 
-* It is unlikely that we will mention you in the slpash screen of the core
+* It is unlikely that we will mention you in the splash screen of the core
   or in the publicly visible list of authors (currently MJoergen & sy2002)
   as long as your contributions are not equal to ours.

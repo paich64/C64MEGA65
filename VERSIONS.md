@@ -95,7 +95,7 @@ features that we are planning to deliver at a later stage:
 	* IEC port (for example to plug in a real C1541)	
 	* C1581 via MEGA65's disk drive
 	* REU via expansion port
-* Utilize full 16:9 screen real estate for file-and directory browsing and
+* Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
 
 ### Technical Roadmap

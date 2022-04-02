@@ -47,15 +47,15 @@ port (
    SD_RESET       : out std_logic;
    SD_CLK         : out std_logic;
    SD_MOSI        : out std_logic;
-   SD_MISO        : in std_logic;
-   SD_CD          : in std_logic;
+   SD_MISO        : in  std_logic;
+   SD_CD          : in  std_logic;
 
    -- SD Card (external on back)
    SD2_RESET      : out std_logic;
    SD2_CLK        : out std_logic;
    SD2_MOSI       : out std_logic;
-   SD2_MISO       : in std_logic;
-   SD2_CD         : in std_logic;
+   SD2_MISO       : in  std_logic;
+   SD2_CD         : in  std_logic;
 
    -- 3.5mm analog audio jack
    pwm_l          : out std_logic;
@@ -91,7 +91,6 @@ port (
 end entity mega65_r3;
 
 architecture synthesis of mega65_r3 is
-
 begin
 
    MEGA65 : entity work.MEGA65_Core
