@@ -19,7 +19,7 @@ itself is based on
 
 The core uses the [MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
 framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
-FAT32 support (loading loading ROMs, mounting disks) and for the
+FAT32 support (loading ROMs, mounting disks) and for the
 on-screen-menu.
 
 Features
@@ -73,7 +73,7 @@ start the legendary game
 on your favorite emulator on your computer and then watch the title
 scroller / intro. You will see a pretty stuttering scroller.
 
-Not so when doing FPGA based emulation on the MEGA65 using the right
+Not so when doing FPGA based recreation on the MEGA65 using the right
 display and settings. We have your back! :-)
 
 When using VGA or Retro 15 KHz RGB, you are safe by definition, if your
@@ -103,7 +103,7 @@ Commodore 64 is running to open the on-screen-menu and choose:
   MEGA65 though) to not displaying anything. This is why you can force
   720p @ 60 Hz even while running the C64 in PAL mode. The C64 core is not
   affected by this 60 Hz HDMI output at all, but you will have a very similar
-  experience than on a computer that runs an emulation: Jerky scrolling and
+  experience like on a computer that runs an emulation: Jerky scrolling and
   movements on the screen.
   
 ### Convenience
@@ -123,7 +123,7 @@ Commodore 64 is running to open the on-screen-menu and choose:
 Our Release 1 is - well - a Release 1. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
 Commodore 64. With our Release 1 you can play nearly all the avilable games
-and watch kind of all demos ever written for the C64. It happens more often
+and watch almost all demos ever written for the C64. It happens more often
 than not, that the core is recognized as real hardware by software.
 
 At this moment, our MEGA65 version of the core is not supporting
@@ -135,7 +135,7 @@ some of the very nice hardware offerings that the MEGA65 makes, such as:
 * Use the MEGA65's drive as a C1581
 
 Also, some things that folks would consider as "basic stuff" are not
-supported, yet such as:
+supported yet, such as:
 
 * NTSC mode
 * Mounting tapes (`*.tap`)
@@ -148,7 +148,7 @@ most of it. Have a look at our [Roadmap](VERSIONS.md#feature-roadmap)
 to learn more.
 
 Since we do this as a hobby, it might take a year or longer until these
-things are supported. So please bear with us or [help us](CONTRIBUTE.md).
+things are supported. So please bear with us or [help us](CONTRIBUTING.md).
 
 Installation
 ------------
@@ -156,7 +156,7 @@ Installation
 1. [Download @TODO LINK](https://github.com/MJoergen/C64MEGA65/edit/dev-mount/README.md)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Choose the right subfolder depending on the type of your MEGA65:
-   `R2` or `R3`. If you are not sure which one to choose, it likely that
+   `R2` or `R3`. If you are not sure which one to choose, it's likely that
    you have an `R3`. You will need the `.cor` file.
 3. Read the section "How do I install an alternative MEGA65 core?" on the
    [alternative MEGA65 cores](https://sy2002.github.io/m65cores/index.html)
@@ -189,17 +189,17 @@ Here is how the browser works:
 * <kbd>Return</kbd> mounts a disk image
 * <kbd>Run/Stop</kbd> exits the file browser without mounting
 * Remembers the browsing history, i.e. even while you climb directory trees,
-  when you mount the next image, the file selection cursor stands where you
+  when you mount the next image, the file selection cursor is positioned where you
   left off. This is very convenient for mounting multiple subsequent
   disks of a demo in a row.
 * Support for both SD card slots: The back slot has precedence over the bottom
   slot: As soon as you insert a card to the back slot, this card is being
-  used. SD card changes are detected in real-time; also while being in the
-  file browser.
-* While being in the browser you can use <kbd>F1</kbd> to manually select
+  used. SD card changes are detected in real-time; also while the
+  file browser is open.
+* Within the file browser you can use <kbd>F1</kbd> to manually select
   the internal SD card (bottom tray) and <kbd>F3</kbd> to select the
   external SD card (back slot).
-* The disk image is internally buffered, that means you can remove or
+* The disk image is internally buffered, which means you can remove or
   switch the SD card even while the C64 is accessing the disk.
 * An already mounted drive can be unmounted (i.e. "switch the drive off"), if
   you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
