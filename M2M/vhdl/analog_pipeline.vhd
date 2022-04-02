@@ -20,68 +20,68 @@ entity analog_pipeline is
    );
    port (
       -- Input from Core (video and audio)
-      main_clk_i               : in  std_logic;
-      video_clk_i              : in  std_logic;
-      video_rst_i              : in  std_logic;
-      video_ce_i               : in  std_logic;
-      video_red_i              : in  std_logic_vector(7 downto 0);
-      video_green_i            : in  std_logic_vector(7 downto 0);
-      video_blue_i             : in  std_logic_vector(7 downto 0);
-      video_hs_i               : in  std_logic;
-      video_vs_i               : in  std_logic;
-      audio_clk_i              : in  std_logic;
-      audio_rst_i              : in  std_logic;
-      audio_left_i             : in  signed(15 downto 0); -- Signed PCM format
-      audio_right_i            : in  signed(15 downto 0); -- Signed PCM format
+      main_clk_i             : in  std_logic;
+      video_clk_i            : in  std_logic;
+      video_rst_i            : in  std_logic;
+      video_ce_i             : in  std_logic;
+      video_red_i            : in  std_logic_vector(7 downto 0);
+      video_green_i          : in  std_logic_vector(7 downto 0);
+      video_blue_i           : in  std_logic_vector(7 downto 0);
+      video_hs_i             : in  std_logic;
+      video_vs_i             : in  std_logic;
+      audio_clk_i            : in  std_logic;
+      audio_rst_i            : in  std_logic;
+      audio_left_i           : in  signed(15 downto 0); -- Signed PCM format
+      audio_right_i          : in  signed(15 downto 0); -- Signed PCM format
 
       -- Video output (VGA)
-      vga_red_o                : out std_logic_vector(7 downto 0);
-      vga_green_o              : out std_logic_vector(7 downto 0);
-      vga_blue_o               : out std_logic_vector(7 downto 0);
-      vga_hs_o                 : out std_logic;
-      vga_vs_o                 : out std_logic;
-      vdac_clk_o               : out std_logic;
-      vdac_syncn_o             : out std_logic;
-      vdac_blankn_o            : out std_logic;
+      vga_red_o              : out std_logic_vector(7 downto 0);
+      vga_green_o            : out std_logic_vector(7 downto 0);
+      vga_blue_o             : out std_logic_vector(7 downto 0);
+      vga_hs_o               : out std_logic;
+      vga_vs_o               : out std_logic;
+      vdac_clk_o             : out std_logic;
+      vdac_syncn_o           : out std_logic;
+      vdac_blankn_o          : out std_logic;
 
       -- Audio output (3.5 mm jack)
-      pwm_l_o                  : out std_logic;
-      pwm_r_o                  : out std_logic;
+      pwm_l_o                : out std_logic;
+      pwm_r_o                : out std_logic;
 
       -- Connect to QNICE and Video RAM
-      video_osm_cfg_enable_i   : in  std_logic;
-      video_osm_cfg_xy_i       : in  std_logic_vector(15 downto 0);
-      video_osm_cfg_dxdy_i     : in  std_logic_vector(15 downto 0);
-      video_osm_vram_addr_o    : out std_logic_vector(15 downto 0);
-      video_osm_vram_data_i    : in  std_logic_vector(15 downto 0);
-      sys_info_vga_o           : out std_logic_vector(79 downto 0)
+      video_osm_cfg_enable_i : in  std_logic;
+      video_osm_cfg_xy_i     : in  std_logic_vector(15 downto 0);
+      video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
+      video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
+      video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
+      sys_info_vga_o         : out std_logic_vector(79 downto 0)
    );
 end entity analog_pipeline;
 
 architecture synthesis of analog_pipeline is
 
-   constant C_FONT_DX            : natural := 16;
-   constant C_FONT_DY            : natural := 16;
+   constant C_FONT_DX        : natural := 16;
+   constant C_FONT_DY        : natural := 16;
 
    -- MiSTer video pipeline signals
-   signal vs_hsync            : std_logic;
-   signal vs_vsync            : std_logic;
-   signal vs_hblank           : std_logic;
-   signal vs_vblank           : std_logic;
-   signal div                 : integer range 0 to 7;
-   signal mix_r               : std_logic_vector(7 downto 0);
-   signal mix_g               : std_logic_vector(7 downto 0);
-   signal mix_b               : std_logic_vector(7 downto 0);
-   signal mix_vga_de          : std_logic;
-   signal ce_pix              : std_logic;
+   signal vs_hsync           : std_logic;
+   signal vs_vsync           : std_logic;
+   signal vs_hblank          : std_logic;
+   signal vs_vblank          : std_logic;
+   signal div                : integer range 0 to 7;
+   signal mix_r              : std_logic_vector(7 downto 0);
+   signal mix_g              : std_logic_vector(7 downto 0);
+   signal mix_b              : std_logic_vector(7 downto 0);
+   signal mix_vga_de         : std_logic;
+   signal ce_pix             : std_logic;
 
-   signal vga_red             : std_logic_vector(7 downto 0);
-   signal vga_green           : std_logic_vector(7 downto 0);
-   signal vga_blue            : std_logic_vector(7 downto 0);
-   signal vga_hs              : std_logic;
-   signal vga_vs              : std_logic;
+   signal vga_red            : std_logic_vector(7 downto 0);
+   signal vga_green          : std_logic_vector(7 downto 0);
+   signal vga_blue           : std_logic_vector(7 downto 0);
+   signal vga_hs             : std_logic;
+   signal vga_vs             : std_logic;
 
-   signal video_ce_overlay       : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
+   signal video_ce_overlay   : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
 
    component video_mixer is
       port (
@@ -170,6 +170,7 @@ begin
    --------------------------------------------------------------------------------------------------
 
    -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
+   -- This also crops the signal to 384x270 via the vs_hblank and vs_vblank signals.
    i_video_sync : entity work.video_sync
       port map (
          clk32     => main_clk_i,
@@ -197,18 +198,6 @@ begin
    -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
    -- a horizontal period of 32.00 us. The difference here is 0.1 %.
    -- The ratio between clk_video_i and the pixel frequency is 7/3.
-   --
-   -- Using a logic analyzer it's observed that the output has the following parameters:
-   -- H_PIXELS = 658 pixels (1536 clock cycles)
-   -- H_PULSE  =  65 pixels ( 152 clock cycles)
-   -- H_BP     = 105 pixels ( 244 clock cycles)
-   -- H_FP     =  36 pixels (  84 clock cycles)
-   -- TOTAL    = 864 pixels (2016 clock cycles)
-   -- V_PIXELS = 540 lines
-   -- V_PULSE  =   8 lines
-   -- V_BP     =  17 lines
-   -- V_FP     =  59 lines
-   -- TOTAL    = 624 lines
 
    i_video_mixer : video_mixer
       port map (

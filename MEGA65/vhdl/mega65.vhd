@@ -858,7 +858,7 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         video_clk_i              => video_clk,
+         video_clk_i              => main_clk,
          video_rst_i              => video_rst,
          video_ce_i               => '1',
          video_red_i              => video_red,
