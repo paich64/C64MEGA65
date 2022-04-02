@@ -31,6 +31,10 @@ features.
     (we need to re-load the core)
 
 * Code consistency and "niceness":
+  - Refactor "IEC" names to something more fitting (as IEC is C64 specific)
+  - Refactor OSM_DX and OSM_DY: Get rid of it in mega65.vhd and in the
+    audio-video-pipeline and move it to config.vhd: DX can be configured there
+    and passed via a new 4k selector and DY can be inferred SEL_OPTM_ICOUNT-
   - Check directory structure and headers of source files.
   - Review all documentation and README's
   - run    grep -irn mark_debug .
