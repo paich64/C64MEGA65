@@ -891,7 +891,6 @@ begin
          hdmi_osm_vram_data_i     => hdmi_osm_vram_data,
 
          -- System info device
-         sys_info_vga_o           => sys_info_vga,
          sys_info_hdmi_o          => sys_info_hdmi,
 
          -- Connect to HyperRAM controller
