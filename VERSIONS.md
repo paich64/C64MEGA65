@@ -30,7 +30,8 @@ features.
     (C64_MiSTerMEGA65 is already clean.)
 
 * Bugs:
-   - Reset problem => might be already solved in the meantime?
+   - HDMI reset problem
+   - Deactivation of joysticks via QNICE does not work
 
 * MiSTer Features:
    - CRT mode
