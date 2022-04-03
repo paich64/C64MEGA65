@@ -189,7 +189,7 @@ begin
    sys_info_hdmi_o(79 downto 64) <=
       std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
 
-   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(0) when hdmi_video_mode_i = '0' else G_VIDEO_MODE_VECTOR(1);
+   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(0) when hdmi_video_mode_i = '1' else G_VIDEO_MODE_VECTOR(1);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
    hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;
    hdmi_hsend      <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE;
