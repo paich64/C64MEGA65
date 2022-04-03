@@ -59,53 +59,6 @@ recognizing this core as genuine C64 hardware.
   cable) or an old RGB-capable monitor (by soldering your own cable)
   to MEGA65's VGA port.
   
-#### Flicker-free HDMI
-
-When you use an emulator on your computer, you very probably will
-experience jerky movements on the screen and tearing effects
-because a lot of computer monitors are running at 60 Hz or higher
-while the Commodore 64 had a pretty odd frequency.
-Even if it would have been exactly 50 Hz, you would experience this on a
-modern computer using emulation, and imagine that: The C64 is closer to
-50.125 Hz than to 50 Hz, so it gets even worse... As a reference, just
-start the legendary game
-[The Great Giana Sisters](https://csdb.dk/release/?id=4829)
-on your favorite emulator on your computer and then watch the title
-scroller / intro. You will see a pretty stuttering scroller.
-
-Not so when doing FPGA based recreation on the MEGA65 using the right
-display and settings. We have your back! :-)
-
-When using VGA or Retro 15 KHz RGB, you are safe by definition, if your
-monitor plays along. For users of HDMI, we are offering two options
-to provide you with a similar 100% flicker-free, tearing-free, stuttering-free
-experience. Press the <kbd>Help</kbd> button on your MEGA65 while the
-Commodore 64 is running to open the on-screen-menu and choose:
-
-* **Best: 50.125 Hz**: With this option, we are torturing your HDMI display
-  with the odd frequency that the Commodore 64 actually creates. If this
-  works on your screen, then this is for sure the best option. But we assume
-  that many displays are defaulting to 50 Hz when being fed 50.125 Hz. You
-  can check this by watching the Giana Sisters title scroller: If you see a
-  flicker / tearing every ~8 seconds, then your display is not supporting
-  this option.
-  
-* **OK: C64 0.25% slow**: We are slowing down the whole system (not only the
-  C64, but also the SID, VIC, C1541, ...), so that it runs at only 99.75% of
-  the original clock speed of the C64. This does not decrease the
-  compatibility of the core in any way and you probably will never notice.
-  This results in a clean 50 Hz signal for your HDMI display. We expect that
-  this is the most compatible way of providing a flicker-free experience on
-  HDMI.
-  
-* **Off: 60 Hz**: Some HDMI displays struggle with 720p @ 50 Hz. Effects range
-  from not playing any sound (you can still use the 3.5mm audio jack of the
-  MEGA65 though) to not displaying anything. This is why you can force
-  720p @ 60 Hz even while running the C64 in PAL mode. The C64 core is not
-  affected by this 60 Hz HDMI output at all, but you will have a very similar
-  experience like on a computer that runs an emulation: Jerky scrolling and
-  movements on the screen.
-  
 ### Convenience
 
 * On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
@@ -211,3 +164,33 @@ Here is how the browser works:
   Otherwise it starts at the root folder.
 * The file browser only shows files with a valid file extension.
   Currently, we only suppoert `.d64`.
+  
+Flicker-free HDMI
+-----------------
+
+When you use an emulator on your computer, you very probably will
+experience jerky movements on the screen and tearing effects
+because a lot of computer monitors are running at 60 Hz or higher
+while the Commodore 64 had a pretty odd frequency.
+Even if it would have been exactly 50 Hz, you would experience this on a
+modern computer using emulation, and imagine that: The C64 is closer to
+50.125 Hz than to 50 Hz, so it gets even worse... As a reference, just
+start the legendary game
+[The Great Giana Sisters](https://csdb.dk/release/?id=4829)
+on your favorite emulator on your computer and then watch the title
+scroller / intro. You will see a pretty stuttering scroller.
+
+Not so when doing FPGA based recreation on the MEGA65 using the right
+display and settings. We have your back! :-)
+
+When using VGA or Retro 15 KHz RGB, you are safe by definition, if your
+monitor plays along.
+
+We are slowing down the whole system (not only the C64, but also the SID,
+VIC, C1541, ...), so that it runs at only 99.75% of the original clock
+speed of the C64. This does not decrease the compatibility of the core in
+any way and you probably will never notice.
+
+This results in a clean 50 Hz signal for your HDMI display. We believe that
+this is the most compatible way of providing a flicker-free experience on
+HDMI.
