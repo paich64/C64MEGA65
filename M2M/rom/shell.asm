@@ -589,7 +589,7 @@ HANDLE_IO       SYSCALL(enter, 1)
 
                 ; read request pending?
 _HANDLE_IO_1    MOVE    R0, R8
-                MOVE    VD_IEC_RD, R9
+                MOVE    VD_RD, R9
                 RSUB    VD_DRV_READ, 1
                 CMP     1, R8                   ; read request?
                 RBRA    _HANDLE_IO_NXT, !Z      ; no: next drive, if any
@@ -614,21 +614,21 @@ HANDLE_DRV_RD   SYSCALL(enter, 1)
 
                 MOVE    R8, R11                 ; R11: virtual drive ID
 
-                MOVE    VD_IEC_SIZEB, R9        ; virtual drive ID still in R8
+                MOVE    VD_SIZEB, R9            ; virtual drive ID still in R8
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R0                  ; R0=# bytes to be transmitted
                 MOVE    R11, R8
-                MOVE    VD_IEC_4K_WIN, R9
+                MOVE    VD_4K_WIN, R9
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R1                  ; R1=start 4k win of transmis.
                 MOVE    R11, R8
-                MOVE    VD_IEC_4K_OFFS, R9
+                MOVE    VD_4K_OFFS, R9
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R2                  ; R2=start offs in 4k win
 
                 ; transmit data to internal buffer of drive
                 MOVE    R11, R8
-                MOVE    VD_IEC_ACK, R9          ; ackknowledge sd_rd_i
+                MOVE    VD_ACK, R9              ; ackknowledge sd_rd_i
                 MOVE    1, R10
                 RSUB    VD_DRV_WRITE, 1
 
@@ -649,15 +649,15 @@ _HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
                 MOVE    R1, @R4                 ; select window in RAM
                 MOVE    @R5++, R12              ; R12=next byte from disk img
 
-                MOVE    VD_IEC_B_ADDR, R8       ; write buffer: address
+                MOVE    VD_B_ADDR, R8           ; write buffer: address
                 MOVE    R6, R9
                 RSUB    VD_CAD_WRITE, 1
 
-                MOVE    VD_IEC_B_DOUT, R8      ; write buffer: data out
+                MOVE    VD_B_DOUT, R8           ; write buffer: data out
                 MOVE    R12, R9
                 RSUB    VD_CAD_WRITE, 1
 
-                MOVE    VD_IEC_B_WREN, R8      ; strobe write enable
+                MOVE    VD_B_WREN, R8       ; strobe write enable
                 MOVE    1, R9
                 RSUB    VD_CAD_WRITE, 1
                 XOR     0, R9
@@ -673,7 +673,7 @@ _HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
 
                 ; unassert ACK
 _HDR_SEND_DONE  MOVE    R11, R8                 ; virtual drive ID
-                MOVE    VD_IEC_ACK, R9          ; unassert ACK
+                MOVE    VD_ACK, R9              ; unassert ACK
                 MOVE    0, R10
                 RSUB    VD_DRV_WRITE, 1
 

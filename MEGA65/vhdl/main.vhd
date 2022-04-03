@@ -20,6 +20,7 @@ entity main is
       clk_main_i              : in std_logic;
       reset_i                 : in std_logic;
       pause_i                 : in std_logic;
+      flip_joys_i             : in std_logic;
 
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
 
@@ -320,6 +321,7 @@ begin
    i_m65_to_c64 : entity work.keyboard
       port map (
          clk_main_i           => clk_main_i,
+         flip_joys_i          => flip_joys_i,
 
          -- Interface to the MEGA65 keyboard
          key_num_i            => kb_key_num_i,

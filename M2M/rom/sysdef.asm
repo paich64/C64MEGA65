@@ -231,32 +231,32 @@ VD_DEVICE           .EQU 0x7001     ; address of the vdrives.vhd device
 VD_RAM_BUFFERS      .EQU 0x7100     ; array of RAM buffers to store dsk images
 
 ; window selectors for vdrives.vhd
-VD_IEC_WIN_CAD      .EQU 0x0000     ; control and data registers
-VD_IEC_WIN_DRV      .EQU 0x0001     ; drive 0, next window = drive 1, ...
+VD_WIN_CAD          .EQU 0x0000     ; control and data registers
+VD_WIN_DRV          .EQU 0x0001     ; drive 0, next window = drive 1, ...
 
-; VD_IEC_WIN_CAD: control and data registers
-VD_IEC_IMG_MOUNT    .EQU 0x7000     ; image mounted, lowest bit = drive 0
-VD_IEC_RO           .EQU 0x7001     ; read-only for currently mounted drive
-VD_IEC_SIZE_L       .EQU 0x7002     ; image file size, low word
-VD_IEC_SIZE_H       .EQU 0x7003     ; image file size, high word
-VD_IEC_TYPE         .EQU 0x7004     ; image file type (2-bit value)
-VD_IEC_B_ADDR       .EQU 0x7005     ; drive buffer: address
-VD_IEC_B_DOUT       .EQU 0x7006     ; drive buffer: data out (to drive)
-VD_IEC_B_WREN       .EQU 0x7007     ; drive buffer: write enable (also needs ack)
-VD_IEC_VDNUM        .EQU 0x7008     ; number of virtual drives
-VD_IEC_BLKSZ        .EQU 0x7009     ; block size for LBA in bytes
-VD_IEC_DRV_MOUNT    .EQU 0x700A     ; drive mounted, lowest bit = drive 0
+; VD_WIN_CAD: control and data registers
+VD_IMG_MOUNT        .EQU 0x7000     ; image mounted, lowest bit = drive 0
+VD_RO               .EQU 0x7001     ; read-only for currently mounted drive
+VD_SIZE_L           .EQU 0x7002     ; image file size, low word
+VD_SIZE_H           .EQU 0x7003     ; image file size, high word
+VD_TYPE             .EQU 0x7004     ; image file type (2-bit value)
+VD_B_ADDR           .EQU 0x7005     ; drive buffer: address
+VD_B_DOUT           .EQU 0x7006     ; drive buffer: data out (to drive)
+VD_B_WREN           .EQU 0x7007     ; drive buffer: write enable (also needs ack)
+VD_VDNUM            .EQU 0x7008     ; number of virtual drives
+VD_BLKSZ            .EQU 0x7009     ; block size for LBA in bytes
+VD_DRV_MOUNT        .EQU 0x700A     ; drive mounted, lowest bit = drive 0
 
-; VD_IEC_WIN_DRV (and onwards): virtual drive specific registers
-VD_IEC_LBA_L        .EQU 0x7000     ; SD LBA low word
-VD_IEC_LBA_H        .EQU 0x7001     ; SD LBA high word
-VD_IEC_BLKCNT       .EQU 0x7002     ; SD block count
-VD_IEC_BYTES_L      .EQU 0x7003     ; SD block address in bytes: low word
-VD_IEC_BYTES_H      .EQU 0x7004     ; SD block address in bytes: high word
-VD_IEC_SIZEB        .EQU 0x7005     ; SD block data amount in bytes
-VD_IEC_4K_WIN       .EQU 0x7006     ; SD block address in 4k win logic: window
-VD_IEC_4K_OFFS      .EQU 0x7007     ; SD block address in 4k win logic: offset
-VD_IEC_RD           .EQU 0x7008     ; SD read request
-VD_IEC_WR           .EQU 0x7009     ; SD write request
-VD_IEC_ACK          .EQU 0x700A     ; SD acknowledge
-VD_IEC_B_DIN        .EQU 0x700B     ; drive buffer: data in (from drive)
+; VD_WIN_DRV (and onwards): virtual drive specific registers
+VD_LBA_L            .EQU 0x7000     ; SD LBA low word
+VD_LBA_H            .EQU 0x7001     ; SD LBA high word
+VD_BLKCNT           .EQU 0x7002     ; SD block count
+VD_BYTES_L          .EQU 0x7003     ; SD block address in bytes: low word
+VD_BYTES_H          .EQU 0x7004     ; SD block address in bytes: high word
+VD_SIZEB            .EQU 0x7005     ; SD block data amount in bytes
+VD_4K_WIN           .EQU 0x7006     ; SD block address in 4k win logic: window
+VD_4K_OFFS          .EQU 0x7007     ; SD block address in 4k win logic: offset
+VD_RD               .EQU 0x7008     ; SD read request
+VD_WR               .EQU 0x7009     ; SD write request
+VD_ACK              .EQU 0x700A     ; SD acknowledge
+VD_B_DIN            .EQU 0x700B     ; drive buffer: data in (from drive)

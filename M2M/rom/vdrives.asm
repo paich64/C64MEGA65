@@ -196,7 +196,7 @@ VD_MOUNTED      INCRB
                 MOVE    1, R0                   ; probe to check drive
                 AND     0xFFFD, SR              ; clear X
                 SHL     R8, R0                  ; drive 0 = LSB
-                MOVE    VD_IEC_DRV_MOUNT, R8    ; get bitpattern of mounted..
+                MOVE    VD_DRV_MOUNT, R8        ; get bitpattern of mounted..
                 RSUB    VD_CAD_READ, 1          ; ..drives
                 MOVE    R8, R2
                 MOVE    R1, R8                  ; restore R8 (original drv. #)
@@ -226,16 +226,16 @@ VD_STROBE_IM    INCRB
                 MOVE    R12, R4                 ; R4: disk image type
 
                 ; set file size, read-only and disk image type registers
-                MOVE    VD_IEC_SIZE_L, R8
+                MOVE    VD_SIZE_L, R8
                 MOVE    R1, R9
                 RSUB    VD_CAD_WRITE, 1
-                MOVE    VD_IEC_SIZE_H, R8
+                MOVE    VD_SIZE_H, R8
                 MOVE    R2, R9
                 RSUB    VD_CAD_WRITE, 1
-                MOVE    VD_IEC_RO, R8
+                MOVE    VD_RO, R8
                 MOVE    R3, R9
                 RSUB    VD_CAD_WRITE, 1
-                MOVE    VD_IEC_TYPE, R8
+                MOVE    VD_TYPE, R8
                 MOVE    R4, R9
                 RSUB    VD_CAD_WRITE, 1
 
@@ -246,11 +246,11 @@ VD_STROBE_IM    INCRB
                 NOT     R6, R7                  ; R7: used to clear flag
 
                 ; get current bitmask and then strobe the flag
-                MOVE    VD_IEC_IMG_MOUNT, R8
+                MOVE    VD_IMG_MOUNT, R8
                 RSUB    VD_CAD_READ, 1
                 OR      R6, R8                  ; set flag
                 MOVE    R8, R9
-                MOVE    VD_IEC_IMG_MOUNT, R8
+                MOVE    VD_IMG_MOUNT, R8
                 RSUB    VD_CAD_WRITE, 1         ; set flag in register
                 AND     R7, R9                  ; delete flag
                 RSUB    VD_CAD_WRITE, 1         ; delete flag in register
@@ -275,7 +275,7 @@ VD_CAD_READ     INCRB
                 MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
-                MOVE    VD_IEC_WIN_CAD, @R0
+                MOVE    VD_WIN_CAD, @R0
                 MOVE    @R8, R8
 
                 DECRB
@@ -292,7 +292,7 @@ VD_CAD_WRITE    INCRB
                 MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
-                MOVE    VD_IEC_WIN_CAD, @R0
+                MOVE    VD_WIN_CAD, @R0
                 MOVE    R9, @R8
 
                 DECRB
@@ -308,7 +308,7 @@ VD_DRV_READ     INCRB
                 MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
-                MOVE    VD_IEC_WIN_DRV, @R0
+                MOVE    VD_WIN_DRV, @R0
                 ADD     R8, @R0                 ; drive windows are ascending
                 MOVE    @R9, R8
 
@@ -326,7 +326,7 @@ VD_DRV_WRITE    INCRB
                 MOVE    VDRIVES_DEVICE, R1
                 MOVE    @R1, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0
-                MOVE    VD_IEC_WIN_DRV, @R0
+                MOVE    VD_WIN_DRV, @R0
                 ADD     R8, @R0                 ; drive windows are ascending
                 MOVE    R10, @R9
 

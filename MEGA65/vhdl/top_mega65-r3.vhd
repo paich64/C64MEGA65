@@ -91,13 +91,31 @@ port (
 end entity mega65_r3;
 
 architecture synthesis of mega65_r3 is
+
+constant BOARD_CLK_SPEED   : natural := 100_000_000;
+
+signal dbnce_reset_n       : std_logic;
+  
+signal dbnce_joy1_up_n     : std_logic;
+signal dbnce_joy1_down_n   : std_logic;
+signal dbnce_joy1_left_n   : std_logic;
+signal dbnce_joy1_right_n  : std_logic;
+signal dbnce_joy1_fire_n   : std_logic;
+     
+signal dbnce_joy2_up_n     : std_logic;
+signal dbnce_joy2_down_n   : std_logic;
+signal dbnce_joy2_left_n   : std_logic;
+signal dbnce_joy2_right_n  : std_logic;
+signal dbnce_joy2_fire_n   : std_logic;     
+
+
 begin
 
    MEGA65 : entity work.MEGA65_Core
       port map
       (
          CLK            => CLK,
-         RESET_N        => RESET_N,
+         RESET_N        => dbnce_reset_n,
 
          -- serial communication (rxd, txd only; rts/cts are not available)
          -- 115.200 baud, 8-N-1
@@ -145,23 +163,58 @@ begin
          pwm_r          => pwm_r,
 
          -- Joysticks
-         joy_1_up_n     => joy_1_up_n,
-         joy_1_down_n   => joy_1_down_n,
-         joy_1_left_n   => joy_1_left_n,
-         joy_1_right_n  => joy_1_right_n,
-         joy_1_fire_n   => joy_1_fire_n,
+         joy_1_up_n     => dbnce_joy1_up_n,
+         joy_1_down_n   => dbnce_joy1_down_n,
+         joy_1_left_n   => dbnce_joy1_left_n,
+         joy_1_right_n  => dbnce_joy1_right_n,
+         joy_1_fire_n   => dbnce_joy1_fire_n,
 
-         joy_2_up_n     => joy_2_up_n,
-         joy_2_down_n   => joy_2_down_n,
-         joy_2_left_n   => joy_2_left_n,
-         joy_2_right_n  => joy_2_right_n,
-         joy_2_fire_n   => joy_2_fire_n,
+         joy_2_up_n     => dbnce_joy2_up_n,
+         joy_2_down_n   => dbnce_joy2_down_n,
+         joy_2_left_n   => dbnce_joy2_left_n,
+         joy_2_right_n  => dbnce_joy2_right_n,
+         joy_2_fire_n   => dbnce_joy2_fire_n,
 
          hr_d           => hr_d,
          hr_rwds        => hr_rwds,
          hr_reset       => hr_reset,
          hr_clk_p       => hr_clk_p,
          hr_cs0         => hr_cs0
+      );
+
+   i_debouncer : entity work.debouncer
+      generic map ( 
+         CLK_FREQ             => BOARD_CLK_SPEED
+      )
+      port map (
+         clk                  => CLK,
+ 
+         reset_n              => RESET_N,
+         dbnce_reset_n        => dbnce_reset_n,
+ 
+         joy_1_up_n           => joy_1_up_n,
+         joy_1_down_n         => joy_1_down_n,
+         joy_1_left_n         => joy_1_left_n,
+         joy_1_right_n        => joy_1_right_n,
+         joy_1_fire_n         => joy_1_fire_n,
+ 
+         dbnce_joy1_up_n      => dbnce_joy1_up_n,
+         dbnce_joy1_down_n    => dbnce_joy1_down_n,
+         dbnce_joy1_left_n    => dbnce_joy1_left_n,
+         dbnce_joy1_right_n   => dbnce_joy1_right_n,
+         dbnce_joy1_fire_n    => dbnce_joy1_fire_n,
+ 
+         joy_2_up_n           => joy_2_up_n,
+         joy_2_down_n         => joy_2_down_n,
+         joy_2_left_n         => joy_2_left_n,
+         joy_2_right_n        => joy_2_right_n,
+         joy_2_fire_n         => joy_2_fire_n,
+ 
+         dbnce_joy2_up_n      => dbnce_joy2_up_n,
+         dbnce_joy2_down_n    => dbnce_joy2_down_n,
+         dbnce_joy2_left_n    => dbnce_joy2_left_n,
+         dbnce_joy2_right_n   => dbnce_joy2_right_n,
+         dbnce_joy2_fire_n    => dbnce_joy2_fire_n
       );
 
 end architecture synthesis;

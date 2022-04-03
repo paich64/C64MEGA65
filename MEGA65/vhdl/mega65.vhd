@@ -296,12 +296,13 @@ signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 -- QNICE On Screen Menu selections
 signal qnice_osm_control_m    : std_logic_vector(255 downto 0);
 
-constant C_MENU_8580          : natural := 7;
-constant C_MENU_CRT_EMULATION : natural := 11;
-constant C_MENU_HDMI_ZOOM     : natural := 12;
-constant C_MENU_IMPROVE_AUDIO : natural := 13;
-constant C_MENU_VGA_RETRO     : natural := 17;
-constant C_MENU_HDMI_60HZ     : natural := 18;
+constant C_MENU_FLIP_JOYS     : natural := 4;
+constant C_MENU_8580          : natural := 9;
+constant C_MENU_CRT_EMULATION : natural := 13;
+constant C_MENU_HDMI_ZOOM     : natural := 14;
+constant C_MENU_IMPROVE_AUDIO : natural := 15;
+constant C_MENU_VGA_RETRO     : natural := 19;
+constant C_MENU_HDMI_60HZ     : natural := 20;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -387,6 +388,7 @@ begin
          clk_main_i           => main_clk,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
+         flip_joys_i          => main_osm_control_m(C_MENU_FLIP_JOYS),
 
          -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
          c64_ntsc_i           => c64_ntsc,

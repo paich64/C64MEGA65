@@ -7,28 +7,20 @@ features.
 
 ## TODOs before release
 
-* 15KHz RGB mode over VGA
-
-* Joystick port switcher
+* Make sure that the MiSTer2MEGA65 framework is updated accordingly
+  as soon as all of this works
 
 * File Browser:
   - Unmount whole disk drive via Space in OSM
-  - Make sure that the MiSTer2MEGA65 framework is updated accordingly
-    as soon as all of this works
 
 * General robustness:
-  - Do the final heap/stack sanity check in m2m-rom.asm and replace
-    0xXXXX by the calculated values
-  - Debounce the joystick and the MEGA65's reset button
-    (add to MiSTer2MEGA65 from gbc4mega65)
-    => needs to go to the framework, too
+  - Do the final heap/stack sanity check in m2m-rom.asm
   - Implement a hard reset as described in
     https://www.c64-wiki.com/wiki/Reset_Button
     because right now, Games like URIDIUM can prevent us from resetting
     (we need to re-load the core)
 
 * Code consistency and "niceness":
-  - Refactor "IEC" names to something more fitting (as IEC is C64 specific)
   - Review all documentation and README's
   - run    grep -irn mark_debug .
     in these folders and remove all debug signals:
@@ -41,7 +33,6 @@ features.
 
 * MiSTer Features:
    - CRT mode
-   - crop/zoom
    - audio processing
 
 ## Features
