@@ -194,3 +194,13 @@ any way and you probably will never notice.
 But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
 HDMI display. We believe that this is the most compatible way of providing
 a flicker-free experience on HDMI.
+
+Technical Details
+-----------------
+
+Here is a list of technical details, that are not relevant for most users:
+
+* [Avalon Scaler](doc/ascal.md)
+* [Compatibiltiy](doc/compatibility.md)
+* [Graphics](doc/graphics.md)
+* [Speed Details](doc/speed.md)
