@@ -11,6 +11,7 @@ features.
   as soon as all of this works
 
 * File Browser:
+  - Let the current file browser selection survive a reset
   - Unmount whole disk drive via Space in OSM
 
 * General robustness:
