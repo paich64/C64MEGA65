@@ -18,7 +18,6 @@ entity main is
    );
    port (
       clk_main_i              : in std_logic;
-      clk_video_i             : in std_logic;
       reset_i                 : in std_logic;
       pause_i                 : in std_logic;
 
@@ -55,6 +54,7 @@ entity main is
       vga_hs_o                : out std_logic;
       vga_hblank_o            : out std_logic;
       vga_vblank_o            : out std_logic;
+      vga_ce_o                : out std_logic;
 
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);
@@ -148,6 +148,7 @@ architecture synthesis of main is
    signal vga_red             : unsigned(7 downto 0);
    signal vga_green           : unsigned(7 downto 0);
    signal vga_blue            : unsigned(7 downto 0);
+   signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock.
 
    constant C_DEBUG_MODE             : boolean := false;
    attribute mark_debug              : boolean;
@@ -281,6 +282,7 @@ begin
          cass_read   => '0'
       ); -- i_fpga64_sid_iec
 
+   -- The M2M framework needs the signals vga_hblank_o, vga_vblank_o, and vga_ce_o.
    -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
    -- This also crops the signal to 384x270 via the vs_hblank and vs_vblank signals.
    i_video_sync : entity work.video_sync
@@ -300,6 +302,15 @@ begin
    vga_red_o   <= std_logic_vector(vga_red);
    vga_green_o <= std_logic_vector(vga_green);
    vga_blue_o  <= std_logic_vector(vga_blue);
+   vga_ce_o    <= vga_ce(0);
+
+   p_vga_ce : process (clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         vga_ce <= vga_ce(0) & vga_ce(vga_ce'left downto 1);
+      end if;
+   end process p_vga_ce;
+
 
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
