@@ -14,6 +14,10 @@
 
 #include "menu_vars.asm"
 
+; reset handling
+WELCOME_SHOWN   .BLOCK 1                        ; we need to trust that this
+                                                ; is 0 on system coldstart
+
 ; option menu
 OPTM_ICOUNT     .BLOCK 1                        ; amount of menu items
 OPTM_START      .BLOCK 1                        ; initially selected menu item

@@ -21,23 +21,7 @@
                 ; Reset management
                 ; ------------------------------------------------------------
 
-                RSUB    RESETPAUSE_INIT, 1
-
-                ; @TODO: different behavior of C64 core than in the framework
-                ; make reset and pause behavior configurable in config.vhd
-                ; Make sure that SCR$OSM_O_ON (and the others) are behaving
-                ; consistent to this setting in config.vhd
-                ; And anyway, as a first step the shell should keep the core
-                ; in reset state for "a while" so that it can settle and we
-                ; have no reset related bugs
-START_SHELL     MOVE    M2M$CSR, R0             ; Reset core and clear all
-                MOVE    M2M$CSR_RESET, @R0      ; other CSR flags, so that
-                                                ; no keypress propagates to
-                                                ; the core
-                MOVE    100, R1
-_RESET_A_WHILE  SUB     1, R1
-                RBRA    _RESET_A_WHILE, !Z
-                MOVE    0, @R0                  ; remove reset signal
+START_SHELL     RSUB    RP_SYSTEM_START, 1
 
                 ; log M2M message to serial terminal (not visible to end user)
                 MOVE    LOG_M2M, R8
@@ -109,50 +93,16 @@ _RESET_A_WHILE  SUB     1, R1
                 MOVE    OPTM_HEAP_SIZE, R8
                 MOVE    0, @R8
 
-                ; initialize screen library and draw the OSM frame
+                ; initialize libraries
                 RSUB    SCR$INIT, 1             ; retrieve VHDL generics
                 RSUB    FRAME_FULLSCR, 1        ; draw fullscreen frame
+                RSUB    VD_INIT, 1              ; virtual drive system
+                RSUB    KEYB$INIT, 1            ; keyboard library
+                RSUB    HELP_MENU_INIT, 1       ; menu library
 
-                ; use the sysinfo device to initialize the vdrives system:
-                ; get the amount of virtual drives, the device id of the
-                ; vdrives.vhd device and an array of RAM buffers for
-                ; the disk images
-                MOVE    M2M$RAMROM_DEV, R8
-                MOVE    M2M$SYS_INFO, @R8
-                MOVE    M2M$RAMROM_4KWIN, R8
-                MOVE    M2M$SYS_VDRIVES, @R8
-                MOVE    VD_NUM, R8
-                MOVE    VDRIVES_NUM, R0         ; number of virtual drives
-                MOVE    @R8, @R0
-                MOVE    @R0, R0
-                MOVE    VDRIVES_MAX, R1
-                CMP     R0, @R1                 ; vdrives > maximum?
-                RBRA    START_VD, !N            ; no: continue
-
-                MOVE    ERR_FATAL_VDMAX, R8     ; yes: stop core
-                MOVE    R0, R9
-                RBRA    FATAL, 1
-
-START_VD        MOVE    VD_DEVICE, R1           ; device id of vdrives.vhd
-                MOVE    VDRIVES_DEVICE, R2
-                MOVE    @R1, @R2
-
-                XOR     R1, R1                  ; loop var for buffer array
-                MOVE    VD_RAM_BUFFERS, R2      ; Source data from config.vhd
-                MOVE    VDRIVES_BUFS, R3        ; Dest. buf. in shell_vars.asm
-
-START_VD_CPY_1  MOVE    @R2++, @R3
-
-                RBRA    START_VD_CPY_F, Z       ; illegal values for buffer..
-                CMP     0xEEEE, @R3++           ; ..ptrs indicate that there..
-                RBRA    START_VD_CPY_2, !Z      ; ..are not enough of them:
-START_VD_CPY_F  MOVE    ERR_FATAL_VDBUF, R8     ; stop core
-                XOR     R9, R9
-                RBRA    FATAL, 1
-
-START_VD_CPY_2  ADD     1, R1
-                CMP     R0, R1
-                RBRA    START_VD_CPY_1, !Z
+                ; Show welcome screen at all?
+                RSUB    RP_WELCOME, 1           
+                RBRA    START_CONNECT, !C
 
                 ; Show the welcome screen                
                 MOVE    M2M$RAMROM_DEV, R0      ; Device = config data
@@ -163,13 +113,7 @@ START_VD_CPY_2  ADD     1, R1
                 RSUB    SCR$PRINTSTR, 1
 
                 ; switch on main OSM
-                RSUB    SCR$OSM_M_ON, 1
-
-                ; initialize all other libraries as late as here, so that
-                ; error messages (if any) can be printed on screen because the
-                ; screen is already initialized using the sequence above
-                RSUB    KEYB$INIT, 1            ; keyboard library
-                RSUB    HELP_MENU_INIT, 1       ; menu library                
+                RSUB    SCR$OSM_M_ON, 1  
 
                 ; Wait for "Space to continue"
                 ; TODO: The whole startup behavior of the Shell needs to be
@@ -182,12 +126,15 @@ START_SPACE     RSUB    KEYB$SCAN, 1
                 ; Hide OSM
                 RSUB    SCR$OSM_OFF, 1
 
-                ; Connect keyboard and joysticks to the core.
-                ; Avoid that the keypress to exit the splash screen gets
-                ; noticed by the core: Wait 1 second and only after that
-                ; connect the keyboard and the joysticks to the core
-                RSUB    WAIT333MS, 1
+                ; Unreset (in case the core is still in reset at this point
+                ; due to RESET_KEEP in config.vhd) and connect keyboard and
+                ; joysticks to the core (in case they were disconnected)
+                ; Avoid that the keypress to exit the splash screen (if any)
+                ; gets noticed by the core: Wait 0.3 second and only after
+                ; that connect the keyboard and the joysticks to the core
+START_CONNECT   RSUB    WAIT333MS, 1
                 MOVE    M2M$CSR, R0
+                AND     M2M$CSR_UN_RESET, @R0
                 OR      M2M$CSR_KBD_JOY, @R0
 
                 ; ------------------------------------------------------------

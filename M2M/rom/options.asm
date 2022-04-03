@@ -22,10 +22,10 @@ HELP_MENU       SYSCALL(enter, 1)
                 CMP     M2M$KEY_HELP, R8        ; help key pressed?
                 RBRA    _HLP_RET_DIRECT, !Z                
 
-                ; Deactivate keyboard and joysticks, so that the key strokes
-                ; done during the OSD is on are not passed along to the core
-                MOVE    M2M$CSR, R0
-                AND     M2M$CSR_UN_KBD_JOY, @R0
+                ; If configured in config.vhd, deactivate keyboard and
+                ; joysticks, so that the key strokes done during the OSD is on
+                ; are not passed along to the core
+                RSUB    RP_OPTM_START, 1
 
                 ; Copy menu items from config.vhd to heap
                 MOVE    M2M$RAMROM_DEV, R0
@@ -194,8 +194,11 @@ _HLP_RESETPOS   MOVE    OPTM_START, R0
                 ; that the Return key press is not registered by the core
                 RSUB    WAIT333MS, 1
 
-                ; Reactivate keyboard and joysticks
+                ; Unpause (in case the core was at pause state due to
+                ; OPTM_PAUSE in config.vhd) and reactivate keyboard and
+                ; joysticks in case they were inactive
 _HLP_RET        MOVE    M2M$CSR, R0
+                AND     M2M$CSR_UN_PAUSE, @R0
                 OR      M2M$CSR_KBD_JOY, @R0
 
 _HLP_RET_DIRECT SYSCALL(leave, 1)

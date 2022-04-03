@@ -188,6 +188,7 @@ M2M$SHELL_M_DXDY    .EQU 0x7002     ; main screen: dx|dy width and height
 
 M2M$CFG_WELCOME     .EQU 0x0000     ; Welcome screen
 M2M$CFG_DIR_START   .EQU 0x0100     ; Start folder for file browser
+M2M$CFG_RESETPAUSE  .EQU 0x0110     ; Reset/Pause handling
 M2M$CFG_ROMS        .EQU 0x0200     ; Mandatory and optional ROMs
 
 M2M$CFG_OPTM_ITEMS  .EQU 0x0300     ; "Help" menu / Options menu items
@@ -205,6 +206,20 @@ M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
 
 M2M$SHELL_O_DX      .EQU 0x7000     ; Width of Help/Options menu
 M2M$SHELL_O_DY      .EQU 0x7001     ; Height of Help/Options menu
+
+; M2M$CFG_RESETPAUSE Addresses
+
+M2M$CFG_RP_KEEP     .EQU 0x7000     ; keep core at reset after machine reset
+M2M$CFG_RP_COUNTER  .EQU 0x7001     ; keep reset for a "QNICE loop while"
+M2M$CFG_RP_PAUSE    .EQU 0x7002     ; pause core when any OSD opens
+M2M$CFG_RP_WELCOME  .EQU 0x7003     ; show the welcome screen in general
+M2M$CFG_RP_WLCM_RST .EQU 0x7004     ; show welcome screen after reset
+M2M$CFG_RP_KB_RST   .EQU 0x7005     ; connect the keyboard at reset
+M2M$CFG_RP_J1_RST   .EQU 0x7006     ; connect the joystick 1 at reset
+M2M$CFG_RP_J2_RST   .EQU 0x7007     ; connect the joystick 2 at reset
+M2M$CFG_RP_KB_OSD   .EQU 0x7008     ; connect the keyboard at OSD
+M2M$CFG_RP_J1_OSD   .EQU 0x7009     ; connect the joystick 1 at OSD
+M2M$CFG_RP_J2_OSD   .EQU 0x700A     ; connect the joystick 2 at OSD
 
 ; ----------------------------------------------------------------------------
 ; Virtual Drives Device for MiSTer "SD" interface (vdrives.vhd)

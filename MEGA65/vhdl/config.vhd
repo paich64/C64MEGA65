@@ -73,14 +73,14 @@ constant SEL_RESET_PAUSE   : std_logic_vector(15 downto 0) := x"0110";
 -- keep the core in RESET state after the hardware starts up and after pressing the MEGA65's reset button 
 constant RESET_KEEP        : boolean := false;
 
--- after the core is "UN-RESET", keep the reset line active for this amount of "QNICE loops" (see shell.asm)
+-- alternative to RESET_KEEP: keep the reset line active for this amount of "QNICE loops" (see shell.asm)
 -- "0" means: deactivate this feature
 constant RESET_COUNTER     : natural := 100;
 
 -- put the core in PAUSE state if any OSD opens
 constant OPTM_PAUSE        : boolean := false;
 
--- show the welcome screen at all
+-- show the welcome screen in general
 constant WELCOME_ACTIVE    : boolean := true;
 
 -- shall the welcome screen also be shown after the core is reset?
@@ -88,9 +88,9 @@ constant WELCOME_ACTIVE    : boolean := true;
 constant WELCOME_AT_RESET  : boolean := false;
 
 -- keyboard and joystick connection during reset and OSD
-constant KEYBOARD_AT_RESET : boolean := true;
-constant JOY_1_AT_RESET    : boolean := true;
-constant JOY_2_AT_RESET    : boolean := true;
+constant KEYBOARD_AT_RESET : boolean := false;
+constant JOY_1_AT_RESET    : boolean := false;
+constant JOY_2_AT_RESET    : boolean := false;
 
 constant KEYBOARD_AT_OSD   : boolean := false;
 constant JOY_1_AT_OSD      : boolean := false;

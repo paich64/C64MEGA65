@@ -10,6 +10,51 @@
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
+; Initialize library
+; ----------------------------------------------------------------------------
+
+                ; use the sysinfo device to initialize the vdrives system:
+                ; get the amount of virtual drives, the device id of the
+                ; vdrives.vhd device and an array of RAM buffers for
+                ; the disk images
+VD_INIT         MOVE    M2M$RAMROM_DEV, R8
+                MOVE    M2M$SYS_INFO, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    M2M$SYS_VDRIVES, @R8
+                MOVE    VD_NUM, R8
+                MOVE    VDRIVES_NUM, R0         ; number of virtual drives
+                MOVE    @R8, @R0
+                MOVE    @R0, R0
+                MOVE    VDRIVES_MAX, R1
+                CMP     R0, @R1                 ; vdrives > maximum?
+                RBRA    _START_VD, !N           ; no: continue
+
+                MOVE    ERR_FATAL_VDMAX, R8     ; yes: stop core
+                MOVE    R0, R9
+                RBRA    FATAL, 1
+
+_START_VD       MOVE    VD_DEVICE, R1           ; device id of vdrives.vhd
+                MOVE    VDRIVES_DEVICE, R2
+                MOVE    @R1, @R2
+
+                XOR     R1, R1                  ; loop var for buffer array
+                MOVE    VD_RAM_BUFFERS, R2      ; Source data from config.vhd
+                MOVE    VDRIVES_BUFS, R3        ; Dest. buf. in shell_vars.asm
+
+_START_VD_CPY_1 MOVE    @R2++, @R3
+
+                RBRA    _START_VD_CPY_F, Z      ; illegal values for buffer..
+                CMP     0xEEEE, @R3++           ; ..ptrs indicate that there..
+                RBRA    _START_VD_CPY_2, !Z     ; ..are not enough of them:
+_START_VD_CPY_F MOVE    ERR_FATAL_VDBUF, R8     ; stop core
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+_START_VD_CPY_2 ADD     1, R1
+                CMP     R0, R1
+                RBRA    _START_VD_CPY_1, !Z
+
+; ----------------------------------------------------------------------------
 ; Query & setter functions
 ; ----------------------------------------------------------------------------
 
