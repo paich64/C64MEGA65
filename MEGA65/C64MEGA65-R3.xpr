@@ -548,7 +548,7 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../M2M/vhdl/drivers/MiSTer/scandoubler.v">
-        <FileInfo>
+        <FileInfo SFType="SVerilog">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
