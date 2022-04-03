@@ -186,12 +186,23 @@ signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
 
 -- C64 Video output
-signal video_red              : std_logic_vector(7 downto 0);
-signal video_green            : std_logic_vector(7 downto 0);
-signal video_blue             : std_logic_vector(7 downto 0);
-signal video_hs               : std_logic;
-signal video_vs               : std_logic;
-signal video_de               : std_logic;
+signal main_red               : std_logic_vector(7 downto 0);
+signal main_green             : std_logic_vector(7 downto 0);
+signal main_blue              : std_logic_vector(7 downto 0);
+signal main_hs                : std_logic;
+signal main_vs                : std_logic;
+signal main_hblank            : std_logic;
+signal main_vblank            : std_logic;
+signal main_ce                : std_logic;
+
+signal main_crop_ce           : std_logic;
+signal main_crop_red          : std_logic_vector(7 downto 0);
+signal main_crop_green        : std_logic_vector(7 downto 0);
+signal main_crop_blue         : std_logic_vector(7 downto 0);
+signal main_crop_hs           : std_logic;
+signal main_crop_vs           : std_logic;
+signal main_crop_hblank       : std_logic;
+signal main_crop_vblank       : std_logic;
 
 -- On-Screen-Menu (OSM) for VGA
 signal video_osm_cfg_enable   : std_logic;
@@ -209,7 +220,6 @@ signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
 
 -- QNICE On Screen Menu selections
 signal hdmi_osm_control_m     : std_logic_vector(255 downto 0);
-signal hdmi_video_mode        : natural;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -378,7 +388,6 @@ begin
       )
       port map (
          clk_main_i           => main_clk,
-         clk_video_i          => video_clk,
          reset_i              => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
 
@@ -405,14 +414,15 @@ begin
          joy_2_right_n_i      => joy_2_right_n,
          joy_2_fire_n_i       => joy_2_fire_n,
 
-         -- C64 video out (after scandoubler)
-         -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to video_clk (63 MHz).
-         vga_red_o            => video_red,
-         vga_green_o          => video_green,
-         vga_blue_o           => video_blue,
-         vga_vs_o             => video_vs,
-         vga_hs_o             => video_hs,
-         vga_de_o             => video_de,
+         -- C64 video out
+         vga_red_o            => main_red,
+         vga_green_o          => main_green,
+         vga_blue_o           => main_blue,
+         vga_vs_o             => main_vs,
+         vga_hs_o             => main_hs,
+         vga_hblank_o         => main_hblank,
+         vga_vblank_o         => main_vblank,
+         vga_ce_o             => main_ce,
 
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -676,14 +686,14 @@ begin
          WIDTH => 33
       )
       port map (
-         src_clk                => qnice_clk,
-         src_in(15 downto 0)    => qnice_osm_cfg_xy,
-         src_in(31 downto 16)   => qnice_osm_cfg_dxdy,
-         src_in(32)             => qnice_osm_cfg_enable,
-         dest_clk               => video_clk,
-         dest_out(15 downto 0)  => video_osm_cfg_xy,
-         dest_out(31 downto 16) => video_osm_cfg_dxdy,
-         dest_out(32)           => video_osm_cfg_enable
+         src_clk                 => qnice_clk,
+         src_in(15 downto 0)     => qnice_osm_cfg_xy,
+         src_in(31 downto 16)    => qnice_osm_cfg_dxdy,
+         src_in(32)              => qnice_osm_cfg_enable,
+         dest_clk                => video_clk,
+         dest_out(15 downto 0)   => video_osm_cfg_xy,
+         dest_out(31 downto 16)  => video_osm_cfg_dxdy,
+         dest_out(32)            => video_osm_cfg_enable
       ); -- i_qnice2video
 
    -- Clock domain crossing: QNICE to HDMI QNICE-On-Screen-Display
@@ -804,15 +814,17 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
+         main_clk_i               => main_clk,
          video_clk_i              => video_clk,
-         video_rst_i              => video_rst,
-         video_ce_i               => '1',
-         video_red_i              => video_red,
-         video_green_i            => video_green,
-         video_blue_i             => video_blue,
-         video_hs_i               => video_hs,
-         video_vs_i               => video_vs,
-         video_de_i               => video_de,
+         video_rst_i              => main_rst,
+         video_ce_i               => main_ce,
+         video_red_i              => main_red,
+         video_green_i            => main_green,
+         video_blue_i             => main_blue,
+         video_hs_i               => main_hs,
+         video_vs_i               => main_vs,
+         video_hblank_i           => main_hblank,
+         video_vblank_i           => main_vblank,
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
@@ -842,7 +854,29 @@ begin
       ); -- i_analog_pipeline
 
 
-   hdmi_video_mode <= 0 when hdmi_osm_control_m(C_MENU_HDMI_60HZ) else 1;
+   i_crop : entity work.crop
+      port map (
+         video_crop_mode_i => main_osm_control_m(C_MENU_HDMI_ZOOM),
+         video_clk_i       => main_clk,
+         video_rst_i       => main_rst,
+         video_ce_i        => main_ce,
+         video_red_i       => main_red,
+         video_green_i     => main_green,
+         video_blue_i      => main_blue,
+         video_hs_i        => main_hs,
+         video_vs_i        => main_vs,
+         video_hblank_i    => main_hblank,
+         video_vblank_i    => main_vblank,
+         video_ce_o        => main_crop_ce,
+         video_red_o       => main_crop_red,
+         video_green_o     => main_crop_green,
+         video_blue_o      => main_crop_blue,
+         video_hs_o        => main_crop_hs,
+         video_vs_o        => main_crop_vs,
+         video_hblank_o    => main_crop_hblank,
+         video_vblank_o    => main_crop_vblank
+      ); -- i_crop
+
 
    i_digital_pipeline : entity work.digital_pipeline
       generic map (
@@ -859,15 +893,16 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         video_clk_i              => video_clk,
-         video_rst_i              => video_rst,
-         video_ce_i               => '1',
-         video_red_i              => video_red,
-         video_green_i            => video_green,
-         video_blue_i             => video_blue,
-         video_hs_i               => video_hs,
-         video_vs_i               => video_vs,
-         video_de_i               => video_de,
+         video_clk_i              => main_clk,
+         video_rst_i              => main_rst,
+         video_ce_i               => main_crop_ce,
+         video_red_i              => main_crop_red,
+         video_green_i            => main_crop_green,
+         video_blue_i             => main_crop_blue,
+         video_hs_i               => main_crop_hs,
+         video_vs_i               => main_crop_vs,
+         video_hblank_i           => main_crop_hblank,
+         video_vblank_i           => main_crop_vblank,
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
@@ -883,7 +918,8 @@ begin
          tmds_clk_n_o             => tmds_clk_n,
 
          -- Connect to QNICE and Video RAM
-         hdmi_video_mode_i        => hdmi_video_mode,
+         hdmi_video_mode_i        => hdmi_osm_control_m(C_MENU_HDMI_60HZ),
+         hdmi_crop_mode_i         => main_osm_control_m(C_MENU_HDMI_ZOOM),
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
          hdmi_osm_cfg_dxdy_i      => hdmi_osm_cfg_dxdy,

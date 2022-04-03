@@ -38,7 +38,8 @@ entity digital_pipeline is
       video_blue_i             : in  std_logic_vector(7 downto 0);
       video_hs_i               : in  std_logic;
       video_vs_i               : in  std_logic;
-      video_de_i               : in  std_logic;
+      video_hblank_i           : in  std_logic;
+      video_vblank_i           : in  std_logic;
       audio_clk_i              : in  std_logic;
       audio_rst_i              : in  std_logic;
       audio_left_i             : in  signed(15 downto 0); -- Signed PCM format
@@ -54,7 +55,8 @@ entity digital_pipeline is
       tmds_clk_n_o             : out std_logic;
 
       -- Connect to QNICE and Video RAM
-      hdmi_video_mode_i        : in  natural;
+      hdmi_video_mode_i        : in  std_logic;
+      hdmi_crop_mode_i         : in  std_logic;
       hdmi_osm_cfg_enable_i    : in  std_logic;
       hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
       hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
@@ -112,6 +114,11 @@ architecture synthesis of digital_pipeline is
    signal pcm_audio_counter      : integer := 0;
    signal pcm_acr_counter        : integer range 0 to pcm_acr_cnt_range := 0;
 
+   signal vs_hsync               : std_logic;
+   signal vs_vsync               : std_logic;
+   signal vs_hblank              : std_logic;
+   signal vs_vblank              : std_logic;
+
    signal reset_na               : std_logic;            -- Asynchronous reset, active low
 
    signal hdmi_tmds              : slv_9_0_t(0 to 2);    -- parallel TMDS symbol stream x 3 channels
@@ -160,8 +167,6 @@ architecture synthesis of digital_pipeline is
    signal hr_wide_readdatavalid  : std_logic;
    signal hr_wide_waitrequest    : std_logic;
 
-   signal video_ce               : std_logic_vector(3 downto 0) := "1000"; -- Clock divider 1/4
-
 begin
 
    -- SHELL_M_XY
@@ -184,7 +189,7 @@ begin
    sys_info_hdmi_o(79 downto 64) <=
       std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
 
-   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(hdmi_video_mode_i);
+   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(0) when hdmi_video_mode_i = '1' else G_VIDEO_MODE_VECTOR(1);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
    hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;
    hdmi_hsend      <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE;
@@ -193,8 +198,8 @@ begin
    hdmi_vsstart    <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP;
    hdmi_vsend      <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP + hdmi_video_mode.V_PULSE;
    hdmi_vdisp      <= hdmi_video_mode.V_PIXELS;
-   hdmi_hmin       <= (hdmi_video_mode.H_PIXELS-hdmi_video_mode.V_PIXELS*4/3)/2;
-   hdmi_hmax       <= (hdmi_video_mode.H_PIXELS+hdmi_video_mode.V_PIXELS*4/3)/2-1;
+   hdmi_hmin       <= (hdmi_video_mode.H_PIXELS-hdmi_video_mode.V_PIXELS*4/3)/2 when hdmi_crop_mode_i = '0' else 0;
+   hdmi_hmax       <= (hdmi_video_mode.H_PIXELS+hdmi_video_mode.V_PIXELS*4/3)/2-1 when hdmi_crop_mode_i = '0' else hdmi_video_mode.H_PIXELS-1;
    hdmi_vmin       <= 0;
    hdmi_vmax       <= hdmi_video_mode.V_PIXELS-1;
 
@@ -279,14 +284,6 @@ begin
 
    reset_na <= not (video_rst_i or hdmi_rst_i or hr_rst_i);
 
-   -- Clock enable for Overlay and HDMI video streams
-   p_video_ce : process (video_clk_i)
-   begin
-      if rising_edge(video_clk_i) then
-         video_ce <= video_ce(0) & video_ce(video_ce'left downto 1);
-      end if;
-   end process p_video_ce;
-
    i_ascal : entity work.ascal
       generic map (
          MASK      => x"ff",
@@ -315,8 +312,8 @@ begin
          i_hs              => video_hs_i,                   -- input
          i_vs              => video_vs_i,                   -- input
          i_fl              => '0',                          -- input
-         i_de              => video_de_i,                   -- input
-         i_ce              => video_ce(0),                  -- input
+         i_de              => not (video_hblank_i or video_vblank_i), -- input
+         i_ce              => video_ce_i,                   -- input
          i_clk             => video_clk_i,                  -- input
 
          -- Output video
