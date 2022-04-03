@@ -105,6 +105,8 @@ robustness, performance and stability of the whole system, we will need
 to implement certain technical improvements in the "backend":
 
 * Update to newer ascal version (wait until MiSTer did the same upstream)
+* Investigate dynamic PLL adjustment/autotune in conjunciton with ascal
+  to even improve flicker-free HDMI further
 * Re-do QNICE's SD Card controller: Go from SPI to native
 * Enhance QNICE's FAT32 library so that it supports writing
 * HyperRAM device support to QNICE
