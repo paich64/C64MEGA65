@@ -191,6 +191,6 @@ VIC, C1541, ...), so that it runs at only 99.75% of the original clock
 speed of the C64. This does not decrease the compatibility of the core in
 any way and you probably will never notice.
 
-This results in a clean 50 Hz signal for your HDMI display. We believe that
-this is the most compatible way of providing a flicker-free experience on
-HDMI.
+But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
+HDMI display. We believe that this is the most compatible way of providing
+a flicker-free experience on HDMI.
