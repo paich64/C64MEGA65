@@ -7,16 +7,9 @@ features.
 
 ## TODOs before release
 
-* Flicker-free HDMI: Implement the three menu options:
-  - "Best: 50.125 Hz" means "C64 at original speed and HDMI at 50.125 Hz"
-  - "OK: C64 0.25% slow" means "C64 0.25% slow and HDMI at 50 Hz"
-   " Off: 60 Hz" means "C64 at original speed and HDMI at 60 Hz"
-
 * 15KHz RGB mode over VGA
 
 * Joystick port switcher
-
-* Welcome screen only at power-up (core load) not at each reset
 
 * File Browser:
   - Unmount whole disk drive via Space in OSM
@@ -36,9 +29,6 @@ features.
 
 * Code consistency and "niceness":
   - Refactor "IEC" names to something more fitting (as IEC is C64 specific)
-  - Refactor OSM_DX and OSM_DY: Get rid of it in mega65.vhd and in the
-    audio-video-pipeline and move it to config.vhd: DX can be configured there
-    and passed via a new 4k selector and DY can be inferred SEL_OPTM_ICOUNT-
   - Review all documentation and README's
   - run    grep -irn mark_debug .
     in these folders and remove all debug signals:

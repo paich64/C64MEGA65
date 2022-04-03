@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#undef RELEASE
+#define RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -178,9 +178,9 @@ HEAP            .BLOCK 1
 ; The stack starts at 0xFEE0 (search var VAR$STACK_START in osm_rom.lis to
 ; calculate the address). To see, if there is enough room for the stack
 ; given the HEAP_SIZE do this calculation: Add 29696 words to HEAP which
-; is currently 0xXXXX and subtract the result from 0xFEE0. This yields
-; currently a stack size of more than 1.5k words, which is sufficient
-; for this program.
+; is currently 0x8269 and subtract the result from 0xFEE0. This yields
+; currently a stack size of 2167, which is more than 1.5k words, and therefore
+; sufficient for this program.
 
                 .ORG    0xFEE0                  ; TODO: automate calculation
 #endif

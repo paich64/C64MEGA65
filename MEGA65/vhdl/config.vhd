@@ -166,52 +166,46 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 27;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 21;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- We advise to use OPTM_SIZE as height, but there might be reasons for you to change it.
-constant OPTM_DX           : natural := 20;
+constant OPTM_DX           : natural := 22;
 constant OPTM_DY           : natural := OPTM_SIZE;
                                              
 constant OPTM_ITEMS        : string :=
 
-   " C64 for MEGA65\n"     &
-   "\n"                    &
-   " 8:%s\n"               &                 -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
-   "\n"                    &
-   " SID\n"                &
-   "\n"                    &
-   " 6581\n"               &
-   " 8580\n"               &
-   "\n"                    &
-   " Flicker-free HDMI\n"  &
-   "\n"                    &
-   " Best: 50.125 Hz\n"    &
-   " OK: C64 0.25% slow\n" &
-   " Off: 60 Hz\n"         &
-   "\n"                    &
-   " VGA connector\n"      &
-   "\n"                    &
-   " Normal VGA output\n"  &
-   " Retro 15KHz RGB\n"    &
-   "\n"                    &
-   " Post-processing\n"    &
-   "\n"                    &
-   " CRT emulation\n"      &
-   " HDMI: Zoom-in\n"      &
-   " Audio improvements\n" &
-   "\n"                    &
+   " C64 for MEGA65\n"        &
+   "\n"                       &
+   " 8:%s\n"                  &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
+   "\n"                       &
+   " SID\n"                   &
+   "\n"                       &
+   " 6581\n"                  &
+   " 8580\n"                  &
+   "\n"                       &
+   " Post-processing\n"       &
+   "\n"                       &
+   " CRT emulation\n"         &
+   " HDMI: Zoom-in\n"         &
+   " Audio improvements\n"    &
+   "\n"                       &
+   " Advanced\n"              &
+   "\n"                       &
+   " VGA: Retro 15KHz RGB\n"  &
+   " HDMI: Force 60Hz\n"      &
+   "\n"                       &
    " Close Menu\n";
         
 constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
 constant OPTM_G_SID           : integer := 3;
-constant OPTM_G_ANTI_FLICKER  : integer := 4;
-constant OPTM_G_VGA_RETRO     : integer := 5;
-constant OPTM_G_CRT_EMULATION : integer := 6;
-constant OPTM_G_HDMI_ZOOM     : integer := 7;
-constant OPTM_G_IMPROVE_AUDIO : integer := 8;
+constant OPTM_G_CRT_EMULATION : integer := 4;
+constant OPTM_G_HDMI_ZOOM     : integer := 5;
+constant OPTM_G_IMPROVE_AUDIO : integer := 6;
+constant OPTM_G_VGA_RETRO     : integer := 7;
+constant OPTM_G_HDMI_60HZ     : integer := 8;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -225,20 +219,14 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_ANTI_FLICKER,
-                                             OPTM_G_ANTI_FLICKER + OPTM_G_STDSEL,
-                                             OPTM_G_ANTI_FLICKER,
-                                             OPTM_G_LINE,
-                                             OPTM_G_HEADLINE,
-                                             OPTM_G_LINE,
-                                             OPTM_G_VGA_RETRO    + OPTM_G_STDSEL,
-                                             OPTM_G_VGA_RETRO,
-                                             OPTM_G_LINE,
-                                             OPTM_G_HEADLINE,
-                                             OPTM_G_LINE,
                                              OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
-                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL   + OPTM_G_STDSEL,
+                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
+                                             OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE
                                            );

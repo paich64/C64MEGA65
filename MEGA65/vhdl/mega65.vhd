@@ -97,8 +97,8 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
-constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
---constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
+--constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
+constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
 -- HDMI 1280x720 @ 60 Hz resolution = mode 0, 1280x720 @ 50 Hz resolution = mode 1
 constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
@@ -297,11 +297,11 @@ signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 signal qnice_osm_control_m    : std_logic_vector(255 downto 0);
 
 constant C_MENU_8580          : natural := 7;
-constant C_MENU_HDMI_60HZ     : natural := 13;
-constant C_MENU_VGA_RETRO     : natural := 18;
-constant C_MENU_CRT_EMULATION : natural := 22;
-constant C_MENU_HDMI_ZOOM     : natural := 23;
-constant C_MENU_IMPROVE_AUDIO : natural := 24;
+constant C_MENU_CRT_EMULATION : natural := 11;
+constant C_MENU_HDMI_ZOOM     : natural := 12;
+constant C_MENU_IMPROVE_AUDIO : natural := 13;
+constant C_MENU_VGA_RETRO     : natural := 17;
+constant C_MENU_HDMI_60HZ     : natural := 18;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -842,6 +842,7 @@ begin
          video_osm_cfg_dxdy_i     => video_osm_cfg_dxdy,
          video_osm_vram_addr_o    => video_osm_vram_addr,
          video_osm_vram_data_i    => video_osm_vram_data,
+         scandoubler_i            => not main_osm_control_m(C_MENU_VGA_RETRO),
 
          -- System info device
          sys_info_vga_o           => sys_info_vga

@@ -57,6 +57,7 @@ entity analog_pipeline is
       video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
       video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
       video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
+      scandoubler_i          : in std_logic;
       sys_info_vga_o         : out std_logic_vector(47 downto 0)
    );
 end entity analog_pipeline;
@@ -187,7 +188,7 @@ begin
          CLK_VIDEO   => video_clk_i,      -- 63.056 MHz
          CE_PIXEL    => open,
          ce_pix      => ce_pix,
-         scandoubler => '1',
+         scandoubler => scandoubler_i,
          hq2x        => '0',
          gamma_bus   => open,
          R           => unsigned(video_red_i),
