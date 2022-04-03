@@ -118,12 +118,9 @@ constant HDMI_CLK_SPEED       : natural := 74_250_000;
 --    FONT_*  size of one OSM character
 constant VGA_DX               : natural := 768;
 constant VGA_DY               : natural := 540;
+constant FONT_FILE            : string  := "../font/Anikki-16x16.rom";
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
-
--- OSM size: Important: Make sure that the OSM's height (OSM_DY) equals config.vhd's OPTM_SIZE + 2
-constant OSM_DX               : natural := 22;
-constant OSM_DY               : natural := 27 + 2;
 
 -- Constants for the OSM screen memory
 constant CHARS_DX             : natural := VGA_DX / FONT_DX;
@@ -274,8 +271,8 @@ constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := x"0101";     --
 constant C_VD_BUFFER          : vd_buf_array := (C_DEV_C64_MOUNT, x"EEEE");   -- Finish the array using x"EEEE"
 
 -- Sysinfo device for the two graphics adaptors that the firmware uses for the on-screen-display
-signal sys_info_vga           : std_logic_vector(79 downto 0);
-signal sys_info_hdmi          : std_logic_vector(79 downto 0);
+signal sys_info_vga           : std_logic_vector(47 downto 0);
+signal sys_info_hdmi          : std_logic_vector(47 downto 0);
 
 -- VRAM
 signal qnice_vram_data        : std_logic_vector(15 downto 0);
@@ -599,8 +596,6 @@ begin
                      when X"000" => qnice_ramrom_data_i <= sys_info_vga(15 downto  0);
                      when X"001" => qnice_ramrom_data_i <= sys_info_vga(31 downto 16);
                      when X"002" => qnice_ramrom_data_i <= sys_info_vga(47 downto 32);
-                     when X"003" => qnice_ramrom_data_i <= sys_info_vga(63 downto 48);
-                     when X"004" => qnice_ramrom_data_i <= sys_info_vga(79 downto 64);
                      when others => null;
                   end case;
 
@@ -610,8 +605,6 @@ begin
                      when X"000" => qnice_ramrom_data_i <= sys_info_hdmi(15 downto  0);
                      when X"001" => qnice_ramrom_data_i <= sys_info_hdmi(31 downto 16);
                      when X"002" => qnice_ramrom_data_i <= sys_info_hdmi(47 downto 32);
-                     when X"003" => qnice_ramrom_data_i <= sys_info_hdmi(63 downto 48);
-                     when X"004" => qnice_ramrom_data_i <= sys_info_hdmi(79 downto 64);
                      when others => null;
                   end case;
 
@@ -809,8 +802,9 @@ begin
       generic map (
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY,
-         G_OSM_DX            => OSM_DX,
-         G_OSM_DY            => OSM_DY
+         G_FONT_FILE         => FONT_FILE,
+         G_FONT_DX           => FONT_DX,
+         G_FONT_DY           => FONT_DY
       )
       port map (
          -- Input from Core (video and audio)
@@ -888,8 +882,9 @@ begin
          G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY,
-         G_OSM_DX            => OSM_DX,
-         G_OSM_DY            => OSM_DY
+         G_FONT_FILE         => FONT_FILE,
+         G_FONT_DX           => FONT_DX,
+         G_FONT_DY           => FONT_DY
       )
       port map (
          -- Input from Core (video and audio)

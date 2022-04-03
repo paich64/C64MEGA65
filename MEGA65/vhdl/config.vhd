@@ -61,8 +61,40 @@ constant SCR_WELCOME : string :=
 -- Set start folder for file browser (Selector 0x0100) 
 --------------------------------------------------------------------------------------------------------------------
 
-constant SEL_DIR_START : std_logic_vector(15 downto 0) := x"0100";
-constant DIR_START     : string := "/c64";
+constant SEL_DIR_START     : std_logic_vector(15 downto 0) := x"0100";
+constant DIR_START         : string := "/c64";
+
+--------------------------------------------------------------------------------------------------------------------
+-- Reset / Pause / OSD behavior
+--------------------------------------------------------------------------------------------------------------------
+
+constant SEL_RESET_PAUSE   : std_logic_vector(15 downto 0) := x"0110";
+
+-- keep the core in RESET state after the hardware starts up and after pressing the MEGA65's reset button 
+constant RESET_KEEP        : boolean := false;
+
+-- after the core is "UN-RESET", keep the reset line active for this amount of "QNICE loops" (see shell.asm)
+-- "0" means: deactivate this feature
+constant RESET_COUNTER     : natural := 100;
+
+-- put the core in PAUSE state if any OSD opens
+constant OPTM_PAUSE        : boolean := false;
+
+-- show the welcome screen at all
+constant WELCOME_ACTIVE    : boolean := true;
+
+-- shall the welcome screen also be shown after the core is reset?
+-- (only relevant if WELCOME_ACTIVE is true)
+constant WELCOME_AT_RESET  : boolean := false;
+
+-- keyboard and joystick connection during reset and OSD
+constant KEYBOARD_AT_RESET : boolean := true;
+constant JOY_1_AT_RESET    : boolean := true;
+constant JOY_2_AT_RESET    : boolean := true;
+
+constant KEYBOARD_AT_OSD   : boolean := false;
+constant JOY_1_AT_OSD      : boolean := false;
+constant JOY_2_AT_OSD      : boolean := false;
 
 --------------------------------------------------------------------------------------------------------------------
 -- Load one or more mandatory or optional BIOS/ROMs  (Selectors 0x0200 .. 0x02FF) 
@@ -114,6 +146,7 @@ constant SEL_OPTM_ICOUNT      : std_logic_vector(15 downto 0) := x"0305";
 constant SEL_OPTM_MOUNT_DRV   : std_logic_vector(15 downto 0) := x"0306";
 constant SEL_OPTM_SINGLESEL   : std_logic_vector(15 downto 0) := x"0307";
 constant SEL_OPTM_MOUNT_STR   : std_logic_vector(15 downto 0) := x"0308";
+constant SEL_OPTM_DIMENSIONS  : std_logic_vector(15 downto 0) := x"0309";
 
 -- String with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
 constant OPTM_S_MOUNT         : string :=  "<Mount Drive>";
@@ -133,11 +166,14 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : integer := 27;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 27;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
-                                             -- Important: make sure that OSM_DY in mega65.vhd is equal to OPTM_SIZE + 2,
-                                             -- so that the On-Screen window has the correct length
-                                             -- @TODO: There is for sure a more elegant way than this redundant definition
+
+-- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
+-- We advise to use OPTM_SIZE as height, but there might be reasons for you to change it.
+constant OPTM_DX           : natural := 20;
+constant OPTM_DY           : natural := OPTM_SIZE;
+                                             
 constant OPTM_ITEMS        : string :=
 
    " C64 for MEGA65\n"     &
@@ -227,26 +263,67 @@ addr_decode : process(all)
          return (others => '0'); -- zero terminated strings
       end if;
    end;
+   
+   -- return the dimensions of the Options menu
+   function getDXDY(dx, dy, index: natural) return std_logic_vector is
+   begin
+      case index is
+         when 0 => return std_logic_vector(to_unsigned(dx + 2, 16));
+         when 1 => return std_logic_vector(to_unsigned(dy + 2, 16));
+         when others => return (others => '0');
+      end case;
+   end;
+   
+   -- convert bool to std_logic_vector
+   function bool2slv(b: boolean) return std_logic_vector is
+   begin
+      if b then
+         return x"0001";
+      else
+         return x"0000";
+      end if;
+   end;
+   
+   -- return the RESET/PAUSE settings
+   function getResetPause(index: natural) return std_logic_vector is
+   begin
+      case index is
+         when 0      => return bool2slv(RESET_KEEP);
+         when 1      => return std_logic_vector(to_unsigned(RESET_COUNTER, 16));
+         when 2      => return bool2slv(OPTM_PAUSE);
+         when 3      => return bool2slv(WELCOME_ACTIVE);
+         when 4      => return bool2slv(WELCOME_AT_RESET);
+         when 5      => return bool2slv(KEYBOARD_AT_RESET);
+         when 6      => return bool2slv(JOY_1_AT_RESET);
+         when 7      => return bool2slv(JOY_2_AT_RESET);
+         when 8      => return bool2slv(KEYBOARD_AT_OSD);
+         when 9      => return bool2slv(JOY_1_AT_OSD);
+         when 10     => return bool2slv(JOY_2_AT_OSD); 
+         when others => return x"0000";
+      end case;
+   end;
      
 begin
    data_o <= x"EEEE";
    index := to_integer(unsigned(address_i(11 downto 0)));
    
    case address_i(27 downto 12) is   
-      when SEL_WELCOME        => data_o <= str2data(SCR_WELCOME);
-      when SEL_DIR_START      => data_o <= str2data(DIR_START);
-      when SEL_OPTM_ITEMS     => data_o <= str2data(OPTM_ITEMS);
-      when SEL_OPTM_MOUNT_STR => data_o <= str2data(OPTM_S_MOUNT);
-      when SEL_OPTM_GROUPS    => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
-                                           std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
-                                           std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
-      when SEL_OPTM_STDSEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
-      when SEL_OPTM_LINES     => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
-      when SEL_OPTM_START     => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
-      when SEL_OPTM_MOUNT_DRV => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
-      when SEL_OPTM_SINGLESEL => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
-      when SEL_OPTM_ICOUNT => data_o    <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
-             
+      when SEL_WELCOME           => data_o <= str2data(SCR_WELCOME);
+      when SEL_RESET_PAUSE       => data_o <= getResetPause(index);
+      when SEL_DIR_START         => data_o <= str2data(DIR_START);
+      when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
+      when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
+      when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
+                                              std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
+                                              std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
+      when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
+      when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
+      when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
+      when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
+      when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
+      when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
+      when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
+                   
       -- BIOS / ROM section
       -- @TODO: Add the desired amount of SEL_ROM_x_FLAG and SEL_ROM_x_FILE constants here
       when SEL_ROM_1_FLAG  => data_o <= ROM_1_FLAG;

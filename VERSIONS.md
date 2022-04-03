@@ -14,6 +14,10 @@ features.
 
 * 15KHz RGB mode over VGA
 
+* Joystick port switcher
+
+* Welcome screen only at power-up (core load) not at each reset
+
 * File Browser:
   - Unmount whole disk drive via Space in OSM
   - Make sure that the MiSTer2MEGA65 framework is updated accordingly
@@ -80,6 +84,7 @@ features that we are planning to deliver at a later stage:
 * NTSC
 * Support two drives: 8 and 9
 * Writing to virtual disks
+* Ability to save the settings of the core
 * More sophisticated scalers and scandoublers
 * Tape mounting via SD card
 * Cartridge mounting via SD card

@@ -15,8 +15,9 @@ entity analog_pipeline is
    generic (
       G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural;
-      G_OSM_DX               : natural;              -- On-Screen-Menu width and height
-      G_OSM_DY               : natural
+      G_FONT_FILE            : string;
+      G_FONT_DX              : natural;
+      G_FONT_DY              : natural
    );
    port (
       -- Input from Core (video and audio)
@@ -56,14 +57,11 @@ entity analog_pipeline is
       video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
       video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
       video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
-      sys_info_vga_o         : out std_logic_vector(79 downto 0)
+      sys_info_vga_o         : out std_logic_vector(47 downto 0)
    );
 end entity analog_pipeline;
 
 architecture synthesis of analog_pipeline is
-
-   constant C_FONT_DX        : natural := 16;
-   constant C_FONT_DY        : natural := 16;
 
    -- MiSTer video pipeline signals
    signal vs_hsync           : std_logic;
@@ -130,26 +128,17 @@ architecture synthesis of analog_pipeline is
 
 begin
 
+   -- SYS_DXDY
+   sys_info_vga_o(15 downto 0) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
+
    -- SHELL_M_XY
-   sys_info_vga_o(15 downto  0) <=
+   sys_info_vga_o(31 downto  16) <=
       X"0000";
 
    -- SHELL_M_DXDY
-   sys_info_vga_o(31 downto 16) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
-
-   -- SHELL_O_XY
    sys_info_vga_o(47 downto 32) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-G_OSM_DX) * 256, 16));
-
-   -- SHELL_O_DXDY
-   sys_info_vga_o(63 downto 48) <=
-      std_logic_vector(to_unsigned(G_OSM_DX * 256 + G_OSM_DY, 16));
-
-   -- SYS_DXDY
-   sys_info_vga_o(79 downto 64) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
-
+      std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
 
    ---------------------------------------------------------------------------------------------
    -- Audio output (3.5 mm jack)
@@ -167,7 +156,6 @@ begin
          pdm_right        => pwm_r_o,
          audio_mode       => '0'         -- 0=PDM, 1=PWM
       ); -- i_pcm2pdm
-
 
    ---------------------------------------------------------------------------------------------
    -- Video output (VGA)
@@ -232,7 +220,6 @@ begin
       end if;
    end process vga_data_enable;
 
-
    -- Clock enable for Overlay video streams
    p_video_ce : process (video_clk_i)
    begin
@@ -241,13 +228,13 @@ begin
       end if;
    end process p_video_ce;
 
-
-   i_video_overlay_video : entity work.video_overlay
+   i_video_overlay : entity work.video_overlay
       generic  map (
          G_VGA_DX         => G_VGA_DX,
          G_VGA_DY         => G_VGA_DY,
-         G_FONT_DX        => C_FONT_DX,
-         G_FONT_DY        => C_FONT_DY
+         G_FONT_FILE      => G_FONT_FILE,
+         G_FONT_DX        => G_FONT_DX,
+         G_FONT_DY        => G_FONT_DY
       )
       port map (
          vga_clk_i        => video_clk_i,

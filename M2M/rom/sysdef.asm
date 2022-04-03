@@ -163,26 +163,28 @@ M2M$SYS_INFO        .EQU 0x00FF     ; Device for System Info
 M2M$RAMROM_4KWIN    .EQU 0xFFF5     ; 4k window selector
 M2M$RAMROM_DATA     .EQU 0x7000     ; 4k MMIO window to read/write
 
-M2M$SYS_VDRIVES     .EQU 0x0000     ; sysinfo 4k win for vdrives constants
-M2M$SYS_VGA         .EQU 0x0010     ; sysinfo 4k win for gfx adaptor 0: VGA
-M2M$SYS_HDMI        .EQU 0x0011     ; sysinfo 4k win for gfx adaptor 1: HDMI
+; ----------------------------------------------------------------------------
+; Sysinfo device: Selectors and addresses
+; ----------------------------------------------------------------------------
 
-; ----------------------------------------------------------------------------
-; Sysinfo data for graphics adaptors
-; ----------------------------------------------------------------------------
+; Selectors (4k windows)
+M2M$SYS_VDRIVES     .EQU 0x0000     ; vdrives constants
+M2M$SYS_VGA         .EQU 0x0010     ; gfx adaptor 0: VGA
+M2M$SYS_HDMI        .EQU 0x0011     ; gfx adaptor 1: HDMI
 
 ; The following read-only registers are meant to be used by the QNICE
-; firmware. They enable the ability to specify the main screen of the Shell
-; and the Help menu via VHDL generics: "M" = main screen; "O" = options menu
-M2M$SHELL_M_XY      .EQU 0x7000     ; main screen: x|y start coordinates
-M2M$SHELL_M_DXDY    .EQU 0x7001     ; main screen: dx|dy width and height
-M2M$SHELL_O_XY      .EQU 0x7002     ; options menu: x|y start coordinates
-M2M$SHELL_O_DXDY    .EQU 0x7003     ; options menu: dx|dy width and height
-M2M$SYS_DXDY        .EQU 0x7004
+; firmware. They enable the ability to specify the hardware screen resolution
+; in characters as well as the start coordinates and size of the main screen.
+; The position and size of the option menu is deducted.
+M2M$SYS_DXDY        .EQU 0x7000
+M2M$SHELL_M_XY      .EQU 0x7001     ; main screen: x|y start coordinates
+M2M$SHELL_M_DXDY    .EQU 0x7002     ; main screen: dx|dy width and height
 
 ; ----------------------------------------------------------------------------
-; Selectors for static Shell configuration data (config.vhd)
+; Static Shell configuration data (config.vhd): Selectors and addresses
 ; ----------------------------------------------------------------------------
+
+; Selectors (4k windows)
 
 M2M$CFG_WELCOME     .EQU 0x0000     ; Welcome screen
 M2M$CFG_DIR_START   .EQU 0x0100     ; Start folder for file browser
@@ -197,6 +199,12 @@ M2M$CFG_OPTM_ICOUNT .EQU 0x0305     ; Amount of menu items
 M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
 M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item
 M2M$CFG_OPTM_MSTR   .EQU 0x0308     ; Mount string to display instead of %s
+M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
+
+; M2M$CFG_OPTM_DIM: Addresses
+
+M2M$SHELL_O_DX      .EQU 0x7000     ; Width of Help/Options menu
+M2M$SHELL_O_DY      .EQU 0x7001     ; Height of Help/Options menu
 
 ; ----------------------------------------------------------------------------
 ; Virtual Drives Device for MiSTer "SD" interface (vdrives.vhd)

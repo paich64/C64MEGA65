@@ -25,8 +25,9 @@ entity digital_pipeline is
       G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
       G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural;
-      G_OSM_DX               : natural;              -- On-Screen-Menu width and height
-      G_OSM_DY               : natural
+      G_FONT_FILE            : string;
+      G_FONT_DX              : natural;
+      G_FONT_DY              : natural      
    );
    port (
       -- Input from Core (video and audio)
@@ -62,7 +63,7 @@ entity digital_pipeline is
       hdmi_osm_cfg_dxdy_i      : in  std_logic_vector(15 downto 0);
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
-      sys_info_hdmi_o          : out std_logic_vector(79 downto 0);
+      sys_info_hdmi_o          : out std_logic_vector(47 downto 0);
 
       -- Connect to HyperRAM controller
       hr_clk_i                 : in  std_logic;
@@ -169,26 +170,18 @@ architecture synthesis of digital_pipeline is
 
 begin
 
+   -- SYS_DXDY
+   sys_info_hdmi_o(15 downto 0) <=
+      std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
+
    -- SHELL_M_XY
-   sys_info_hdmi_o(15 downto  0) <=
+   sys_info_hdmi_o(31 downto  16) <=
       X"0000";
 
    -- SHELL_M_DXDY
-   sys_info_hdmi_o(31 downto 16) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
-
-   -- SHELL_O_XY
    sys_info_hdmi_o(47 downto 32) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX-G_OSM_DX) * 256, 16));
-
-   -- SHELL_O_DXDY
-   sys_info_hdmi_o(63 downto 48) <=
-      std_logic_vector(to_unsigned(G_OSM_DX * 256 + G_OSM_DY, 16));
-
-   -- SYS_DXDY
-   sys_info_hdmi_o(79 downto 64) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/C_FONT_DX) * 256 + (G_VGA_DY/C_FONT_DY), 16));
-
+      std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
+      
    hdmi_video_mode <= G_VIDEO_MODE_VECTOR(0) when hdmi_video_mode_i = '1' else G_VIDEO_MODE_VECTOR(1);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
    hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;
@@ -448,8 +441,9 @@ begin
          G_SHIFT          => G_SHIFT_HDMI,   -- Deprecated. Will be removed in future release
          G_VGA_DX         => G_VGA_DX,  -- TBD
          G_VGA_DY         => G_VGA_DY,  -- TBD
-         G_FONT_DX        => C_FONT_DX,
-         G_FONT_DY        => C_FONT_DY
+         G_FONT_FILE      => G_FONT_FILE,
+         G_FONT_DX        => G_FONT_DX,
+         G_FONT_DY        => G_FONT_DY
       )
       port map (
          vga_clk_i        => hdmi_clk_i,

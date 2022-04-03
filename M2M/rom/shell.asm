@@ -21,6 +21,8 @@
                 ; Reset management
                 ; ------------------------------------------------------------
 
+                RSUB    RESETPAUSE_INIT, 1
+
                 ; @TODO: different behavior of C64 core than in the framework
                 ; make reset and pause behavior configurable in config.vhd
                 ; Make sure that SCR$OSM_O_ON (and the others) are behaving
@@ -839,6 +841,7 @@ FRAME_FULLSCR   SYSCALL(enter, 1)
 #include "options.asm"
 #include "selectfile.asm"
 #include "strings.asm"
+#include "resetpause.asm"
 #include "vdrives.asm"
 
 ; framework libraries
