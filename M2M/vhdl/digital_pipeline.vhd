@@ -38,7 +38,8 @@ entity digital_pipeline is
       video_blue_i             : in  std_logic_vector(7 downto 0);
       video_hs_i               : in  std_logic;
       video_vs_i               : in  std_logic;
-      video_de_i               : in  std_logic;
+      video_hblank_i           : in  std_logic;
+      video_vblank_i           : in  std_logic;
       audio_clk_i              : in  std_logic;
       audio_rst_i              : in  std_logic;
       audio_left_i             : in  signed(15 downto 0); -- Signed PCM format
@@ -282,22 +283,6 @@ begin
    -- Digital output (HDMI) - Video part
    ---------------------------------------------------------------------------------------------
 
-   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
-   -- This also crops the signal to 384x270 via the vs_hblank and vs_vblank signals.
-   i_video_sync : entity work.video_sync
-      port map (
-         clk32     => video_clk_i,
-         pause     => '0',
-         hsync     => video_hs_i,
-         vsync     => video_vs_i,
-         ntsc      => '0',
-         wide      => '0',
-         hsync_out => vs_hsync,
-         vsync_out => vs_vsync,
-         hblank    => vs_hblank,
-         vblank    => vs_vblank
-      ); -- i_video_sync
-
    reset_na <= not (video_rst_i or hdmi_rst_i or hr_rst_i);
 
    -- Clock enable for Overlay and HDMI video streams
@@ -333,10 +318,10 @@ begin
          i_r               => unsigned(video_red_i),        -- input
          i_g               => unsigned(video_green_i),      -- input
          i_b               => unsigned(video_blue_i),       -- input
-         i_hs              => vs_hsync,                     -- input
-         i_vs              => vs_vsync,                     -- input
+         i_hs              => video_hs_i,                   -- input
+         i_vs              => video_vs_i,                   -- input
          i_fl              => '0',                          -- input
-         i_de              => not (vs_hblank or vs_vblank), -- input
+         i_de              => not (video_hblank_i or video_vblank_i), -- input
          i_ce              => video_ce(0),                  -- input
          i_clk             => video_clk_i,                  -- input
 

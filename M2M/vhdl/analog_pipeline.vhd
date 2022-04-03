@@ -29,6 +29,8 @@ entity analog_pipeline is
       video_blue_i           : in  std_logic_vector(7 downto 0);
       video_hs_i             : in  std_logic;
       video_vs_i             : in  std_logic;
+      video_hblank_i         : in  std_logic;
+      video_vblank_i         : in  std_logic;
       audio_clk_i            : in  std_logic;
       audio_rst_i            : in  std_logic;
       audio_left_i           : in  signed(15 downto 0); -- Signed PCM format
@@ -109,13 +111,22 @@ architecture synthesis of analog_pipeline is
       );
    end component video_mixer;
 
-   constant C_DEBUG_MODE               : boolean := false;
-   attribute mark_debug                : boolean;
-   attribute mark_debug of vga_red_o   : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_green_o : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_blue_o  : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_hs_o    : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_vs_o    : signal is C_DEBUG_MODE;
+   constant C_DEBUG_MODE                  : boolean := false;
+   attribute mark_debug                   : boolean;
+   attribute mark_debug of video_red_i    : signal is C_DEBUG_MODE;
+   attribute mark_debug of video_green_i  : signal is C_DEBUG_MODE;
+   attribute mark_debug of video_blue_i   : signal is C_DEBUG_MODE;
+   attribute mark_debug of video_vs_i     : signal is C_DEBUG_MODE;
+   attribute mark_debug of video_hs_i     : signal is C_DEBUG_MODE;
+   attribute mark_debug of video_hblank_i : signal is C_DEBUG_MODE;
+   attribute mark_debug of video_vblank_i : signal is C_DEBUG_MODE;
+   attribute mark_debug of ce_pix         : signal is C_DEBUG_MODE;
+   attribute mark_debug of mix_r          : signal is C_DEBUG_MODE;
+   attribute mark_debug of mix_g          : signal is C_DEBUG_MODE;
+   attribute mark_debug of mix_b          : signal is C_DEBUG_MODE;
+   attribute mark_debug of vga_vs         : signal is C_DEBUG_MODE;
+   attribute mark_debug of vga_hs         : signal is C_DEBUG_MODE;
+   attribute mark_debug of mix_vga_de     : signal is C_DEBUG_MODE;
 
 begin
 
@@ -169,22 +180,6 @@ begin
    -- we could do here, including to make sure that we output an old composite signal instead of VGA
    --------------------------------------------------------------------------------------------------
 
-   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
-   -- This also crops the signal to 384x270 via the vs_hblank and vs_vblank signals.
-   i_video_sync : entity work.video_sync
-      port map (
-         clk32     => main_clk_i,
-         pause     => '0',
-         hsync     => video_hs_i,
-         vsync     => video_vs_i,
-         ntsc      => '0',
-         wide      => '0',
-         hsync_out => vs_hsync,
-         vsync_out => vs_vsync,
-         hblank    => vs_hblank,
-         vblank    => vs_vblank
-      ); -- i_video_sync
-
    p_div : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
@@ -210,10 +205,10 @@ begin
          R           => unsigned(video_red_i),
          G           => unsigned(video_green_i),
          B           => unsigned(video_blue_i),
-         HSync       => vs_hsync,
-         VSync       => vs_vsync,
-         HBlank      => vs_hblank,
-         VBlank      => vs_vblank,
+         HSync       => video_hs_i,
+         VSync       => video_vs_i,
+         HBlank      => video_hblank_i,
+         VBlank      => video_vblank_i,
          HDMI_FREEZE => '0',
          freeze_sync => open,
          VGA_R       => mix_r,

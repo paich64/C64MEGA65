@@ -53,6 +53,8 @@ entity main is
       vga_blue_o              : out std_logic_vector(7 downto 0);
       vga_vs_o                : out std_logic;
       vga_hs_o                : out std_logic;
+      vga_hblank_o            : out std_logic;
+      vga_vblank_o            : out std_logic;
 
       -- C64 SID audio out: signed, see MiSTer's c64.sv
       sid_l                   : out signed(15 downto 0);
@@ -141,6 +143,8 @@ architecture synthesis of main is
    signal iec_rom_data_i      : std_logic_vector(7 downto 0);
    signal iec_rom_wr_i        : std_logic;
 
+   signal vga_hs              : std_logic;
+   signal vga_vs              : std_logic;
    signal vga_red             : unsigned(7 downto 0);
    signal vga_green           : unsigned(7 downto 0);
    signal vga_blue            : unsigned(7 downto 0);
@@ -191,8 +195,8 @@ begin
          -- The hsync frequency is 15.64 kHz (period 63.94 us).
          -- The hsync pulse width is 12.69 us.
          ntscMode    => c64_ntsc_i,
-         hsync       => vga_hs_o,
-         vsync       => vga_vs_o,
+         hsync       => vga_hs,
+         vsync       => vga_vs,
          r           => vga_red,
          g           => vga_green,
          b           => vga_blue,
@@ -276,6 +280,22 @@ begin
          cass_sense  => '0',
          cass_read   => '0'
       ); -- i_fpga64_sid_iec
+
+   -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
+   -- This also crops the signal to 384x270 via the vs_hblank and vs_vblank signals.
+   i_video_sync : entity work.video_sync
+      port map (
+         clk32     => clk_main_i,
+         pause     => '0',
+         hsync     => vga_hs,
+         vsync     => vga_vs,
+         ntsc      => '0',
+         wide      => '0',
+         hsync_out => vga_hs_o,
+         vsync_out => vga_vs_o,
+         hblank    => vga_hblank_o,
+         vblank    => vga_vblank_o
+      ); -- i_video_sync
 
    vga_red_o   <= std_logic_vector(vga_red);
    vga_green_o <= std_logic_vector(vga_green);

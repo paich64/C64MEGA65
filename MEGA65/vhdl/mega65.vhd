@@ -191,7 +191,8 @@ signal video_green            : std_logic_vector(7 downto 0);
 signal video_blue             : std_logic_vector(7 downto 0);
 signal video_hs               : std_logic;
 signal video_vs               : std_logic;
-signal video_de               : std_logic;
+signal video_hblank           : std_logic;
+signal video_vblank           : std_logic;
 
 -- On-Screen-Menu (OSM) for VGA
 signal video_osm_cfg_enable   : std_logic;
@@ -412,6 +413,8 @@ begin
          vga_blue_o           => video_blue,
          vga_vs_o             => video_vs,
          vga_hs_o             => video_hs,
+         vga_hblank_o         => video_hblank,
+         vga_vblank_o         => video_vblank,
 
          -- C64 SID audio out: signed, see MiSTer's c64.sv
          sid_l                => main_sid_l,
@@ -803,7 +806,7 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         main_clk_i               => main_clk,
+         main_clk_i               => video_clk,
          video_clk_i              => video_clk,
          video_rst_i              => video_rst,
          video_ce_i               => '1',
@@ -812,6 +815,8 @@ begin
          video_blue_i             => video_blue,
          video_hs_i               => video_hs,
          video_vs_i               => video_vs,
+         video_hblank_i           => video_hblank,
+         video_vblank_i           => video_vblank,
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
@@ -858,7 +863,7 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         video_clk_i              => main_clk,
+         video_clk_i              => video_clk,
          video_rst_i              => video_rst,
          video_ce_i               => '1',
          video_red_i              => video_red,
@@ -866,7 +871,8 @@ begin
          video_blue_i             => video_blue,
          video_hs_i               => video_hs,
          video_vs_i               => video_vs,
-         video_de_i               => '0', -- TBD
+         video_hblank_i           => video_hblank,
+         video_vblank_i           => video_vblank,
          audio_clk_i              => audio_clk, -- 60 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => main_sid_l,
