@@ -97,4 +97,5 @@ to implement certain technical improvements in the "backend":
 * Re-do QNICE's SD Card controller: Go from SPI to native
 * Enhance QNICE's FAT32 library so that it supports writing
 * HyperRAM device support to QNICE
+* Hardware debugger (single-step the CPU via the on-screen-menu)
 * Line 65 in fdc1772.v: back to 2 or work with generic?
