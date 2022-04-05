@@ -68,6 +68,31 @@ _START_VD_CPY_2 ADD     1, R1
 ; Query & setter functions
 ; ----------------------------------------------------------------------------
 
+; Check if the current mount status is different from the one we remembered
+; Returns: Carry=1 if mount status is different (and in this case we remember
+; automatically the new status), else Carry=0
+VD_MNT_STATUS   INCRB
+
+                ; retrieve current mount status
+                MOVE    R8, R6        
+                MOVE    OPTM_MNT_STATUS, R0
+                MOVE    VD_DRV_MOUNT, R8
+                RSUB    VD_CAD_READ, 1
+                MOVE    R8, R1
+                MOVE    R6, R8
+
+                ; did it change?
+                CMP     @R0, R1
+                RBRA    _VDD_C0, Z              ; no: leave with Carry=0
+
+                ; yes: it did change: remember the new status and
+                ; return with Carry=1
+                MOVE    R1, @R0
+                RBRA    _VDD_C1, 1
+
+                ; DECRB and 
+                ; RET done via _VDD_C0 and _VDD_C1              
+
 ; Check if the virtual drive system is active by checking, if there is at
 ; least one virtual drive.
 ;

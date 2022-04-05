@@ -408,6 +408,8 @@ _OPTM_FPS_RET   DECRB
 ; and returns the OPTM_KEY_* code in R8
 OPT_MENU_GETKEY INCRB
 _OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
+                RSUB    VD_MNT_STATUS, 1        ; did mount status change..
+                RSUB    _OPTM_GK_MNT, C         ; ..while OPTM is open?
                 RSUB    KEYB$SCAN, 1            ; wait until key is pressed
                 RSUB    KEYB$GETKEY, 1
                 CMP     0, R8
@@ -434,6 +436,19 @@ _OPTM_GK_3      CMP     M2M$KEY_HELP, R8        ; help (close menu)
 
 _OPTMGK_RET     DECRB
                 RET
+
+                ; the archetypical situation that the mount status changes
+                ; while the OPTM is open is a reset of the core only (while
+                ; not resetting the framework/QNICE)
+_OPTM_GK_MNT    INCRB
+
+                MOVE    0x1234, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(exit, 1)
+
+                DECRB
+                RET
+
 
 ; ----------------------------------------------------------------------------
 ; Callback function that is called during the execution of the menu (OPTM_RUN)
