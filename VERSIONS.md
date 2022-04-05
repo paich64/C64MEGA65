@@ -11,15 +11,10 @@ features.
   as soon as all of this works
 
 * File Browser:
-  - Let the current file browser selection survive a reset
   - Unmount whole disk drive via Space in OSM
 
 * General robustness:
   - Do the final heap/stack sanity check in m2m-rom.asm
-  - Implement a hard reset as described in
-    https://www.c64-wiki.com/wiki/Reset_Button
-    because right now, Games like URIDIUM can prevent us from resetting
-    (we need to re-load the core)
 
 * Code consistency and "niceness":
   - Review all documentation and README's
@@ -55,6 +50,8 @@ features.
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   utilized more efficiently. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
+* Smart reset: Press the reset button briefly and only the C64 core is being
+  reset; press it longer than 1.5 seconds and the whole machine is reset.
 
 ## Constraints (What is not yet working) & Roadmap
 

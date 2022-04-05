@@ -159,14 +159,51 @@ architecture synthesis of main is
    attribute mark_debug of c64_g     : signal is C_DEBUG_MODE;
    attribute mark_debug of c64_b     : signal is C_DEBUG_MODE;
 
+   -- Hard reset handling
+   constant hard_rst_delay   : natural := 100000; -- roundabout 1/10th of a second
+   signal reset_core_n        : std_logic;
+   signal hard_reset_n        : std_logic;
+   signal hard_rst_counter    : natural := 0;
+   signal c64_ram_data        : unsigned(7 downto 0);
+
 begin
 
+   --------------------------------------------------------------------------------------------------
+   -- Hard reset
+   --------------------------------------------------------------------------------------------------
+
+   hard_reset : process(clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         if reset_i then
+            hard_rst_counter <= hard_rst_delay;
+            reset_core_n      <= '0';
+            hard_reset_n      <= '0';
+         else
+            reset_core_n      <= '1';
+            if hard_rst_counter = 0 then
+               hard_reset_n   <= '1';
+            else
+               hard_rst_counter <= hard_rst_counter - 1;
+            end if;
+         end if;
+      end if;
+   end process;
+   
+   -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
+   -- and avoid that the KERNAL ever sees the CBM80 signature during reset. But we cannot do it like
+   -- on real hardware using the exrom signal because the MiSTer core is not supporting this
+   c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
+      
+   --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
+   --------------------------------------------------------------------------------------------------
+
    i_fpga64_sid_iec : entity work.fpga64_sid_iec
       port map (
          clk32       => clk_main_i,
          clk32_speed => clk_main_speed_i,
-         reset_n     => not reset_i,
+         reset_n     => reset_core_n,
          bios        => "01",             -- standard C64, internal ROM
 
          pause       => pause_i,
@@ -180,7 +217,7 @@ begin
 
          -- external memory
          ramAddr     => c64_ram_addr_o,
-         ramDin      => c64_ram_data_i,
+         ramDin      => c64_ram_data,
          ramDout     => c64_ram_data_o,
          ramCE       => c64_ram_ce,
          ramWE       => c64_ram_we,
@@ -204,8 +241,8 @@ begin
          b           => vga_blue,
 
          -- cartridge port
-         game        => '1',              -- low active, 1 is default so that KERNAL ROM can be read
-         exrom       => '1',              -- ditto
+         game        => '1',           -- low active, 1 is default so that KERNAL ROM can be read
+         exrom       => '1',           -- ditto
          io_rom      => '0',
          io_ext      => '0',
          io_data     => x"00",

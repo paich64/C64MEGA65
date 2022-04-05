@@ -111,11 +111,10 @@ signal dbnce_joy2_fire_n   : std_logic;
 -- reset control (times in ms):
 -- Press the MEGA65's reset button long to activate the M2M reset, press it short for a core-only reset
 constant M2M_RST_TRIGGER   : natural := 1500;
-constant RST_DURATION      : natural := 100;
+constant RST_DURATION      : natural := 50;
 signal reset_m2m_n         : std_logic;
 signal reset_core_n        : std_logic;
 signal reset_pressed       : std_logic := '0';
-signal long_trigger        : std_logic;
 signal button_duration     : natural;
 signal reset_duration      : natural;
 
@@ -128,22 +127,21 @@ begin
          -- button pressed
          if dbnce_reset_n = '0' then
             reset_pressed        <= '1';
-            reset_core_n         <= '0';            
+            reset_core_n         <= '0';  -- the core resets immediately on pressing the button
             reset_duration       <= (BOARD_CLK_SPEED / 1000) * RST_DURATION;
-            if button_duration /= 0 then
-               button_duration   <= button_duration - 1;
+            if button_duration = 0 then
+               reset_m2m_n       <= '0';  -- the framework only resets if the trigger time is reached
             else
-               long_trigger      <= '1';
+               button_duration   <= button_duration - 1;            
             end if;
             
          -- button released
          else
-            if reset_pressed then     
-               if reset_duration /= 0 then
-                  reset_duration <= reset_duration - 1;
-                  reset_m2m_n    <= not long_trigger;
-               else
+            if reset_pressed then
+               if reset_duration = 0 then
                   reset_pressed  <= '0';
+               else               
+                  reset_duration <= reset_duration - 1;
                end if;
             else
                reset_m2m_n       <= '1';

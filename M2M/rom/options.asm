@@ -435,7 +435,6 @@ _OPTM_GK_3      CMP     M2M$KEY_HELP, R8        ; help (close menu)
 _OPTMGK_RET     DECRB
                 RET
 
-
 ; ----------------------------------------------------------------------------
 ; Callback function that is called during the execution of the menu (OPTM_RUN)
 ;
