@@ -208,6 +208,18 @@ signal main_crop_vs           : std_logic;
 signal main_crop_hblank       : std_logic;
 signal main_crop_vblank       : std_logic;
 
+-- Joysticks
+signal j1_up_n                : std_logic;
+signal j1_down_n              : std_logic;
+signal j1_left_n              : std_logic;
+signal j1_right_n             : std_logic;
+signal j1_fire_n              : std_logic;
+signal j2_up_n                : std_logic;
+signal j2_down_n              : std_logic;
+signal j2_left_n              : std_logic;
+signal j2_right_n             : std_logic;
+signal j2_fire_n              : std_logic;
+
 -- On-Screen-Menu (OSM) for VGA
 signal video_osm_cfg_enable   : std_logic;
 signal video_osm_cfg_xy       : std_logic_vector(15 downto 0);
@@ -408,17 +420,17 @@ begin
          kb_key_pressed_n_i   => main_key_pressed_n,
 
          -- MEGA65 joysticks
-         joy_1_up_n_i         => joy_1_up_n,
-         joy_1_down_n_i       => joy_1_down_n,
-         joy_1_left_n_i       => joy_1_left_n,
-         joy_1_right_n_i      => joy_1_right_n,
-         joy_1_fire_n_i       => joy_1_fire_n,
+         joy_1_up_n_i         => j1_up_n,
+         joy_1_down_n_i       => j1_down_n,
+         joy_1_left_n_i       => j1_left_n,
+         joy_1_right_n_i      => j1_right_n,
+         joy_1_fire_n_i       => j1_fire_n,
 
-         joy_2_up_n_i         => joy_2_up_n,
-         joy_2_down_n_i       => joy_2_down_n,
-         joy_2_left_n_i       => joy_2_left_n,
-         joy_2_right_n_i      => joy_2_right_n,
-         joy_2_fire_n_i       => joy_2_fire_n,
+         joy_2_up_n_i         => j2_up_n,
+         joy_2_down_n_i       => j2_down_n,
+         joy_2_left_n_i       => j2_left_n,
+         joy_2_right_n_i      => j2_right_n,
+         joy_2_fire_n_i       => j2_fire_n,
 
          -- C64 video out
          vga_red_o            => main_red,
@@ -474,7 +486,6 @@ begin
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n
       ); -- i_m2m_keyb
-
 
    ---------------------------------------------------------------------------------------------
    -- qnice_clk
@@ -651,13 +662,33 @@ begin
    -- Clock domain crossing: 100 MHz system main clock to core
    i_system2main: xpm_cdc_array_single
       generic map (
-         WIDTH => 1
+         WIDTH => 11
       )
       port map (
          src_clk                => CLK,
          src_in(0)              => not RESET_CORE_N,
+         src_in(1)              => joy_1_up_n,
+         src_in(2)              => joy_1_down_n,
+         src_in(3)              => joy_1_left_n,
+         src_in(4)              => joy_1_right_n,
+         src_in(5)              => joy_1_fire_n,
+         src_in(6)              => joy_2_up_n,
+         src_in(7)              => joy_2_down_n,
+         src_in(8)              => joy_2_left_n,
+         src_in(9)              => joy_2_right_n,
+         src_in(10)             => joy_2_fire_n,         
          dest_clk               => main_clk,
-         dest_out(0)            => core_only_rst
+         dest_out(0)            => core_only_rst,
+         dest_out(1)            => j1_up_n,
+         dest_out(2)            => j1_down_n,
+         dest_out(3)            => j1_left_n,
+         dest_out(4)            => j1_right_n,
+         dest_out(5)            => j1_fire_n,
+         dest_out(6)            => j2_up_n,
+         dest_out(7)            => j2_down_n,
+         dest_out(8)            => j2_left_n,
+         dest_out(9)            => j2_right_n,
+         dest_out(10)           => j2_fire_n
       );
 
    -- Clock domain crossing: QNICE to C64
@@ -814,7 +845,6 @@ begin
          b_q_o          => hdmi_osm_vram_data
       ); -- i_osm_vram_hdmi
 
-
    --------------------------------------------------------
    -- Audio and Video processing pipeline
    --------------------------------------------------------
@@ -869,7 +899,6 @@ begin
          sys_info_vga_o           => sys_info_vga
       ); -- i_analog_pipeline
 
-
    i_crop : entity work.crop
       port map (
          video_crop_mode_i => main_osm_control_m(C_MENU_HDMI_ZOOM),
@@ -892,7 +921,6 @@ begin
          video_hblank_o    => main_crop_hblank,
          video_vblank_o    => main_crop_vblank
       ); -- i_crop
-
 
    i_digital_pipeline : entity work.digital_pipeline
       generic map (
@@ -959,7 +987,6 @@ begin
          hr_readdatavalid_i       => hr_readdatavalid,
          hr_waitrequest_i         => hr_waitrequest
       ); -- i_digital_pipeline
-
 
    --------------------------------------------------------
    -- Instantiate HyperRAM controller

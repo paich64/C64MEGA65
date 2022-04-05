@@ -176,7 +176,7 @@ begin
    begin
       if rising_edge(clk_main_i) then
          if reset_i then
-            hard_rst_counter <= hard_rst_delay;
+            hard_rst_counter  <= hard_rst_delay;
             reset_core_n      <= '0';
             hard_reset_n      <= '0';
          else
@@ -192,7 +192,8 @@ begin
    
    -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
    -- and avoid that the KERNAL ever sees the CBM80 signature during reset. But we cannot do it like
-   -- on real hardware using the exrom signal because the MiSTer core is not supporting this
+   -- on real hardware using the exrom signal because the MiSTer core is not supporting this.
+   -- @TODO: As soon as we support cartridges, this code here needs to become smarter.
    c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
       
    --------------------------------------------------------------------------------------------------

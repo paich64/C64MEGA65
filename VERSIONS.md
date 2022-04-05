@@ -15,6 +15,7 @@ features.
 
 * General robustness:
   - Do the final heap/stack sanity check in m2m-rom.asm
+  - Try to reduce warnings in general and in CDC in particular
 
 * Code consistency and "niceness":
   - Review all documentation and README's
