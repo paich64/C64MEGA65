@@ -23,7 +23,12 @@ use xpm.vcomponents.all;
 entity MEGA65_Core is
 port (
    CLK            : in std_logic;                  -- 100 MHz clock
-   RESET_N        : in std_logic;                  -- CPU reset button
+   
+   -- M2M's reset manager provides 2 signals:
+   --    RESET_M2M_N:   Reset the whole machine: Core and Framework
+   --    RESET_CORE_N:  Only reset the core
+   RESET_M2M_N    : in std_logic;
+   RESET_CORE_N   : in std_logic;
 
    -- Serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
@@ -148,6 +153,8 @@ signal audio_rst              : std_logic;
 signal hdmi_rst               : std_logic;
 signal main_rst               : std_logic;
 signal video_rst              : std_logic;
+
+signal core_only_rst          : std_logic;               -- reset only the core, not the framework
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -332,7 +339,7 @@ begin
    clk_gen : entity work.clk
       port map (
          sys_clk_i       => CLK,             -- expects 100 MHz
-         sys_rstn_i      => RESET_N,         -- Asynchronous, asserted low
+         sys_rstn_i      => RESET_M2M_N,     -- Asynchronous, asserted low
 
          qnice_clk_o     => qnice_clk,       -- QNICE's 50 MHz main clock
          qnice_rst_o     => qnice_rst,       -- QNICE's reset, synchronized
@@ -386,7 +393,7 @@ begin
       )
       port map (
          clk_main_i           => main_clk,
-         reset_i              => main_rst or main_qnice_reset,
+         reset_i              => main_rst or main_qnice_reset or core_only_rst,
          pause_i              => main_qnice_pause,
          flip_joys_i          => main_osm_control_m(C_MENU_FLIP_JOYS),
 
@@ -640,6 +647,18 @@ begin
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
    ---------------------------------------------------------------------------------------------
+
+   -- Clock domain crossing: 100 MHz system main clock to core
+   i_system2main: xpm_cdc_array_single
+      generic map (
+         WIDTH => 1
+      )
+      port map (
+         src_clk                => CLK,
+         src_in(0)              => not RESET_CORE_N,
+         dest_clk               => main_clk,
+         dest_out(0)            => core_only_rst
+      );
 
    -- Clock domain crossing: QNICE to C64
    i_qnice2main: xpm_cdc_array_single
