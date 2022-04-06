@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------
 -- Commodore 64 for MEGA65
 --
--- Complete pipeline processing of audio and video output (analog and digital)
+-- Complete pipeline processing of digital audio and video output
 --
 -- based on C64_MiSTer by the MiSTer development team
 -- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
@@ -181,7 +181,7 @@ begin
    -- SHELL_M_DXDY
    sys_info_hdmi_o(47 downto 32) <=
       std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
-      
+
    hdmi_video_mode <= G_VIDEO_MODE_VECTOR(0) when hdmi_video_mode_i = '1' else G_VIDEO_MODE_VECTOR(1);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
    hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;

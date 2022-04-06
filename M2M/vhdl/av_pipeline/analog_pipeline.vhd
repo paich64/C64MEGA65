@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------
 -- Commodore 64 for MEGA65
 --
--- Complete pipeline processing of audio and video output (analog and digital)
+-- Complete pipeline processing of analog audio and video output (VGA and 3.5 mm)
 --
 -- based on C64_MiSTer by the MiSTer development team
 -- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
