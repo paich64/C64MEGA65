@@ -185,7 +185,7 @@ start the legendary game
 on your favorite emulator on your computer and then watch the title
 scroller / intro. You will see a pretty stuttering scroller.
 
-Not so when doing FPGA based recreation on the MEGA65 using the right
+Not so when using a FPGA based recreation on the MEGA65 using the right
 display and settings. We have your back! :-)
 
 When using VGA or Retro 15 KHz RGB, you are safe by definition, if your
