@@ -70,6 +70,11 @@ recognizing this core as genuine C64 hardware.
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
+* Smart reset: Press the reset button briefly and only the C64 core is being
+  reset; press it longer than 1.5 seconds and the whole machine is reset. The
+  advantage of only resetting the C64 core is: All your options/settings
+  remain intact and your file browser continues where you left off. The latter
+  is particularly useful when browing large hierarchies of disk images.
 
 ### Constraints and Roadmap
 
@@ -142,8 +147,8 @@ Here is how the browser works:
 * <kbd>Return</kbd> mounts a disk image
 * <kbd>Run/Stop</kbd> exits the file browser without mounting
 * Remembers the browsing history, i.e. even while you climb directory trees,
-  when you mount the next image, the file selection cursor is positioned where you
-  left off. This is very convenient for mounting multiple subsequent
+  when you mount the next image, the file selection cursor is positioned where 
+  you left off. This is very convenient for mounting multiple subsequent
   disks of a demo in a row.
 * Support for both SD card slots: The back slot has precedence over the bottom
   slot: As soon as you insert a card to the back slot, this card is being

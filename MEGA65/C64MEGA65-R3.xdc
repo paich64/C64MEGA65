@@ -66,6 +66,9 @@ set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_d
 set_false_path -from [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/C]
 set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
 
+## The high level reset signal is slow enough so that we can afford a false path
+set_false_path -from [get_pins reset_m2m_n_reg/C]
+
 ## Reset button
 set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports RESET_N]
 

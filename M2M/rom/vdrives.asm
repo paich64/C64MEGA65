@@ -13,11 +13,12 @@
 ; Initialize library
 ; ----------------------------------------------------------------------------
 
-                ; use the sysinfo device to initialize the vdrives system:
-                ; get the amount of virtual drives, the device id of the
-                ; vdrives.vhd device and an array of RAM buffers for
-                ; the disk images
-VD_INIT         MOVE    M2M$RAMROM_DEV, R8
+; use the sysinfo device to initialize the vdrives system:
+; get the amount of virtual drives, the device id of the vdrives.vhd device
+; and an array of RAM buffers for the disk images
+VD_INIT         SYSCALL(enter, 1)
+
+                MOVE    M2M$RAMROM_DEV, R8
                 MOVE    M2M$SYS_INFO, @R8
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    M2M$SYS_VDRIVES, @R8
@@ -53,6 +54,15 @@ _START_VD_CPY_F MOVE    ERR_FATAL_VDBUF, R8     ; stop core
 _START_VD_CPY_2 ADD     1, R1
                 CMP     R0, R1
                 RBRA    _START_VD_CPY_1, !Z
+
+                ; remember current mount status
+                MOVE    OPTM_MNT_STATUS, R0
+                MOVE    VD_DRV_MOUNT, R8
+                RSUB    VD_CAD_READ, 1  
+                MOVE    R8, @R0
+
+                SYSCALL(leave, 1)
+                RET
 
 ; ----------------------------------------------------------------------------
 ; Query & setter functions

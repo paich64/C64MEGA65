@@ -15,10 +15,7 @@ features.
 
 * General robustness:
   - Do the final heap/stack sanity check in m2m-rom.asm
-  - Implement a hard reset as described in
-    https://www.c64-wiki.com/wiki/Reset_Button
-    because right now, Games like URIDIUM can prevent us from resetting
-    (we need to re-load the core)
+  - Try to reduce warnings in general and in CDC in particular
 
 * Code consistency and "niceness":
   - Review all documentation and README's
@@ -29,7 +26,8 @@ features.
     (C64_MiSTerMEGA65 is already clean.)
 
 * Bugs:
-   - Reset problem => might be already solved in the meantime?
+   - HDMI reset problem
+   - Deactivation of joysticks via QNICE does not work
 
 * MiSTer Features:
    - CRT mode
@@ -53,6 +51,8 @@ features.
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   utilized more efficiently. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
+* Smart reset: Press the reset button briefly and only the C64 core is being
+  reset; press it longer than 1.5 seconds and the whole machine is reset.
 
 ## Constraints (What is not yet working) & Roadmap
 
@@ -95,4 +95,5 @@ to implement certain technical improvements in the "backend":
 * Re-do QNICE's SD Card controller: Go from SPI to native
 * Enhance QNICE's FAT32 library so that it supports writing
 * HyperRAM device support to QNICE
+* Hardware debugger (single-step the CPU via the on-screen-menu)
 * Line 65 in fdc1772.v: back to 2 or work with generic?

@@ -108,14 +108,60 @@ signal dbnce_joy2_left_n   : std_logic;
 signal dbnce_joy2_right_n  : std_logic;
 signal dbnce_joy2_fire_n   : std_logic;     
 
+-- reset control (times in ms):
+-- Press the MEGA65's reset button long to activate the M2M reset, press it short for a core-only reset
+constant M2M_RST_TRIGGER   : natural := 1500;
+constant RST_DURATION      : natural := 50;
+signal reset_m2m_n         : std_logic;
+signal reset_core_n        : std_logic;
+signal reset_pressed       : std_logic := '0';
+signal button_duration     : natural;
+signal reset_duration      : natural;
 
 begin
+
+   reset_manager : process(CLK)
+   begin
+      if rising_edge(CLK) then
+      
+         -- button pressed
+         if dbnce_reset_n = '0' then
+            reset_pressed        <= '1';
+            reset_core_n         <= '0';  -- the core resets immediately on pressing the button
+            reset_duration       <= (BOARD_CLK_SPEED / 1000) * RST_DURATION;
+            if button_duration = 0 then
+               reset_m2m_n       <= '0';  -- the framework only resets if the trigger time is reached
+            else
+               button_duration   <= button_duration - 1;            
+            end if;
+            
+         -- button released
+         else
+            if reset_pressed then
+               if reset_duration = 0 then
+                  reset_pressed  <= '0';
+               else               
+                  reset_duration <= reset_duration - 1;
+               end if;
+            else
+               reset_m2m_n       <= '1';
+               reset_core_n      <= '1';            
+               button_duration   <= (BOARD_CLK_SPEED / 1000) * M2M_RST_TRIGGER;               
+            end if;
+         end if;
+      end if;
+   end process;
 
    MEGA65 : entity work.MEGA65_Core
       port map
       (
          CLK            => CLK,
-         RESET_N        => dbnce_reset_n,
+         
+         -- M2M's reset manager provides 2 signals:
+         --    RESET_M2M_N:   Reset the whole machine: Core and Framework
+         --    RESET_CORE_N:  Only reset the core
+         RESET_M2M_N    => reset_m2m_n,
+         RESET_CORE_N   => reset_core_n,
 
          -- serial communication (rxd, txd only; rts/cts are not available)
          -- 115.200 baud, 8-N-1
