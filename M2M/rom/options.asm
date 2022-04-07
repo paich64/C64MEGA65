@@ -441,9 +441,7 @@ _OPTMGK_RET     DECRB
                 ; "in the background" (i.e. not controlled by any) callback
                 ; function, while the OPTM is open is a "Smart Reset" reset of
                 ; the core. "Core" as in "core only", not the M2M framework.
-_OPTM_GK_MNT    INCRB
-                MOVE    R8, R6
-                MOVE    R9, R7
+_OPTM_GK_MNT    SYSCALL(enter, 1)
 
                 RSUB    VD_ACTIVE, 1            ; are there any vdrives?
                 RBRA    _OPTM_GK_MNT_R, !C      ; no: return
@@ -471,9 +469,37 @@ _OPTM_GK_MNT_2  MOVE    R9, R8
                 MOVE    0, R9
                 RBRA    _OPTM_GK_MNT_3, 1
 _OPTM_GK_MNT_X1 MOVE    1, R9
-_OPTM_GK_MNT_3  RSUB    _HM_SETMENU, 1          ; set/unset menu item
 
-                ADD     1, R0
+_OPTM_GK_MNT_3  RSUB    _HM_SETMENU, 1          ; set/unset menu item
+                                                ; (R8=menu item, R9=value)
+
+                ; update M2M$CFM_DATA accordingly:
+                ; window within M2M$CFM_DATA = R0 / 16
+                ; bit within window = R0 % 16
+                MOVE    R8, R3
+                MOVE    R8, R4
+                AND     0xFFFB, SR              ; clear Carry
+                SHR     4, R3                   ; R3 = R0 / 16
+                AND     0x000F, R4              ; R4 = R0 % 16
+                MOVE    M2M$CFM_ADDR, R5
+                MOVE    R3, @R5
+
+                MOVE    1, R6                   ; will be used to set/del bit
+                AND     0xFFFD, SR              ; clear X
+                SHL     R4, R6
+
+                MOVE    M2M$CFM_DATA, R5
+
+                CMP     0, R9
+                RBRA    _OPTM_GK_MNT_4, !Z
+                NOT     R6, R6
+                AND     R6, @R5                 ; clear bit                               
+
+                RBRA    _OPTM_GK_MNT_5, 1
+
+_OPTM_GK_MNT_4  OR      R6, @R5                 ; set bit
+
+_OPTM_GK_MNT_5  ADD     1, R0
                 CMP     R0, R1
                 RBRA    _OPTM_GK_MNT_1, !Z              
 
@@ -487,9 +513,7 @@ _OPTM_GK_MNT_3  RSUB    _HM_SETMENU, 1          ; set/unset menu item
                 MOVE    OPTM_SEL_SEL, R9
                 RSUB    OPTM_SELECT, 1
 
-_OPTM_GK_MNT_R  MOVE    R6, R8
-                MOVE    R7, R9
-                DECRB
+_OPTM_GK_MNT_R  SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------
