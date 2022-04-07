@@ -449,7 +449,8 @@ _HM_MOUNTED_1   MOVE    R9, R8                  ; menu index
                 RSUB    _HM_SETMENU, 1
                 RBRA    _HM_START_MOUNT, 1      ; show browser and mount
 
-_HM_RET         SYSCALL(leave, 1)
+_HM_RET         RSUB    VD_MNT_ST_SET, 1        ; remember mount status
+                SYSCALL(leave, 1)
                 RET
 
 ; helper function that executes the menu and data structure modification
