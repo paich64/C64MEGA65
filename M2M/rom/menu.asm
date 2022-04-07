@@ -138,6 +138,10 @@ OPTM_INIT       INCRB
                 MOVE    R11, @R0
                 MOVE    OPTM_DY, R0
                 MOVE    R12, @R0
+                MOVE    OPTM_CUR_SEL, R0
+                MOVE    0, @R0
+                MOVE    OPTM_SSMS, R0
+                MOVE    0, @R0
                 DECRB
                 RET
 
@@ -390,6 +394,8 @@ _OPTM_RUN_SEL   MOVE    OPTM_FP_SELECT, R7      ; select line
                 MOVE    R2, R8                  ; R8: selected item
                 MOVE    OPTM_SEL_SEL, R9
                 RSUB    _OPTM_CALL, 1
+                MOVE    OPTM_CUR_SEL, R8        ; remember for ext. routines..
+                MOVE    R2, @R8                 ; to be able to process it
 
                 MOVE    OPTM_FP_GETKEY, R7      ; get next keypress
                 RSUB    _OPTM_CALL, 1

@@ -408,6 +408,8 @@ _OPTM_FPS_RET   DECRB
 ; and returns the OPTM_KEY_* code in R8
 OPT_MENU_GETKEY INCRB
 _OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
+                RSUB    VD_MNT_ST_GET, 1        ; did mount status change..
+                RSUB    _OPTM_GK_MNT, C         ; ..while OPTM is open?
                 RSUB    KEYB$SCAN, 1            ; wait until key is pressed
                 RSUB    KEYB$GETKEY, 1
                 CMP     0, R8
@@ -433,6 +435,85 @@ _OPTM_GK_3      CMP     M2M$KEY_HELP, R8        ; help (close menu)
                 MOVE    OPTM_KEY_CLOSE, R8
 
 _OPTMGK_RET     DECRB
+                RET
+
+                ; the archetypical situation that the mount status changes
+                ; "in the background" (i.e. not controlled by any) callback
+                ; function, while the OPTM is open is a "Smart Reset" reset of
+                ; the core. "Core" as in "core only", not the M2M framework.
+_OPTM_GK_MNT    SYSCALL(enter, 1)
+
+                RSUB    VD_ACTIVE, 1            ; are there any vdrives?
+                RBRA    _OPTM_GK_MNT_R, !C      ; no: return
+
+                ; reset the menu data structure according to the mount status
+                ; of the vdrives: iterate through each bit of the mount status
+                ; and set the data structure accordingly
+                XOR     R0, R0                  ; vdrive counter
+                MOVE    VDRIVES_NUM, R1         ; R1: amount of vdrives
+                MOVE    @R1, R1
+                RSUB    VD_MNT_ST_GET, 1        ; R2: current status
+                MOVE    R8, R2
+
+_OPTM_GK_MNT_1  MOVE    R0, R8                  ; R9: index of vdrive men. itm
+                RSUB    VD_MENGRP, 1
+                RBRA    _OPTM_GK_MNT_2, C
+
+                MOVE    ERR_FATAL_INST, R8      ; no menu itm for drive: fatal
+                MOVE    ERR_FATAL_INST4, R9
+                RBRA    FATAL, 1
+
+_OPTM_GK_MNT_2  MOVE    R9, R8
+                SHR     1, R2                   ; read next status bit
+                RBRA    _OPTM_GK_MNT_X1, X
+                MOVE    0, R9
+                RBRA    _OPTM_GK_MNT_3, 1
+_OPTM_GK_MNT_X1 MOVE    1, R9
+
+_OPTM_GK_MNT_3  RSUB    _HM_SETMENU, 1          ; set/unset menu item
+                                                ; (R8=menu item, R9=value)
+
+                ; update M2M$CFM_DATA accordingly:
+                ; window within M2M$CFM_DATA = R0 / 16
+                ; bit within window = R0 % 16
+                MOVE    R8, R3
+                MOVE    R8, R4
+                AND     0xFFFB, SR              ; clear Carry
+                SHR     4, R3                   ; R3 = R0 / 16
+                AND     0x000F, R4              ; R4 = R0 % 16
+                MOVE    M2M$CFM_ADDR, R5
+                MOVE    R3, @R5
+
+                MOVE    1, R6                   ; will be used to set/del bit
+                AND     0xFFFD, SR              ; clear X
+                SHL     R4, R6
+
+                MOVE    M2M$CFM_DATA, R5
+
+                CMP     0, R9
+                RBRA    _OPTM_GK_MNT_4, !Z
+                NOT     R6, R6
+                AND     R6, @R5                 ; clear bit                               
+
+                RBRA    _OPTM_GK_MNT_5, 1
+
+_OPTM_GK_MNT_4  OR      R6, @R5                 ; set bit
+
+_OPTM_GK_MNT_5  ADD     1, R0
+                CMP     R0, R1
+                RBRA    _OPTM_GK_MNT_1, !Z              
+
+                ; a core-reset unmounts some or all drives: redraw menu to
+                ; make sure that the drives are not shown as mounted any more
+                RSUB    OPTM_SHOW, 1
+
+                ; re-show the currently selected item
+                MOVE    OPTM_CUR_SEL, R8
+                MOVE    @R8, R8
+                MOVE    OPTM_SEL_SEL, R9
+                RSUB    OPTM_SELECT, 1
+
+_OPTM_GK_MNT_R  SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------
