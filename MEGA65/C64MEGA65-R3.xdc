@@ -22,6 +22,8 @@ create_generated_clock -name audio_clk     [get_pins */clk_gen/i_clk_qnice/CLKOU
 create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
 create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
 create_generated_clock -name video_clk_ff  [get_pins */clk_gen/i_clk_c64_ff/CLKOUT0]
+create_generated_clock -name main_clk_org  [get_pins */clk_gen/i_clk_c64_org/CLKOUT0]
+create_generated_clock -name video_clk_org [get_pins */clk_gen/i_clk_c64_org/CLKOUT1]
 
 create_generated_clock -name main_clk_ff -source [get_pins */clk_gen/i_clk_c64_ff/CLKOUT0] -divide_by 2 [get_pins MEGA65/clk_gen/main_clk_ff_reg/Q]
 
@@ -50,8 +52,13 @@ set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks main_clk_ff]
 set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks main_clk_ff]
 set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks main_clk_ff]
 set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks main_clk_ff]
+set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks main_clk_org]
+set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks main_clk_org]
+set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks main_clk_org]
+set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks main_clk_org]
 
 set_false_path -from [get_clocks main_clk_ff]  -to [get_clocks audio_clk]
+set_false_path -from [get_clocks main_clk_org] -to [get_clocks audio_clk]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]

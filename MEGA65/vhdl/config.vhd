@@ -100,6 +100,9 @@ constant JOY_2_AT_OSD      : boolean := false;
 -- Load one or more mandatory or optional BIOS/ROMs  (Selectors 0x0200 .. 0x02FF) 
 --------------------------------------------------------------------------------------------------------------------
 
+-- !!! CAUTION: CURRENTLY NOT YET SUPPORTED BY THE FIRMWARE !!!
+
+
 -- Data structure: Word 0: Flags, Word 1+: full path to BIOS/ROM
 -- Flags: bit 0: 1=mandatory
 --        bit 1: 1=hide this file from the file browser
@@ -196,8 +199,8 @@ constant OPTM_ITEMS        : string :=
    " Advanced\n"              &
    "\n"                       &
    " VGA: Retro 15KHz RGB\n"  &
-   " HDMI: Flicker-free\n"    &
    " HDMI: Force 60Hz\n"      &
+   " HDMI: Flicker-free\n"    &   
    "\n"                       &
    " Close Menu\n";
         
@@ -209,8 +212,8 @@ constant OPTM_G_CRT_EMULATION : integer := 5;
 constant OPTM_G_HDMI_ZOOM     : integer := 6;
 constant OPTM_G_IMPROVE_AUDIO : integer := 7;
 constant OPTM_G_VGA_RETRO     : integer := 8;
-constant OPTM_G_HDMI_FF       : integer := 9;
-constant OPTM_G_HDMI_60HZ     : integer := 10;
+constant OPTM_G_HDMI_60HZ     : integer := 9;
+constant OPTM_G_HDMI_FF       : integer := 10;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -233,14 +236,14 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
+                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                            
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE
                                            );
 
 --------------------------------------------------------------------------------------------------------------------
--- Address Decoding 
+-- Address Decoding: DO NOT TOUCH!
 --------------------------------------------------------------------------------------------------------------------
 
 begin

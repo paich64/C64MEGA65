@@ -99,10 +99,11 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; ------------------------------------------------------------
 
                 ; The reset management should be executed after HELP_MENU_INIT
-                ; so that option menu default settings at affect clock speeds
-                ; are already set in the M2M$CFM_DATA register and therefore
-                ; influencing the core directly after reset in case config.vhd
-                ; is configured such, that the core is reset at all here
+                ; so that option menu default settings that affect clock
+                ; speeds are already set in the M2M$CFM_DATA register and
+                ; therefore influencing the core directly after reset.
+                ; Of course this happens only when config.vhd is configured
+                ; such, that the core is reset at all at this point in time.
                 RSUB    RP_SYSTEM_START, 1                
 
                 ; ------------------------------------------------------------
