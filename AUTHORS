@@ -11,7 +11,7 @@ Parts of C64MEGA65 are licensed under other Free-software licenses as described 
 C64MEGA65:
 ----------
 
-  C64MEGA65 is a port of MISTER'S C64_MiSTer
+  C64MEGA65 is a port of MiSTer's C64_MiSTer
       done by the MiSTer Development Team
       Original GitHub Repository: https://github.com/MiSTer-devel/C64_MiSTer
       Significant contributors:
@@ -19,7 +19,19 @@ C64MEGA65:
       * vpelletier
       * raparici
 
-  MISTER'S C64_MiSTer is a port of FPGA64
+  MiSTer's C64_MiSTer is a port of MiST's C64 core
+      done by the MiST Development Team
+      Original GitHub Repository: https://github.com/mist-devel/c64
+      Significant contributors:
+      * gyurco
+      * nippur72
+      * harbaum
+
+  MiST's C64 core is a port of FPGA64_027 and 1541_SD
+     done by Dar (darfpga@aol.fr)
+     http://darfpga.blogspot.fr
+
+  FPGA64_027 and 1541_SD is a port of FPGA64
       done by the Peter Wendrich
       https://www.syntiac.com/fpga64.html
 

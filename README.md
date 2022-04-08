@@ -11,8 +11,7 @@ Learn more about where to [download and how to get started](#Installation).
 
 This core is based on the
 [MiSTer](https://github.com/MiSTer-devel/C64_MiSTer) Commodore 64 core which
-itself is based on
-[FPGA64](https://www.syntiac.com/fpga64.html) by Peter Wendrich.
+itself is based on the work of [many others](AUTHORS).
 
 [MJoergen](https://github.com/MJoergen) and
 [sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2021.
