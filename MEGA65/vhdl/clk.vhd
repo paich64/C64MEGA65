@@ -211,11 +211,11 @@ begin
          STARTUP_WAIT         => FALSE,
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
-         DIVCLK_DIVIDE        => 3,
-         CLKFBOUT_MULT_F      => 41.750,     -- 1391.6666 MHz
+         DIVCLK_DIVIDE        => 6,
+         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 22.125,     -- 62.900188 MHz
+         CLKOUT0_DIVIDE_F     => 30.000,     -- 31.528 MHz (31.5277777778)
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE
