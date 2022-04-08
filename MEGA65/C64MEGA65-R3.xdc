@@ -21,11 +21,10 @@ create_generated_clock -name hr_clk_x2_del [get_pins */clk_gen/i_clk_qnice/CLKOU
 create_generated_clock -name audio_clk     [get_pins */clk_gen/i_clk_qnice/CLKOUT4]
 create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
 create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
-create_generated_clock -name video_clk_ff  [get_pins */clk_gen/i_clk_c64_ff/CLKOUT0]
-create_generated_clock -name main_clk_org  [get_pins */clk_gen/i_clk_c64_org/CLKOUT0]
-create_generated_clock -name video_clk_org [get_pins */clk_gen/i_clk_c64_org/CLKOUT1]
-
-create_generated_clock -name main_clk_ff -source [get_pins */clk_gen/i_clk_c64_ff/CLKOUT0] -divide_by 2 [get_pins MEGA65/clk_gen/main_clk_ff_reg/Q]
+create_generated_clock -name main_clk_0    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks CLK]
+create_generated_clock -name main_clk_1    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks sys_clk_9975_mmcm]
+create_generated_clock -name video_clk_0   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks CLK]
+create_generated_clock -name video_clk_1   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks sys_clk_9975_mmcm]
 
 ## Clock divider sdcardclk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins */clk_gen/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins MEGA65/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
@@ -46,19 +45,28 @@ add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_hyperram]]
 endgroup
 
 # Timing between ascal.vhd and HyperRAM is asynchronous.
-set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks hdmi_clk]
-set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks hdmi_clk]
-set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks main_clk_ff]
-set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks main_clk_ff]
-set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks main_clk_ff]
-set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks main_clk_ff]
-set_false_path -from [get_clocks hr_clk_x1]    -to [get_clocks main_clk_org]
-set_false_path   -to [get_clocks hr_clk_x1]  -from [get_clocks main_clk_org]
-set_false_path -from [get_clocks hdmi_clk]     -to [get_clocks main_clk_org]
-set_false_path   -to [get_clocks hdmi_clk]   -from [get_clocks main_clk_org]
+set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks hdmi_clk]
+set_false_path   -to [get_clocks hr_clk_x1]   -from [get_clocks hdmi_clk]
+set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks main_clk_0]
+set_false_path   -to [get_clocks hr_clk_x1]   -from [get_clocks main_clk_0]
+set_false_path -from [get_clocks hdmi_clk]      -to [get_clocks main_clk_0]
+set_false_path   -to [get_clocks hdmi_clk]    -from [get_clocks main_clk_0]
+set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks main_clk_1]
+set_false_path   -to [get_clocks hr_clk_x1]   -from [get_clocks main_clk_1]
+set_false_path -from [get_clocks hdmi_clk]      -to [get_clocks main_clk_1]
+set_false_path   -to [get_clocks hdmi_clk]    -from [get_clocks main_clk_1]
 
-set_false_path -from [get_clocks main_clk_ff]  -to [get_clocks audio_clk]
-set_false_path -from [get_clocks main_clk_org] -to [get_clocks audio_clk]
+set_false_path -from [get_clocks main_clk_0]    -to [get_clocks audio_clk]
+set_false_path -from [get_clocks main_clk_1]    -to [get_clocks audio_clk]
+
+set_false_path -from [get_clocks main_clk_0]    -to [get_clocks main_clk_1]
+set_false_path -to   [get_clocks main_clk_0]  -from [get_clocks main_clk_1]
+set_false_path -from [get_clocks main_clk_0]    -to [get_clocks video_clk_1]
+set_false_path -to   [get_clocks main_clk_0]  -from [get_clocks video_clk_1]
+set_false_path -from [get_clocks main_clk_1]    -to [get_clocks video_clk_0]
+set_false_path -to   [get_clocks main_clk_1]  -from [get_clocks video_clk_0]
+set_false_path -from [get_clocks video_clk_0]   -to [get_clocks video_clk_1]
+set_false_path -to   [get_clocks video_clk_0] -from [get_clocks video_clk_1]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
