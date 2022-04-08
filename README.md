@@ -203,16 +203,21 @@ the difference between the two:
 
 * Soft-reset: Do not force the reset for the C64 core. The C64 has a quite
   [sophisticated reset behavior](http://tech.guitarsite.de/cbm80.html),
-  and some demos make use of that, so that you can start certain parts when
+  and some demos - such as
+  ["That's the Way It Is"](https://csdb.dk/release/?id=11775&show=hidden) -
+  make use of that, so that you can start certain parts when
   pressing the reset button. And also some games did - as a copy
   protection. This can be annoying when you want to exit a game and cannot:
-  Uridium and Eagle's nest are examples for this. The bottom line is: A
+  [Uridium](https://csdb.dk/search/?seinsel=all&search=uridium&Go.x=0&Go.y=0)
+  and
+  [Eagle's Nest](https://csdb.dk/search/?seinsel=all&search=eagles+nest&Go.x=0&Go.y=0)
+  are examples for this. The bottom line is: A
   soft reset will allow you to enjoy the original behavior including "reset
   demos" but you will also be stuck with the drawbacks.
 
 * Hard-reset: The core is doing a "forced reset" by simulating what is
-  described [here](https://www.c64-wiki.com/wiki/Reset_Button). This will
-  always reset the machine.
+  described [here](https://www.c64-wiki.com/wiki/Reset_Button) and what
+  modules like the Action Replay did. This will always reset the machine.
 
 There is another difference between the hard-reset and the soft-reset that is
 more related to your convenience while using the file browser and the 
