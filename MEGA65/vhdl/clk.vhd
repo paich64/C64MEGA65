@@ -44,11 +44,17 @@ entity clk is
       audio_clk_o     : out std_logic;   -- Audio's 60 MHz clock
       audio_rst_o     : out std_logic;   -- Audio's reset, synchronized
 
-      main_clk_o      : out std_logic;   -- main's 31.528 MHz clock
-      main_rst_o      : out std_logic;   -- main's reset, synchronized
+      main_clk_ff_o   : out std_logic;   -- main's 31.528 MHz clock
+      main_rst_ff_o   : out std_logic;   -- main's reset, synchronized
 
-      video_clk_o     : out std_logic;   -- video's 63.056 MHz clock
-      video_rst_o     : out std_logic    -- video's reset, synchronized
+      video_clk_ff_o  : out std_logic;   -- video's 63.056 MHz clock
+      video_rst_ff_o  : out std_logic    -- video's reset, synchronized
+      
+--      main_clk_org_o  : out std_logic;   -- main's 31.528 MHz clock
+--      main_rst_org_o  : out std_logic;   -- main's reset, synchronized
+
+--      video_clk_org_o : out std_logic;   -- video's 63.056 MHz clock
+--      video_rst_org_o : out std_logic    -- video's reset, synchronized
    );
 end entity clk;
 
@@ -67,18 +73,25 @@ signal hr_clk_x2_del_mmcm : std_logic;
 signal audio_clk_mmcm     : std_logic;
 signal tmds_clk_mmcm      : std_logic;
 signal hdmi_clk_mmcm      : std_logic;
-signal main_clk           : std_logic;
-signal video_clk_mmcm     : std_logic;
+signal main_clk_ff        : std_logic;
+signal video_clk_ff_mmcm  : std_logic;
+signal main_clk_org_mmcm  : std_logic;
+signal video_clk_org_mmcm : std_logic;
 
 signal qnice_locked       : std_logic;
 signal hdmi_locked        : std_logic;
-signal c64_locked         : std_logic;
+signal c64_locked_ff      : std_logic;
+signal c64_locked_org     : std_logic;
 
 begin
 
-   -- generate QNICE and HyperRAM clock
+   -------------------------------------------------------------------------------------
+   -- Generate QNICE and HyperRAM clock
+   -------------------------------------------------------------------------------------
+
    -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
    -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE
+   
    i_clk_qnice : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
@@ -147,9 +160,10 @@ begin
          RST                 => '0'
       ); -- i_clk_qnice
 
-   -- generate 74.25 MHz for 720p @ 50 Hz and 5x74.25 MHz = 371.25 MHz for TMDS
-   -- VCO frequency range for Artix 7 speed grade -1 : 600 MHz - 1200 MHz
-   -- f_VCO = f_CLKIN * CLKFBOUT_MULT_F / DIVCLK_DIVIDE
+   -------------------------------------------------------------------------------------
+   -- Generate 74.25 MHz for 720p @ 50 Hz and 5x74.25 MHz = 371.25 MHz for TMDS
+   -------------------------------------------------------------------------------------
+
    i_clk_hdmi : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
@@ -203,7 +217,11 @@ begin
          RST                 => '0'
       ); -- i_clk_hdmi
 
-   i_clk_c64 : MMCME2_ADV
+   -------------------------------------------------------------------------------------
+   -- Generate HDMI flicker-fix version of the C64 clock
+   -------------------------------------------------------------------------------------
+
+   i_clk_c64_ff : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
          CLKOUT4_CASCADE      => FALSE,
@@ -211,11 +229,11 @@ begin
          STARTUP_WAIT         => FALSE,
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
-         DIVCLK_DIVIDE        => 6,
-         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
+         DIVCLK_DIVIDE        => 3,
+         CLKFBOUT_MULT_F      => 41.750,     -- 1391.6666 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 15.000,     -- will be divided by two to: 31.528 MHz (31.5277777778)
+         CLKOUT0_DIVIDE_F     => 22.125,     -- 62.900188 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE
@@ -223,7 +241,7 @@ begin
       port map (
          -- Output clocks
          CLKFBOUT            => clkfb3_mmcm,
-         CLKOUT0             => video_clk_mmcm,
+         CLKOUT0             => video_clk_ff_mmcm,
          -- Input clock control
          CLKFBIN             => clkfb3,
          CLKIN1              => sys_clk_i,
@@ -244,19 +262,71 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => c64_locked,
+         LOCKED              => c64_locked_ff,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
          RST                 => '0'
-      ); -- i_clk_c64
+      ); -- i_clk_c64_ff
 
-   p_main_clk : process (video_clk_o)
+   p_main_clk_ff : process (video_clk_ff_o)
    begin
-      if rising_edge(video_clk_o) then
-         main_clk <= not main_clk;
+      if rising_edge(video_clk_ff_o) then
+         main_clk_ff <= not main_clk_ff;
       end if;
-   end process p_main_clk;
+   end process p_main_clk_ff;
+   
+   -------------------------------------------------------------------------------------
+   -- Generate as-close-as-possible-to-the-original version of the C64 clock
+   -------------------------------------------------------------------------------------
+
+--   i_clk_c64_org : MMCME2_ADV
+--      generic map (
+--         BANDWIDTH            => "OPTIMIZED",
+--         CLKOUT4_CASCADE      => FALSE,
+--         COMPENSATION         => "ZHOLD",
+--         STARTUP_WAIT         => FALSE,
+--         CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
+--         REF_JITTER1          => 0.010,
+--         DIVCLK_DIVIDE        => 6,
+--         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
+--         CLKFBOUT_PHASE       => 0.000,
+--         CLKFBOUT_USE_FINE_PS => FALSE,
+--         CLKOUT0_DIVIDE_F     => 30.000,     -- 31.5277777778 MHz
+--         CLKOUT0_PHASE        => 0.000,
+--         CLKOUT0_DUTY_CYCLE   => 0.500,
+--         CLKOUT0_USE_FINE_PS  => FALSE
+--      )
+--      port map (
+--         -- Output clocks
+--         CLKFBOUT            => clkfb3_mmcm,
+--         CLKOUT0             => video_clk_mmcm,
+--         -- Input clock control
+--         CLKFBIN             => clkfb3,
+--         CLKIN1              => sys_clk_i,
+--         CLKIN2              => '0',
+--         -- Tied to always select the primary input clock
+--         CLKINSEL            => '1',
+--         -- Ports for dynamic reconfiguration
+--         DADDR               => (others => '0'),
+--         DCLK                => '0',
+--         DEN                 => '0',
+--         DI                  => (others => '0'),
+--         DO                  => open,
+--         DRDY                => open,
+--         DWE                 => '0',
+--         -- Ports for dynamic phase shift
+--         PSCLK               => '0',
+--         PSEN                => '0',
+--         PSINCDEC            => '0',
+--         PSDONE              => open,
+--         -- Other control and status signals
+--         LOCKED              => c64_locked_org,
+--         CLKINSTOPPED        => open,
+--         CLKFBSTOPPED        => open,
+--         PWRDWN              => '0',
+--         RST                 => '0'
+--      ); -- i_clk_c64_org  
 
    -------------------------------------
    -- Output buffering
@@ -324,14 +394,14 @@ begin
 
    main_clk_bufg : BUFG
       port map (
-         I => main_clk,
-         O => main_clk_o
+         I => main_clk_ff,
+         O => main_clk_ff_o
       );
 
    video_clk_bufg : BUFG
       port map (
-         I => video_clk_mmcm,
-         O => video_clk_o
+         I => video_clk_ff_mmcm,
+         O => video_clk_ff_o
       );
 
    -------------------------------------
@@ -387,9 +457,9 @@ begin
          RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_arst  => not (c64_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
-         dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
-         dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
+         src_arst  => not (c64_locked_ff and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => main_clk_ff_o,   -- 1-bit input: Destination clock.
+         dest_arst => main_rst_ff_o    -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
 
@@ -398,9 +468,9 @@ begin
          RST_ACTIVE_HIGH => 1
       )
       port map (
-         src_arst  => not (c64_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
-         dest_clk  => video_clk_o,      -- 1-bit input: Destination clock.
-         dest_arst => video_rst_o       -- 1-bit output: src_rst synchronized to the destination clock dovideo.
+         src_arst  => not (c64_locked_ff and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         dest_clk  => video_clk_ff_o,  -- 1-bit input: Destination clock.
+         dest_arst => video_rst_ff_o   -- 1-bit output: src_rst synchronized to the destination clock dovideo.
                                        -- This output is registered.
       );
 
