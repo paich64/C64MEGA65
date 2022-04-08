@@ -215,7 +215,7 @@ begin
          CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 30.000,     -- 31.528 MHz (31.5277777778)
+         CLKOUT0_DIVIDE_F     => 15.000,     -- will be divided by two to: 31.528 MHz (31.5277777778)
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE
