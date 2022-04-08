@@ -18,7 +18,8 @@ entity main is
    );
    port (
       clk_main_i              : in std_logic;
-      reset_i                 : in std_logic;
+      reset_soft_i            : in std_logic;
+      reset_hard_i            : in std_logic;
       pause_i                 : in std_logic;
       flip_joys_i             : in std_logic;
 
@@ -175,10 +176,10 @@ begin
    hard_reset : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         if reset_i then
+         if reset_soft_i or reset_hard_i then
             hard_rst_counter  <= hard_rst_delay;
             reset_core_n      <= '0';
-            hard_reset_n      <= '0';
+            hard_reset_n      <= not reset_hard_i;  -- "not" converts to low-active
          else
             reset_core_n      <= '1';
             if hard_rst_counter = 0 then
@@ -449,7 +450,7 @@ begin
    --        "P2oNO,Enable Drive #9,If Mounted,Always,Never;"
    --        This code currently only implements the "If Mounted" option
    g_iec_drv_reset : for i in 0 to G_VDNUM - 1 generate
-      iec_drives_reset(i) <= reset_i or not vdrives_mounted_o(i);
+      iec_drives_reset(i) <= (not reset_core_n) or (not vdrives_mounted_o(i));
    end generate g_iec_drv_reset;
 
    i_iec_drive : entity work.iec_drive
@@ -518,7 +519,7 @@ begin
 
       if rising_edge(clk_main_i) then
          iec_drive_ce <= '0';
-         if reset_i = '1' then
+         if reset_core_n = '0' then
             iec_dce_sum <= 0;
          else
             iec_dce_sum <= nextsum;
@@ -538,7 +539,7 @@ begin
       port map (
          clk_qnice_i          => c64_clk_sd_i,
          clk_core_i           => clk_main_i,
-         reset_core_i         => reset_i,
+         reset_core_i         => not reset_core_n,
 
          -- MiSTer's "SD config" interface, which runs in the core's clock domain
          img_mounted_o        => iec_img_mounted_i,

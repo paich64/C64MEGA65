@@ -70,11 +70,6 @@ recognizing this core as genuine C64 hardware.
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
-* Smart reset: Press the reset button briefly and only the C64 core is being
-  reset; press it longer than 1.5 seconds and the whole machine is reset. The
-  advantage of only resetting the C64 core is: All your options/settings
-  remain intact and your file browser continues where you left off. The latter
-  is particularly useful when browing large hierarchies of disk images.
 
 ### Constraints and Roadmap
 
@@ -199,3 +194,39 @@ any way and you probably will never notice.
 But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
 HDMI display. We believe that this is the most compatible way of providing
 a flicker-free experience on HDMI.
+
+Hard-reset vs soft-reset
+------------------------
+
+If you press the reset button of your MEGA65 briefly, i.e. less than 1.5
+seconds, you will do a soft-reset. A long press does a hard-reset. Here is
+the difference between the two:
+
+* Soft-reset: Do not force the reset for the C64 core. The C64 has a quite
+  [sophisticated reset behavior](http://tech.guitarsite.de/cbm80.html),
+  and some demos make use of that, so that you can start certain parts when
+  pressing the reset button. And also some games did - as a copy
+  protection. This can be annoying when you want to exit a game and cannot:
+  Uridium and Eagle's nest are examples for this. The bottom line is: A
+  soft reset will allow you to enjoy the original behavior including "reset
+  demos" but you will also be stuck with the drawbacks.
+
+* Hard-reset: The core is doing a "forced reset" by simulating what is
+  described [here](https://www.c64-wiki.com/wiki/Reset_Button). This will
+  always reset the machine.
+
+There is another difference between the hard-reset and the soft-reset that is
+more related to your convenience while using the file browser and the 
+options menu:
+
+* Soft-reset: Only reset the C64 core. Advantage: All your options/settings
+  remain intact and your file browser continues where you left off. The latter
+  is particularly useful when browing large hierarchies of disk images.
+  Imagine being in the fourth folder hierarchy of your disk image collection,
+  browsing on page 10 of hundreds of files and then pressing reset: While
+  a hard-reset let's you start over, including - again - browsing to the
+  fourth folder of your disk image collection to page 10, the soft-reset
+  let's you continue exactly where you left off.
+
+* Hard-reset: The whole system is reset. All settings in the options menu
+  are back to factory defaults and the file browsing starts over.
