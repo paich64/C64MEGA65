@@ -102,6 +102,11 @@ signal video_clk_ff_mmcm  : std_logic;
 signal main_clk_org_mmcm  : std_logic;
 signal video_clk_org_mmcm : std_logic;
 
+signal main_clk_ff_bufg   : std_logic;
+signal video_clk_ff_bufg  : std_logic;
+signal main_clk_org_bufg  : std_logic;
+signal video_clk_org_bufg : std_logic;
+
 signal qnice_locked       : std_logic;
 signal hdmi_locked        : std_logic;
 signal c64_locked_ff      : std_logic;
@@ -297,9 +302,9 @@ begin
          RST                 => '0'
       ); -- i_clk_c64_ff
 
-   p_main_clk_ff : process (video_clk_ff_mmcm)
+   p_main_clk_ff : process (video_clk_ff_bufg)
    begin
-      if rising_edge(video_clk_ff_mmcm) then
+      if rising_edge(video_clk_ff_bufg) then
          main_clk_ff <= not main_clk_ff;
       end if;
    end process p_main_clk_ff;
@@ -371,16 +376,16 @@ begin
          -- PAL, original clock speed
          when 0 =>
             main_clk_speed_o  <= CORE_CLK_SPEED_PAL_ORG;
-            main_clk_sel      <= main_clk_org_mmcm;
-            video_clk_sel     <= video_clk_org_mmcm;
+            main_clk_sel      <= main_clk_org_bufg;
+            video_clk_sel     <= video_clk_org_bufg;
             c64_locked_sel    <= c64_locked_org;         
             
          -- PAL, HDMI flicker-fix
          when 1 =>
             main_clk_speed_o  <= CORE_CLK_SPEED_PAL_FF;
-            main_clk_sel      <= main_clk_ff;
-            video_clk_sel     <= video_clk_ff_mmcm;
-            c64_locked_sel    <= c64_locked_ff;            
+            main_clk_sel      <= main_clk_ff_bufg;
+            video_clk_sel     <= video_clk_ff_bufg;
+            c64_locked_sel    <= c64_locked_ff;        
 
          when others =>
             main_clk_speed_o  <= 0;
@@ -458,6 +463,30 @@ begin
       port map (
          I => hdmi_clk_mmcm,
          O => hdmi_clk_o
+      );
+      
+    main_clk_ff_bg : BUFG
+      port map (
+         I => main_clk_ff,
+         O => main_clk_ff_bufg
+      );
+      
+    video_clk_ff_bg : BUFG
+      port map (
+         I => video_clk_ff_mmcm,
+         O => video_clk_ff_bufg
+      );
+
+   main_clk_org_bg : BUFG
+      port map (
+         I => main_clk_org_mmcm,
+         O => main_clk_org_bufg 
+      );
+      
+   video_clk_org_bg : BUFG
+      port map (
+         I => video_clk_org_mmcm,
+         O => video_clk_org_bufg
       );
 
    main_clk_bufg : BUFG
