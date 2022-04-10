@@ -344,8 +344,8 @@ begin
    begin
       if rising_edge(qnice_clk_o) then
          if qnice_rst_o then
-            old_core_speed <= (others => '0');
-            reset_c64_mmcm <= '0';
+            old_core_speed <= core_speed_i;
+            reset_c64_mmcm <= '1';
          else
             if core_speed_i /= old_core_speed then
                reset_c64_mmcm <= '1';
