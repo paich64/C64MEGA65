@@ -10,8 +10,17 @@ features.
 * Make sure that the MiSTer2MEGA65 framework is updated accordingly
   as soon as all of this works
 
+* MiSTer Features:
+   - CRT mode
+   - audio processing
+
 * File Browser:
   - Unmount whole disk drive via Space in OSM
+  - (Maybe/think about it) Show F1/F3 help at the bottom of the screen
+  - Show flashing/blinking "Loading..." when loading large subdirectories
+    where you are otherwise staring at an "empty blue frame" while it is
+    loading.
+  - Show flashing/blinking "Loading..." while the actual disk image is mounted
 
 * General robustness:
   - Double-check if the keyboard reading "via both CIA directions" is actually
@@ -35,10 +44,6 @@ features.
      when HDMI Zoom is ON:
      https://csdb.dk/release/?id=205526
    - Deactivation of joysticks via QNICE does not work
-
-* MiSTer Features:
-   - CRT mode
-   - audio processing
 
 ## Features
 
