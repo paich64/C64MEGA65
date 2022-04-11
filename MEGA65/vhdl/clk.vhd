@@ -468,10 +468,15 @@ begin
 
    i_xpm_cdc_async_rst_hr : xpm_cdc_async_rst
       generic map (
-         RST_ACTIVE_HIGH => 1
+         RST_ACTIVE_HIGH => 1,
+         DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (qnice_locked and sys_rstn_i),   -- 1-bit input: Source reset signal.
+         -- 1-bit input: Source reset signal
+         -- Important: The HyperRAM needs to be reset when ascal is being reset! The Avalon memory interface
+         --  assumes that both ends maintain state information and agree on this state information. Therefore,
+         -- one side can not be reset in the middle of e.g. a burst transaction, without the other end becoming confused.         
+         src_arst  => not (qnice_locked and sys_rstn_i) or main_rst_o or hdmi_rst_o or reset_c64_mmcm,
          dest_clk  => hr_clk_x1_o,      -- 1-bit input: Destination clock.
          dest_arst => hr_rst_o          -- 1-bit output: src_rst synchronized to the destination clock domain.
                                         -- This output is registered.
@@ -479,10 +484,11 @@ begin
 
    i_xpm_cdc_async_rst_audio : xpm_cdc_async_rst
       generic map (
-         RST_ACTIVE_HIGH => 1
+         RST_ACTIVE_HIGH => 1,
+         DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (qnice_locked and sys_rstn_i) and not reset_c64_mmcm,   -- 1-bit input: Source reset signal.
+         src_arst  => not (qnice_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
          dest_clk  => audio_clk_o,      -- 1-bit input: Destination clock.
          dest_arst => audio_rst_o       -- 1-bit output: src_rst synchronized to the destination clock domain.
                                         -- This output is registered.
@@ -490,10 +496,11 @@ begin
 
    i_xpm_cdc_async_rst_hdmi : xpm_cdc_async_rst
       generic map (
-         RST_ACTIVE_HIGH => 1
+         RST_ACTIVE_HIGH => 1,
+         DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (hdmi_locked and sys_rstn_i) and not reset_c64_mmcm,   -- 1-bit input: Source reset signal.
+         src_arst  => not (hdmi_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
          dest_clk  => hdmi_clk_o,       -- 1-bit input: Destination clock.
          dest_arst => hdmi_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
@@ -501,10 +508,11 @@ begin
 
    i_xpm_cdc_async_rst_main : xpm_cdc_async_rst
       generic map (
-         RST_ACTIVE_HIGH => 1
+         RST_ACTIVE_HIGH => 1,
+         DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (c64_locked and sys_rstn_i) and not reset_c64_mmcm,   -- 1-bit input: Source reset signal.
+         src_arst  => not (c64_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
          dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
          dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
@@ -512,10 +520,11 @@ begin
 
    i_xpm_cdc_async_rst_video : xpm_cdc_async_rst
       generic map (
-         RST_ACTIVE_HIGH => 1
+         RST_ACTIVE_HIGH => 1,
+         DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (c64_locked and sys_rstn_i) and not reset_c64_mmcm,   -- 1-bit input: Source reset signal.
+         src_arst  => not (c64_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
          dest_clk  => video_clk_o,      -- 1-bit input: Destination clock.
          dest_arst => video_rst_o       -- 1-bit output: src_rst synchronized to the destination clock dovideo.
                                         -- This output is registered.

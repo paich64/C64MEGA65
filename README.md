@@ -199,6 +199,10 @@ a flicker-free experience on HDMI.
 If you experience issues, then you can switch the core back to 100% system
 speed. The menu item for doing so is called "HDMI: Flicker-free".
 
+Please note that the C64 core will reset each time you toggle the
+"HDMI: Flicker-free" switch, the system clock speed is switched between
+99.75% and 100% back and forth.
+
 Here is a small test-case for you to experience the difference by yourself:
 
 1. Switch OFF "HDMI: Flicker-free" and load The Great Giana Sisters and

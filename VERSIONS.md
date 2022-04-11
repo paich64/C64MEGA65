@@ -18,6 +18,8 @@ features.
   - Try to reduce warnings in general and in CDC in particular
 
 * Code consistency and "niceness":
+  - Move reset manager and debouncer from top level file to mega65.vhd
+  - Refactor mega65.vhd so that it becomes less crowded
   - Review all documentation and README's
   - run    grep -irn mark_debug .
     in these folders and remove all debug signals:
@@ -27,6 +29,9 @@ features.
 
 * Bugs:
    - HDMI reset problem
+   - Visible tearing in Bromance demo (vertical scroll effect), but only,
+     when HDMI Zoom is ON:
+     https://csdb.dk/release/?id=205526
    - Deactivation of joysticks via QNICE does not work
 
 * MiSTer Features:
@@ -64,6 +69,7 @@ features that we are planning to deliver at a later stage:
 
 * NTSC
 * Support two drives: 8 and 9
+* Dual SID
 * Writing to virtual disks
 * Ability to save the settings of the core
 * More sophisticated scalers and scandoublers
