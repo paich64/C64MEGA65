@@ -188,11 +188,44 @@ monitor plays along.
 We are slowing down the whole system (not only the C64, but also the SID,
 VIC, C1541, ...), so that it runs at only 99.75% of the original clock
 speed of the C64. This does not decrease the compatibility of the core in
-any way and you probably will never notice.
+most cases and you probably will never notice.
 
 But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
 HDMI display. We believe that this is the most compatible way of providing
 a flicker-free experience on HDMI.
+
+### Compatibility
+
+If you experience issues, then you can switch the core back to 100% system
+speed. The menu item for doing so is called "HDMI: Flicker-free".
+
+Please note that the C64 core will reset each time you toggle the
+"HDMI: Flicker-free" switch, the system clock speed is switched between
+99.75% and 100% back and forth.
+
+Here is a small test-case for you to experience the difference by yourself:
+
+1. Switch OFF "HDMI: Flicker-free" and load The Great Giana Sisters and
+   watch the title scroller: Every ~8 seconds, you will see a jerky movement
+   and tearing. The same will happen when you play the game. And this
+   effect is not only there at Giana Sisters but at everything that
+   scrolls and/or moves a lot of things on the screen.
+   
+2. Switch ON "HDMI: Flicker-free" and load the disk and tape magazine
+   [Input 64 Issue 1/1985](https://c64-online.com/?ddownload=4459).
+   You will not see the intro which consists of flying letters
+   building up the word "Input 64". So here we see an example of a
+   compatibility issue.
+   
+3. Switch OFF "HDMI: Flicker-free" and load Input 64 again. It now works.
+   You can watch the intro.
+
+So you have the choice: Flicker-free on HDMI or more compatibiltiy. 
+
+Our tests have shown, that the vast majority of software works like a charm
+and the value of having a completely smooth and flicker free experience on
+HDMI seems therefore larger than slight compatibility issues. This is why
+this feature is activated by default.
 
 Hard-reset vs soft-reset
 ------------------------

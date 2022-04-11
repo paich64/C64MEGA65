@@ -16,15 +16,9 @@
 ; The call is performed doing an RBRA not an RSUB, so the main program is
 ; not supposed to return to the caller.
 ; ----------------------------------------------------------------------------
-
-                ; ------------------------------------------------------------
-                ; Reset management
-                ; ------------------------------------------------------------
-
-START_SHELL     RSUB    RP_SYSTEM_START, 1
-
+     
                 ; log M2M message to serial terminal (not visible to end user)
-                MOVE    LOG_M2M, R8
+START_SHELL     MOVE    LOG_M2M, R8
                 SYSCALL(puts, 1)
 
                 ; ------------------------------------------------------------
@@ -52,7 +46,7 @@ START_SHELL     RSUB    RP_SYSTEM_START, 1
                 MOVE    @R9, @R8
 
                 ; ------------------------------------------------------------
-                ; Initialize variables, libraries, IO and show welcome screen
+                ; Initialize stack, heap, variables, libraries and IO
                 ; ------------------------------------------------------------
 
                 ; initialize device (SD card) and file handle
@@ -99,6 +93,22 @@ START_SHELL     RSUB    RP_SYSTEM_START, 1
                 RSUB    VD_INIT, 1              ; virtual drive system
                 RSUB    KEYB$INIT, 1            ; keyboard library
                 RSUB    HELP_MENU_INIT, 1       ; menu library
+
+                ; ------------------------------------------------------------
+                ; Reset management
+                ; ------------------------------------------------------------
+
+                ; The reset management should be executed after HELP_MENU_INIT
+                ; so that option menu default settings that affect clock
+                ; speeds are already set in the M2M$CFM_DATA register and
+                ; therefore influencing the core directly after reset.
+                ; Of course this happens only when config.vhd is configured
+                ; such, that the core is reset at all at this point in time.
+                RSUB    RP_SYSTEM_START, 1                
+
+                ; ------------------------------------------------------------
+                ; Welcome screen
+                ; ------------------------------------------------------------
 
                 ; Show welcome screen at all?
                 RSUB    RP_WELCOME, 1           
