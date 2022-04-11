@@ -14,6 +14,8 @@ features.
   - Unmount whole disk drive via Space in OSM
 
 * General robustness:
+  - Double-check if the keyboard reading "via both CIA directions" is actually
+    working; maybe this is the PBIS crack-not-working reason (issue #1)
   - Do the final heap/stack sanity check in m2m-rom.asm
   - Try to reduce warnings in general and in CDC in particular
 
