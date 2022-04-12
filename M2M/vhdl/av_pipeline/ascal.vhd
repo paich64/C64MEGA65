@@ -2516,7 +2516,7 @@ BEGIN
   -- Polyphase ROMs
   Polikarpov:PROCESS(poly_clk) IS
   BEGIN
-    IF rising_edge(poly_clk) THEN
+    IF falling_edge(poly_clk) THEN     -- adjusted to QNICE writing on the falling edge
       IF poly_wr='1' THEN
         poly_tdw(9+10*(3-to_integer(poly_a(1 DOWNTO 0))) DOWNTO
                    10*(3-to_integer(poly_a(1 DOWNTO 0))))<=poly_dw;

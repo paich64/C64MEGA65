@@ -64,6 +64,15 @@ entity digital_pipeline is
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
       sys_info_hdmi_o          : out std_logic_vector(47 downto 0);
+    
+      -- QNICE connection to ascal's mode register
+      qnice_ascal_mode_i       : in unsigned(4 downto 0);
+    
+      -- QNICE device for interacting with the Polyphase filter coefficients
+      qnice_poly_clk_i         : in std_logic;
+      qnice_poly_dw_i          : in unsigned(9 downto 0);
+      qnice_poly_a_i           : in unsigned(6+3 downto 0);    -- FRAC+3 downto 0, if we change FRAC below, we need to change quite some code, also in the M2M Firmware
+      qnice_poly_wr_i          : in std_logic;
 
       -- Connect to HyperRAM controller
       hr_clk_i                 : in  std_logic;
@@ -362,7 +371,7 @@ begin
          -- Output video parameters
          run               => '1',                          -- input
          freeze            => '0',                          -- input
-         mode              => "00000",                      -- input: mode(2 downto 0)="000": "Nearest" interpolation, mode(3)=0: no triple buffering, mode(4) currently unused by ascal
+         mode              => qnice_ascal_mode_i,           -- input
 
          -- SYNC  |_________________________/"""""""""\_______|
          -- DE    |""""""""""""""""""\________________________|
@@ -385,10 +394,10 @@ begin
          format            => "01",                         -- input: 24bpp
 
          -- Polyphase filter coefficients (not used by us)
-         poly_clk          => '0',                          -- input
-         poly_dw           => (others => '0'),              -- input
-         poly_a            => (others => '0'),              -- input
-         poly_wr           => '0',                          -- input
+         poly_clk          => qnice_poly_clk_i,             -- input
+         poly_dw           => qnice_poly_dw_i,              -- input
+         poly_a            => qnice_poly_a_i,               -- input
+         poly_wr           => qnice_poly_wr_i,              -- input
 
          -- Avalon Memory interface
          avl_clk           => hr_clk_i,                     -- input

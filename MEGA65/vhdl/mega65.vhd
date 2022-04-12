@@ -102,8 +102,8 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
---constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
-constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
+constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
+--constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
 -- HDMI 1280x720 @ 60 Hz resolution = mode 0, 1280x720 @ 50 Hz resolution = mode 1
 constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
@@ -263,6 +263,10 @@ signal qnice_osm_cfg_enable   : std_logic;
 signal qnice_osm_cfg_xy       : std_logic_vector(15 downto 0);
 signal qnice_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
 
+-- ascal.vhd mode register and polyphase filter handling
+signal qnice_ascal_mode       : std_logic_vector(4 downto 0);
+signal qnice_poly_wr          : std_logic;
+
 -- m2m_keyb output for the firmware and the Shell; see also sysdef.asm
 signal qnice_qnice_keys_n     : std_logic_vector(15 downto 0);
 
@@ -279,6 +283,7 @@ signal qnice_ramrom_we        : std_logic;
 constant C_DEV_VRAM_DATA      : std_logic_vector(15 downto 0) := x"0000";
 constant C_DEV_VRAM_ATTR      : std_logic_vector(15 downto 0) := x"0001";
 constant C_DEV_OSM_CONFIG     : std_logic_vector(15 downto 0) := x"0002";
+constant C_DEV_ASCAL_PPHASE   : std_logic_vector(15 downto 0) := x"0003";
 constant C_DEV_SYS_INFO       : std_logic_vector(15 downto 0) := x"00FF";
 constant C_SYS_VGA            : std_logic_vector(15 downto 0) := x"0010";
 constant C_SYS_HDMI           : std_logic_vector(15 downto 0) := x"0011";
@@ -539,6 +544,7 @@ begin
          csr_joy2_o              => qnice_csr_joy2_on,
          osm_xy_o                => qnice_osm_cfg_xy,
          osm_dxdy_o              => qnice_osm_cfg_dxdy,
+         ascal_mode_o            => qnice_ascal_mode,
 
          -- Keyboard input for the firmware and Shell (see sysdef.asm)
          keys_n_i                => qnice_qnice_keys_n,
@@ -548,6 +554,13 @@ begin
          -- "m" = indirectly controled by the menu system
          control_d_o             => open,
          control_m_o             => qnice_osm_control_m,
+         
+         -- 16-bit special-purpose and 16-bit general-purpose input flags 
+         -- Special-purpose flags are having a given semantic when the "Shell" firmware is running:
+         -- bit 0 to 2: ascal mode (see sysdef.asm)
+         -- bit 3:      ascal triple-buffering (see sysdef.asm)
+         special_i               => x"00" & "00000" & qnice_osm_control_m(C_MENU_CRT_EMULATION) & "00",
+         general_i               => (others => '0'),            
 
          -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
          -- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
@@ -578,6 +591,7 @@ begin
       qnice_vram_we        <= '0';
       qnice_vram_attr_we   <= '0';
       qnice_ramrom_data_i  <= x"EEEE";
+      qnice_poly_wr        <= '0';
       -- C64 specific
       qnice_c64_ram_we           <= '0';
       qnice_c64_qnice_ce         <= '0';
@@ -586,10 +600,11 @@ begin
 
       case qnice_ramrom_dev is
          ----------------------------------------------------------------------------
-         -- MiSTer2MEGA65 reserved devices
-         -- OSM VRAM data and attributes with device numbers < 0x0100
+         -- MiSTer2MEGA65 reserved devices with device numbers < 0x0100
          -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
          ----------------------------------------------------------------------------
+         
+         -- On-Screen-Menu (OSM) video ram data and attributes 
          when C_DEV_VRAM_DATA =>
             qnice_vram_we              <= qnice_ramrom_we;
             qnice_ramrom_data_i        <= x"00" & qnice_vram_data(7 downto 0);
@@ -600,6 +615,11 @@ begin
          -- Shell configuration data (config.vhd)
          when C_DEV_OSM_CONFIG =>
             qnice_ramrom_data_i        <= qnice_config_data;
+        
+         -- ascal.vhd's polyphase handling
+         when C_DEV_ASCAL_PPHASE =>
+            qnice_ramrom_data_i        <= x"EEEE"; -- write-only
+            qnice_poly_wr              <= qnice_ramrom_we;
 
          -- Read-only System Info (constants are defined in sysdef.asm)
          when C_DEV_SYS_INFO =>
@@ -980,6 +1000,15 @@ begin
 
          -- System info device
          sys_info_hdmi_o          => sys_info_hdmi,
+
+         -- QNICE connection to ascal's mode register
+         qnice_ascal_mode_i       => unsigned(qnice_ascal_mode),
+
+         -- QNICE device for interacting with the Polyphase filter coefficients
+         qnice_poly_clk_i         => qnice_clk,
+         qnice_poly_dw_i          => unsigned(qnice_ramrom_data_o(9 downto 0)),
+         qnice_poly_a_i           => unsigned(qnice_ramrom_addr(6+3 downto 0)),
+         qnice_poly_wr_i          => qnice_poly_wr,
 
          -- Connect to HyperRAM controller
          hr_clk_i                 => hr_clk_x1,

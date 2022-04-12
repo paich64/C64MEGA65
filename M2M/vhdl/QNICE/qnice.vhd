@@ -55,15 +55,23 @@ port (
    csr_joy2_o           : out std_logic;           -- ditto joystick port #2
    osm_xy_o             : out std_logic_vector(15 downto 0);   -- On-Screen-Menu x|y (in chars): x=hi-byte y=lo-byte 
    osm_dxdy_o           : out std_logic_vector(15 downto 0);   -- On-Screen-Menu dx|dy (in chars): dx=hi-byte dy=lo-byte
+   ascal_mode_o         : out std_logic_vector(4 downto 0);    -- ascal.vhd mode register
    
    -- Keyboard input for the firmware and Shell (see sysdef.asm)
    keys_n_i             : in std_logic_vector(15 downto 0);
    
-   -- 256-bit General purpose control flags
+   -- 256-bit general purpose control (output) flags
    -- "d" = directly controled by the firmware
    -- "m" = indirectly controled by the menu system
    control_d_o          : out std_logic_vector(255 downto 0);
    control_m_o          : out std_logic_vector(255 downto 0);
+   
+   -- 16-bit special-purpose and 16-bit general purpose input flags 
+   -- Special-purpose flags are having a given semantic when the "Shell" firmware is running:
+   -- bit 0 to 2: ascal mode (see sysdef.asm), controls the output of ascal_mode_o 
+   -- bit 3:      ascal triple-buffering, ditto
+   special_i            : in std_logic_vector(15 downto 0);
+   general_i            : in std_logic_vector(15 downto 0); 
 
    -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
    -- ramrom_dev_o: 0 = VRAM data, 1 = VRAM attributes, > 256 = free to be used for any "RAM like" device
@@ -149,6 +157,13 @@ signal osm_xy_data_out           : std_logic_vector(15 downto 0);
 signal osm_dxdy_en               : std_logic;                        -- $FFE2
 signal osm_dxdy_we               : std_logic;
 signal osm_dxdy_data_out         : std_logic_vector(15 downto 0);
+signal ascal_mode_en             : std_logic;                        -- $FFE3
+signal ascal_mode_we             : std_logic;
+signal special_en                : std_logic;                        -- $FFE4 (read-only)
+signal special_data_out          : std_logic_vector(15 downto 0);
+signal general_en                : std_logic;                        -- $FFE5 (read-only)
+signal general_data_out          : std_logic_vector(15 downto 0);
+signal ascal_mode_data_out       : std_logic_vector(15 downto 0);
 signal keys_en                   : std_logic;                        -- $FFE8
 signal keys_data_out             : std_logic_vector(15 downto 0);
 signal cfd_addr_en               : std_logic;                        -- $FFF0
@@ -193,7 +208,10 @@ begin
                   ramrom_data_out            or
                   csr_data_out               or
                   osm_xy_data_out            or
-                  osm_dxdy_data_out          or                  
+                  osm_dxdy_data_out          or
+                  ascal_mode_data_out        or
+                  special_data_out           or
+                  general_data_out           or                                    
                   keys_data_out              or                 
                   cfd_addr_data_out          or
                   cfd_data_data_out          or
@@ -457,17 +475,16 @@ begin
    -- 0xFFE0: Control and status register
    -- 0xFFE1: OSM x|y coordinates (in chars)
    -- 0xFFE2: OSM dx|dy width|height (in chars)
-   -- 0xFFE3 .. 0xFFE6: read-only registers for OSM presets
-   -- 0xFFE7: read-only register for hardware screen size in chars (width and height)
+   -- 0xFFE3: ascal.vhd mode register
    -- 0xFFE8: Low active realtime snapshot of the currently pressed keys (read-only)
    -- 0xFFF0 .. 0xFFF3: access 256-bit general purpose control flags via address/data pairs
    -- 0xFFF4 -- 0xFFF5: 4k-segmented access to RAMs, ROMs and similarily behaving devices
    ramrom_en                  <= '1' when cpu_addr(15 downto 12) = x"7" else '0';
    ramrom_we                  <= ramrom_en and cpu_data_dir and cpu_data_valid;
    ramrom_data_out            <= ramrom_data_i when ramrom_en = '1' and ramrom_we = '0' else (others => '0');
-   
+
    rom_en                     <= rom_en_maybe and not ramrom_en;
-      
+
    csr_en                     <= '1' when cpu_addr = x"FFE0" else '0';
    csr_we                     <= csr_en and cpu_data_dir and cpu_data_valid;
    csr_data_out               <=                  "00000" & -- see sysdef.asm for details about the mapping of the bits
@@ -479,18 +496,28 @@ begin
    osm_xy_en                  <= '1' when cpu_addr = x"FFE1" else '0';
    osm_xy_we                  <= osm_xy_en and cpu_data_dir and cpu_data_valid;
    osm_xy_data_out            <= osm_xy_o when osm_xy_en = '1' and osm_xy_we = '0' else (others => '0');
-   
+
    osm_dxdy_en                <= '1' when cpu_addr = x"FFE2" else '0';
    osm_dxdy_we                <= osm_dxdy_en and cpu_data_dir and cpu_data_valid;
    osm_dxdy_data_out          <= osm_dxdy_o when osm_dxdy_en = '1' and osm_dxdy_we = '0' else (others => '0');
-      
+
+   ascal_mode_en              <= '1' when cpu_addr = x"FFE3" else '0';
+   ascal_mode_we              <= ascal_mode_en and cpu_data_dir and cpu_data_valid;
+   ascal_mode_data_out        <= x"00" & "000" & ascal_mode_o when ascal_mode_en = '1' and ascal_mode_we = '0' else (others => '0');
+
+   special_en                 <= '1' when cpu_addr = x"FFE4" else '0';  -- read-only
+   special_data_out           <= special_i when special_en = '1' and cpu_data_dir = '0' else (others => '0');
+
+   general_en                 <= '1' when cpu_addr = x"FFE5" else '0';  -- read-only
+   general_data_out           <= general_i when general_en = '1' and cpu_data_dir = '0' else (others => '0');
+
    keys_en                    <= '1' when cpu_addr = x"FFE8" else '0';
    keys_data_out              <= keys_n_i when keys_en = '1' and cpu_data_dir = '0' else (others => '0');
-   
+
    cfd_addr_en                <= '1' when cpu_addr = x"FFF0" else '0';
    cfd_addr_we                <= cfd_addr_en and cpu_data_dir and cpu_data_valid;
    cfd_addr_data_out          <= std_logic_vector(to_unsigned(reg_cfd_addr, 16)) when cfd_addr_en = '1' and cfd_addr_we = '0' else (others => '0');
-   
+
    cfd_data_en                <= '1' when cpu_addr = x"FFF1" else '0';
    cfd_data_we                <= cfd_data_en and cpu_data_dir and cpu_data_valid;
    cfd_data_data_out          <= control_d_o(((reg_cfd_addr + 1) * 16) - 1 downto (reg_cfd_addr * 16)) when cfd_data_en = '1' and cfd_data_we = '0' else (others => '0');  
@@ -498,28 +525,30 @@ begin
    cfm_addr_en                <= '1' when cpu_addr = x"FFF2" else '0';
    cfm_addr_we                <= cfm_addr_en and cpu_data_dir and cpu_data_valid;
    cfm_addr_data_out          <= std_logic_vector(to_unsigned(reg_cfm_addr, 16)) when cfm_addr_en = '1' and cfm_addr_we = '0' else (others => '0');
-   
+
    cfm_data_en                <= '1' when cpu_addr = x"FFF3" else '0';
    cfm_data_we                <= cfm_data_en and cpu_data_dir and cpu_data_valid;
    cfm_data_data_out          <= control_m_o(((reg_cfm_addr + 1) * 16) - 1 downto (reg_cfm_addr * 16)) when cfm_data_en = '1' and cfm_data_we = '0' else (others => '0');
-   
+
    ramrom_dev_en              <= '1' when cpu_addr = x"FFF4" else '0';
    ramrom_dev_we              <= ramrom_dev_en and cpu_data_dir and cpu_data_valid;
    ramrom_dev_data_out        <= ramrom_dev_o when ramrom_dev_en = '1' and ramrom_dev_we = '0' else (others => '0');
-   
+
    ramrom_4kwin_en            <= '1' when cpu_addr = x"FFF5" else '0';
    ramrom_4kwin_we            <= ramrom_4kwin_en and cpu_data_dir and cpu_data_valid;
    ramrom_4kwin_data_out      <= std_logic_vector(to_unsigned(reg_ramrom_4kwin, 16)) when ramrom_4kwin_en = '1' and ramrom_4kwin_we = '0' else (others => '0');    
-                                       
+
    -- Registers (see also M2M/rom/sysdef.asm)
    handle_regs : process(clk50_i)
    begin
       if falling_edge(clk50_i) then
          -- Default values of all registers (reset)
          if reset_ctl = '1' then
-            reg_csr     <= x"0038"; -- By default the C64 core is running and the keyboard and the joysticks are active
-                                    -- Default: Auto select SD card: bit 6 = 0
-                                    -- Default: internal card (bottom tray): bit 7 = 0
+            reg_csr     <= x"0038";  -- By default the C64 core is running and the keyboard and the joysticks are active
+                                     -- Default: Auto select SD card: bit 6 = 0
+                                     -- Default: internal card (bottom tray): bit 7 = 0
+                                    
+            ascal_mode_o <= "00000"; -- nearest neighbor scaler, no triple buffering
 
              -- OSM is fullscreen by default
             osm_xy_o    <= x"0000";
@@ -538,6 +567,11 @@ begin
             -- CSR register
             if csr_we then
                reg_csr <= cpu_data_out;
+            end if;
+            
+            -- ascal mode register
+            if ascal_mode_we then
+               ascal_mode_o <= cpu_data_out(4 downto 0);
             end if;
                         
             -- OSM registers

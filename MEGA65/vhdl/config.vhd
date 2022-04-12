@@ -192,7 +192,7 @@ constant OPTM_ITEMS        : string :=
    "\n"                       &
    " Post-processing\n"       &
    "\n"                       &
-   " CRT emulation\n"         &
+   " HDMI: CRT emulation\n"   &
    " HDMI: Zoom-in\n"         &
    " Audio improvements\n"    &
    "\n"                       &

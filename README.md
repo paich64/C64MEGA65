@@ -63,8 +63,8 @@ recognizing this core as genuine C64 hardware.
 * On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
   and to configure the core
 * Realtime switching between a 6581 SID and a 8580 SID
-* CRT filter: Optional visual scanlines so that the output looks more like
-  an old monitor or TV
+* CRT filter: Optional visual scanlines via HDMI so that the output looks more
+  like an old monitor or TV
 * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.

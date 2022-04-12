@@ -100,6 +100,33 @@ M2M$OPT_SEL_MULTI   .EQU 7      ; selection char for options menu: multi-sel.
 M2M$OPT_SEL_SINGLE  .EQU 61     ; ditto for single select
 
 ; ----------------------------------------------------------------------------
+; HDMI: Avalon Scaler (ascal.vhd)
+; ----------------------------------------------------------------------------
+
+M2M$ASCAL_MODE      .EQU 0xFFE3 ; ascal mode register
+
+; ascal mode: bits 2 downto 0
+M2M$ASCAL_NEAREST   .EQU 0x0000 ; Nearest neighbor
+M2M$ASCAL_BILINEAR  .EQU 0x0001 ; Bilinear
+M2M$ASCAL_SBILINEAR .EQU 0x0002 ; Sharp Bilinear
+M2M$ASCAL_BICUBIC   .EQU 0x0003 ; Bicubic
+M2M$ASCAL_POLYPHASE .EQU 0x0004 ; Polyphase filter (used for CRT emulation)
+
+; ascal mode: bit 3
+M2M$ASCAL_TRIPLEBUF .EQU 0x0008 ; Activate triple-buffering
+
+; ----------------------------------------------------------------------------
+; Special-purpose and general-purpose 16-bit input registers
+; ----------------------------------------------------------------------------
+
+; special-purpose register that gets its semantics via the Shell firmware
+; bits 3 downto 0 equal to M2M$ASCAL_MODE 
+M2M$SPECIAL         .EQU 0xFFE4
+
+; general-purpose register, can be freely used and is not used by the Shell
+M2M$GENERAL         .EQU 0xFFE5
+
+; ----------------------------------------------------------------------------
 ; Keyboard for the framework (independent from the keyboard of the core)
 ; ----------------------------------------------------------------------------
 
@@ -130,15 +157,15 @@ M2M$KEY_F3          .EQU 0x0200
 ; 256-bit General purpose control flags
 ; ----------------------------------------------------------------------------
 
-; 128-bit directly controled by the programmer:
+; 128-bit directly controled by the programmer (not used by the Shell)
 ; Select a window between 0 and 7 in M2M$CFD_ADDR and access the control flags
 ; sliced into 16-bit chunks via M2M$CFD_DATA
 ; exposed by QNICE via control_d_o
 M2M$CFD_ADDR        .EQU 0xFFF0
 M2M$CFD_DATA        .EQU 0xFFF1
 
-; 128-bit indirectly controled via the options menu, i.e. the menu that opens
-; when the core is running and the user presses "Help" on the keyboard:
+; 128-bit controled by the Shell via the options menu, i.e. the menu that
+; opens when the core is running and the user presses "Help" on the keyboard:
 ; the bit order is: bit 0 = topmost menu entry, the mapping is 1-to-1 to
 ; OPTM_ITEMS / OPTM_GROUPS in config.vhd
 ; exposed by QNICE via control_m_o
@@ -158,6 +185,8 @@ M2M$RAMROM_DEV      .EQU 0xFFF4
 M2M$VRAM_DATA       .EQU 0x0000     ; Device for VRAM: Data
 M2M$VRAM_ATTR       .EQU 0x0001     ; Device for VRAM: Attributes
 M2M$CONFIG          .EQU 0x0002     ; Static Shell config data (config.vhd)
+M2M$ASCAL_PPHASE    .EQU 0x0003     ; ascal.vhd Polyphase filter RAM
+
 M2M$SYS_INFO        .EQU 0x00FF     ; Device for System Info
 
 M2M$RAMROM_4KWIN    .EQU 0xFFF5     ; 4k window selector
