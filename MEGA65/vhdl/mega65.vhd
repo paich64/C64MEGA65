@@ -102,8 +102,8 @@ architecture beh of MEGA65_Core is
 
 -- QNICE Firmware: Use the regular QNICE "operating system" called "Monitor" while developing
 -- and debugging and use the MiSTer2MEGA65 firmware in the release version
-constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
---constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
+--constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
+constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
 -- HDMI 1280x720 @ 60 Hz resolution = mode 0, 1280x720 @ 50 Hz resolution = mode 1
 constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
@@ -1002,7 +1002,7 @@ begin
          sys_info_hdmi_o          => sys_info_hdmi,
 
          -- QNICE connection to ascal's mode register
-         qnice_ascal_mode_i       => unsigned(qnice_ascal_mode),
+         qnice_ascal_mode_i       => "00" & main_osm_control_m(C_MENU_CRT_EMULATION) & not main_osm_control_m(C_MENU_IMPROVE_AUDIO) & "0",
 
          -- QNICE device for interacting with the Polyphase filter coefficients
          qnice_poly_clk_i         => qnice_clk,

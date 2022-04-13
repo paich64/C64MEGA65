@@ -93,6 +93,7 @@ START_SHELL     MOVE    LOG_M2M, R8
                 RSUB    VD_INIT, 1              ; virtual drive system
                 RSUB    KEYB$INIT, 1            ; keyboard library
                 RSUB    HELP_MENU_INIT, 1       ; menu library
+                RSUB    LOAD_ASCAL_FLT, 1       ; ascal polyphase filters
 
                 ; ------------------------------------------------------------
                 ; Reset management
@@ -796,6 +797,7 @@ FRAME_FULLSCR   SYSCALL(enter, 1)
 
 ; "Outsourced" code from shell.asm, i.e. this code directly accesses the
 ; shell.asm environment incl. all variables
+#include "filters.asm"
 #include "options.asm"
 #include "selectfile.asm"
 #include "strings.asm"

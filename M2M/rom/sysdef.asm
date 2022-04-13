@@ -112,6 +112,10 @@ M2M$ASCAL_SBILINEAR .EQU 0x0002 ; Sharp Bilinear
 M2M$ASCAL_BICUBIC   .EQU 0x0003 ; Bicubic
 M2M$ASCAL_POLYPHASE .EQU 0x0004 ; Polyphase filter (used for CRT emulation)
 
+; ascal Polyphase addresses
+M2M$ASCAL_PP_HORIZ  .EQU 0x0000
+M2M$ASCAL_PP_VERT   .EQU 0x0100
+
 ; ascal mode: bit 3
 M2M$ASCAL_TRIPLEBUF .EQU 0x0008 ; Activate triple-buffering
 
