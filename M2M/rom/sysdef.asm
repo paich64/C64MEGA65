@@ -24,7 +24,12 @@ M2M$CSR                 .EQU 0xFFE0
     ; Bit       8: SD Card: Currently active: 0=internal / 1=external
     ; Bit       9: SD Card: Internal SD card detected
     ; Bit      10: SD Card: External SD card detected
-    ; Bits 11..15: RESERVED
+    ; Bit      11: Ascal autoset: If set to 1: M2M$ASCAL_MODE (which is
+    ;              controlling QNICE ouput port ascal_mode_o) is automatically
+    ;              kept in sync with ascal_mode_i
+    ; Bits 12..15: RESERVED
+    ;
+    ; Bits 8, 9, 10 are read-only
 
 M2M$CSR_RESET           .EQU 0x0001
 M2M$CSR_UN_RESET        .EQU 0xFFFE
@@ -45,9 +50,11 @@ M2M$CSR_UN_SD_FORCE     .EQU 0xFF7F
 M2M$CSR_SD_ACTIVE       .EQU 0x0100
 M2M$CSR_UN_SD_ACTIVE    .EQU 0xFEFF
 M2M$CSR_SD_DET_INT      .EQU 0x0200
-M2M$CSR_UN_SD_DET_INT   .EQU 0xFBFF
+M2M$CSR_UN_SD_DET_INT   .EQU 0xFDFF
 M2M$CSR_SD_DET_EXT      .EQU 0x0400
-M2M$CSR_UN_SD_DET_EXT   .EQU 0xF7FF
+M2M$CSR_UN_SD_DET_EXT   .EQU 0xFBFF
+M2M$CSR_ASCAL_AUTO      .EQU 0x0800
+M2M$CSR_UN_ASCAL_AUTO   .EQU 0xF7FF
 
 M2M$CSR_KBD_JOY         .EQU 0x0038
 M2M$CSR_UN_KBD_JOY      .EQU 0xFFC7
@@ -104,6 +111,7 @@ M2M$OPT_SEL_SINGLE  .EQU 61     ; ditto for single select
 ; ----------------------------------------------------------------------------
 
 M2M$ASCAL_MODE      .EQU 0xFFE3 ; ascal mode register
+                                ; this reg. is read-only if CSR bit 11 = 1
 
 ; ascal mode: bits 2 downto 0
 M2M$ASCAL_NEAREST   .EQU 0x0000 ; Nearest neighbor
@@ -116,15 +124,16 @@ M2M$ASCAL_POLYPHASE .EQU 0x0004 ; Polyphase filter (used for CRT emulation)
 M2M$ASCAL_PP_HORIZ  .EQU 0x0000
 M2M$ASCAL_PP_VERT   .EQU 0x0100
 
-; ascal mode: bit 3
+; ascal mode: bits 3 and 4
 M2M$ASCAL_TRIPLEBUF .EQU 0x0008 ; Activate triple-buffering
+M2M$ASCAL_RESERVED  .EQU 0x0010 ; reserved (see ascal.vhd)
 
 ; ----------------------------------------------------------------------------
 ; Special-purpose and general-purpose 16-bit input registers
+; (Currently reserved and not used, yet)
 ; ----------------------------------------------------------------------------
 
 ; special-purpose register that gets its semantics via the Shell firmware
-; bits 3 downto 0 equal to M2M$ASCAL_MODE 
 M2M$SPECIAL         .EQU 0xFFE4
 
 ; general-purpose register, can be freely used and is not used by the Shell
@@ -221,7 +230,7 @@ M2M$SHELL_M_DXDY    .EQU 0x7002     ; main screen: dx|dy width and height
 
 M2M$CFG_WELCOME     .EQU 0x0000     ; Welcome screen
 M2M$CFG_DIR_START   .EQU 0x0100     ; Start folder for file browser
-M2M$CFG_RESETPAUSE  .EQU 0x0110     ; Reset/Pause handling
+M2M$CFG_GENERAL     .EQU 0x0110     ; General configuration settings
 M2M$CFG_ROMS        .EQU 0x0200     ; Mandatory and optional ROMs
 
 M2M$CFG_OPTM_ITEMS  .EQU 0x0300     ; "Help" menu / Options menu items
@@ -240,7 +249,7 @@ M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
 M2M$SHELL_O_DX      .EQU 0x7000     ; Width of Help/Options menu
 M2M$SHELL_O_DY      .EQU 0x7001     ; Height of Help/Options menu
 
-; M2M$CFG_RESETPAUSE Addresses
+; M2M$CFG_GENERAL Addresses
 
 M2M$CFG_RP_KEEP     .EQU 0x7000     ; keep core at reset after machine reset
 M2M$CFG_RP_COUNTER  .EQU 0x7001     ; keep reset for a "QNICE loop while"
@@ -253,6 +262,14 @@ M2M$CFG_RP_J2_RST   .EQU 0x7007     ; connect the joystick 2 at reset
 M2M$CFG_RP_KB_OSD   .EQU 0x7008     ; connect the keyboard at OSD
 M2M$CFG_RP_J1_OSD   .EQU 0x7009     ; connect the joystick 1 at OSD
 M2M$CFG_RP_J2_OSD   .EQU 0x700A     ; connect the joystick 2 at OSD
+
+M2M$CFG_ASCAL_USAGE .EQU 0x700B     ; firmware treatment of ascal mode
+M2M$CFG_ASCAL_MODE  .EQU 0x700C     ; hardcoded ascal mode, if applicable
+
+; M2M$CFG_ASCAL_USAGE modes
+M2M$CFG_AUSE_CFG    .EQU 0x0000     ; use ASCAL_MODE from config.vhd
+M2M$CFG_AUSE_CUSTOM .EQU 0x0001     ; controlled via custom QNICE assembly
+M2M$CFG_AUSE_AUTO   .EQU 0x0002     ; auto-sync via M2M$CFG_ASCAL_USAGE
 
 ; ----------------------------------------------------------------------------
 ; Virtual Drives Device for MiSTer "SD" interface (vdrives.vhd)

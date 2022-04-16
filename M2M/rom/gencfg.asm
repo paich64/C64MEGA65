@@ -1,15 +1,19 @@
 ; ****************************************************************************
 ; MiSTer2MEGA65 (M2M) QNICE ROM
 ;
-; Reset and Pause handling of the core
+; General Configuration handling of the core
 ;
 ; The behavior can be configured in config.vhd; see also the documentation
-; written there. The file resetpause.asm needs the environment of shell.asm.
+; written there. The file gencfg.asm needs the environment of shell.asm.
 ;
 ; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
-; Meant to be the first thing that is executed when the Shell firmware starts: 
+; ----------------------------------------------------------------------------
+; Reset / Pause handling of the core
+; ----------------------------------------------------------------------------
+
+; Meant to be executed when the Shell firmware starts:
 ; Check, if the core is meant to be put in reset and/or pause and if a certain
 ; amount of cycles shall be wasted while the system stays in reset
 RP_SYSTEM_START INCRB
@@ -17,7 +21,7 @@ RP_SYSTEM_START INCRB
                 MOVE    M2M$RAMROM_DEV, R0      ; select config.vhd device
                 MOVE    M2M$CONFIG, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0    ; choose Reset/Pause handling
-                MOVE    M2M$CFG_RESETPAUSE, @R0
+                MOVE    M2M$CFG_GENERAL, @R0
 
                 MOVE    M2M$CSR, R7
                 MOVE    0, @R7                  ; reset/keyb/joy OFF by default
@@ -58,7 +62,8 @@ _RP_SS_1_LOOP   CMP     R1, R2                  ; done?
 
 _RP_SS_2        AND     M2M$CSR_UN_RESET, @R7   ; delete reset state
 
-_RP_SS_3        DECRB
+_RP_SS_3        RSUB    ASCAL_INIT, 1           ; handle ascal configuration
+                DECRB
                 RET
 
 ; Returns Carry flag = 1, if the welcome screen shall be shown
@@ -67,7 +72,7 @@ RP_WELCOME      INCRB
                 MOVE    M2M$RAMROM_DEV, R0      ; select config.vhd device
                 MOVE    M2M$CONFIG, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0    ; choose Reset/Pause handling
-                MOVE    M2M$CFG_RESETPAUSE, @R0
+                MOVE    M2M$CFG_GENERAL, @R0
 
                 ; Show welcome screen at all?
                 MOVE    M2M$CFG_RP_WELCOME, R1
@@ -103,7 +108,7 @@ RP_OPTM_START   INCRB
                 MOVE    M2M$RAMROM_DEV, R0      ; select config.vhd device
                 MOVE    M2M$CONFIG, @R0
                 MOVE    M2M$RAMROM_4KWIN, R0    ; choose Reset/Pause handling
-                MOVE    M2M$CFG_RESETPAUSE, @R0
+                MOVE    M2M$CFG_GENERAL, @R0
 
                 ; Pause state, keyboard and joysticks are OFF by default
                 MOVE    M2M$CSR, R7
@@ -131,4 +136,46 @@ _RP_OS_3        MOVE    M2M$CFG_RP_PAUSE, R1
                 OR      M2M$CSR_PAUSE, @R7      ; Pause state of the core     
 
 _RP_OS_4        DECRB
+                RET
+
+; ----------------------------------------------------------------------------
+; Ascal handling
+; ----------------------------------------------------------------------------
+
+; extract config settings and execute them
+ASCAL_INIT      INCRB
+
+                ; Transfer CRT emulation polyphase filter coefficients from
+                ; the QNICE ROM to the ascal RAM
+                RSUB    LOAD_ASCAL_FLT, 1
+
+                ; get ascal handling from config and execute it            
+                MOVE    M2M$RAMROM_DEV, R0      ; select config.vhd device
+                MOVE    M2M$CONFIG, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0    ; choose ascal handling
+                MOVE    M2M$CFG_GENERAL, @R0
+   
+                ; standard ascal usage is "not auto": save this in CSR and
+                ; then extract the usage value from config.vhd
+                MOVE    M2M$CSR, R0
+                AND     M2M$CSR_UN_ASCAL_AUTO, @R0
+                MOVE    M2M$CFG_ASCAL_USAGE, R1
+                MOVE    @R1, R1
+
+                CMP     M2M$CFG_AUSE_CFG, R1    ; use value from config.vhd
+                RBRA    _ASCAL_INIT_1, !Z
+                MOVE    M2M$CFG_ASCAL_MODE, R0
+                MOVE    M2M$ASCAL_MODE, R1
+                MOVE    @R0, @R1
+                RBRA    _ASCAL_INIT_RET, 1
+
+_ASCAL_INIT_1   CMP     M2M$CFG_AUSE_CUSTOM, R1 ; custom = do nothing here
+                RBRA    _ASCAL_INIT_RET, Z
+
+                CMP     M2M$CFG_AUSE_AUTO, R1   ; set auto-sync in CSR
+                RBRA    _ASCAL_INIT_RET, !Z
+                MOVE    M2M$CSR, R0
+                OR      M2M$CSR_ASCAL_AUTO, @R0
+
+_ASCAL_INIT_RET DECRB
                 RET

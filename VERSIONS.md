@@ -104,7 +104,8 @@ to implement certain technical improvements in the "backend":
 
 * Update to newer ascal version (wait until MiSTer did the same upstream)
 * Investigate dynamic PLL adjustment/autotune in conjunciton with ascal
-  to even improve flicker-free HDMI further
+  to improve flicker-free HDMI further (maybe there is a possibility to
+  achieve flicker-free without the need of slowing down by 0.25%)
 * Re-do QNICE's SD Card controller: Go from SPI to native
 * Enhance QNICE's FAT32 library so that it supports writing
 * HyperRAM device support to QNICE

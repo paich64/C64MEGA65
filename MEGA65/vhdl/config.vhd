@@ -65,10 +65,10 @@ constant SEL_DIR_START     : std_logic_vector(15 downto 0) := x"0100";
 constant DIR_START         : string := "/c64";
 
 --------------------------------------------------------------------------------------------------------------------
--- Reset / Pause / OSD behavior
+-- General configuration settings: Reset, Pause, OSD behavior, Ascal
 --------------------------------------------------------------------------------------------------------------------
 
-constant SEL_RESET_PAUSE   : std_logic_vector(15 downto 0) := x"0110";
+constant SEL_GENERAL       : std_logic_vector(15 downto 0) := x"0110";
 
 -- keep the core in RESET state after the hardware starts up and after pressing the MEGA65's reset button 
 constant RESET_KEEP        : boolean := false;
@@ -95,6 +95,16 @@ constant JOY_2_AT_RESET    : boolean := false;
 constant KEYBOARD_AT_OSD   : boolean := false;
 constant JOY_1_AT_OSD      : boolean := false;
 constant JOY_2_AT_OSD      : boolean := false;
+
+-- Avalon Scaler settings (see ascal.vhd, used for HDMI output only)
+-- 0=set ascal mode (via QNICE's ascal_mode_o) to the value of the config.vhd constant ASCAL_MODE
+-- 1=do nothing, leave ascal mode alone, custom QNICE assembly code can still change it via M2M$ASCAL_MODE
+--               and QNICE's CSR will be set to not automatically sync ascal_mode_i 
+-- 2=keep ascal mode in sync with the QNICE input register ascal_mode_i:
+--   use this if you want to control the ascal mode for example via the Options menu
+--   where you would wire the output of certain options menu bits with ascal_mode_i
+constant ASCAL_USAGE       : natural := 2;
+constant ASCAL_MODE        : natural := 0;   -- see ascal.vhd for the meaning of this value
 
 --------------------------------------------------------------------------------------------------------------------
 -- Load one or more mandatory or optional BIOS/ROMs  (Selectors 0x0200 .. 0x02FF) 
@@ -283,8 +293,8 @@ addr_decode : process(all)
       end if;
    end;
    
-   -- return the RESET/PAUSE settings
-   function getResetPause(index: natural) return std_logic_vector is
+   -- return the General Configuration settings
+   function getGenConf(index: natural) return std_logic_vector is
    begin
       case index is
          when 0      => return bool2slv(RESET_KEEP);
@@ -297,7 +307,9 @@ addr_decode : process(all)
          when 7      => return bool2slv(JOY_2_AT_RESET);
          when 8      => return bool2slv(KEYBOARD_AT_OSD);
          when 9      => return bool2slv(JOY_1_AT_OSD);
-         when 10     => return bool2slv(JOY_2_AT_OSD); 
+         when 10     => return bool2slv(JOY_2_AT_OSD);
+         when 11     => return std_logic_vector(to_unsigned(ASCAL_USAGE, 16));
+         when 12     => return std_logic_vector(to_unsigned(ASCAL_MODE, 16));
          when others => return x"0000";
       end case;
    end;
@@ -308,7 +320,7 @@ begin
    
    case address_i(27 downto 12) is   
       when SEL_WELCOME           => data_o <= str2data(SCR_WELCOME);
-      when SEL_RESET_PAUSE       => data_o <= getResetPause(index);
+      when SEL_GENERAL           => data_o <= getGenConf(index);
       when SEL_DIR_START         => data_o <= str2data(DIR_START);
       when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
       when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);

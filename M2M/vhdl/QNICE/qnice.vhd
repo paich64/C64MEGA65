@@ -55,7 +55,12 @@ port (
    csr_joy2_o           : out std_logic;           -- ditto joystick port #2
    osm_xy_o             : out std_logic_vector(15 downto 0);   -- On-Screen-Menu x|y (in chars): x=hi-byte y=lo-byte 
    osm_dxdy_o           : out std_logic_vector(15 downto 0);   -- On-Screen-Menu dx|dy (in chars): dx=hi-byte dy=lo-byte
-   ascal_mode_o         : out std_logic_vector(4 downto 0);    -- ascal.vhd mode register
+   
+   -- ascal.vhd mode register
+   -- ascal_mode_o is equal to ascal_mode_i if QNICE CSR bit 11 = 1 otherwise ascal_mode_o is set via
+   -- QNICE register 0xFFE3 (M2M$ASCAL_MODE)
+   ascal_mode_i         : in std_logic_vector(4 downto 0);
+   ascal_mode_o         : out std_logic_vector(4 downto 0);
    
    -- Keyboard input for the firmware and Shell (see sysdef.asm)
    keys_n_i             : in std_logic_vector(15 downto 0);
@@ -66,10 +71,9 @@ port (
    control_d_o          : out std_logic_vector(255 downto 0);
    control_m_o          : out std_logic_vector(255 downto 0);
    
-   -- 16-bit special-purpose and 16-bit general purpose input flags 
-   -- Special-purpose flags are having a given semantic when the "Shell" firmware is running:
-   -- bit 0 to 2: ascal mode (see sysdef.asm), controls the output of ascal_mode_o 
-   -- bit 3:      ascal triple-buffering, ditto
+   -- 16-bit special-purpose and 16-bit general purpose input flags: Read-only
+   -- Special-purpose is meant to be used by the Shell, but currently it is reserved and not used, yet
+   -- General-purpose can be used freely by custom QNICE assembly code
    special_i            : in std_logic_vector(15 downto 0);
    general_i            : in std_logic_vector(15 downto 0); 
 
@@ -191,6 +195,9 @@ signal reg_cfd_addr              : natural range 0 to 15;
 signal reg_cfm_addr              : natural range 0 to 15;
 signal reg_ramrom_4kwin          : natural range 0 to 65535;
 
+signal ascal_mode                : std_logic_vector(4 downto 0);
+signal ascal_usage               : std_logic;
+
 begin
    -- emulate the QNICE toggle switches as described in QNICE-FPGA's doc/README.md
    -- all zero: STDIN = STDOUT = UART
@@ -232,6 +239,7 @@ begin
    csr_joy2_o        <= reg_csr(5);
    sd_mode           <= reg_csr(6);
    sd_inuse_wr       <= reg_csr(7);
+   ascal_usage       <= reg_csr(11);
    ramrom_ce_o       <= ramrom_en;
    ramrom_we_o       <= ramrom_we;
    ramrom_addr_o     <= std_logic_vector(to_unsigned(reg_ramrom_4kwin * 4096 + to_integer(unsigned(cpu_addr(11 downto 0))), 28));
@@ -487,7 +495,8 @@ begin
 
    csr_en                     <= '1' when cpu_addr = x"FFE0" else '0';
    csr_we                     <= csr_en and cpu_data_dir and cpu_data_valid;
-   csr_data_out               <=                  "00000" & -- see sysdef.asm for details about the mapping of the bits
+   csr_data_out               <=                  "0000" & -- see sysdef.asm for details about the mapping of the bits
+                                 /* bit 11 */      reg_csr(11) &
                                  /* bit 10 */      sd_cd_ext & 
                                  /* bit 9  */      sd_cd_int &
                                  /* bit 8  */      sd_inuse_rd &
@@ -503,7 +512,8 @@ begin
 
    ascal_mode_en              <= '1' when cpu_addr = x"FFE3" else '0';
    ascal_mode_we              <= ascal_mode_en and cpu_data_dir and cpu_data_valid;
-   ascal_mode_data_out        <= x"00" & "000" & ascal_mode_o when ascal_mode_en = '1' and ascal_mode_we = '0' else (others => '0');
+   ascal_mode                 <= ascal_mode_i when ascal_usage = '1' else ascal_mode_o;
+   ascal_mode_data_out        <= x"00" & "000" & ascal_mode when ascal_mode_en = '1' and ascal_mode_we = '0' else (others => '0');
 
    special_en                 <= '1' when cpu_addr = x"FFE4" else '0';  -- read-only
    special_data_out           <= special_i when special_en = '1' and cpu_data_dir = '0' else (others => '0');
@@ -544,10 +554,11 @@ begin
       if falling_edge(clk50_i) then
          -- Default values of all registers (reset)
          if reset_ctl = '1' then
-            reg_csr     <= x"0038";  -- By default the C64 core is running and the keyboard and the joysticks are active
+            reg_csr     <= x"0838";  -- By default the C64 core is running and the keyboard and the joysticks are active
                                      -- Default: Auto select SD card: bit 6 = 0
                                      -- Default: internal card (bottom tray): bit 7 = 0
-                                    
+                                     -- Default: Auto-sync ascal settings = on: bit 11 aka ascal_usage = 1
+                                                
             ascal_mode_o <= "00000"; -- nearest neighbor scaler, no triple buffering
 
              -- OSM is fullscreen by default
@@ -570,8 +581,12 @@ begin
             end if;
             
             -- ascal mode register
-            if ascal_mode_we then
-               ascal_mode_o <= cpu_data_out(4 downto 0);
+            if ascal_usage = '0' then
+               if ascal_mode_we then
+                  ascal_mode_o <= cpu_data_out(4 downto 0);
+               end if;            
+            else
+               ascal_mode_o <= ascal_mode_i;
             end if;
                         
             -- OSM registers

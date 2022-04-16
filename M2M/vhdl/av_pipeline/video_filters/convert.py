@@ -47,5 +47,13 @@ def convert_file(mode, file_in, file_out, address, bits, skip_header_lines, skip
 
 convert_file(MODE_OUT, 'lanczos2_12.txt',     'lanczos2_12.out'    , 0x7000, 10, 6, 4, 0, 0)
 convert_file(MODE_ASM, 'lanczos2_12.txt',     'lanczos2_12.asm'    , 0x7000, 10, 6, 4, 0, 0)
+convert_file(MODE_OUT, 'Scanlines_80.txt',    'Scanlines_80.out'   , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_ASM, 'Scanlines_80.txt',    'Scanlines_80.asm'   , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_OUT, 'Scan_Br_105_80.txt',  'Scan_Br_105_80.out' , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_ASM, 'Scan_Br_105_80.txt',  'Scan_Br_105_80.asm' , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_OUT, 'Scan_Br_110_80.txt',  'Scan_Br_110_80.out' , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_ASM, 'Scan_Br_110_80.txt',  'Scan_Br_110_80.asm' , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_OUT, 'Scan_Br_115_80.txt',  'Scan_Br_115_80.out' , 0x7100, 10, 7, 1, 0, 1)
+convert_file(MODE_ASM, 'Scan_Br_115_80.txt',  'Scan_Br_115_80.asm' , 0x7100, 10, 7, 1, 0, 1)
 convert_file(MODE_OUT, 'Scan_Br_120_80.txt',  'Scan_Br_120_80.out' , 0x7100, 10, 7, 1, 0, 1)
 convert_file(MODE_ASM, 'Scan_Br_120_80.txt',  'Scan_Br_120_80.asm' , 0x7100, 10, 7, 1, 0, 1)

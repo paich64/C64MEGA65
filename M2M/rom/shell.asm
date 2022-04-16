@@ -87,13 +87,14 @@ START_SHELL     MOVE    LOG_M2M, R8
                 MOVE    OPTM_HEAP_SIZE, R8
                 MOVE    0, @R8
 
-                ; initialize libraries
+                ; Initialize libraries: The order in which these libraries are
+                ; initialized matters and the initialization needs to happen
+                ; before RP_SYSTEM_START is called.
                 RSUB    SCR$INIT, 1             ; retrieve VHDL generics
                 RSUB    FRAME_FULLSCR, 1        ; draw fullscreen frame
                 RSUB    VD_INIT, 1              ; virtual drive system
                 RSUB    KEYB$INIT, 1            ; keyboard library
                 RSUB    HELP_MENU_INIT, 1       ; menu library
-                RSUB    LOAD_ASCAL_FLT, 1       ; ascal polyphase filters
 
                 ; ------------------------------------------------------------
                 ; Reset management
@@ -105,7 +106,9 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; therefore influencing the core directly after reset.
                 ; Of course this happens only when config.vhd is configured
                 ; such, that the core is reset at all at this point in time.
-                RSUB    RP_SYSTEM_START, 1                
+                ; The Control & Status Register (M2M$CSR) is reset/initialized
+                ; too, so any setting done before this line is ignored
+                RSUB    RP_SYSTEM_START, 1
 
                 ; ------------------------------------------------------------
                 ; Welcome screen
@@ -700,8 +703,8 @@ _HDR_SEND_DONE  MOVE    R11, R8                 ; virtual drive ID
                 ; Debug mode: Exits the main loop and starts the QNICE
                 ; Monitor which can be used to debug via UART and a
                 ; terminal program. You can return to the Shell by using
-                ; the Monitor C/R command while entering the start address
-                ; that is shown in the terminal (using the "puthex" below).
+                ; the Monitor C/R command while entering an address shown
+                ; in the terminal.
 CHECK_DEBUG     INCRB
                 MOVE    M2M$KEY_UP, R0
                 OR      M2M$KEY_RUNSTOP, R0
@@ -715,13 +718,37 @@ CHECK_DEBUG     INCRB
                 RBRA    START_MONITOR, Z        ; yes: enter debug mode
                 RET                             ; no: return to main loop
                 
-START_MONITOR   MOVE    DBG_START1, R8          ; print info message via UART
+                ; print info message via UART that shows how to return back
+                ; to the shell (either main loop or restart)
+                ; in RELEASE mode, you can also return to where you left off
+                ; else you can only restart the Shell
+START_MONITOR   MOVE    DBG_START1, R8
                 SYSCALL(puts, 1)
-                MOVE    START_SHELL, R8         ; show how to return to ..
-                SYSCALL(puthex, 1)              ; .. the shell
+
+#ifdef RELEASE
+                MOVE    _START_MON_GO, R8 
+                SYSCALL(puthex, 1)
                 MOVE    DBG_START2, R8
                 SYSCALL(puts, 1)
+                MOVE    START_SHELL, R8
+                SYSCALL(puthex, 1)
+                MOVE    DBG_START3, R8
+                SYSCALL(puts, 1)
+
+                ; enter the QNICE Monitor without allowing the QNICE Monitor
+                ; to tamper the stack or to reset the status register
+                INCRB
+                RBRA    QMON$SOFTMON, 1
+_START_MON_GO   DECRB
+                RET
+#else
+                MOVE    START_SHELL, R8
+                SYSCALL(puthex, 1)
+                MOVE    DBG_START2, R8
+                SYSCALL(puts, 1)
+
                 SYSCALL(exit, 1)                ; small/irrelevant stack leak
+#endif
 
 ; ----------------------------------------------------------------------------
 ; Fatal error:
@@ -798,10 +825,10 @@ FRAME_FULLSCR   SYSCALL(enter, 1)
 ; "Outsourced" code from shell.asm, i.e. this code directly accesses the
 ; shell.asm environment incl. all variables
 #include "filters.asm"
+#include "gencfg.asm"
 #include "options.asm"
 #include "selectfile.asm"
 #include "strings.asm"
-#include "resetpause.asm"
 #include "vdrives.asm"
 
 ; framework libraries

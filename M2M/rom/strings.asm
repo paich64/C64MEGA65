@@ -24,14 +24,24 @@ FN_ELLIPSIS     .ASCII_W "..." ; hardcoded to a len. of 3, see comment below
 ; (Hold "Run/Stop" + "Cursor Up" and then while holding these, press "Help")
 ; ----------------------------------------------------------------------------
 
-DBG_START1      .ASCII_P "Entering MiSTer2MEGA65 debug mode.\nPress H for "
+DBG_START1      .ASCII_P "\nEntering MiSTer2MEGA65 debug mode.\nPress H for "
                 .ASCII_W "help and press C R "
-DBG_START2      .ASCII_W " to return to the Shell.\n"
+#ifdef RELEASE
+DBG_START2      .ASCII_P " to return to where you left off\n"
+                .ASCII_W "and press C R "
+DBG_START3
+#else
+DBG_START2
+#endif
+                .ASCII_W " to restart the Shell.\n"
 
 LOG_M2M         .ASCII_P "                                                 \n"
                 .ASCII_P "MiSTer2MEGA65 Firmware and Shell, "
                 .ASCII_P "done by sy2002 & MJoergen in 2022\n"
-                .ASCII_W "https://github.com/sy2002/MiSTer2MEGA65\n\n"
+                .ASCII_P "https://github.com/sy2002/MiSTer2MEGA65\n\n"
+                .ASCII_P "Press 'Run/Stop' + 'Cursor Up' and then while "
+                .ASCII_P "holding these press 'Help' to enter the debug "
+                .ASCII_W "mode.\n\n"
 LOG_STR_SD      .ASCII_W "SD card has been changed. Re-reading...\n"
 LOG_STR_CD      .ASCII_W "Changing directory to: "
 LOG_STR_ITM_AMT .ASCII_W "Items in current directory (in hex): "

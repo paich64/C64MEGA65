@@ -544,6 +544,8 @@ begin
          csr_joy2_o              => qnice_csr_joy2_on,
          osm_xy_o                => qnice_osm_cfg_xy,
          osm_dxdy_o              => qnice_osm_cfg_dxdy,
+         
+         ascal_mode_i            => "00" & qnice_osm_control_m(C_MENU_CRT_EMULATION) & "00",
          ascal_mode_o            => qnice_ascal_mode,
 
          -- Keyboard input for the firmware and Shell (see sysdef.asm)
@@ -556,10 +558,9 @@ begin
          control_m_o             => qnice_osm_control_m,
          
          -- 16-bit special-purpose and 16-bit general-purpose input flags 
-         -- Special-purpose flags are having a given semantic when the "Shell" firmware is running:
-         -- bit 0 to 2: ascal mode (see sysdef.asm)
-         -- bit 3:      ascal triple-buffering (see sysdef.asm)
-         special_i               => x"00" & "00000" & qnice_osm_control_m(C_MENU_CRT_EMULATION) & "00",
+         -- Special-purpose flags are having a given semantic when the "Shell" firmware is running,
+         -- but right now they are reserved and not used, yet.
+         special_i               => (others => '0'),
          general_i               => (others => '0'),            
 
          -- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
@@ -1002,7 +1003,7 @@ begin
          sys_info_hdmi_o          => sys_info_hdmi,
 
          -- QNICE connection to ascal's mode register
-         qnice_ascal_mode_i       => "00" & main_osm_control_m(C_MENU_CRT_EMULATION) & not main_osm_control_m(C_MENU_IMPROVE_AUDIO) & "0",
+         qnice_ascal_mode_i       => unsigned(qnice_ascal_mode),
 
          -- QNICE device for interacting with the Polyphase filter coefficients
          qnice_poly_clk_i         => qnice_clk,
