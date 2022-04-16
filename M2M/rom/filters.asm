@@ -9,8 +9,8 @@
 ; ****************************************************************************
 
 ; more details: see ../vhdl/av_pipeline/video_filters/README.md
-#include "../vhdl/av_pipeline/video_filters/lanczos2_12.asm"
-#include "../vhdl/av_pipeline/video_filters/Scan_Br_120_80.asm"
+#include "../video_filters/lanczos2_12.asm"
+#include "../video_filters/Scan_Br_110_80.asm"
 
 ; currently, we only support filters with 4 signed 10-bit integers per line,
 ; 64 lines, i.e. 256 data points
@@ -34,7 +34,7 @@ LOAD_ASCAL_FLT  SYSCALL(enter, 1)
                 SYSCALL(memcpy, 1)
 
                 ; copy vertical filter from ROM to ascal Polyphase RAM
-                MOVE    SCAN_BR_120_80, R8
+                MOVE    SCAN_BR_110_80, R8
                 MOVE    M2M$RAMROM_DATA, R9
                 ADD     M2M$ASCAL_PP_VERT, R9
                 SYSCALL(memcpy, 1)
