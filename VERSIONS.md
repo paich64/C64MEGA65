@@ -20,6 +20,8 @@ features.
   - Visible tearing in Bromance demo (vertical scroll effect), but only,
     when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
 
+  - Support for R2 version of MEGA65
+
   - VGA retro does not generate CSync
 
   - Make sure that the MiSTer2MEGA65 framework is updated accordingly
