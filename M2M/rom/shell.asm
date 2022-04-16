@@ -186,11 +186,12 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
 ;
 ; Input:
 ;   R8 contains the drive number
-;   R9: 0=unmount drive, if it has been mounted before
-;       @TODO:
-;       1=just replace the disk image, if it has been mounted
-;         before without unmounting the drive (aka resetting
-;         the drive/"switching the drive on/off")
+;   R9=OPTM_KEY_SELECT:
+;      Just replace the disk image, if it has been mounted
+;      before without unmounting the drive (aka without
+;      resetting the drive/"switching the drive on/off")
+;   R9=OPTM_KEY_SELALT:
+;      Unmount the drive (aka "switch the drive off")
 HANDLE_MOUNTING SYSCALL(enter, 1)
 
                 MOVE    R8, R7                  ; R7: drive number
@@ -431,10 +432,18 @@ _HM_SDMOUNTED7  RSUB    OPTM_SHOW, 1
                 RBRA    _HM_RET, 1
 
                 ; Virtual drive (number in R8) is already mounted
-                ; @TODO: Support two cases:
-                ; R9=0 (see function description above) and R9=1
-                ; Right now we just switch the disk image in the drive, i.e
-                ; we are hardcoded performing the case R9=1
+_HM_MOUNTED     CMP     OPTM_KEY_SELALT, R6     ; unmount the whole drive?
+                RBRA    _HM_MOUNTED_S, !Z       ; no
+
+                ; Unmount the whole drive by stobing the image mount signal
+                ; while setting the image size to zero
+                MOVE    R7, R8                  ; virtual drive number
+                XOR     R9, R9                  ; low word of image size
+                XOR     R10, R10                ; high word of image size
+                XOR     R11, R11                ; read-only
+                XOR     R12, R12
+                RSUB    VD_STROBE_IM, 1
+                RBRA    _HM_SDMOUNTED7, 1       ; redraw menu and exit
 
                 ; Make sure the current drive stays selected in M2M$CFM_DATA.
                 ; The standard semantics of menu.asm is that single-select
@@ -450,7 +459,7 @@ _HM_SDMOUNTED7  RSUB    OPTM_SHOW, 1
                 ; But menu.asm already has deleted the visual representation
                 ; at this point, so we need to hack the visual representation
                 ; of the currently open menu and actually print it.
-_HM_MOUNTED     MOVE    R7, R8                  ; R7: virtual drive number
+_HM_MOUNTED_S   MOVE    R7, R8                  ; R7: virtual drive number
                 RSUB    VD_MENGRP, 1            ; get index of menu item
                 RBRA    _HM_MOUNTED_1, C
 

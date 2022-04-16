@@ -404,7 +404,7 @@ _OPTM_FPS_L     CMP     R2, R4
 _OPTM_FPS_RET   DECRB
                 RET                
 
-; Waits until one of the four Option Menu keys is pressed
+; Waits until one of the five Option Menu keys is pressed
 ; and returns the OPTM_KEY_* code in R8
 OPT_MENU_GETKEY INCRB
 _OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
@@ -415,22 +415,27 @@ _OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 CMP     0, R8
                 RBRA    _OPTMGK_LOOP, Z
 
-                CMP     M2M$KEY_UP, R8          ; up
+                CMP     M2M$KEY_UP, R8          ; Up
                 RBRA    _OPTM_GK_1, !Z
                 MOVE    OPTM_KEY_UP, R8
                 RBRA    _OPTMGK_RET, 1
 
-_OPTM_GK_1      CMP     M2M$KEY_DOWN, R8        ; down
-                RBRA    _OPTM_GK_2, !Z
+_OPTM_GK_1      CMP     M2M$KEY_DOWN, R8        ; Down
+                RBRA    _OPTM_GK_2A, !Z
                 MOVE    OPTM_KEY_DOWN, R8
                 RBRA    _OPTMGK_RET, 1
 
-_OPTM_GK_2      CMP     M2M$KEY_RETURN, R8      ; return (select)
-                RBRA    _OPTM_GK_3, !Z
+_OPTM_GK_2A     CMP     M2M$KEY_RETURN, R8      ; Return (select)
+                RBRA    _OPTM_GK_2B, !Z
                 MOVE    OPTM_KEY_SELECT, R8
                 RBRA    _OPTMGK_RET, 1
 
-_OPTM_GK_3      CMP     M2M$KEY_HELP, R8        ; help (close menu)
+_OPTM_GK_2B     CMP     M2M$KEY_SPACE, R8       ; Space (alternative select)
+                RBRA    _OPTM_GK_3, !Z
+                MOVE    OPTM_KEY_SELALT, R8
+                RBRA    _OPTMGK_RET, 1           
+
+_OPTM_GK_3      CMP     M2M$KEY_HELP, R8        ; Help (close menu)
                 RBRA    _OPTMGK_LOOP, !Z        ; other key: ignore
                 MOVE    OPTM_KEY_CLOSE, R8
 
@@ -523,9 +528,8 @@ _OPTM_GK_MNT_R  SYSCALL(leave, 1)
 ; R9: selected item within menu group
 ;     in case of single selected items: 0=not selected, 1=selected
 ;
-; @TODO:
-; R10: 0=selection was done via pressing Return
-;      1=selection was done via pressing Space
+; R10: OPTM_KEY_SELECT (normally means "Return") or
+;      OPTM_KEY_SELALT (normally means "Space")
 ;
 ; For making sure that the hardware can react in "real-time" to menu item
 ; changes, i.e. even before the menu is closed, we are updating the
@@ -533,9 +537,6 @@ _OPTM_GK_MNT_R  SYSCALL(leave, 1)
 ; ----------------------------------------------------------------------------
 
 OPTM_CB_SEL     INCRB
-
-                ; @TODO: support this feature and do not hardcode
-                MOVE    0, R10
 
                 ; Special treatment for drive-mount items: Drive-mount items
                 ; are per definition also single-select items
@@ -552,15 +553,17 @@ OPTM_CB_SEL     INCRB
                 ; Handle mounting
                 ; Input:
                 ;   R8 contains the drive number at this point
-                ;   R9: 0=unmount drive, if it has been mounted before
-                ;       1=just replace the disk image, if it has been mounted
-                ;         before without unmounting the drive (aka resetting
-                ;         the drive/"switching the drive on/off")
+                ;   R9=OPTM_KEY_SELECT:
+                ;      Just replace the disk image, if it has been mounted
+                ;      before without unmounting the drive (aka without
+                ;      resetting the drive/"switching the drive on/off")
+                ;   R9=OPTM_KEY_SELALT:
+                ;      Unmount the drive (aka "switch the drive off")
                 ;
                 ; It is important that the standard behavior runs after the
                 ; mounting is done, this is why we do RSUB and not RBRA
                 MOVE    R10, R9
-                RSUB    HANDLE_MOUNTING, 1                
+                RSUB    HANDLE_MOUNTING, 1             
 
                 ; Standard behavior
 _OPTMC_NOMNT    CMP     OPTM_CLOSE, R8          ; CLOSE = no changes: leave
