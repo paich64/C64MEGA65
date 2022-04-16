@@ -11,11 +11,12 @@ features.
   as soon as all of this works
 
 * MiSTer Features:
-   - CRT mode
    - audio processing
 
 * File Browser:
   - Unmount whole disk drive via Space in OSM
+
+Maybe (if we can fit it in Release 1)
   - (Maybe/think about it) Show F1/F3 help at the bottom of the screen
   - Show flashing/blinking "Loading..." when loading large subdirectories
     where you are otherwise staring at an "empty blue frame" while it is
@@ -43,6 +44,7 @@ features.
    - Visible tearing in Bromance demo (vertical scroll effect), but only,
      when HDMI Zoom is ON:
      https://csdb.dk/release/?id=205526
+   - VGA retro does not generate CSync
    - Deactivation of joysticks via QNICE does not work
 
 ## Features
