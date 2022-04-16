@@ -7,45 +7,28 @@ features.
 
 ## TODOs before release
 
-* Make sure that the MiSTer2MEGA65 framework is updated accordingly
-  as soon as all of this works
-
-* MiSTer Features:
-   - audio processing
-
-* File Browser:
-  - Unmount whole disk drive via Space in OSM
-
-Maybe (if we can fit it in Release 1)
-  - (Maybe/think about it) Show F1/F3 help at the bottom of the screen
-  - Show flashing/blinking "Loading..." when loading large subdirectories
-    where you are otherwise staring at an "empty blue frame" while it is
-    loading.
-  - Show flashing/blinking "Loading..." while the actual disk image is mounted
-
-* General robustness:
-  - Double-check if the keyboard reading "via both CIA directions" is actually
-    working; maybe this is the PBIS crack-not-working reason (issue #1)
-  - Do the final heap/stack sanity check in m2m-rom.asm
-  - Try to reduce warnings in general and in CDC in particular
-
-* Code consistency and "niceness":
-  - Move reset manager and debouncer from top level file to mega65.vhd
-  - Refactor mega65.vhd so that it becomes less crowded
-  - Review all documentation and README's
-  - run    grep -irn mark_debug .
-    in these folders and remove all debug signals:
-    M2M/vhdl
-    MEGA65/vhdl
-    (C64_MiSTerMEGA65 is already clean.)
-
-* Bugs:
+* MUST HAVES:
+   - MiSTer audio processing
    - HDMI reset problem
-   - Visible tearing in Bromance demo (vertical scroll effect), but only,
-     when HDMI Zoom is ON:
-     https://csdb.dk/release/?id=205526
-   - VGA retro does not generate CSync
-   - Deactivation of joysticks via QNICE does not work
+   - run    grep -irn mark_debug .
+     in these folders and remove all debug signals:
+     M2M/vhdl
+     MEGA65/vhdl
+     (C64_MiSTerMEGA65 is already clean.)
+
+* NICE TO HAVES:
+  - Visible tearing in Bromance demo (vertical scroll effect), but only,
+    when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
+
+  - VGA retro does not generate CSync
+
+  - Make sure that the MiSTer2MEGA65 framework is updated accordingly
+
+  - Refactor mega65.vhd so that it becomes less crowded:
+    Includes: 
+    a) Move reset manager and debouncer from top level file to mega65.vhd
+    b) Deactivation of joysticks via QNICE does not work
+    c) Move documentation such as ascal to the framework 
 
 ## Features
 
@@ -83,10 +66,11 @@ features that we are planning to deliver at a later stage:
 * Ability to save the settings of the core
 * More sophisticated scalers and scandoublers
 * Tape mounting via SD card
-* Cartridge mounting via SD card
-* Alternative KERNAL & Floppy Disk ROMs and fast loaders
+* Directly load program files (`*.PRG`)
+* Cartridge mounting via SD card (`*.CRT`)
 * Support for raw GCR mode (`*.G64`)
 * C1581 virtual drive support via SD card (`*.D81`)
+* Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * REU and GeoRAM using HyperRAM
 * The following MEGA65 hardware ports are not yet working

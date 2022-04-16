@@ -6,7 +6,7 @@
 ; The intention of the Shell is to provide a uniform user interface and core
 ; automation for all MiSTer2MEGA65 projects.
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
