@@ -198,6 +198,10 @@ signal main_osm_control_m     : std_logic_vector(255 downto 0);
 -- SID Audio
 signal main_sid_l             : signed(15 downto 0);
 signal main_sid_r             : signed(15 downto 0);
+signal filt_audio_l           : std_logic_vector(15 downto 0);
+signal filt_audio_r           : std_logic_vector(15 downto 0);
+signal audio_l                : std_logic_vector(15 downto 0);
+signal audio_r                : std_logic_vector(15 downto 0);
 
 -- C64 Video output
 signal main_red               : std_logic_vector(7 downto 0);
@@ -357,6 +361,62 @@ signal hr_dq_in         : std_logic_vector(7 downto 0);
 signal hr_dq_out        : std_logic_vector(7 downto 0);
 signal hr_dq_oe         : std_logic;   -- Output enable for DQ
 
+-- These values are copied from C64_MiSTerMEGA65/sys/sys_top.v
+constant audio_flt_rate : std_logic_vector(31 downto 0) := std_logic_vector(to_signed(7056000, 32));
+constant audio_cx       : std_logic_vector(39 downto 0) := std_logic_vector(to_signed(4258969, 40));
+constant audio_cx0      : std_logic_vector( 7 downto 0) := std_logic_vector(to_signed(3, 8));
+constant audio_cx1      : std_logic_vector( 7 downto 0) := std_logic_vector(to_signed(2, 8));
+constant audio_cx2      : std_logic_vector( 7 downto 0) := std_logic_vector(to_signed(1, 8));
+constant audio_cy0      : std_logic_vector(23 downto 0) := std_logic_vector(to_signed(-6216759, 24));
+constant audio_cy1      : std_logic_vector(23 downto 0) := std_logic_vector(to_signed(-6143386, 24));
+constant audio_cy2      : std_logic_vector(23 downto 0) := std_logic_vector(to_signed(-2023767, 24));
+constant audio_att      : std_logic_vector( 4 downto 0) := "00000";
+constant audio_mix      : std_logic_vector( 1 downto 0) := "00"; -- 0 - no mix, 1 - 25%, 2 - 50%, 3 - 100% (mono)
+
+component audio_out
+   generic (
+      CLK_RATE : natural := 24576000
+   );
+   port (
+      reset       : in  std_logic;
+      clk         : in  std_logic;
+
+      -- 0 - 48KHz, 1 - 96KHz
+      sample_rate : in  std_logic;
+
+      flt_rate    : in  std_logic_vector(31 downto 0);
+      cx          : in  std_logic_vector(39 downto 0);
+      cx0         : in  std_logic_vector( 7 downto 0);
+      cx1         : in  std_logic_vector( 7 downto 0);
+      cx2         : in  std_logic_vector( 7 downto 0);
+      cy0         : in  std_logic_vector(23 downto 0);
+      cy1         : in  std_logic_vector(23 downto 0);
+      cy2         : in  std_logic_vector(23 downto 0);
+
+      att         : in  std_logic_vector( 4 downto 0);
+      mix         : in  std_logic_vector( 1 downto 0);
+
+      is_signed   : in  std_logic;
+      core_l      : in  std_logic_vector(15 downto 0);
+      core_r      : in  std_logic_vector(15 downto 0);
+
+      alsa_l      : in  std_logic_vector(15 downto 0);
+      alsa_r      : in  std_logic_vector(15 downto 0);
+
+      -- I2S
+      i2s_bclk    : out std_logic;
+      i2s_lrclk   : out std_logic;
+      i2s_data    : out std_logic;
+
+      -- SPDIF
+      spdif       : out std_logic;
+
+      -- Sigma-Delta DAC
+      al          : out std_logic_vector(15 downto 0);
+      ar          : out std_logic_vector(15 downto 0)
+   );
+end component audio_out;
+
 begin
 
    -- MMCME2_ADV clock generators:
@@ -377,7 +437,7 @@ begin
          hr_clk_x2_del_o   => hr_clk_x2_del,   -- HyperRAM's 200 MHz phase delayed
          hr_rst_o          => hr_rst,          -- HyperRAM's reset, synchronized
 
-         audio_clk_o       => audio_clk,       -- Audio's 60 MHz
+         audio_clk_o       => audio_clk,       -- Audio's 30 MHz
          audio_rst_o       => audio_rst,       -- Audio's reset, synchronized
 
          tmds_clk_o        => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
@@ -877,6 +937,50 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
+   i_audio_out : audio_out
+      generic map (
+         CLK_RATE => 30_000_000
+      )
+      port map (
+         reset       => audio_rst,
+         clk         => audio_clk,
+
+         sample_rate => '0', -- 0 - 48KHz, 1 - 96KHz
+
+         flt_rate    => audio_flt_rate,
+         cx          => audio_cx,
+         cx0         => audio_cx0,
+         cx1         => audio_cx1,
+         cx2         => audio_cx2,
+         cy0         => audio_cy0,
+         cy1         => audio_cy1,
+         cy2         => audio_cy2,
+         att         => audio_att,
+         mix         => audio_mix,
+
+         is_signed   => '1',
+         core_l      => std_logic_vector(main_sid_l),
+         core_r      => std_logic_vector(main_sid_r),
+
+         alsa_l      => (others => '0'),
+         alsa_r      => (others => '0'),
+
+         -- I2S
+         i2s_bclk    => open,
+         i2s_lrclk   => open,
+         i2s_data    => open,
+
+         -- SPDIF
+         spdif       => open,
+
+         -- Sigma-Delta DAC
+         al          => filt_audio_l,
+         ar          => filt_audio_r
+      ); -- i_audio_out
+
+   audio_l <= filt_audio_l when qnice_osm_control_m(C_MENU_IMPROVE_AUDIO) = '1' else std_logic_vector(main_sid_l);
+   audio_r <= filt_audio_r when qnice_osm_control_m(C_MENU_IMPROVE_AUDIO) = '1' else std_logic_vector(main_sid_r);
+
    i_analog_pipeline : entity work.analog_pipeline
       generic map (
          G_VGA_DX            => VGA_DX,
@@ -898,10 +1002,10 @@ begin
          video_vs_i               => main_vs,
          video_hblank_i           => main_hblank,
          video_vblank_i           => main_vblank,
-         audio_clk_i              => audio_clk, -- 60 MHz
+         audio_clk_i              => audio_clk, -- 30 MHz
          audio_rst_i              => audio_rst,
-         audio_left_i             => main_sid_l,
-         audio_right_i            => main_sid_r,
+         audio_left_i             => signed(audio_l),
+         audio_right_i            => signed(audio_r),
 
          -- Analog output (VGA and audio jack)
          vga_red_o                => vga_red,
@@ -976,10 +1080,10 @@ begin
          video_vs_i               => main_crop_vs,
          video_hblank_i           => main_crop_hblank,
          video_vblank_i           => main_crop_vblank,
-         audio_clk_i              => audio_clk, -- 60 MHz
+         audio_clk_i              => audio_clk, -- 30 MHz
          audio_rst_i              => audio_rst,
-         audio_left_i             => main_sid_l,
-         audio_right_i            => main_sid_r,
+         audio_left_i             => signed(audio_l),
+         audio_right_i            => signed(audio_r),
 
          -- Digital output (HDMI)
          hdmi_clk_i               => hdmi_clk,

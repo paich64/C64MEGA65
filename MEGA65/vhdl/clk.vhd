@@ -42,7 +42,7 @@ entity clk is
       hdmi_clk_o      : out std_logic;   -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
       hdmi_rst_o      : out std_logic;   -- HDMI's reset, synchronized
 
-      audio_clk_o     : out std_logic;   -- Audio's 60 MHz clock
+      audio_clk_o     : out std_logic;   -- Audio's 30 MHz clock
       audio_rst_o     : out std_logic;   -- Audio's reset, synchronized
 
       -- switchable clock for the C64 core
@@ -135,8 +135,8 @@ begin
          CLKOUT3_PHASE        => 180.000,
          CLKOUT3_DUTY_CYCLE   => 0.500,
          CLKOUT3_USE_FINE_PS  => FALSE,
-         CLKOUT4_DIVIDE       => 20,         -- Audio @ 60 MHz
-         CLKOUT4_PHASE        => 180.000,
+         CLKOUT4_DIVIDE       => 40,         -- Audio @ 30 MHz
+         CLKOUT4_PHASE        => 0.000,
          CLKOUT4_DUTY_CYCLE   => 0.500,
          CLKOUT4_USE_FINE_PS  => FALSE
       )

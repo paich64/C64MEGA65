@@ -212,7 +212,7 @@ begin
 
    i_clk_synthetic : entity work.clk_synthetic
       generic map (
-         G_SRC_FREQ_HZ  => 60_000_000,
+         G_SRC_FREQ_HZ  => 30_000_000,
          G_DEST_FREQ_HZ => HDMI_PCM_SAMPLING*256
       )
       port map (
