@@ -8,8 +8,6 @@ features.
 ## TODOs before release
 
 * MUST HAVES:
-   - MiSTer audio processing
-   - HDMI reset problem
    - run    grep -irn mark_debug .
      in these folders and remove all debug signals:
      M2M/vhdl
@@ -90,6 +88,7 @@ To implement some of the above-mentioned features and also to improve the
 robustness, performance and stability of the whole system, we will need
 to implement certain technical improvements in the "backend":
 
+* Fix the behavior of the floppy led
 * Update to newer ascal version (wait until MiSTer did the same upstream)
 * Investigate dynamic PLL adjustment/autotune in conjunciton with ascal
   to improve flicker-free HDMI further (maybe there is a possibility to
