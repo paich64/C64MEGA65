@@ -29,15 +29,7 @@ module audio_out
 	input [15:0] alsa_l,
 	input [15:0] alsa_r,
 
-	// I2S
-	output       i2s_bclk,
-	output       i2s_lrclk,
-	output       i2s_data,
-
-	// SPDIF
-   output       spdif,
-
-	// Sigma-Delta DAC
+	// Signed output
 	output [15:0] al,
 	output [15:0] ar
 );

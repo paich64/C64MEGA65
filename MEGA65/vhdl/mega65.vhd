@@ -403,15 +403,7 @@ component audio_out
       alsa_l      : in  std_logic_vector(15 downto 0);
       alsa_r      : in  std_logic_vector(15 downto 0);
 
-      -- I2S
-      i2s_bclk    : out std_logic;
-      i2s_lrclk   : out std_logic;
-      i2s_data    : out std_logic;
-
-      -- SPDIF
-      spdif       : out std_logic;
-
-      -- Sigma-Delta DAC
+      -- Signed output
       al          : out std_logic_vector(15 downto 0);
       ar          : out std_logic_vector(15 downto 0)
    );
@@ -965,15 +957,7 @@ begin
          alsa_l      => (others => '0'),
          alsa_r      => (others => '0'),
 
-         -- I2S
-         i2s_bclk    => open,
-         i2s_lrclk   => open,
-         i2s_data    => open,
-
-         -- SPDIF
-         spdif       => open,
-
-         -- Sigma-Delta DAC
+         -- Signed output
          al          => filt_audio_l,
          ar          => filt_audio_r
       ); -- i_audio_out
