@@ -8,8 +8,6 @@ features.
 ## TODOs before release
 
 * MUST HAVES:
-   - MiSTer audio processing
-   - HDMI reset problem
    - run    grep -irn mark_debug .
      in these folders and remove all debug signals:
      M2M/vhdl
@@ -77,10 +75,10 @@ features that we are planning to deliver at a later stage:
 * REU and GeoRAM using HyperRAM
 * The following MEGA65 hardware ports are not yet working
   * Cartridges via the MEGA65's hardware Expansion Port
-	* Paddles / mouse via the joystick ports
-	* IEC port (for example to plug in a real C1541)	
-	* C1581 via MEGA65's disk drive
-	* REU via expansion port
+  * Paddles / mouse via the joystick ports
+  * IEC port (for example to plug in a real C1541)	
+  * C1581 via MEGA65's disk drive
+  * REU via expansion port
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
 
@@ -90,6 +88,7 @@ To implement some of the above-mentioned features and also to improve the
 robustness, performance and stability of the whole system, we will need
 to implement certain technical improvements in the "backend":
 
+* Fix the behavior of the floppy led
 * Update to newer ascal version (wait until MiSTer did the same upstream)
 * Investigate dynamic PLL adjustment/autotune in conjunciton with ascal
   to improve flicker-free HDMI further (maybe there is a possibility to

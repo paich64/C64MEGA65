@@ -81,7 +81,7 @@ constant RESET_COUNTER     : natural := 100;
 constant OPTM_PAUSE        : boolean := false;
 
 -- show the welcome screen in general
-constant WELCOME_ACTIVE    : boolean := true;
+constant WELCOME_ACTIVE    : boolean := false;
 
 -- shall the welcome screen also be shown after the core is reset?
 -- (only relevant if WELCOME_ACTIVE is true)
@@ -239,7 +239,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL,
+                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
                                              OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_LINE,
