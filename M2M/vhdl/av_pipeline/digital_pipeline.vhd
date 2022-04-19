@@ -290,7 +290,7 @@ begin
       generic map (
          MASK      => x"ff",
          RAMBASE   => (others => '0'),
-         RAMSIZE   => x"0020_0000", -- = 2MB for input buffer : dx * dy * 3 byte (RGB) per pixel and then a power of two
+         RAMSIZE   => x"0008_0000", -- = 2MB for input buffer : dx * dy * 3 byte (RGB) per pixel and then a power of two
          INTER     => false,        -- Not needed: Progressive input only
          HEADER    => false,        -- Not needed: Used on MiSTer to read the sampled image back from the ARM side to do screenshots. The header provides informations such as image size.
          DOWNSCALE => false,        -- Not needed: We use ascal only to upscale
