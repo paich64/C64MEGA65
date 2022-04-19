@@ -75,10 +75,10 @@ features that we are planning to deliver at a later stage:
 * REU and GeoRAM using HyperRAM
 * The following MEGA65 hardware ports are not yet working
   * Cartridges via the MEGA65's hardware Expansion Port
-	* Paddles / mouse via the joystick ports
-	* IEC port (for example to plug in a real C1541)	
-	* C1581 via MEGA65's disk drive
-	* REU via expansion port
+  * Paddles / mouse via the joystick ports
+  * IEC port (for example to plug in a real C1541)	
+  * C1581 via MEGA65's disk drive
+  * REU via expansion port
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
 
