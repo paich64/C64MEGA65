@@ -152,14 +152,6 @@ architecture synthesis of main is
    signal vga_blue            : unsigned(7 downto 0);
    signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock.
 
-   constant C_DEBUG_MODE             : boolean := false;
-   attribute mark_debug              : boolean;
-   attribute mark_debug of c64_hsync : signal is C_DEBUG_MODE;
-   attribute mark_debug of c64_vsync : signal is C_DEBUG_MODE;
-   attribute mark_debug of c64_r     : signal is C_DEBUG_MODE;
-   attribute mark_debug of c64_g     : signal is C_DEBUG_MODE;
-   attribute mark_debug of c64_b     : signal is C_DEBUG_MODE;
-
    -- Hard reset handling
    constant hard_rst_delay   : natural := 100000; -- roundabout 1/10th of a second
    signal reset_core_n        : std_logic;
