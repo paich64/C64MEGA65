@@ -115,30 +115,9 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; ------------------------------------------------------------
 
                 ; Show welcome screen at all?
-                RSUB    RP_WELCOME, 1           
+                RSUB    RP_WELCOME, 1
                 RBRA    START_CONNECT, !C
-
-                ; Show the welcome screen                
-                MOVE    M2M$RAMROM_DEV, R0      ; Device = config data
-                MOVE    M2M$CONFIG, @R0
-                MOVE    M2M$RAMROM_4KWIN, R0    ; Selector = Welcome screen
-                MOVE    M2M$CFG_WELCOME, @R0
-                MOVE    M2M$RAMROM_DATA, R8     ; R8 = welcome screen string
-                RSUB    SCR$PRINTSTR, 1
-
-                ; switch on main OSM
-                RSUB    SCR$OSM_M_ON, 1  
-
-                ; Wait for "Space to continue"
-                ; TODO: The whole startup behavior of the Shell needs to be
-                ; more flexible than this, see also README.md
-START_SPACE     RSUB    KEYB$SCAN, 1
-                RSUB    KEYB$GETKEY, 1
-                CMP     M2M$KEY_SPACE, R8
-                RBRA    START_SPACE, !Z         ; loop until Space was pressed
-
-                ; Hide OSM
-                RSUB    SCR$OSM_OFF, 1
+                RSUB    SHOW_WELCOME, 1
 
                 ; Unreset (in case the core is still in reset at this point
                 ; due to RESET_KEEP in config.vhd) and connect keyboard and
@@ -494,7 +473,7 @@ _HM_SETMENU     SYSCALL(enter, 1)
                 MOVE    R0, R11                 ; save menu index
                 MOVE    R1, @R8                 ; re-set single-select flag
 
-                MOVE    0, R8                   ; R8 = space (unset)
+                MOVE    SPACE, R8               ; R8 = space (unset)
                 CMP     0, R1
                 RBRA    _HM_SETMENU_1, Z
 
@@ -839,6 +818,7 @@ FRAME_FULLSCR   SYSCALL(enter, 1)
 #include "selectfile.asm"
 #include "strings.asm"
 #include "vdrives.asm"
+#include "whs.asm"
 
 ; framework libraries
 #include "dirbrowse.asm"

@@ -81,16 +81,17 @@ RP_WELCOME      INCRB
 
                 ; Handle welcome screen after reset:
                 ; "if (not M2M$CFG_RP_WLCM_RST) and WELCOME_SHOWN then skip"
+                MOVE    WELCOME_SHOWN, R2                
                 MOVE    M2M$CFG_RP_WLCM_RST, R1 ; welcm. scr. after reset?
                 MOVE    @R1, R1
-                XOR     1, R1
-                MOVE    WELCOME_SHOWN, R2
+                RBRA    _RPW_SHOW, !Z           ; not zero means: show always
 
-                CMP     R1, @R2
+                ; do not show if already shown
+                CMP     1, @R2
                 RBRA    _RPW_C0, Z
 
                 ; Show welcome screen
-                MOVE    1, @R2                  ; remember shown
+_RPW_SHOW       MOVE    1, @R2                  ; remember shown
                 RBRA    _RPW_C1, 1
 
 _RPW_C0         AND     0xFFFB, SR              ; clear Carry

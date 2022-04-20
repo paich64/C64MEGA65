@@ -91,21 +91,33 @@ constant SCR_WELCOME : string :=
    "   F3: Switch to external SD card\n" & 
    
    "\n\n Press Space to continue.";
-    
+   
 constant HELP_1 : string :=
 
    "\n Commodore 64 for MEGA65 Version 1\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
-   " Powered by MiSTer2MEGA65\n\n" &
-     
+   " Powered by MiSTer2MEGA65\n\n\n" &
+   
+   " This core turns your MEGA65 into a PAL C64\n" &
+   " with a C1541 drive and a pair of joysticks.\n" &
+   " No frills. The C64/C1541 run the original\n" &
+   " Commodore Kernal and DOS.\n\n" & 
+        
    " When browsing disk images to mount a drive:\n\n" &
+   
    " Cursor up/down:     File up/down\n" &
    " Cursor left/right:  Page up/down\n" &
    " Run/Stop:           Cancel browsing\n" &
    " F1:                 Internal SD card\n" &
    " F3:                 External SD card\n" &
-   " Enter:              Mount drive\n\n" &
+   " Enter:              Mount drive\n" &
+   " Space:              Unmount drive\n" &
+   " Help:               Close menu\n\n" &
+
+   " If you create a ""/c64"" folder on your\n" &
+   " SD card, then by default the file browser\n" &
+   " will start there.\n\n" &
    
    " Cursor right to learn more.       (1 of 3)\n" &
    " Press Space to close the help screen.";
@@ -114,16 +126,27 @@ constant HELP_2 : string :=
 
    "\n Commodore 64 for MEGA65 Version 1\n\n" &
    
-   " =====================================\n" &   
-   " \n" &
-     
-   " X:\n\n" &
-   " A\n" &
-   " B\n" &
-   " C\n" &
-   " D\n" &
-   " E\n" &
-   " F\n\n" &
+   " Post-processing:\n\n" &
+
+   " Visual post-processing only works on the\n" &
+   " HDMI output. On the VGA output, the core\n" &
+   " outputs a pure C64 4:3 PAL signal.\n\n" &
+   
+   " We recommend to always use the\n" &
+   " CRT emulation. The way the upscaling is done\n" &
+   " there leads to a much better picture with\n" &
+   " little to no Moire effects. And it just\n" &
+   " looks awesome.\n\n" &
+
+   " The Audio improvements work on the analog\n" &
+   " 3.5mm audio out as well as via HDMI audio.\n" &
+   " They fix the DC offset of the SID and reduce\n" &
+   " treble for a more authentic listening\n" &
+   " experience. Recommended.\n\n" &
+   
+   " The Zoom-in feature is mainly meant for\n" &
+   " playing games that do not use the C64's\n" &
+   " border. It looks best on a 16:9 screen.\n\n" &
    
    " Crsr left: Prev  Crsr right: Next (2 of 3)\n" &
    " Press Space to close the help screen.";
@@ -132,16 +155,28 @@ constant HELP_3 : string :=
 
    "\n Commodore 64 for MEGA65 Version 1\n\n" &
    
-   " =====================================\n" &   
-   " \n" &
+   " Flicker-free experience on HDMI:\n\n" &
      
-   " Z:\n\n" &
-   " M\n" &
-   " N\n" &
-   " O\n" &
-   " P\n" &
-   " Q\n" &
-   " R\n\n" &
+   " 1. Make sure your HDMI display supports:\n" &
+   "    1280x720 pixels 50Hz (16:9 aspect ratio)\n\n" &   
+   "    There are displays out there that display\n" &
+   "    50Hz as 60Hz. This leads to non-optimal\n" &
+   "    and jerky movements (e.g. scrolling).\n\n" &
+   
+   " 2. ""HDMI: Flicker-free"" needs to be active.\n\n" &
+
+   " The 'HDMI: Flicker-free' option reduces the\n" &
+   " speed of the whole C64/C1541 system by a\n" &
+   " tiny amount: 0.25%. You probably will never\n" &
+   " notice. In case you encounter extremely rare\n" &
+   " compatibility issues: Turn off the option\n" &
+   " and try again.\n\n" &
+   
+   " System reset:\n\n" &
+   
+   " Press the MEGA65's reset button shortly to\n" &         
+   " just reset the C64 core and press the button\n" &
+   " longer than 1.5s to reset the whole system.\n\n" &
    
    " Cursor left to go back.           (3 of 3)\n" &
    " Press Space to close the help screen.";
@@ -163,9 +198,9 @@ constant HELP_3_START      : natural := HELP_2_START + HELP_2'length;
 constant WHS : WHS_RECORD_ARRAY_TYPE := (
    --- Welcome Screen
    (page_count    => 1,
-    page_start    => (0, 0, 0),
+    page_start    => (SCR_WELCOME_START,  0, 0),
     page_length   => (SCR_WELCOME'length, 0, 0)),
-    
+
    --- Help pages
    (page_count    => 3,
     page_start    => (HELP_1_START,  HELP_2_START,  HELP_3_START),
@@ -201,11 +236,11 @@ constant RESET_COUNTER     : natural := 100;
 constant OPTM_PAUSE        : boolean := false;
 
 -- show the welcome screen in general
-constant WELCOME_ACTIVE    : boolean := true;
+constant WELCOME_ACTIVE    : boolean := false;
 
 -- shall the welcome screen also be shown after the core is reset?
 -- (only relevant if WELCOME_ACTIVE is true)
-constant WELCOME_AT_RESET  : boolean := true;
+constant WELCOME_AT_RESET  : boolean := false;
 
 -- keyboard and joystick connection during reset and OSD
 constant KEYBOARD_AT_RESET : boolean := false;
@@ -303,7 +338,7 @@ constant OPTM_ITEMS        : string :=
    " HDMI: Force 60Hz\n"      &
    " HDMI: Flicker-free\n"    &
    "\n"                       &
-   " Info & Help\n"           &
+   " About & Help\n"          &
    "\n"                       &      
    " Close Menu\n";
         
@@ -317,7 +352,7 @@ constant OPTM_G_IMPROVE_AUDIO : integer := 7;
 constant OPTM_G_VGA_RETRO     : integer := 8;
 constant OPTM_G_HDMI_60HZ     : integer := 9;
 constant OPTM_G_HDMI_FF       : integer := 10;
-constant OPTM_G_INFO_HELP     : integer := 11;
+constant OPTM_G_ABOUT_HELP    : integer := 11;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -343,7 +378,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                            
                                              OPTM_G_LINE,
-                                             OPTM_G_INFO_HELP     + OPTM_G_HELP,
+                                             OPTM_G_ABOUT_HELP    + OPTM_G_HELP,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE
                                            );

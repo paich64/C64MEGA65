@@ -7,6 +7,7 @@
 ; ****************************************************************************
 
 NEWLINE         .ASCII_W "\n"
+SPACE           .ASCII_W " "
 
 ; The following line is the maximum string length on a PAL output:
 ; **********************************************
