@@ -5,31 +5,6 @@ Experience the Commodore 64 with great accuracy and sublime compatibility
 on your MEGA65! It can run a ton of games and demos and it offers convenient
 features.
 
-## TODOs before release
-
-* MUST HAVES:
-   - run    grep -irn mark_debug .
-     in these folders and remove all debug signals:
-     M2M/vhdl
-     MEGA65/vhdl
-     (C64_MiSTerMEGA65 is already clean.)
-
-* NICE TO HAVES:
-  - Visible tearing in Bromance demo (vertical scroll effect), but only,
-    when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
-
-  - Support for R2 version of MEGA65
-
-  - VGA retro does not generate CSync
-
-  - Make sure that the MiSTer2MEGA65 framework is updated accordingly
-
-  - Refactor mega65.vhd so that it becomes less crowded:
-    Includes: 
-    a) Move reset manager and debouncer from top level file to mega65.vhd
-    b) Deactivation of joysticks via QNICE does not work
-    c) Move documentation such as ascal to the framework 
-
 ## Features
 
 * PAL standard C64 (running standard KERNAL and standard C1541 DOS)
@@ -88,7 +63,11 @@ To implement some of the above-mentioned features and also to improve the
 robustness, performance and stability of the whole system, we will need
 to implement certain technical improvements in the "backend":
 
+* Support for R2 version of MEGA65
+* VGA retro does not generate CSync
 * Fix the behavior of the floppy led
+* Fix visible tearing in Bromance demo (vertical scroll effect), but only,
+  when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
 * Update to newer ascal version (wait until MiSTer did the same upstream)
 * Investigate dynamic PLL adjustment/autotune in conjunciton with ascal
   to improve flicker-free HDMI further (maybe there is a possibility to

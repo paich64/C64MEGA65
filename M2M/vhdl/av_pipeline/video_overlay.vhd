@@ -64,18 +64,6 @@ architecture synthesis of video_overlay is
    signal vga_de_dd      : std_logic;
    signal vga_ce_dd      : std_logic;
 
-   constant C_DEBUG_MODE                  : boolean := false;
-   attribute mark_debug                   : boolean;
-   attribute mark_debug of vga_ce_d       : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_pix_x_d    : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_pix_y_d    : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_red_d      : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_green_d    : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_blue_d     : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_hs_d       : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_vs_d       : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_de_d       : signal is C_DEBUG_MODE;
-
 begin
 
    -----------------------------------------------

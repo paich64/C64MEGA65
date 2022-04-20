@@ -65,28 +65,6 @@ architecture synthesis of crop is
 
    signal crop_active : std_logic;
 
-   constant C_DEBUG_MODE                   : boolean := false;
-   attribute mark_debug                    : boolean;
-   attribute mark_debug of video_ce_i      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_red_i     : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_green_i   : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_blue_i    : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_hs_i      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_vs_i      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_hblank_i  : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_vblank_i  : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_ce_o      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_red_o     : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_green_o   : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_blue_o    : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_hs_o      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_vs_o      : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_hblank_o  : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_vblank_o  : signal is C_DEBUG_MODE;
-   attribute mark_debug of x_count         : signal is C_DEBUG_MODE;
-   attribute mark_debug of y_count         : signal is C_DEBUG_MODE;
-   attribute mark_debug of crop_active     : signal is C_DEBUG_MODE;
-
 begin
 
    p_count : process (video_clk_i)

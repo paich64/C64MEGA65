@@ -110,23 +110,6 @@ architecture synthesis of analog_pipeline is
       );
    end component video_mixer;
 
-   constant C_DEBUG_MODE                  : boolean := false;
-   attribute mark_debug                   : boolean;
-   attribute mark_debug of video_red_i    : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_green_i  : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_blue_i   : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_vs_i     : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_hs_i     : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_hblank_i : signal is C_DEBUG_MODE;
-   attribute mark_debug of video_vblank_i : signal is C_DEBUG_MODE;
-   attribute mark_debug of ce_pix         : signal is C_DEBUG_MODE;
-   attribute mark_debug of mix_r          : signal is C_DEBUG_MODE;
-   attribute mark_debug of mix_g          : signal is C_DEBUG_MODE;
-   attribute mark_debug of mix_b          : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_vs         : signal is C_DEBUG_MODE;
-   attribute mark_debug of vga_hs         : signal is C_DEBUG_MODE;
-   attribute mark_debug of mix_vga_de     : signal is C_DEBUG_MODE;
-
 begin
 
    -- SYS_DXDY
