@@ -249,7 +249,8 @@ M2M$CFG_OPTM_HELP   .EQU 0x0310     ; Menu item = show a help menu
 
 M2M$WHS_PAGES       .EQU 0x7FFF     ; Amount of pages in current WHS element
 M2M$WHS_WELCOME     .EQU 0x0000     ; WHS array element: Welcome page
-M2M$WHS_HELP_START  .EQU 0x0001     ; Start address of Help pages in WHS array
+M2M$WHS_HELP_START  .EQU 0x0100     ; WHS array element: Next help structure
+M2M$WHS_PAGE        .EQU 0x0001     ; WHS array element: Next page / prev page
 
 ; M2M$CFG_OPTM_DIM: Addresses
 

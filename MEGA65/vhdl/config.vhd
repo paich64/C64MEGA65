@@ -46,10 +46,11 @@ constant WHS_MAX_PAGES : natural := 3;
 
  -- !!! DO NOT TOUCH !!!
 constant SEL_WHS           : std_logic_vector(15 downto 0) := x"1000";
-type WHS_DATA_TYPE is array (0 to WHS_MAX_PAGES - 1) of string;
+type WHS_INDEX_TYPE is array (0 to WHS_MAX_PAGES - 1) of natural;
 type WHS_RECORD_TYPE is record
-   page_count : natural;
-   page_data  : WHS_DATA_TYPE;
+   page_count  : natural;
+   page_start  : WHS_INDEX_TYPE;
+   page_length : WHS_INDEX_TYPE;
 end record;
 type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE; 
 
@@ -59,8 +60,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 -- You can name these string constants as you want to, as long as you make them part of the WHS array (see below).
 --
 -- WHS array position 0 is defined as the "Welcome Screen" as controled by WELCOME_ACTIVE and WELCOME_AT_RESET.
--- If you are not using a Welcome Screen but only Help menu items, then you need to leave WHS array pos. 0 empty by
--- setting page_count to 0 and by adding two empty strings ("", "").
+-- If you are not using a Welcome Screen but only Help menu items, then you need to leave WHS array pos. 0 empty.
 -- 
 -- WHS array position 1 and onwards is for all the Option Menu items tagged as "Help": The first one in the
 -- Options menu is WHS array pos. 1, the second one in the menu is WHS array pos. 2 and so on.
@@ -91,7 +91,7 @@ constant SCR_WELCOME : string :=
    "   F3: Switch to external SD card\n" & 
    
    "\n\n Press Space to continue.";
-   
+    
 constant HELP_1 : string :=
 
    "\n Commodore 64 for MEGA65 Version 1\n\n" &
@@ -146,14 +146,30 @@ constant HELP_3 : string :=
    " Cursor left to go back.           (3 of 3)\n" &
    " Press Space to close the help screen.";
 
--- You need to construct this array of records according to your Welcome Screen and Help Menu structure
--- page_count is the amount of pages per WHS array entry
--- page_data needs at least two entries of type string, so if you have zero pages, than you need to write ("", "") and
--- if you have one page, then you need to add an empty string for example (SCR_WELCOME, "")
--- Anyway, you need to have WHS_MAX_PAGES entries per page_data because Vivado does not support unconstrained arrays in a record 
+-- Concatenate all your Welcome and Help screens into one large string, so that during synthesis one large string ROM can be build.
+constant WHS_DATA : string := SCR_WELCOME & HELP_1 & HELP_2 & HELP_3;
+
+-- The WHS array needs the start address of each page. As a best practice: Just define some constants, that you can name for example
+-- just like you named the string constants and then add _START. Use the 'length attribute of VHDL to add up all previous strings
+-- so that the Synthesis tool can calculate the start addresses: Your first string starts at zero, your next one at the address which
+-- is equal to the length of the first one, your next one at the address which is equal to the sum of the previous ones, and so on.
+constant SCR_WELCOME_START : natural := 0;
+constant HELP_1_START      : natural := SCR_WELCOME'length;
+constant HELP_2_START      : natural := HELP_1_START + HELP_1'length;
+constant HELP_3_START      : natural := HELP_2_START + HELP_2'length;
+
+-- Fill the WHS array with page start addresses and the length of each page.
+-- Make sure that array element 0 is always your Welcome page. If you don't use a welcome page, fill everything with zeros.
 constant WHS : WHS_RECORD_ARRAY_TYPE := (
-   (page_count => 1, page_data => (SCR_WELCOME, "", "")),
-   (page_count => 3, page_data => (HELP_1, HELP_2, HELP_3))
+   --- Welcome Screen
+   (page_count    => 1,
+    page_start    => (0, 0, 0),
+    page_length   => (SCR_WELCOME'length, 0, 0)),
+    
+   --- Help pages
+   (page_count    => 3,
+    page_start    => (HELP_1_START,  HELP_2_START,  HELP_3_START),
+    page_length   => (HELP_1'length, HELP_2'length, HELP_3'length))
 );
 
 --------------------------------------------------------------------------------------------------------------------
@@ -346,7 +362,7 @@ addr_decode : process(all)
    variable index : integer;
    variable whs_array_index : integer;
    variable whs_page_index : integer;
-   
+
    -- return ASCII value of given string at the position defined by address_i(11 downto 0)
    function str2data(str : string) return std_logic_vector is
    variable strpos : integer;
@@ -358,7 +374,7 @@ addr_decode : process(all)
          return (others => '0'); -- zero terminated strings
       end if;
    end;
-   
+
    -- return the dimensions of the Options menu
    function getDXDY(dx, dy, index: natural) return std_logic_vector is
    begin
@@ -368,7 +384,7 @@ addr_decode : process(all)
          when others => return (others => '0');
       end case;
    end;
-   
+
    -- convert bool to std_logic_vector
    function bool2slv(b: boolean) return std_logic_vector is
    begin
@@ -378,7 +394,7 @@ addr_decode : process(all)
          return x"0000";
       end if;
    end;
-   
+
    -- return the General Configuration settings
    function getGenConf(index: natural) return std_logic_vector is
    begin
@@ -399,42 +415,61 @@ addr_decode : process(all)
          when others => return x"0000";
       end case;
    end;
-     
+
 begin
    data_o <= x"EEEE";
    index := to_integer(unsigned(address_i(11 downto 0)));
    whs_array_index := to_integer(unsigned(address_i(23 downto 20)));
    whs_page_index  := to_integer(unsigned(address_i(19 downto 12)));   
+
+   -----------------------------------------------------------------------------------
+   -- Welcome & Help System: upper 4 bits of address equal SEL_WHS' upper 4 bits
+   -----------------------------------------------------------------------------------
    
-   case address_i(27 downto 12) is   
-      when SEL_GENERAL           => data_o <= getGenConf(index);
-      when SEL_DIR_START         => data_o <= str2data(DIR_START);
-      when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
-      when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
-      when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
-                                              std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
-                                              std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
-      when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
-      when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
-      when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
-      when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
-      when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
-      when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
-      when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
-      when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
- 
-      when others =>
-         -- Welcome and Help Screens
-         if address_i(27 downto 24) = SEL_WHS(15 downto 12) then           
-            if  whs_array_index < WHS_RECORDS then
-               if index = 4095 then
-                  data_o <= std_logic_vector(to_unsigned(WHS(whs_array_index).page_count, 16));
-               else
-                  data_o <= str2data(WHS(whs_array_index).page_data(whs_page_index));
-               end if;
-            end if;       
-         end if; 
-   end case;
+   if address_i(27 downto 24) = SEL_WHS(15 downto 12) then
+
+      if  whs_array_index < WHS_RECORDS then
+         if index = 4095 then
+            data_o <= std_logic_vector(to_unsigned(WHS(whs_array_index).page_count, 16));
+         else
+            if index < WHS(whs_array_index).page_length(whs_page_index) then
+               data_o <= std_logic_vector(to_unsigned(character'pos(
+                                          WHS_DATA(WHS(whs_array_index).page_start(whs_page_index) + index + 1)
+                                         ), 16));
+            else
+               data_o <= (others => '0'); -- zero-terminated strings
+            end if;
+         end if;
+      end if;
+      
+   -----------------------------------------------------------------------------------
+   -- All other selectors, which are 16-bit values
+   -----------------------------------------------------------------------------------
+   
+   else
+
+      case address_i(27 downto 12) is   
+         when SEL_GENERAL           => data_o <= getGenConf(index);
+         when SEL_DIR_START         => data_o <= str2data(DIR_START);
+         when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
+         when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
+         when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
+                                                 std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
+                                                 std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
+         when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
+         when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
+         when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
+         when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
+         when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
+         when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
+         when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
+         when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
+
+         when others                => null;         
+      end case;
+
+   end if;
+
 end process;
 
 end beh;
