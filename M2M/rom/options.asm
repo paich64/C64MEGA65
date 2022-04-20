@@ -538,6 +538,10 @@ _OPTM_GK_MNT_R  SYSCALL(leave, 1)
 
 OPTM_CB_SEL     INCRB
 
+                ; Special treatment for help menu items
+                RSUB    HANDLE_HELP, 1
+                RBRA    _OPTMC_NOMNT, C         ; if help then no drive mount
+
                 ; Special treatment for drive-mount items: Drive-mount items
                 ; are per definition also single-select items
                 MOVE    R8, R0                  ; R8: selected menu group

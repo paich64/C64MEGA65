@@ -228,7 +228,7 @@ M2M$SHELL_M_DXDY    .EQU 0x7002     ; main screen: dx|dy width and height
 
 ; Selectors (4k windows)
 
-M2M$CFG_WELCOME     .EQU 0x0000     ; Welcome screen
+M2M$CFG_WHS         .EQU 0x1000     ; Welcome & Help screens
 M2M$CFG_DIR_START   .EQU 0x0100     ; Start folder for file browser
 M2M$CFG_GENERAL     .EQU 0x0110     ; General configuration settings
 M2M$CFG_ROMS        .EQU 0x0200     ; Mandatory and optional ROMs
@@ -243,6 +243,15 @@ M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
 M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item
 M2M$CFG_OPTM_MSTR   .EQU 0x0308     ; Mount string to display instead of %s
 M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
+M2M$CFG_OPTM_HELP   .EQU 0x0310     ; Menu item = show a help menu
+
+; M2M$CFG_WHS
+
+M2M$WHS_PAGES       .EQU 0x7FFF     ; Amount of pages in current WHS element
+M2M$WHS_WELCOME     .EQU 0x0000     ; WHS array element: Welcome page
+M2M$WHS_HELP_INDEX  .EQU 0x0001     ; WHS array: Help pages start with index 1
+M2M$WHS_HELP_NEXT   .EQU 0x0100     ; WHS array element: Next help structure
+M2M$WHS_PAGE_NEXT   .EQU 0x0001     ; WHS array element: Next page / prev page
 
 ; M2M$CFG_OPTM_DIM: Addresses
 
