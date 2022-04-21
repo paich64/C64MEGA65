@@ -165,7 +165,7 @@ constant HELP_3 : string :=
    
    " 2. ""HDMI: Flicker-free"" needs to be active.\n\n" &
 
-   " The 'HDMI: Flicker-free' option reduces the\n" &
+   " The ""HDMI: Flicker-free"" option reduces the\n" &
    " speed of the whole C64/C1541 system by a\n" &
    " tiny amount: 0.25%. You probably will never\n" &
    " notice. In case you encounter extremely rare\n" &
