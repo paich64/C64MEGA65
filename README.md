@@ -105,11 +105,11 @@ things are supported. So please bear with us or [help us](CONTRIBUTING.md).
 Installation
 ------------
 
-1. [Download @TODO LINK](https://github.com/MJoergen/C64MEGA65/edit/dev-mount/README.md)
+1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V1/C64MEGA65-V1.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Choose the right subfolder depending on the type of your MEGA65:
-   `R2` or `R3`. If you are not sure which one to choose, it's likely that
-   you have an `R3`. You will need the `.cor` file.
+   `R2` or `R3`. Right now, we are only supporting the MEGA65 `R3`, so
+   choose `R3`. You will need the `.cor` file.
 3. Read the section "How do I install an alternative MEGA65 core?" on the
    [alternative MEGA65 cores](https://sy2002.github.io/m65cores/index.html)
    website or read the section "Bitstream Utility" in the
