@@ -1,41 +1,45 @@
-YOUR PROJECT NAME for MEGA65 aka GITHUB REPO SHORT NAME
-=======================================================
+Commodore 64 for MEGA65 aka C64MEGA65
+=====================================
 
-done in YEAR by YOUR NAME
+done in 2022 by
+    * MJoergen   github.com/MJoergen
+    * sy2002     github.com/sy2002     www.sy2002.de
 
-YOUR WEBSITE
-YOUR GITHUB SITE
+C64MEGA65 is licensed under the terms of GNU/GPL v3, for more information please read the file LICENSE
+Parts of C64MEGA65 are licensed under other Free-software licenses as described in the source code
 
-REPO SHORT NAME is licensed under the terms of GNU/GPL v3, for more information please read the file LICENSE
-Parts of REPO SHORT NAME are licensed under other Free-software licenses as described in the source code
+C64MEGA65:
+----------
 
-GITHUB REPO SHORT NAME:
------------------------
-
-  GITHUB REPO SHORT NAME is a port of MISTER'S REPO SHORT NAME
+  C64MEGA65 is a port of MiSTer's C64_MiSTer
       done by the MiSTer Development Team
-      Original GitHub Repository: https://github.com/MiSTer-devel/MISTER-REPO-LINK
+      Original GitHub Repository: https://github.com/MiSTer-devel/C64_MiSTer
       Significant contributors:
-      * NAME THE MAIN
-      * CONTRIBUTORS
-      * ON MiSTer's SIDE
+      * sorgelig
+      * vpelletier
+      * raparici
 
-  MISTER'S REPO SHORT NAME is a port of MiST's MiST NAME/OTHER SOURCE IN CASE MiSTer ported it from MIST/OTHER SOURCE
+  MiSTer's C64_MiSTer is a port of MiST's C64 core
       done by the MiST Development Team
-      Original GitHub Repository: https://github.com/mist-devel/MIST-REPO-LINK OR OTHER SOURCE
+      Original GitHub Repository: https://github.com/mist-devel/c64
       Significant contributors:
-      * NAME THE MAIN
-      * CONTRIBUTORS
-      * ON MiST's SIDE (OR OTHER SOURCE)
+      * gyurco
+      * nippur72
+      * harbaum
 
-  LIST SOME MORE SIGNIFICANT / MAIN AUTHERS OF SUBMODULES
-  HAVE A LOOK AT THIS EXAMPLE HOW TO: https://github.com/sy2002/gbc4mega65/blob/master/AUTHORS
+  MiST's C64 core is a port of FPGA64_027 and 1541_SD
+     done by Dar (darfpga@aol.fr)
+     http://darfpga.blogspot.fr
 
-Other than that and my own work, REPO SHORT NAME uses:
-------------------------------------------------------
+  FPGA64_027 and 1541_SD is a port of FPGA64
+      done by the Peter Wendrich
+      https://www.syntiac.com/fpga64.html
 
-DO NOT FORGET TO CREDIT EVERYTHING YOU USE FROM OTHER PEOPLE HERE
-THE FOLLOWING LIST NEEDS ALWAYS TO BE PART OF YOUR LIST:
+  The 6510/6502 CPU is based on T65
+      done by Daniel Wallner, Mike Johnson, Wolfgang Scherr, Morten Leikvoll
+
+Other than that and our own work, C64MEGA65 uses:
+-------------------------------------------------
   
   * MiSTer2MEGA65 by The MiSTer2MEGA65 Development Team
     https://github.com/sy2002/MiSTer2MEGA65
@@ -46,14 +50,19 @@ THE FOLLOWING LIST NEEDS ALWAYS TO BE PART OF YOUR LIST:
   * Various MEGA65 drivers taken from the MEGA65 VHDL source by Paul Gardner-Stephen
     https://github.com/MEGA65/mega65-core
 
-  * VGA Timing Generator, done by Scott Larson
-    https://www.digikey.com/eewiki/pages/viewpage.action?pageId=15925278
-
   * VGA to HDMI converter IP core, done by Adam Barnes
     https://github.com/amb5l/tyto_project
 
+  * AVALON SCALER used for scaling to 720p for HDMI, done by temlib.org
+    http://temlib.org/site/?page_id=10
+
+  * HyperRAM controller, done by MJoergen
+    https://mjoergen.github.io/HyperRAM/
+
   * Debouncer: I/O debouncing used for the joysticks, done by Scott Larson
     https://www.digikey.com/eewiki/pages/viewpage.action?pageId=4980758
+
+  * Optimal choice of MiSTer video post-processing filters, done by KiDra
 
   * Anikki-16x16 font, archived and provided by k80w
     https://github.com/k80w/consolefonts
@@ -63,3 +72,27 @@ THE FOLLOWING LIST NEEDS ALWAYS TO BE PART OF YOUR LIST:
 
   * PSF font to C include file converter psftools-1.1.1 by John Elliott
     https://www.seasip.info/Unix/PSF/
+
+The following resources and tools were invaluable for developing C64MEGA65:
+---------------------------------------------------------------------------
+
+  * Website "Codebase 64": Invaluable resource for all nitty-gritty details
+    https://codebase64.org
+
+  * Book "Die Floppy 1541" by Karsten Schramm
+    Special thanks to Spiro Trikaliotis, who made it legally available online:
+    https://spiro.trikaliotis.net/Book#vic1541
+
+  * "Emulator file formats", chapter 17 of the Vice emulator's user manual:
+    https://vice-emu.sourceforge.io/vice_17.html#SEC351
+
+  * "MCS6500, MICROCOMPUTER FAMILY PROGRAMMING MANUAL" by MOS Technology
+    Special thanks to Erik Van den Broeck for the excellent HTML version:
+    http://users.telenet.be/kim1-6502/6502/proman.html
+
+  * The MOS 6567/6569 video controller and its application in the Commodore 64
+    by Christian Bauer: For making sure our video pipeline is accurate
+    http://www.zimmers.net/cbmpics/cbm/c64/vic-ii.txt
+
+  * DirMaster by Style
+    https://style64.org/dirmaster

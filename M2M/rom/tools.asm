@@ -3,8 +3,78 @@
 ;
 ; Miscellaneous tools and helper functions
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
+
+; ----------------------------------------------------------------------------
+; M2M$CHK_EXT
+; 
+; Checks if the given filename has the given extension. Is case-sensitive, so
+; you need to convert to upper- or lower-case before, if you want to check
+; non-case-sensitive. Per definition, the extension need to be at the end
+; of the string, not just somewhere in the middle.
+;
+; Input:  R8: String: Filename
+;         R9: String: Extension
+; Output: Carry-flag = 1 if the given filename has the extension, else 0 
+; ----------------------------------------------------------------------------
+
+M2M$CHK_EXT     INCRB
+                MOVE    R8, R0                  ; save R8..R10
+                MOVE    R9, R1
+                MOVE    R10, R2
+
+                SYSCALL(strstr, 1)              ; search extension substring
+                CMP     0, R10                  ; R10: pointer to substring
+                RBRA    _M2M$CHK_EX_C0, Z       ; not found: C=0 and return
+
+                ; is the extension actually at the end of the string?
+                ; we add the length of the extension to the position where
+                ; we found the extension and check, if we reach the end of
+                ; the soruce string
+                MOVE    R9, R8
+                SYSCALL(strlen, 1)
+                ADD     R9, R10
+                CMP     0, @R10
+                RBRA    _M2M$CHK_EX_C1, Z
+
+_M2M$CHK_EX_C0  AND     0xFFFB, SR              ; clear Carry
+                RBRA    _M2M$CHK_EX_RET, 1
+
+_M2M$CHK_EX_C1  OR      0x0004, SR              ; set Carry
+                
+_M2M$CHK_EX_RET MOVE    R0, R8                  ; restore R8..R10
+                MOVE    R1, R9
+                MOVE    R2, R10
+                DECRB
+                RET
+
+; ----------------------------------------------------------------------------
+; WAIT1SEC
+;   Waits about 1 second
+; WAIT333MS
+;   Waits about 1/3 second
+; ----------------------------------------------------------------------------
+
+WAIT1SEC        INCRB
+                MOVE    0x0060, R0
+_W1S_L1         MOVE    0xFFFF, R1
+_W1S_L2         SUB     1, R1
+                RBRA    _W1S_L2, !Z
+                SUB     1, R0
+                RBRA    _W1S_L1, !Z
+                DECRB
+                RET
+
+WAIT333MS       INCRB
+                MOVE    0x0020, R0
+_W333MS_L1      MOVE    0xFFFF, R1
+_W333MS_L2      SUB     1, R1
+                RBRA    _W333MS_L2, !Z
+                SUB     1, R0
+                RBRA    _W333MS_L1, !Z
+                DECRB
+                RET
 
 ; ----------------------------------------------------------------------------
 ; WORD2HEXSTR
@@ -68,39 +138,3 @@ RESTORE_DEVSEL  INCRB
                 MOVE    @R1, @R0
                 DECRB
                 RET
-
-; ----------------------------------------------------------------------------
-; Functions that are part of QNICE Monitor V1.7 and that can be replaced
-; as soon as we update gbc4mega65 to QNICE V1.7
-; ----------------------------------------------------------------------------
-
-; Alternative to a pure INCRB that also saves R8 .. R12
-ENTER           INCRB
-                MOVE    R8, R0
-                MOVE    R9, R1
-                MOVE    R10, R2
-                MOVE    R11, R3
-                MOVE    R12, R4
-                INCRB
-                RET
-
-; Alternative to a pure DECRB that also restores R8 .. R12
-LEAVE           DECRB
-                MOVE    R0, R8
-                MOVE    R1, R9
-                MOVE    R2, R10
-                MOVE    R3, R11
-                MOVE    R4, R12
-                DECRB
-                RET
-
-; STRCPY copies a zero-terminated string to a destination
-; R8: Pointer to the string to be copied
-; R9: Pointer to the large enough destination memory
-STRCPY          INCRB
-                MOVE    R8, R0
-                MOVE    R9, R1
-_STRCPY_L       MOVE    @R0++, @R1++
-                RBRA    _STRCPY_L, !Z
-                DECRB
-                RET                   

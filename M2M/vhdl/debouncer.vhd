@@ -1,10 +1,9 @@
 ----------------------------------------------------------------------------------
--- Game Boy Color for MEGA65 (gbc4mega65)
+-- MiSTer2MEGA65 Framework 
 --
--- Debouncer for the joystick ports
+-- Debouncer for the joystick ports and for the reset button
 --
--- This machine is based on Gameboy_MiSTer
--- MEGA65 port done by sy2002 in 2021 and licensed under GPL v3
+-- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 
@@ -17,8 +16,10 @@ generic (
 );
 port (
    clk                : in std_logic;
+   
    reset_n            : in std_logic;
-
+   dbnce_reset_n      : out std_logic;
+ 
    joy_1_up_n         : in std_logic;
    joy_1_down_n       : in std_logic;
    joy_1_left_n       : in std_logic;
@@ -46,8 +47,13 @@ port (
 end debouncer;
 
 architecture beh of debouncer is
-
 begin
+
+   -- 20 ms for the reset button
+   do_dbnce_reset : entity work.debounce
+      generic map(clk_freq => CLK_FREQ, stable_time => 20)
+      port map(clk => clk, reset_n => '1', button => reset_n, result => dbnce_reset_n);
+
    -- debouncer settings for the joysticks:
    -- 5ms for any joystick direction
    -- 1ms for the fire button

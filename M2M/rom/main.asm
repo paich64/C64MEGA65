@@ -4,7 +4,7 @@
 ; Main include for m2m-rom.asm
 ;
 ; As the main include is intended to be included in each and every M2M
-; project,  it does not contain any part of the Shell yet to leave it up to
+; project, it does not contain any part of the Shell yet to leave it up to
 ; the user of the M2M framework to decide. If the Shell is not used, then the
 ; respective overhead is being avoided.
 ;
@@ -22,8 +22,8 @@
                 .ORG    0x0000                  ; start in ROM
 
 ; include QNICE Monitor for SYSCALL "operating system" functions
-#include "qmon_m2m.asm"
-#include "../../QNICE/monitor/io_library.asm"
+#include "monitor/qmon_m2m.asm"
+#include "monitor/io_library_m2m.asm"
 #include "../../QNICE/monitor/string_library.asm"
 #include "../../QNICE/monitor/mem_library.asm"
 #include "../../QNICE/monitor/debug_library.asm"

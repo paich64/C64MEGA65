@@ -12,10 +12,21 @@
 
 SCR$INIT        INCRB
 
+                ; @TODO: Right now we only support one "graphics card" for
+                ; QNICE, i.e. we use the same kind of screen real-estate on
+                ; both: HDMI and VGA. We plan to change this in future. The
+                ; hardware already supports it. Right now we ignore the
+                ; HDMI settings and use the VGA settings for both.
+                MOVE    M2M$RAMROM_DEV, R0      ; sysinfo device
+                MOVE    M2M$SYS_INFO, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0    ; select system info window..
+                MOVE    M2M$SYS_VGA, @R0        ; .. for VGA graphics 0
+
                 MOVE    M2M$SYS_DXDY, R0        ; save hardware dx
                 MOVE    SCR$SYS_DX, R1
                 SWAP    @R0, @R1
                 AND     0x00FF, @R1
+                MOVE    @R1, R2                 ; R2: remember hardware dx
 
                 MOVE    SCR$SYS_DY, R1          ; save hardware dy
                 MOVE    @R0, @R1
@@ -39,23 +50,31 @@ SCR$INIT        INCRB
                 MOVE    @R0, @R1
                 AND     0x00FF, @R1
 
-                MOVE    M2M$SHELL_O_XY, R0      ; save option/help OSM x
-                MOVE    SCR$OSM_O_X, R1
-                SWAP    @R0, @R1
-                AND     0x00FF, @R1
+                ; Option/Help menu
+                ; the position of the OSM on screen is derived from the
+                ; width: We align it at the top/right corner of the screen
+                MOVE    M2M$RAMROM_DEV, R0      ; config.vhd device
+                MOVE    M2M$CONFIG, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0    ; "dimenions" selector
+                MOVE    M2M$CFG_OPTM_DIM, @R0
 
-                MOVE    SCR$OSM_O_Y, R1         ; save option/help OSM y
-                MOVE    @R0, @R1
-                AND     0x00FF, @R1
-
-                MOVE    M2M$SHELL_O_DXDY, R0    ; save option/help OSM dx
+                MOVE    M2M$SHELL_O_DX, R0      ; save option/help OSM dx
                 MOVE    SCR$OSM_O_DX, R1
-                SWAP    @R0, @R1
-                AND     0x00FF, @R1
-
-                MOVE    SCR$OSM_O_DY, R1        ; save option/help OSM dy
                 MOVE    @R0, @R1
-                AND     0x00FF, @R1
+
+                MOVE    SCR$OSM_O_X, R3         ; find out OSM x start pos
+                SUB     @R1, R2                 ; R2 still contains screen dx
+                MOVE    R2, @R3
+
+                MOVE    SCR$OSM_O_Y, R0         ; y start pos = 0
+                MOVE    0, @R0
+
+                MOVE    M2M$SHELL_O_DY, R0      ; save option/help OSM dy
+                MOVE    SCR$OSM_O_DY, R1
+                MOVE    @R0, @R1
+
+                MOVE    SCR$ILX, R0             ; inner left x coordinate
+                MOVE    0, @R0
 
                 XOR     R8, R8                  ; init cursor variables
                 XOR     R9, R9
@@ -65,20 +84,33 @@ SCR$INIT        INCRB
                 RET
 
 ; ----------------------------------------------------------------------------
-; Show main OSM 
+; Show main OSM
 ; ----------------------------------------------------------------------------
-                
+
 SCR$OSM_M_ON    INCRB
 
-                MOVE    M2M$OSM_XY, R0          ; take x|y of OSM from ..
-                MOVE    M2M$SHELL_M_XY, R1      ; .. VHDL generics
-                MOVE    @R1, @R0
-                MOVE    M2M$OSM_DXDY, R0        ; take dx|dy of OSM from ..
-                MOVE    M2M$SHELL_M_DXDY, R1    ; .. VHDL generics
-                MOVE    @R1, @R0
+                MOVE    SCR$OSM_M_X, R0
+                MOVE    @R0, R0
+                SWAP    R0, R0
+                MOVE    SCR$OSM_M_Y, R1
+                MOVE    @R1, R1
+                AND     0x00FF, R1
+                OR      R1, R0
+                MOVE    M2M$OSM_XY, R1
+                MOVE    R0, @R1
+
+                MOVE    SCR$OSM_M_DX, R0
+                MOVE    @R0, R0
+                SWAP    R0, R0
+                MOVE    SCR$OSM_M_DY, R1
+                MOVE    @R1, R1
+                AND     0x00FF, R1
+                OR      R1, R0
+                MOVE    M2M$OSM_DXDY, R1
+                MOVE    R0, @R1
 
                 MOVE    M2M$CSR, R0             ; activate OSM
-                OR      M2M$CSR_OSM_ON, @R0
+                OR      M2M$CSR_OSM, @R0
 
                 DECRB
                 RET
@@ -89,15 +121,28 @@ SCR$OSM_M_ON    INCRB
 
 SCR$OSM_O_ON    INCRB
 
-                MOVE    M2M$OSM_XY, R0          ; take x|y of OSM from ..
-                MOVE    M2M$SHELL_O_XY, R1      ; .. VHDL generics
-                MOVE    @R1, @R0
-                MOVE    M2M$OSM_DXDY, R0        ; take dx|dy of OSM from ..
-                MOVE    M2M$SHELL_O_DXDY, R1    ; .. VHDL generics
-                MOVE    @R1, @R0
+                MOVE    SCR$OSM_O_X, R0
+                MOVE    @R0, R0
+                SWAP    R0, R0
+                MOVE    SCR$OSM_O_Y, R1
+                MOVE    @R1, R1
+                AND     0x00FF, R1
+                OR      R1, R0
+                MOVE    M2M$OSM_XY, R1
+                MOVE    R0, @R1
+
+                MOVE    SCR$OSM_O_DX, R0
+                MOVE    @R0, R0
+                SWAP    R0, R0
+                MOVE    SCR$OSM_O_DY, R1
+                MOVE    @R1, R1
+                AND     0x00FF, R1
+                OR      R1, R0
+                MOVE    M2M$OSM_DXDY, R1
+                MOVE    R0, @R1
 
                 MOVE    M2M$CSR, R0             ; activate OSM
-                OR      M2M$CSR_OSM_ON, @R0
+                OR      M2M$CSR_OSM, @R0
 
                 DECRB
                 RET
@@ -117,7 +162,7 @@ SCR$OSM_OFF     INCRB
 ; and fill the attribute VRAM with the default foreground/background color
 ; ----------------------------------------------------------------------------
 
-SCR$CLR         RSUB    ENTER, 1
+SCR$CLR         SYSCALL(enter, 1)
 
                 MOVE    M2M$RAMROM_4KWIN, R0    ; 4k window selector = 0
                 MOVE    0, @R0
@@ -139,7 +184,57 @@ _SCR$CLR_L      MOVE    M2M$VRAM_DATA, @R0      ; VRAM: data
                 SUB     1, R2
                 RBRA    _SCR$CLR_L, !Z
 
-                RSUB    LEAVE, 1
+                ; reset internal cursor and left margin
+                MOVE    SCR$CUR_X, R0
+                MOVE    0, @R0
+                MOVE    SCR$CUR_Y, R0
+                MOVE    0, @R0             
+                MOVE    SCR$ILX, R0
+                MOVE    0, @R0
+
+                SYSCALL(leave, 1)
+                RET
+
+; clear inner part of the screen (leave the frame)
+SCR$CLRINNER    INCRB
+
+                MOVE    M2M$RAMROM_4KWIN, R0    ; 4k window selector = 0
+                MOVE    0, @R0
+
+                MOVE    M2M$RAMROM_DEV, R0      ; device selector
+                MOVE    M2M$RAMROM_DATA, R1     ; 4k MMIO window
+
+                MOVE    SCR$OSM_M_DX, R2        ; width = DX minus 2 (frame)
+                MOVE    @R2, R2
+                SUB     2, R2
+                MOVE    SCR$OSM_M_DY, R3        ; height = DY minus 2 (frame)
+                MOVE    @R3, R3
+                SUB     2, R3
+
+                ; start address = DX + 1, because we need to skip the frame
+                MOVE    SCR$OSM_M_DX, R4
+                MOVE    @R4, R4
+                ADD     1, R4
+                ADD     R4, R1
+
+_SCR$CLRINNER1  MOVE    R2, R4
+_SCR$CLRINNER2  MOVE    M2M$VRAM_DATA, @R0      ; VRAM: data
+                MOVE    0, @R1                  ; 0 = CLR = space character
+                MOVE    M2M$VRAM_ATTR, @R0      ; VRAM: attributes
+                MOVE    M2M$SA_COL_STD, @R1++
+                SUB     1, R4
+                RBRA    _SCR$CLRINNER2, !Z
+                ADD     2, R1
+                SUB     1, R3
+                RBRA    _SCR$CLRINNER1, !Z
+                
+                ; move cursor to the upper/left inner area of the frame
+                MOVE    SCR$CUR_X, R0
+                MOVE    1, @R0
+                MOVE    SCR$CUR_Y, R0
+                MOVE    1, @R0
+
+                DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
@@ -161,7 +256,7 @@ SCR$GOTOXY      INCRB
 ; Oputput: R8: VRAM address
 ; ----------------------------------------------------------------------------
 
-CALC_VRAM       RSUB    ENTER, 1
+CALC_VRAM       SYSCALL(enter, 1)
 
                 MOVE    SCR$CUR_Y, R8           ; SCR$CUR_Y x SCR$SYS_DX 
                 MOVE    @R8, R8
@@ -173,7 +268,7 @@ CALC_VRAM       RSUB    ENTER, 1
                 ADD     R10, R8                 ; .. + SCR$CUR_X
 
                 MOVE    R8, @--SP
-                RSUB    LEAVE, 1
+                SYSCALL(leave, 1)
                 MOVE    @SP++, R8               ; R8 = offset
                 ADD     M2M$RAMROM_DATA, R8     ; move offset into VRAM space
 
@@ -193,7 +288,7 @@ CALC_VRAM       RSUB    ENTER, 1
 ; >  (greater than)                ditto
 ; ----------------------------------------------------------------------------
 
-SCR$PRINTSTR    RSUB    ENTER, 1
+SCR$PRINTSTR    SYSCALL(enter, 1)
 
                 MOVE    R8, R0                  ; R0: string to be printed
                 MOVE    SCR$CUR_X, R1           ; R1: running x-cursor
@@ -234,12 +329,13 @@ _PS_L2          MOVE    R4, R7                  ; remember original char
                 RSUB    _PS_POST, 1
                 RBRA    _PS_L1, 1
 
-_PS_L3          MOVE    1, @R1                  ; inner-left start x-coord
+_PS_L3          MOVE    SCR$ILX, R12
+                MOVE    @R12, @R1               ; inner-left start x-coord
                 ADD     1, @R2                  ; new line
                 RSUB    CALC_VRAM, 1
                 RBRA    _PS_L1, 1
 
-_PS_RET         RSUB    LEAVE, 1
+_PS_RET         SYSCALL(leave, 1)
                 RET
 
 ; remember any device and selector setting and change it to VRAM; this is
@@ -265,13 +361,43 @@ _PS_POST        INCRB
                 DECRB
                 RET
 
+; ----------------------------------------------------------------------------
+; Print the string using SCR$PRINTSTR
+; Input:  x|y coords in R9|R10
+; Output: None; all registers stay unmodified
+; ----------------------------------------------------------------------------            
+
+SCR$PRINTSTRXY  INCRB
+
+                MOVE    SCR$CUR_X, R0           ; remember original cursor
+                MOVE    @R0, R1
+                MOVE    SCR$CUR_Y, R2
+                MOVE    @R2, R3
+
+                MOVE    R9, @R0                 ; print at actual position
+                MOVE    R10, @R2
+                RSUB    SCR$PRINTSTR, 1
+
+                MOVE    R1, @R0                 ; restore original cursor
+                MOVE    R3, @R2
+
+                DECRB
+                RET
+
 ; ----------------------------------------------------------------------------            
 ; Draws a frame
 ; Input:  R8/R9:   start x/y coordinates
 ;         R10/R11: dx/dy sizes, both need to be larger than 3
 ; Output: None; all registers stay unmodified
-; ----------------------------------------------------------------------------            
-SCR$PRINTFRAME  RSUB    ENTER, 1
+; ----------------------------------------------------------------------------
+
+SCR$PRINTFRAME  SYSCALL(enter, 1)
+
+                ; modify global inner left x coordinate for SCR$PRINTSCR
+                ; so that \n stays inside the frame
+                MOVE    SCR$ILX, R0
+                MOVE    R8, @R0
+                ADD     1, @R0
 
                 MOVE    M2M$RAMROM_DEV, R0      ; switch device to VRAM
                 MOVE    M2M$VRAM_DATA, @R0
@@ -323,5 +449,5 @@ _PF_DL3         MOVE    M2M$FC_SH, @R8++        ; horizontal line
                 RBRA    _PF_DL3, !Z
                 MOVE    M2M$FC_BR, @R8          ; draw bottom/right corner
 
-                RSUB    LEAVE, 1
+                SYSCALL(leave, 1)
                 RET

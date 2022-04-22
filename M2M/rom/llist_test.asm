@@ -1,10 +1,9 @@
 ; ****************************************************************************
-; Game Boy Color for MEGA65 (gbc4mega65)
+; MiSTer2MEGA65 (M2M) QNICE ROM
 ;
 ; Test program and development testbed for Simple Linked List
 ;
-; gbc4mega65 machine is based on Gameboy_MiSTer
-; MEGA65 port done by sy2002 in February 2021 and licensed under GPL v3
+; done by sy2002 in in February 2021 and licensed under GPL v3
 ; ****************************************************************************
 
 #include "../../QNICE/dist_kit/sysdef.asm"
@@ -157,7 +156,7 @@ CMP_FUNC        INCRB
                 SUB     R9, SP
                 MOVE    R9, R4                  ; R4: stack restore amount
                 MOVE    SP, R9
-                RSUB    STRCPY, 1
+                SYSCALL(strcpy, 1)
                 MOVE    R9, R8
                 SYSCALL(str2upper, 1)
                 MOVE    R8, R0
@@ -172,7 +171,7 @@ CMP_FUNC        INCRB
                 SUB     R9, SP
                 ADD     R9, R4                  ; R4: update stack rest. amnt.
                 MOVE    SP, R9
-                RSUB    STRCPY, 1
+                SYSCALL(strcpy, 1)
                 MOVE    R9, R8
                 SYSCALL(str2upper, 1)
                 MOVE    R8, R1
@@ -214,20 +213,7 @@ _FF_RET1        MOVE    1, R8
                 RBRA    _FF_RET, 1
 _FF_RET0        XOR     R8, R8
 _FF_RET         DECRB
-                RET
-
-; STRCPY copies a zero-terminated string to a destination
-; Hint: QNICE Monitor V1.7 comes with a STRCPY, but currently, the gbc4mega65
-; project is based on QNICE V1.7, so we need to have our own STRCPY function
-; R8: Pointer to the string to be copied
-; R9: Pointer to the destination
-STRCPY          INCRB
-                MOVE    R8, R0
-                MOVE    R9, R1
-_STRCPY_LOOP    MOVE    @R0++, @R1++
-                RBRA    _STRCPY_LOOP, !Z
-                DECRB
-                RET                
+                RET           
 
 ; ----------------------------------------------------------------------------
 ; User interface

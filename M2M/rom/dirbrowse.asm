@@ -1,15 +1,9 @@
 ; ****************************************************************************
-; Game Boy Color for MEGA65 (gbc4mega65)
+; MiSTer2MEGA65 (M2M) QNICE ROM
 ;
 ; Directory Browser (with sorted output)
 ;
-; File browser component for the gbc4mega65.
-; Meant to be resusable, so that it could for example be merged upstream to
-; QNICE-FPGA as part of a newly to-be-defined library of optional
-; functionality (i.e. not part of Monitor).
-;
-; gbc4mega65 machine is based on Gameboy_MiSTer
-; MEGA65 port done by sy2002 in February 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
 #include "llist.asm"
@@ -27,9 +21,10 @@ _DIRBR_DSDESIZE .EQU    2                       ; amount of characters in sum
 ;  R10: Pointer to heap
 ;  R11: Maximum amount of available heap memory
 ;  R12: Optional filter function that filters out files of a certain name.
-;       The filter function takes a pointer to a string in R8 and returns
-;       0 in R8, if the file shall not be filtered and 1 if it shall be
-;       filtered. The string provided in R8 is always in upper case.
+;       The filter function takes a pointer to a string in R8 and a directory
+;       flag in R9 (0=it is a file, 1=it is a directory) and returns 0 in R8,
+;       if the file shall not be filtered and 1 if it shall be filtered.
+;       The string provided in R8 is always in upper case.
 ;       If R12 is zero, then no filter is applied.
 ; Output:
 ;   R8: (unchanged) Pointer to valid device handle
@@ -199,7 +194,7 @@ _DIRBR_NEWELM3  MOVE    _DIRBR_ENTRY, R7        ; copy file name
                 ADD     FAT32$DE_NAME, R7
                 MOVE    R7, R8
                 MOVE    R3, R9
-                RSUB    _DIRBR_STRCPY, 1
+                SYSCALL(strcpy, 1)
 
                 SYSCALL(strlen, 1)              ; R9 contains len of filename
                 ADD     R9, R3                  ; R3 points to zero terminator
@@ -266,7 +261,7 @@ _DIRBR_CMP      MOVE    R0, R8                  ; copy string to stack
                 SUB     R9, SP
                 MOVE    R9, R4                  ; R4: stack restore amount
                 MOVE    SP, R9
-                RSUB    _DIRBR_STRCPY, 1
+                SYSCALL(strcpy, 1)
                 MOVE    R9, R8
                 SYSCALL(str2upper, 1)
                 MOVE    R8, R0
@@ -278,7 +273,7 @@ _DIRBR_CMP      MOVE    R0, R8                  ; copy string to stack
                 SUB     R9, SP
                 ADD     R9, R4                  ; R4: update stack rest. amnt.
                 MOVE    SP, R9
-                RSUB    _DIRBR_STRCPY, 1
+                SYSCALL(strcpy, 1)
                 MOVE    R9, R8
                 SYSCALL(str2upper, 1)
                 MOVE    R8, R1
@@ -307,13 +302,23 @@ _DIRBR_FILTWRAP INCRB
                 ADD     SLL$DATA, R8            ; R8: pointer to string
                 SYSCALL(strlen, 1)              ; R9: length of string
                 ADD     1, R9
+
+                MOVE    R9, R3                  ; behind string sits flag
+                ADD     R8, R3
+                MOVE    @R3, R3                 ; R3: file/directory flag
+
                 SUB     R9, SP
                 MOVE    R9, R2
                 MOVE    SP, R9
-                RSUB    _DIRBR_STRCPY, 1
+                SYSCALL(strcpy, 1)
                 MOVE    R9, R8
                 SYSCALL(str2upper, 1)           ; R8 contains upper string
 
+                MOVE    R3, R9
+
+                ; call filter function (callback function)
+                ; R8: filename in upper-case
+                ; R9: 0=file/1=directory
                 MOVE    _DIRBR_FILTERFN, R1
                 ASUB    @R1, 1
 
@@ -321,16 +326,3 @@ _DIRBR_FILTWRAP INCRB
                 MOVE    R0, R9
                 DECRB
                 RET
-
-; STRCPY copies a zero-terminated string to a destination
-; Hint: QNICE Monitor V1.7 comes with a STRCPY, but currently, the gbc4mega65
-; project is based on QNICE V1.6, so we need to have our own STRCPY function
-; R8: Pointer to the string to be copied
-; R9: Pointer to the destination
-_DIRBR_STRCPY   INCRB
-                MOVE    R8, R0
-                MOVE    R9, R1
-_DIRBR_STRCPYL  MOVE    @R0++, @R1++
-                RBRA    _DIRBR_STRCPYL, !Z
-                DECRB
-                RET                   
