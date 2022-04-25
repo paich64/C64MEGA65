@@ -1,4 +1,4 @@
-Version 1 - Month, DD 2022
+Version 1 - April, 26 2022
 ====================================
 
 Experience the Commodore 64 with great accuracy and sublime compatibility
@@ -17,8 +17,8 @@ features.
 * On-Screen-Menu via Help button to mount drives and to configure options
 * C1541 read-only support: Mount standard `*.D64` via SD card to drive 8
 * Drive led during virtual disk access
-* CRT filter: Optional visual scanlines so that the output looks more like an
-  old monitor or TV
+* CRT filter: Optional visual scanlines on HDMI so that the output looks more
+  like an old monitor or TV
 * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   utilized more efficiently. Great for games.
@@ -30,9 +30,10 @@ features.
 
 ### Feature Roadmap
 
-We are planning to improve this core steadily. The MiSTer core offers much
+We are planning to improve this core steadily. The MiSTer core offers many
 more features than our current Release 1 of the port. Here is a list of
-features that we are planning to deliver at a later stage:
+features (in no particular order) that we are planning to deliver at a later
+stage:
 
 * NTSC
 * Support two drives: 8 and 9
@@ -48,7 +49,7 @@ features that we are planning to deliver at a later stage:
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * REU and GeoRAM using HyperRAM
-* The following MEGA65 hardware ports are not yet working
+* The following MEGA65 hardware ports are not yet working:
   * Cartridges via the MEGA65's hardware Expansion Port
   * Paddles / mouse via the joystick ports
   * IEC port (for example to plug in a real C1541)	
@@ -60,16 +61,17 @@ features that we are planning to deliver at a later stage:
 ### Technical Roadmap
 
 To implement some of the above-mentioned features and also to improve the
-robustness, performance and stability of the whole system, we will need
-to implement certain technical improvements in the "backend":
+robustness, performance, and stability of the whole system, we will need
+to implement certain technical improvements in the "backend", again in no
+particular order:
 
 * Support for R2 version of MEGA65
-* VGA retro does not generate CSync
+* VGA retro CSync generation
 * Fix the behavior of the floppy led
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,
   when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
-* Update to newer ascal version (wait until MiSTer did the same upstream)
-* Investigate dynamic PLL adjustment/autotune in conjunciton with ascal
+* Update to newer ascal version (wait until MiSTer does the same upstream)
+* Investigate dynamic PLL adjustment/autotune in conjunction with ascal
   to improve flicker-free HDMI further (maybe there is a possibility to
   achieve flicker-free without the need of slowing down by 0.25%)
 * Re-do QNICE's SD Card controller: Go from SPI to native

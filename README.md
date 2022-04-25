@@ -14,7 +14,7 @@ This core is based on the
 itself is based on the work of [many others](AUTHORS).
 
 [MJoergen](https://github.com/MJoergen) and
-[sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2021.
+[sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2022.
 
 The core uses the [MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
 framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
@@ -42,28 +42,28 @@ recognizing this core as genuine C64 hardware.
   and TVs. In case of compatibility problems, you can switch the HDMI video
   out to 60 Hz (without affecting the PAL core's internal 50 Hz), but this
   would lead to a slightly jerky experience when it comes to scrolling and
-  other fast movements on the screen. The 4:3 ascpect ratio of
+  other fast movements on the screen. The 4:3 aspect ratio of
   the C64's output is preserved during upscaling, so that even though 720p
   is a 16:9 picture, the C64 looks pixel perfect and authentic on HDMI.
-  
+
 * VGA: For a true retro feeling, we are providing a 4:3 image via the
   MEGA65's VGA port, so that you can connect real CRT monitors or older
   4:3 LCD/TFT displays. The resolution is 720x576 pixels and the frequency
   is 50.125 Hz in PAL mode. If your monitor supports this, you will
   experience silky smooth scrolling without any flickering and tearing.
-  
+
 * Retro 15 KHz RGB over VGA: This is for the ultimate retro experience:
   Connect an old Scart TV (for example using
   [this](https://ultimatemister.com/product/rgb-scart-cable/)
   cable) or an old RGB-capable monitor (by soldering your own cable)
   to MEGA65's VGA port.
-  
+
 ### Convenience
 
 * On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
   and to configure the core
 * Realtime switching between a 6581 SID and a 8580 SID
-* CRT filter: Optional visual scanlines via HDMI so that the output looks more
+* CRT filter: Optional visual scan lines via HDMI so that the output looks more
   like an old monitor or TV
 * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
   the C64's output and zoom in, so that the 16:9 screen real-estate is
@@ -74,7 +74,7 @@ recognizing this core as genuine C64 hardware.
 
 Our Release 1 is - well - a Release 1. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
-Commodore 64. With our Release 1 you can play nearly all the avilable games
+Commodore 64. With our Release 1 you can play nearly all the available games
 and watch almost all demos ever written for the C64. It happens more often
 than not, that the core is recognized as real hardware by software.
 
@@ -141,7 +141,7 @@ Here is how the browser works:
 * <kbd>Return</kbd> mounts a disk image
 * <kbd>Run/Stop</kbd> exits the file browser without mounting
 * Remembers the browsing history, i.e. even while you climb directory trees,
-  when you mount the next image, the file selection cursor is positioned where 
+  when you mount the next image, the file selection cursor is positioned where
   you left off. This is very convenient for mounting multiple subsequent
   disks of a demo in a row.
 * Support for both SD card slots: The back slot has precedence over the bottom
@@ -162,8 +162,8 @@ Here is how the browser works:
 * The file browser defaults to the folder `/c64` in case this folder exists.
   Otherwise it starts at the root folder.
 * The file browser only shows files with a valid file extension.
-  Currently, we only suppoert `.d64`.
-  
+  Currently, we only support `.d64`.
+
 Flicker-free HDMI
 -----------------
 
@@ -210,17 +210,17 @@ Here is a small test-case for you to experience the difference by yourself:
    and tearing. The same will happen when you play the game. And this
    effect is not only there at Giana Sisters but at everything that
    scrolls and/or moves a lot of things on the screen.
-   
+
 2. Switch ON "HDMI: Flicker-free" and load the disk and tape magazine
    [Input 64 Issue 1/1985](https://c64-online.com/?ddownload=4459).
    You will not see the intro which consists of flying letters
    building up the word "Input 64". So here we see an example of a
    compatibility issue.
-   
+
 3. Switch OFF "HDMI: Flicker-free" and load Input 64 again. It now works.
    You can watch the intro.
 
-So you have the choice: Flicker-free on HDMI or more compatibiltiy. 
+So you have the choice: Flicker-free on HDMI or more compatibility.
 
 Our tests have shown, that the vast majority of software works like a charm
 and the value of having a completely smooth and flicker free experience on
@@ -258,7 +258,7 @@ options menu:
 
 * Soft-reset: Only reset the C64 core. Advantage: All your options/settings
   remain intact and your file browser continues where you left off. The latter
-  is particularly useful when browing large hierarchies of disk images.
+  is particularly useful when browsing large hierarchies of disk images.
   Imagine being in the fourth folder hierarchy of your disk image collection,
   browsing on page 10 of hundreds of files and then pressing reset: While
   a hard-reset let's you start over, including - again - browsing to the
