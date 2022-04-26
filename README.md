@@ -102,14 +102,32 @@ to learn more.
 Since we do this as a hobby, it might take a year or longer until these
 things are supported. So please bear with us or [help us](CONTRIBUTING.md).
 
+Some demo pictures
+------------------
+
+| ![c64-1](doc/demopics/c64mega65-1.jpg)    | ![c64-2](doc/demopics/c64mega65-2.jpg)   | ![c64-3](doc/demopics/c64mega65-3.jpg) | 
+|:-----------------------------------------:|:----------------------------------------:|:--------------------------------------:| 
+| *Core Menu*                               | *Disk mounting / file browser*           | *Giana Sisters*                        |
+| ![c64-4](doc/demopics/c64mega65-4.jpg)    | ![c64-5](doc/demopics/c64mega65-5.jpg)   | ![c64-6](doc/demopics/c64mega65-6.jpg) | 
+| *Neon/Triad*                              | *Memento Mori/Genesis Project*           | *Relentless*                           |
+
+Clarification: These screenshots are just for illustration purposes.
+This repository does not contain any copyrighted material.
+
 Installation
 ------------
 
+Make sure that you have a MEGA65 R3, R3A or newer. At the moment, we are not
+supporting older R2 machines. If you are not sure what MEGA65 version you have
+then you very probably have an R3, R3A or newer: The Devkits are R3 and the
+machines from Trenz are R3A.
+
 1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V1/C64MEGA65-V1.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
-2. Choose the right subfolder depending on the type of your MEGA65:
-   `R2` or `R3`. Right now, we are only supporting the MEGA65 `R3`, so
-   choose `R3`. You will need the `.cor` file.
+2. Copy the `.cor` file on an SD card that has been formatted using the
+   MEGA65's built-in formatting tool. If you want to be on the safe side, just
+   use the internal SD card (bottom tray), which is formatted like this
+   by default.
 3. Read the section "How do I install an alternative MEGA65 core?" on the
    [alternative MEGA65 cores](https://sy2002.github.io/m65cores/index.html)
    website or read the section "Bitstream Utility" in the
@@ -118,6 +136,8 @@ Installation
    for the C1541 at drive 8.
 5. If you put your disk images into a folder called `/c64`, then the core will
    display this folder on startup. Otherwise the root folder will be shown.
+6. Press the <kbd>Help</kbd> key on your MEGA65 keyboard as soon as the core
+   is running to mount disks and to configure the core.
 
 If you are a developer and/or have a JTAG adaptor connected to your MEGA65,
 then you can use the `.bit` file from the ZIP instead of the `.cor` file:

@@ -1,5 +1,5 @@
 Version 1 - April, 26 2022
-====================================
+==========================
 
 Experience the Commodore 64 with great accuracy and sublime compatibility
 on your MEGA65! It can run a ton of games and demos and it offers convenient
