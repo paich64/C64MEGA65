@@ -57,6 +57,8 @@ stage:
   * REU via expansion port
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
+* Simulate the blending of colours when ALM and DCM are used
+  as described here: https://github.com/MiSTer-devel/C64_MiSTer/issues/104
 
 ### Technical Roadmap
 
