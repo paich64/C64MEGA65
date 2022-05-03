@@ -50,9 +50,10 @@ architecture beh of debouncer is
 begin
 
    -- 20 ms for the reset button
-   do_dbnce_reset : entity work.debounce
-      generic map(clk_freq => CLK_FREQ, stable_time => 20)
-      port map(clk => clk, reset_n => '1', button => reset_n, result => dbnce_reset_n);
+--   do_dbnce_reset : entity work.debounce
+--      generic map(clk_freq => CLK_FREQ, stable_time => 20)
+--      port map(clk => clk, reset_n => '1', button => reset_n, result => dbnce_reset_n);
+   dbnce_reset_n <= reset_n;
 
    -- debouncer settings for the joysticks:
    -- 5ms for any joystick direction
