@@ -88,7 +88,7 @@ set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
 set_false_path -from [get_pins reset_m2m_n_reg/C]
 
 ## Reset button
-set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports RESET_N]
+set_property -dict {PACKAGE_PIN L16 IOSTANDARD LVCMOS33} [get_ports RESET_N]
 
 ## USB-RS232 Interface (rxd, txd only; rts/cts are not available)
 set_property -dict {PACKAGE_PIN L14 IOSTANDARD LVCMOS33} [get_ports UART_RXD]
