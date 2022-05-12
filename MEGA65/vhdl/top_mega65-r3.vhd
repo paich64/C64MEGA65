@@ -11,12 +11,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library unisim;
-use unisim.vcomponents.all;
-
-library xpm;
-use xpm.vcomponents.all;
-
 entity mega65_r3 is
 port (
    CLK            : in  std_logic;                  -- 100 MHz clock
@@ -129,77 +123,16 @@ signal reset_pressed       : std_logic := '0';
 signal button_duration     : natural;
 signal reset_duration      : natural;
 
-signal clk_81mhz_mmcm      : std_logic;
-signal clk_81mhz           : std_logic;
-signal clk_fb              : std_logic;
-signal clk_81mhz_reset_n   : std_logic;
-
 begin
 
-   -----------------------------------------------------------------------------------------
-   -- Create 81 MHz clock for MAX10 handling
-   -----------------------------------------------------------------------------------------
-
-   max_clk_gen : MMCM_ADV
-     generic map
-      (BANDWIDTH            => "OPTIMIZED",
-       CLKOUT4_CASCADE      => FALSE,
-       CLOCK_HOLD           => FALSE,
-       COMPENSATION         => "ZHOLD",
-       STARTUP_WAIT         => FALSE,
-   
-       -- Create 812.5MHz clock from 8.125x100MHz/1
-       DIVCLK_DIVIDE        => 1,
-       CLKFBOUT_MULT_F      => 8.125,
-       CLKFBOUT_PHASE       => 0.000,
-       CLKFBOUT_USE_FINE_PS => FALSE,
-   
-       -- CLKOUT0 = 81.25 MHz clock for MAX 10
-       CLKOUT0_DIVIDE_F     => 10.0,
-       CLKOUT0_PHASE        => 0.000,
-       CLKOUT0_DUTY_CYCLE   => 0.500,
-       CLKOUT0_USE_FINE_PS  => FALSE,
-          
-       CLKIN1_PERIOD        => 10.000,
-       REF_JITTER1          => 0.010)
-     port map
-       -- Output clocks
-      (CLKFBOUT            => clk_fb,
-       CLKOUT0             => clk_81mhz_mmcm,
-       -- Input clock control
-       CLKFBIN             => clk_fb,
-       CLKIN1              => CLK,
-       CLKIN2              => '0',       
-       -- Tied to always select the primary input clock
-       CLKINSEL            => '1',
-       -- Ports for dynamic reconfiguration
-       DADDR               => (others => '0'),
-       DCLK                => '0',
-       DEN                 => '0',
-       DI                  => (others => '0'),
-       DWE                 => '0',
-       -- Ports for dynamic phase shift
-       PSCLK               => '0',
-       PSEN                => '0',
-       PSINCDEC            => '0',
-       -- Other control and status signals
-       PWRDWN              => '0',
-       RST                 => '0');
-       
-   clk_bufg : BUFG
-      port map (
-         I => clk_81mhz_mmcm,
-         O => clk_81mhz
-      );       
-   
    -----------------------------------------------------------------------------------------
    -- MAX10 FPGA handling: extract reset signal
    -----------------------------------------------------------------------------------------
    
    MAX10 : entity work.max10
       port map (
-         pixelclock        => clk_81mhz,
-         cpuclock          => clk_81mhz,
+         pixelclock        => CLK,
+         cpuclock          => CLK,
          led               => open,
          
          max10_rx          => max10_rx,
@@ -208,23 +141,12 @@ begin
 
          max10_fpga_commit => open,
          max10_fpga_date   => open,
-         reset_button      => clk_81mhz_reset_n,
+         reset_button      => reset_n,
          dipsw             => open,
          j21in             => open,
          j21ddr            => (others => '0'),
          j21out            => (others => '0')
       );
-      
-   cdc_reset : XPM_CDC_ASYNC_RST
-   generic map (
-      RST_ACTIVE_HIGH      => 0
-   )
-   port map
-   (
-      src_arst             => clk_81mhz_reset_n,
-      dest_clk             => CLK,
-      dest_arst            => reset_n
-   );
 
    -----------------------------------------------------------------------------------------
    -- Reset management: Differentiate long and short press
