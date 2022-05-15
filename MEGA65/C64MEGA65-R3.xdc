@@ -38,11 +38,19 @@ set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -hold 2
 
 # Place HyperRAM close to I/O pins
-startgroup
 create_pblock pblock_i_hyperram
-resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
 add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_hyperram]]
-endgroup
+resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
+
+# Place MAX10 close to I/O pins
+create_pblock pblock_MAX10
+add_cells_to_pblock pblock_MAX10 [get_cells [list MAX10]]
+resize_pblock pblock_MAX10 -add {SLICE_X0Y150:SLICE_X7Y174}
+
+# Place Keyboard close to I/O pins
+create_pblock pblock_m65driver
+add_cells_to_pblock pblock_m65driver [get_cells [list MEGA65/i_m2m_keyb/m65driver]]
+resize_pblock pblock_m65driver -add {SLICE_X0Y225:SLICE_X7Y243}
 
 # Timing between ascal.vhd and HyperRAM is asynchronous.
 set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks hdmi_clk]
