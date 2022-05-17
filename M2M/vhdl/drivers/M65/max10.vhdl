@@ -38,6 +38,7 @@ architecture Behavioral of max10 is
 
   signal max10_out_vector : std_logic_vector(64 downto 0) := (others => '0');
   signal max10_in_vector : std_logic_vector(64 downto 0) := (others => '0');
+  signal max10_in_vector_d : std_logic_vector(64 downto 0) := (others => '0');
   signal max10_counter : integer range 0 to 79 := 0;
   signal max10_clock_toggle : std_logic := '0';
 
@@ -130,8 +131,9 @@ begin
         -- Drive simple serial protocol with MAX10 FPGA
         if max10_counter = 64 then
           max10_rx <= max10_out_vector(0);
+          max10_in_vector_d <= max10_in_vector;
           -- Latch read values, if vector is not stuck low
-          if max10_in_vector /= std_logic_vector(to_unsigned(0,65)) then
+          if max10_in_vector /= std_logic_vector(to_unsigned(0,65)) and max10_in_vector = max10_in_vector_d then
             max10_fpga_commit_drive <= unsigned(max10_in_vector(48 downto 17));
             max10_fpga_date_drive <= unsigned(max10_in_vector(64 downto 49));
             j21in_drive <= max10_in_vector(11 downto 0);
