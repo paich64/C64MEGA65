@@ -16,7 +16,7 @@
 ; Runs the whole file selection and directory browsing user experience and
 ; returns a string pointer to the filename.
 ;
-; Input:
+; Input: This function needs a lot of context to run:
 ;   * HANDLE_DEV needs to be valid.
 ;   * Expects FB_STACK to be initialized (as well as the stack itself)
 ;   * B_STACK_SIZE needs to contain the correct number
@@ -24,6 +24,7 @@
 ;     to contain the initial cycle counter values
 ;   * SD_WAIT_DONE needs to be initialized to zero for the very first start
 ;     of the system and after each reset
+;   * SF_CONTEXT needs to be set (defined in sysdef.asm as CTX_* constant)
 ; Output:
 ;   R8: Pointer to filename (zero terminated string), if R9=0
 ;   R9: 0=OK (no error)
@@ -147,6 +148,7 @@ _S_BROWSE_START MOVE    R10, R0                 ; R0: dir. linked list head
 _S_BROWSE_SETUP MOVE    R0, R8
                 RSUB    SLL$LASTNCOUNT, 1
                 MOVE    R10, R1                 ; R1: amount of items in dir.
+                RBRA    _S_NOTHING, Z           ; no items in directory
                 MOVE    SCR$OSM_M_DY, R2        ; R2: max rows on screen
                 MOVE    @R2, R2
                 SUB     2, R2                   ; (frame is 2 rows high)
@@ -471,6 +473,28 @@ _S_RET_1        MOVE    @R2, SP                 ; restore global stack
                 MOVE    @SP++, R8
                 RET
 
+                ; Handle the situation: The filter function did filter
+                ; everything, so there is nothing here to browse
+_S_NOTHING      MOVE    CMSG_BROWSENOTHING, R8  ; situation
+                MOVE    SF_CONTEXT, R9          ; context
+                MOVE    @R9, R9
+                RSUB    CUSTOM_MSG, 1
+
+                CMP     0, R8
+                RBRA    _S_NOTHING_1, Z         ; no custom msg available
+                MOVE    R8, R0                  ; use custom message
+                RBRA    _S_NOTHING_2, 1
+_S_NOTHING_1    MOVE    WRN_EMPTY_BRW, R0       ; use standard message
+
+_S_NOTHING_2    MOVE    R0, R8                  ; print warning message
+                RSUB    SCR$PRINTSTR, 1
+_S_NOTHING_3    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
+                MOVE    M2M$KEYBOARD, R8
+                AND     M2M$KEY_SPACE, @R8
+                RBRA    _S_NOTHING_3, !Z        ; wait for space; low-active
+
+                SYSCALL(exit, 1)
+
 ; ----------------------------------------------------------------------------
 ; Initialize file browser persistence variables
 ; ----------------------------------------------------------------------------
@@ -482,6 +506,9 @@ FB_INIT         INCRB
                 MOVE    FB_ITEMS_COUNT, R0      ; no directory browsed so far
                 MOVE    0, @R0
                 MOVE    FB_ITEMS_SHOWN, R0      ; no dir. items shown so far
+                MOVE    0, @R0
+
+                MOVE    SF_CONTEXT, R0          ; no context
                 MOVE    0, @R0
 
                 DECRB

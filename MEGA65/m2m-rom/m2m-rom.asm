@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#define RELEASE
+#undef RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -114,8 +114,33 @@ _PREP_LI_RET    DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
+; Core specific callback functions: Custom messages
+; ----------------------------------------------------------------------------
+
+; CUSTOM_MSG callback function:
+;
+; Called in various situations where the Shell needs to output a message
+; to the end user. The situations and contexts are described in sysdef.asm
+;
+; Input:
+;   R8: Situation (CMSG_* constants in sysdef.asm)
+;   R9: Context   (CTX_* constants in sysdef.asm)
+; Output:
+;   R8: 0=no custom message available, otherwise pointer to string
+
+CUSTOM_MSG      XOR     R8, R8
+                RET
+
+; ----------------------------------------------------------------------------
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
+
+; Warning: At this point we are only supporting standard D64 files
+WRN_WRONG_D64   .ASCII_P "\n\nD64 file size must be exactly 174848 bytes."
+                .ASCII_W "\n\nPress SPACE to continue.\n"
+
+; Warning: Nothing to browse
+
 
 ; Disk image file extensions (need to be upper case)
 C64_IMGFILE_D64  .ASCII_W ".D64"
