@@ -12,7 +12,8 @@ Make sure you have a look at the [User's Manual](https://github.com/MJoergen/C64
 ### Reset Bugfix
 
 In case you experience problems with MEGA65's reset button while using the
-core, use `C64MEGA65-1-R3-MAX10.cor` and `C64MEGA65-1-R3-MAX10.bit`.
+core, use `C64MEGA65-1-R3-resetfix-100MHz.cor`
+and `C64MEGA65-1-R3-resetfix-100MHz.bit`.
 
 Caution: Only use these unofficial versions in case you experience problems
 with the reset button. Otherwise stick with the official release.
