@@ -18,3 +18,10 @@ and `C64MEGA65-1-R3-resetfix-100MHz.bit`.
 
 Caution: Only use these unofficial versions in case you experience problems
 with the reset button. Otherwise stick with the official release.
+
+### 15kHz Retro RGB fix
+
+If you use the 15kHz Retro RGB mode (via VGA) and experience problems with
+the on-screen-menu (for example distortion), then use this fix, which
+also contains the reset bugfix: `15kHz-retro-fix.cor`
+and `15kHz-retro-fix.bit`.
