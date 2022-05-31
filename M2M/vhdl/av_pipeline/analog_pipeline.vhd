@@ -82,7 +82,8 @@ architecture synthesis of analog_pipeline is
    signal vga_hs             : std_logic;
    signal vga_vs             : std_logic;
 
-   signal video_ce_overlay   : std_logic_vector(1 downto 0) := "10"; -- Clock divider 1/2
+   signal video_ce_overlay   : std_logic_vector(1 downto 0) := "00";
+   signal video_ce_overlay_bit : std_logic;
 
    component video_mixer is
       port (
@@ -208,9 +209,11 @@ begin
    p_video_ce : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
-         video_ce_overlay <= video_ce_overlay(0) & video_ce_overlay(video_ce_overlay'left downto 1);
+         video_ce_overlay <= std_logic_vector(unsigned(video_ce_overlay) + 1);
       end if;
    end process p_video_ce;
+
+   video_ce_overlay_bit <= video_ce_overlay(0) when scandoubler_i = '1' else video_ce_overlay(1) and video_ce_overlay(0);
 
    i_video_overlay : entity work.video_overlay
       generic  map (
@@ -222,7 +225,7 @@ begin
       )
       port map (
          vga_clk_i        => video_clk_i,
-         vga_ce_i         => video_ce_overlay(0),
+         vga_ce_i         => video_ce_overlay_bit,
          vga_red_i        => mix_r,
          vga_green_i      => mix_g,
          vga_blue_i       => mix_b,
@@ -230,6 +233,7 @@ begin
          vga_vs_i         => vga_vs,
          vga_de_i         => mix_vga_de,
          vga_cfg_enable_i => video_osm_cfg_enable_i,
+         vga_cfg_double_i => scandoubler_i,
          vga_cfg_xy_i     => video_osm_cfg_xy_i,
          vga_cfg_dxdy_i   => video_osm_cfg_dxdy_i,
          vga_vram_addr_o  => video_osm_vram_addr_o,
