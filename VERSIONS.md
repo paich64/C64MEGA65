@@ -1,3 +1,32 @@
+Version 2 - Month, XX 2022
+==========================
+
+This version is mainly a bugfix & stability release: The focus was not to add
+a lot of new features, but to make sure that the C64 core works flawlessly
+with more MEGA65 machines than version 1 did. We also added a DVI option
+(see below) to increase the amount of displays that work with the core.
+
+TODOs / Scope:
+
+README.md check for "Release 1" and replace by "Release 2"
+It would be optimal, if we rolled back Paul's attempt to transmit MEGA65
+via the HDMI description channel because this might degrade compatibility
+
+## Bugfixes
+
+
+* MAX10 reset bug fixed: Fixes "ambulance light" problem when starting the
+  core and fixes non-working reset buttons
+* SD card problem fixed: When neither any D64 file was present on the SD card
+  and additionally, there was not a single subdirectory, then the core
+  crashed with "Corrupt memory structure: Linked-list boundary" when one tried
+  to mount a disk.
+* Fixed distorted On-Screen-Menu in "VGA Retro 15KHz RGB" mode
+
+## DVI Option
+
+@TODO
+
 Version 1 - April, 26 2022
 ==========================
 
