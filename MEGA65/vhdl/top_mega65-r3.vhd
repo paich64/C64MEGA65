@@ -14,8 +14,12 @@ use ieee.numeric_std.all;
 entity mega65_r3 is
 port (
    CLK            : in  std_logic;                  -- 100 MHz clock
-   RESET_N        : in  std_logic;                  -- CPU reset button
-
+   
+   -- MAX10 FPGA (delivers reset)
+   max10_tx          : in std_logic;
+   max10_rx          : out std_logic;
+   max10_clkandsync  : inout std_logic;
+   
    -- serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
    UART_RXD       : in  std_logic;                  -- receive data
@@ -94,6 +98,7 @@ architecture synthesis of mega65_r3 is
 
 constant BOARD_CLK_SPEED   : natural := 100_000_000;
 
+signal reset_n             : std_logic;
 signal dbnce_reset_n       : std_logic;
   
 signal dbnce_joy1_up_n     : std_logic;
@@ -119,6 +124,33 @@ signal button_duration     : natural;
 signal reset_duration      : natural;
 
 begin
+
+   -----------------------------------------------------------------------------------------
+   -- MAX10 FPGA handling: extract reset signal
+   -----------------------------------------------------------------------------------------
+   
+   MAX10 : entity work.max10
+      port map (
+         pixelclock        => CLK,
+         cpuclock          => CLK,
+         led               => open,
+         
+         max10_rx          => max10_rx,
+         max10_tx          => max10_tx,
+         max10_clkandsync  => max10_clkandsync,
+
+         max10_fpga_commit => open,
+         max10_fpga_date   => open,
+         reset_button      => reset_n,
+         dipsw             => open,
+         j21in             => open,
+         j21ddr            => (others => '0'),
+         j21out            => (others => '0')
+      );
+
+   -----------------------------------------------------------------------------------------
+   -- Reset management: Differentiate long and short press
+   -----------------------------------------------------------------------------------------
 
    reset_manager : process(CLK)
    begin
@@ -151,7 +183,11 @@ begin
          end if;
       end if;
    end process;
-
+   
+   -----------------------------------------------------------------------------------------
+   -- Instantiate the whole machine
+   -----------------------------------------------------------------------------------------
+   
    MEGA65 : entity work.MEGA65_Core
       port map
       (
