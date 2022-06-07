@@ -2,9 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
-library UNISIM;
-use UNISIM.VComponents.all;
-
 entity max10 is
   Port ( pixelclock : in STD_LOGIC;
          cpuclock : in std_logic;
@@ -19,7 +16,7 @@ entity max10 is
          ----------------------------------------------------------------------
          max10_rx : out std_logic := '1';
          max10_tx : in std_logic;
-         max10_clkandsync : inout std_logic;
+         max10_clkandsync : out std_logic;
 
          ----------------------------------------------------------------------
          -- Data to/from MAX10
@@ -41,9 +38,6 @@ architecture Behavioral of max10 is
   signal max10_in_vector_d : std_logic_vector(64 downto 0) := (others => '0');
   signal max10_counter : integer range 0 to 79 := 0;
   signal max10_clock_toggle : std_logic := '0';
-
-  signal max10_saw_0 : std_logic := '0';
-  signal max10_saw_1 : std_logic := '0';
   
   signal max10_fpga_commit_drive : unsigned(31 downto 0) := to_unsigned(0,32);
   signal max10_fpga_date_drive : unsigned(15 downto 0) := to_unsigned(0,16);
@@ -97,7 +91,7 @@ begin
 --        led <= max10_clock_toggle;
         max10_clkandsync <= max10_clock_toggle;
       else
-        max10_clkandsync <= 'Z';
+        max10_clkandsync <= '0';
 --        led <= '1';
         max10_out_vector(11 downto 0) <= j21ddr;
         max10_out_vector(23 downto 12) <= j21out;
@@ -108,24 +102,8 @@ begin
         -- Tick clock on low phase
         if max10_counter /= 79 then
           max10_counter <= max10_counter + 1;
-          if max10_tx = '1' then
-            max10_saw_1 <= '1';
-          end if;
-          if max10_tx = '0' then
-            max10_saw_0 <= '1';
-          end if;
         else
           max10_counter <= 0;
-          max10_saw_1 <= '0';
-          max10_saw_0 <= '0';
-          -- Backward compatibility to old protocol:
-          -- If RX line stays high or low for an entire loop
-          -- then we assume it isn't talking the new protocol
-          if max10_saw_1='1' and max10_saw_0='0' then
-            reset_button_drive <= '1';
-          elsif max10_saw_1='0' and max10_saw_0='1' then
-            reset_button_drive <= '0';
-          end if;
         end if;
         
         -- Drive simple serial protocol with MAX10 FPGA
