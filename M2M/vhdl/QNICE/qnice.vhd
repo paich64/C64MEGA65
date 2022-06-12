@@ -33,18 +33,25 @@ port (
    uart_txd_o           : out std_logic;           -- send data, ditto
 
    -- SD Card (internal on bottom)
-   sd_reset_o           : out std_logic;           -- SD card interface via SPI
-   sd_clk_o             : out std_logic;
-   sd_mosi_o            : out std_logic;
-   sd_miso_i            : in  std_logic;
    sd_cd_i              : in  std_logic;
+   sd_wp_i              : in  std_logic;
+   sd_clk_o             : out std_logic;
+   sd_cmd_in_i          : in  std_logic;
+   sd_cmd_out_o         : out std_logic;
+   sd_cmd_oe_o          : out std_logic;
+   sd_dat_in_i          : in  std_logic_vector(3 downto 0);
+   sd_dat_out_o         : out std_logic_vector(3 downto 0);
+   sd_dat_oe_o          : out std_logic;
 
    -- SD Card (external on back)
-   sd2_reset_o          : out std_logic;           -- SD card interface via SPI
-   sd2_clk_o            : out std_logic;
-   sd2_mosi_o           : out std_logic;
-   sd2_miso_i           : in  std_logic;
    sd2_cd_i             : in  std_logic;
+   sd2_clk_o            : out std_logic;
+   sd2_cmd_in_i         : in  std_logic;
+   sd2_cmd_out_o        : out std_logic;
+   sd2_cmd_oe_o         : out std_logic;
+   sd2_dat_in_i         : in  std_logic_vector(3 downto 0);
+   sd2_dat_out_o        : out std_logic_vector(3 downto 0);
+   sd2_dat_oe_o         : out std_logic;
 
    -- QNICE public registers
    csr_reset_o          : out std_logic;           -- reset the MiSTer core
@@ -109,11 +116,14 @@ signal reset_pre_pore            : std_logic;
 signal reset_post_pore           : std_logic;
 
 -- SD Card multiplexing: SD_* signals are the bottom tray, SD2*_ signals are the back slot
-signal sd_mux_reset_ctrl          : std_logic;                       -- reset QNICE's controller
-signal sd_mux_reset_card          : std_logic;                       -- reset SD card
-signal sd_mux_clk                 : std_logic;
-signal sd_mux_mosi                : std_logic;
-signal sd_mux_miso                : std_logic;
+signal sd_mux_reset_ctrl         : std_logic;                       -- reset QNICE's controller
+signal sd_mux_clk                : std_logic;
+signal sd_mux_cmd_in             : std_logic;
+signal sd_mux_cmd_out            : std_logic;
+signal sd_mux_cmd_oe             : std_logic;
+signal sd_mux_dat_in             : std_logic_vector(3 downto 0);
+signal sd_mux_dat_out            : std_logic_vector(3 downto 0);
+signal sd_mux_dat_oe             : std_logic;
 
 -- QNICE standard MMIO signals
 signal rom_en                    : std_logic;
@@ -342,24 +352,33 @@ begin
 
          -- interface to bottom tray's SD card
          sd_tray_detect_i     => sd_cd_i,
-         sd_tray_reset_o      => sd_reset_o,
          sd_tray_clk_o        => sd_clk_o,
-         sd_tray_mosi_o       => sd_mosi_o,
-         sd_tray_miso_i       => sd_miso_i,
+         sd_tray_cmd_in_i     => sd_cmd_in_i,
+         sd_tray_cmd_out_o    => sd_cmd_out_o,
+         sd_tray_cmd_oe_o     => sd_cmd_oe_o,
+         sd_tray_dat_in_i     => sd_dat_in_i,
+         sd_tray_dat_out_o    => sd_dat_out_o,
+         sd_tray_dat_oe_o     => sd_dat_oe_o,
 
          -- interface to the SD card in the back slot
          sd_back_detect_i     => sd2_cd_i,
-         sd_back_reset_o      => sd2_reset_o,
          sd_back_clk_o        => sd2_clk_o,
-         sd_back_mosi_o       => sd2_mosi_o,
-         sd_back_miso_i       => sd2_miso_i,
+         sd_back_cmd_in_i     => sd2_cmd_in_i,
+         sd_back_cmd_out_o    => sd2_cmd_out_o,
+         sd_back_cmd_oe_o     => sd2_cmd_oe_o,
+         sd_back_dat_in_i     => sd2_dat_in_i,
+         sd_back_dat_out_o    => sd2_dat_out_o,
+         sd_back_dat_oe_o     => sd2_dat_oe_o,
 
          -- interface to the QNICE SD card controller
          ctrl_reset_o         => sd_mux_reset_ctrl,
-         ctrl_sd_reset_i      => sd_mux_reset_card,
-         ctrl_sd_clk_i        => sd_mux_clk,
-         ctrl_sd_mosi_i       => sd_mux_mosi,
-         ctrl_sd_miso_o       => sd_mux_miso
+         ctrl_clk_i           => sd_mux_clk,
+         ctrl_cmd_in_o        => sd_mux_cmd_in,
+         ctrl_cmd_out_i       => sd_mux_cmd_out,
+         ctrl_cmd_oe_i        => sd_mux_cmd_oe,
+         ctrl_dat_in_o        => sd_mux_dat_in,
+         ctrl_dat_out_i       => sd_mux_dat_out,
+         ctrl_dat_oe_i        => sd_mux_dat_oe
       ); -- i_sdmux
 
    -- SD Card: connect QNICE SD Card logic to the smart multiplexer
@@ -373,10 +392,13 @@ begin
          reg                  => sd_reg,
          data_in              => cpu_data_out,
          data_out             => sd_data_out,
-         sd_reset             => sd_mux_reset_card,
-         sd_clk               => sd_mux_clk,
-         sd_mosi              => sd_mux_mosi,
-         sd_miso              => sd_mux_miso
+         sd_clk_o             => sd_mux_clk,
+         sd_cmd_in_i          => sd_mux_cmd_in,
+         sd_cmd_out_o         => sd_mux_cmd_out,
+         sd_cmd_oe_o          => sd_mux_cmd_oe,
+         sd_dat_in_i          => sd_mux_dat_in,
+         sd_dat_out_o         => sd_mux_dat_out,
+         sd_dat_oe_o          => sd_mux_dat_oe
       ); -- sd_card
 
    -- Cycle Counter: used by the M2M firmware for measuring delays

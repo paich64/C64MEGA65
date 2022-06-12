@@ -36,24 +36,33 @@ entity sdmux is
 
       -- interface to bottom tray's SD card
       sd_tray_detect_i  : in  std_logic;   -- low active
-      sd_tray_reset_o   : out std_logic;
       sd_tray_clk_o     : out std_logic;
-      sd_tray_mosi_o    : out std_logic;
-      sd_tray_miso_i    : in  std_logic;
+      sd_tray_cmd_in_i  : in  std_logic;
+      sd_tray_cmd_out_o : out std_logic;
+      sd_tray_cmd_oe_o  : out std_logic;
+      sd_tray_dat_in_i  : in  std_logic_vector(3 downto 0);
+      sd_tray_dat_out_o : out std_logic_vector(3 downto 0);
+      sd_tray_dat_oe_o  : out std_logic;
 
       -- interface to the SD card in the back slot
       sd_back_detect_i  : in  std_logic;   -- low active
-      sd_back_reset_o   : out std_logic;
       sd_back_clk_o     : out std_logic;
-      sd_back_mosi_o    : out std_logic;
-      sd_back_miso_i    : in  std_logic;
+      sd_back_cmd_in_i  : in  std_logic;
+      sd_back_cmd_out_o : out std_logic;
+      sd_back_cmd_oe_o  : out std_logic;
+      sd_back_dat_in_i  : in  std_logic_vector(3 downto 0);
+      sd_back_dat_out_o : out std_logic_vector(3 downto 0);
+      sd_back_dat_oe_o  : out std_logic;
 
       -- interface to the QNICE SD card controller
       ctrl_reset_o      : out std_logic;  -- high active; it is important that sdmux controls the QNICE controller's reset
-      ctrl_sd_reset_i   : in  std_logic;
-      ctrl_sd_clk_i     : in  std_logic;
-      ctrl_sd_mosi_i    : in  std_logic;
-      ctrl_sd_miso_o    : out std_logic
+      ctrl_clk_i        : in  std_logic;
+      ctrl_cmd_in_o     : out std_logic;
+      ctrl_cmd_out_i    : in  std_logic;
+      ctrl_cmd_oe_i     : in  std_logic;
+      ctrl_dat_in_o     : out std_logic_vector(3 downto 0);
+      ctrl_dat_out_i    : in  std_logic_vector(3 downto 0);
+      ctrl_dat_oe_i     : in  std_logic
    );
 end entity sdmux;
 
@@ -92,23 +101,29 @@ begin
    connect_sd_cards : process(all)
    begin
       if active = '0' then
-         sd_tray_reset_o   <= ctrl_sd_reset_i;
-         sd_tray_clk_o     <= ctrl_sd_clk_i;
-         sd_tray_mosi_o    <= ctrl_sd_mosi_i;
-         ctrl_sd_miso_o    <= sd_tray_miso_i;
+         sd_tray_clk_o     <= ctrl_clk_i;
+         sd_tray_cmd_out_o <= ctrl_cmd_out_i;
+         sd_tray_cmd_oe_o  <= ctrl_cmd_oe_i;
+         sd_tray_dat_out_o <= ctrl_dat_out_i;
+         sd_tray_dat_oe_o  <= ctrl_dat_oe_i;
+         ctrl_cmd_in_o     <= sd_tray_cmd_in_i;
+         ctrl_dat_in_o     <= sd_tray_dat_in_i;
 
-         sd_back_reset_o   <= '1';
-         sd_back_clk_o     <= '0';
-         sd_back_mosi_o    <= '0';
+         sd_back_clk_o    <= '1';
+         sd_back_cmd_oe_o <= '0';
+         sd_back_dat_oe_o <= '0';
       else
-         sd_back_reset_o   <= ctrl_sd_reset_i;
-         sd_back_clk_o     <= ctrl_sd_clk_i;
-         sd_back_mosi_o    <= ctrl_sd_mosi_i;
-         ctrl_sd_miso_o    <= sd_back_miso_i;
+         sd_back_clk_o     <= ctrl_clk_i;
+         sd_back_cmd_out_o <= ctrl_cmd_out_i;
+         sd_back_cmd_oe_o  <= ctrl_cmd_oe_i;
+         sd_back_dat_out_o <= ctrl_dat_out_i;
+         sd_back_dat_oe_o  <= ctrl_dat_oe_i;
+         ctrl_cmd_in_o     <= sd_back_cmd_in_i;
+         ctrl_dat_in_o     <= sd_back_dat_in_i;
 
-         sd_tray_reset_o   <= '1';
-         sd_tray_clk_o     <= '0';
-         sd_tray_mosi_o    <= '0';
+         sd_tray_clk_o    <= '1';
+         sd_tray_cmd_oe_o <= '0';
+         sd_tray_dat_oe_o <= '0';
       end if;
    end process connect_sd_cards;
 

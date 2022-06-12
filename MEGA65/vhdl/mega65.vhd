@@ -59,18 +59,17 @@ port (
    kb_io2         : in std_logic;                  -- data input from keyboard
 
    -- SD Card (internal on bottom)
-   SD_RESET       : out std_logic;
-   SD_CLK         : out std_logic;
-   SD_MOSI        : out std_logic;
-   SD_MISO        : in std_logic;
-   SD_CD          : in std_logic;
+   sd_cd_i        : in    std_logic;
+   sd_wp_i        : in    std_logic;
+   sd_clk_o       : out   std_logic;
+   sd_cmd_io      : inout std_logic;
+   sd_dat_io      : inout std_logic_vector(3 downto 0);
 
    -- SD Card (external on back)
-   SD2_RESET      : out std_logic;
-   SD2_CLK        : out std_logic;
-   SD2_MOSI       : out std_logic;
-   SD2_MISO       : in std_logic;
-   SD2_CD         : in std_logic;
+   sd2_cd_i       : in    std_logic;
+   sd2_clk_o      : out   std_logic;
+   sd2_cmd_io     : inout std_logic;
+   sd2_dat_io     : inout std_logic_vector(3 downto 0);
 
    -- 3.5mm analog audio jack
    pwm_l          : out std_logic;
@@ -282,6 +281,15 @@ signal qnice_ramrom_data_o    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_data_i    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_ce        : std_logic;
 signal qnice_ramrom_we        : std_logic;
+
+signal sd_cmd_out             : std_logic;
+signal sd_cmd_oe              : std_logic;
+signal sd_dat_out             : std_logic_vector(3 downto 0);
+signal sd_dat_oe              : std_logic;
+signal sd2_cmd_out            : std_logic;
+signal sd2_cmd_oe             : std_logic;
+signal sd2_dat_out            : std_logic_vector(3 downto 0);
+signal sd2_dat_oe             : std_logic;
 
 -- Devices: MiSTer2MEGA framework
 constant C_DEV_VRAM_DATA      : std_logic_vector(15 downto 0) := x"0000";
@@ -574,18 +582,25 @@ begin
          uart_txd_o              => UART_TXD,
 
          -- SD Card (internal on bottom)
-         sd_reset_o              => SD_RESET,
-         sd_clk_o                => SD_CLK,
-         sd_mosi_o               => SD_MOSI,
-         sd_miso_i               => SD_MISO,
-         sd_cd_i                 => SD_CD,
+         sd_cd_i                 => sd_cd_i,
+         sd_wp_i                 => sd_wp_i,
+         sd_clk_o                => sd_clk_o,
+         sd_cmd_in_i             => sd_cmd_io,
+         sd_cmd_out_o            => sd_cmd_out,
+         sd_cmd_oe_o             => sd_cmd_oe,
+         sd_dat_in_i             => sd_dat_io,
+         sd_dat_out_o            => sd_dat_out,
+         sd_dat_oe_o             => sd_dat_oe,
 
          -- SD Card (external on back)
-         sd2_reset_o             => SD2_RESET,
-         sd2_clk_o               => SD2_CLK,
-         sd2_mosi_o              => SD2_MOSI,
-         sd2_miso_i              => SD2_MISO,
-         sd2_cd_i                => SD2_CD,
+         sd2_cd_i                => sd2_cd_i,
+         sd2_clk_o               => sd2_clk_o,
+         sd2_cmd_in_i            => sd2_cmd_io,
+         sd2_cmd_out_o           => sd2_cmd_out,
+         sd2_cmd_oe_o            => sd2_cmd_oe,
+         sd2_dat_in_i            => sd2_dat_io,
+         sd2_dat_out_o           => sd2_dat_out,
+         sd2_dat_oe_o            => sd2_dat_oe,
 
          -- QNICE public registers
          csr_reset_o             => qnice_csr_reset,
@@ -625,6 +640,12 @@ begin
          ramrom_ce_o             => qnice_ramrom_ce,
          ramrom_we_o             => qnice_ramrom_we
       ); -- QNICE_SOC
+
+   sd_cmd_io <= sd_cmd_out when sd_cmd_oe = '1' else 'Z';
+   sd_dat_io <= sd_dat_out when sd_dat_oe = '1' else (others => 'Z');
+
+   sd2_cmd_io <= sd2_cmd_out when sd2_cmd_oe = '1' else 'Z';
+   sd2_dat_io <= sd2_dat_out when sd2_dat_oe = '1' else (others => 'Z');
 
    shell_cfg : entity work.config
       port map (

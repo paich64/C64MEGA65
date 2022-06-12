@@ -52,6 +52,11 @@ create_pblock pblock_m65driver
 add_cells_to_pblock pblock_m65driver [get_cells [list MEGA65/i_m2m_keyb/m65driver]]
 resize_pblock pblock_m65driver -add {SLICE_X0Y225:SLICE_X7Y243}
 
+# Place SDCard close to I/O pins
+create_pblock pblock_sdcard_cmd
+add_cells_to_pblock pblock_sdcard_cmd [get_cells [list MEGA65/QNICE_SOC/sd_card/i_sdcard_wrapper/i_sdcard_cmd]]
+resize_pblock pblock_sdcard_cmd -add {SLICE_X156Y175:SLICE_X163Y187}
+
 # Timing between ascal.vhd and HyperRAM is asynchronous.
 set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks hdmi_clk]
 set_false_path   -to [get_clocks hr_clk_x1]   -from [get_clocks hdmi_clk]
@@ -110,18 +115,23 @@ set_property -dict {PACKAGE_PIN A13 IOSTANDARD LVCMOS33} [get_ports kb_io1]
 set_property -dict {PACKAGE_PIN C13 IOSTANDARD LVCMOS33} [get_ports kb_io2]
 
 ## Micro SD Connector (this is the slot at the bottom side of the case under the cover)
-set_property -dict {PACKAGE_PIN B15 IOSTANDARD LVCMOS33} [get_ports SD_RESET]
-set_property -dict {PACKAGE_PIN B17 IOSTANDARD LVCMOS33} [get_ports SD_CLK]
-set_property -dict {PACKAGE_PIN B16 IOSTANDARD LVCMOS33} [get_ports SD_MOSI]
-set_property -dict {PACKAGE_PIN B18 IOSTANDARD LVCMOS33} [get_ports SD_MISO]
-set_property -dict {PACKAGE_PIN D17 IOSTANDARD LVCMOS33} [get_ports SD_CD]
+set_property -dict {PACKAGE_PIN D17 IOSTANDARD LVCMOS33}             [get_ports sd_cd_i]
+set_property -dict {PACKAGE_PIN C17 IOSTANDARD LVCMOS33}             [get_ports sd_wp_i]
+set_property -dict {PACKAGE_PIN B17 IOSTANDARD LVCMOS33}             [get_ports sd_clk_o]
+set_property -dict {PACKAGE_PIN B16 IOSTANDARD LVCMOS33}             [get_ports sd_cmd_io]
+set_property -dict {PACKAGE_PIN B18 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd_dat_io[0]]
+set_property -dict {PACKAGE_PIN C18 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd_dat_io[1]]
+set_property -dict {PACKAGE_PIN C19 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd_dat_io[2]]
+set_property -dict {PACKAGE_PIN B15 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd_dat_io[3]]
 
 ## Micro SD Connector (external slot at back of the cover)
-set_property -dict {PACKAGE_PIN K2  IOSTANDARD LVCMOS33} [get_ports SD2_RESET]
-set_property -dict {PACKAGE_PIN G2  IOSTANDARD LVCMOS33} [get_ports SD2_CLK]
-set_property -dict {PACKAGE_PIN J2  IOSTANDARD LVCMOS33} [get_ports SD2_MOSI]
-set_property -dict {PACKAGE_PIN H2  IOSTANDARD LVCMOS33} [get_ports SD2_MISO]
-set_property -dict {PACKAGE_PIN K1  IOSTANDARD LVCMOS33} [get_ports SD2_CD]
+set_property -dict {PACKAGE_PIN K1 IOSTANDARD LVCMOS33}             [get_ports sd2_cd_i]
+set_property -dict {PACKAGE_PIN G2 IOSTANDARD LVCMOS33}             [get_ports sd2_clk_o]
+set_property -dict {PACKAGE_PIN J2 IOSTANDARD LVCMOS33}             [get_ports sd2_cmd_io]
+set_property -dict {PACKAGE_PIN H2 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd2_dat_io[0]]
+set_property -dict {PACKAGE_PIN H3 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd2_dat_io[1]]
+set_property -dict {PACKAGE_PIN J1 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd2_dat_io[2]]
+set_property -dict {PACKAGE_PIN K2 IOSTANDARD LVCMOS33 PULLUP true} [get_ports sd2_dat_io[3]]
 
 ## Joystick port A
 set_property -dict {PACKAGE_PIN C14 IOSTANDARD LVCMOS33} [get_ports joy_1_up_n]

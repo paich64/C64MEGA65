@@ -48,18 +48,17 @@ port (
    kb_io2         : in  std_logic;                 -- data input from keyboard
 
    -- SD Card (internal on bottom)
-   SD_RESET       : out std_logic;
-   SD_CLK         : out std_logic;
-   SD_MOSI        : out std_logic;
-   SD_MISO        : in  std_logic;
-   SD_CD          : in  std_logic;
+   sd_cd_i        : in    std_logic;
+   sd_wp_i        : in    std_logic;
+   sd_clk_o       : out   std_logic;
+   sd_cmd_io      : inout std_logic;
+   sd_dat_io      : inout std_logic_vector(3 downto 0);
 
    -- SD Card (external on back)
-   SD2_RESET      : out std_logic;
-   SD2_CLK        : out std_logic;
-   SD2_MOSI       : out std_logic;
-   SD2_MISO       : in  std_logic;
-   SD2_CD         : in  std_logic;
+   sd2_cd_i       : in    std_logic;
+   sd2_clk_o      : out   std_logic;
+   sd2_cmd_io     : inout std_logic;
+   sd2_dat_io     : inout std_logic_vector(3 downto 0);
 
    -- 3.5mm analog audio jack
    pwm_l          : out std_logic;
@@ -227,18 +226,17 @@ begin
          kb_io2         => kb_io2,
 
          -- SD Card (internal on bottom)
-         SD_RESET       => SD_RESET,
-         SD_CLK         => SD_CLK,
-         SD_MOSI        => SD_MOSI,
-         SD_MISO        => SD_MISO,
-         SD_CD          => SD_CD,
+         sd_cd_i        => sd_cd_i,
+         sd_wp_i        => sd_wp_i,
+         sd_clk_o       => sd_clk_o,
+         sd_cmd_io      => sd_cmd_io,
+         sd_dat_io      => sd_dat_io,
 
          -- SD Card (external on back)
-         SD2_RESET      => SD2_RESET,
-         SD2_CLK        => SD2_CLK,
-         SD2_MOSI       => SD2_MOSI,
-         SD2_MISO       => SD2_MISO,
-         SD2_CD         => SD2_CD,
+         sd2_cd_i       => sd2_cd_i,
+         sd2_clk_o      => sd2_clk_o,
+         sd2_cmd_io     => sd2_cmd_io,
+         sd2_dat_io     => sd2_dat_io,
 
          -- 3.5mm analog audio jack
          pwm_l          => pwm_l,
