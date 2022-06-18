@@ -1,5 +1,5 @@
-Version 2 - Month, XX 2022
-==========================
+Version 2 - June, 18 2022
+=========================
 
 This version is mainly a bugfix & stability release: The focus was not to add
 a lot of new features, but to make sure that the C64 core works flawlessly
@@ -14,9 +14,8 @@ via the HDMI description channel because this might degrade compatibility
 
 ## Bugfixes
 
-
-* MAX10 reset bug fixed: Fixes "ambulance light" problem when starting the
-  core and fixes non-working reset buttons
+* MAX10 reset bug fixed: Fixes the "ambulance lights" problem when starting
+  the core and fixes non-working reset buttons
 * SD card problem fixed: When neither any D64 file was present on the SD card
   and additionally, there was not a single subdirectory, then the core
   crashed with "Corrupt memory structure: Linked-list boundary" when one tried

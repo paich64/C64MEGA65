@@ -24,7 +24,7 @@ on-screen-menu.
 Features
 --------
 
-With our [Release 1](VERSIONS.md), we are striving for a **retro C64 PAL
+With our [Release 2](VERSIONS.md), we are striving for a **retro C64 PAL
 experience**: The core turns your MEGA65 into a Commodore 64, with a
 C1541 drive and a pair of Joysticks. No frills. The C64 runs the original
 Commodore KERNAL and the C1541 runs the original Commodore DOS, which leads to
@@ -72,9 +72,9 @@ recognizing this core as genuine C64 hardware.
 
 ### Constraints and Roadmap
 
-Our Release 1 is - well - a Release 1. Thanks to all the folks who
+Our Release 2 is still an early release. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
-Commodore 64. With our Release 1 you can play nearly all the available games
+Commodore 64. With our Release 2 you can play nearly all the available games
 and watch almost all demos ever written for the C64. It happens more often
 than not, that the core is recognized as real hardware by software.
 
@@ -122,7 +122,7 @@ supporting older R2 machines. If you are not sure what MEGA65 version you have
 then you very probably have an R3, R3A or newer: The Devkits are R3 and the
 machines from Trenz are R3A.
 
-1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V1/C64MEGA65-V1.zip)
+1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V2/C64MEGA65-V2.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Copy the `.cor` file on an SD card that has been formatted using the
    MEGA65's built-in formatting tool. If you want to be on the safe side, just
