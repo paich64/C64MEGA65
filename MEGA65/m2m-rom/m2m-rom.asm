@@ -114,8 +114,53 @@ _PREP_LI_RET    DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
+; Core specific callback functions: Custom messages
+; ----------------------------------------------------------------------------
+
+; CUSTOM_MSG callback function:
+;
+; Called in various situations where the Shell needs to output a message
+; to the end user. The situations and contexts are described in sysdef.asm
+;
+; Input:
+;   R8: Situation (CMSG_* constants in sysdef.asm)
+;   R9: Context   (CTX_* constants in sysdef.asm)
+; Output:
+;   R8: 0=no custom message available, otherwise pointer to string
+
+CUSTOM_MSG      INCRB
+                MOVE    R8, R0
+                XOR     R8, R8                  ; no custom message
+
+                CMP     CMSG_BROWSENOTHING, R0  ; "no D64" situation?
+                RBRA    _CUSTOM_MSG_RET, !Z     ; no: default custom message
+                CMP     CTX_MOUNT_DISKIMG, R9   ; trying to mount a disk?
+                RBRA    _CUSTOM_MSG_RET, !Z     ; no: default custom message
+                MOVE    WRN_NO_D64, R8          ; yes: custom message
+
+_CUSTOM_MSG_RET DECRB
+                RET
+
+; ----------------------------------------------------------------------------
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
+
+; Warning: At this point we are only supporting standard D64 files
+WRN_WRONG_D64   .ASCII_P "\n\nD64 file size must be exactly 174848 bytes."
+                .ASCII_W "\n\nPress SPACE to continue.\n"
+
+; Warning: Nothing to browse
+WRN_NO_D64      .ASCII_P "This core uses D64 disk images.\n\n"
+                .ASCII_P "Please copy at least one D64 file\n"
+                .ASCII_P "to any sub-directory or to the root\n"
+                .ASCII_P "directory of this SD card.\n\n"
+                .ASCII_P "If you use a folder called /c64, then\n"
+                .ASCII_P "the file browser will always start there.\n\n"
+                .ASCII_P "You can use long file names and you can\n"
+                .ASCII_P "also use nested sub-directories to nicely\n"
+                .ASCII_P "order your collection of D64 files.\n\n"
+                .ASCII_P "Nothing to browse.\n\n"
+                .ASCII_W "Press Space to continue."
 
 ; Disk image file extensions (need to be upper case)
 C64_IMGFILE_D64  .ASCII_W ".D64"
@@ -165,7 +210,7 @@ MENU_HEAP_SIZE  .EQU 1024
 HEAP_SIZE       .EQU 6144                       ; 7168 - 1024 = 6144
 HEAP            .BLOCK 1
 
-; in RELEASE mode: 16k of heap which leads to a better user experience when
+; in RELEASE mode: 28k of heap which leads to a better user experience when
 ; it comes to folders with a lot of files
 #else
 
