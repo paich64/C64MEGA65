@@ -150,7 +150,7 @@ HDMI compatibility
 
 Right now, the C64 core is not compatible with all HDMI displays. If your
 display works with the MEGA65 core but stays black when you load the C64 core,
-try this (while the display is black):
+then try this (while the display is black):
 
 1. Boot the C64 core and wait a few seconds.
 2. Press the <kbd>Help</kbd> key.
