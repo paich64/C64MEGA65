@@ -145,6 +145,37 @@ Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
 syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
 into the FPGA of the MEGA65 and automatically started.
 
+HDMI compatibility
+------------------
+
+Right now, the C64 core is not compatible with all HDMI displays. If your
+display works with the MEGA65 core but stays black when you load the C64 core,
+try this (while the display is black):
+
+1. Boot the C64 core and wait a few seconds.
+2. Press the <kbd>Help</kbd> key.
+3. Press four times (4x) the <kbd>Up</kbd> cursor key.
+4. Press <kbd>Return</kbd>.
+5. Wait a few seconds.
+6. If this does not solve the issue, continue:
+7. Press one more time (1x) the <kbd>Up</kbd> cursor key.
+8. Press <kbd>Return</kbd>.
+9. Wait a few seconds.
+
+### Explanation
+
+The recipe above first activates the "DVI mode" as you are choosing the
+menu item "HDMI: DVI (no sound)" in the On-Screen-Menu when you press the
+<kbd>Return</kbd> key for the first time.
+
+In DVI mode, the HDMI data stream sent by the core to your display has a
+slightly different format and it does not contain any sound. You need to use
+the 3.5mm audio-out in this case.
+
+When you press <kbd>Return</kbd> for the second time, the 60Hz mode is
+activated, independent of the C64's output, which is still 50Hz in PAL mode.
+This works fine in general, but leads to some flickering here and there.
+
 How to use the file- and directory browser for mounting a disk image
 --------------------------------------------------------------------
 

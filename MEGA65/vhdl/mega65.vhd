@@ -341,7 +341,8 @@ constant C_MENU_HDMI_ZOOM     : natural := 14;
 constant C_MENU_IMPROVE_AUDIO : natural := 15;
 constant C_MENU_VGA_RETRO     : natural := 19;
 constant C_MENU_HDMI_60HZ     : natural := 20;
-constant C_MENU_HDMI_FF       : natural := 21;
+constant C_MENU_HDMI_DVI      : natural := 21;
+constant C_MENU_HDMI_FF       : natural := 22;
 
 -- HyperRAM
 signal hr_write         : std_logic;
@@ -1079,6 +1080,7 @@ begin
          tmds_clk_n_o             => tmds_clk_n,
 
          -- Connect to QNICE and Video RAM
+         hdmi_dvi_i               => hdmi_osm_control_m(C_MENU_HDMI_DVI),
          hdmi_video_mode_i        => hdmi_osm_control_m(C_MENU_HDMI_60HZ),
          hdmi_crop_mode_i         => main_osm_control_m(C_MENU_HDMI_ZOOM),
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,

@@ -6,12 +6,6 @@ a lot of new features, but to make sure that the C64 core works flawlessly
 with more MEGA65 machines than version 1 did. We also added a DVI option
 (see below) to increase the amount of displays that work with the core.
 
-TODOs / Scope:
-
-README.md check for "Release 1" and replace by "Release 2"
-It would be optimal, if we rolled back Paul's attempt to transmit MEGA65
-via the HDMI description channel because this might degrade compatibility
-
 ## Bugfixes
 
 * MAX10 reset bug fixed: Fixes the "ambulance lights" problem when starting
@@ -24,7 +18,9 @@ via the HDMI description channel because this might degrade compatibility
 
 ## DVI Option
 
-@TODO
+* The DVI option is meant to improve the compatibility with certain monitors.
+  Choosing "HDMI: DVI (no sound)" in the On-Screen-Menu will activate it and
+  thus stop sending sound packages within the HDMI data stream.
 
 Version 1 - April, 26 2022
 ==========================
