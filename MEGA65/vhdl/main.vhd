@@ -281,20 +281,20 @@ begin
          sid_ld_data => x"0000",
          sid_ld_wr   => '0',
 
-         -- USER
-         pb_i        => x"00",
+         -- User Port: Unused inputs need to be high
+         pb_i        => x"FF",
          pb_o        => open,
-         pa2_i       => '0',
+         pa2_i       => '1',
          pa2_o       => open,
          pc2_n_o     => open,
          flag2_n_i   => '1',
-         sp2_i       => '0',
+         sp2_i       => '1',
          sp2_o       => open,
-         sp1_i       => '0',
+         sp1_i       => '1',
          sp1_o       => open,
-         cnt2_i      => '0',
+         cnt2_i      => '1',
          cnt2_o      => open,
-         cnt1_i      => '0',
+         cnt1_i      => '1',
          cnt1_o      => open,
 
          -- IEC
