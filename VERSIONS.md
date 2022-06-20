@@ -1,3 +1,17 @@
+Version 3 - Month, Day 2022
+===========================
+
+This version is mainly a bugfix & compatibility release that is meant to
+increase the C64 compatibility of the core.
+
+## Bugfixes
+
+* User Port "low active" bug fixed: The bug prevented games like
+  Bomberman C64, that support a Multiplayer Joystick Interface
+  (https://www.c64-wiki.com/wiki/Multiplayer_Interface), to work. Reason is,
+  that due to the low-active nature of the User Port these games detected
+  "ghost activites" on the (not existent) joystick connected via User Port.
+
 Version 2 - June, 18 2022
 =========================
 
