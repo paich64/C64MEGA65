@@ -99,3 +99,7 @@ The following resources and tools were invaluable for developing C64MEGA65:
 
   * DirMaster by Style
     https://style64.org/dirmaster
+
+  * Disassembled, fully commented source code of Commando by Ricardo Quesada:
+    Helped to find "the CIA bug"; greatly improved our compatibility
+    https://gitlab.com/ricardoquesada/c64-commando-2084/-/tree/orig

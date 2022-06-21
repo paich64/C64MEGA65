@@ -2,9 +2,12 @@ Version 3 - Month, Day 2022
 ===========================
 
 This version is mainly a bugfix & compatibility release that is meant to
-increase the C64 compatibility of the core.
+heavily increase the C64 compatibility of the core.
 
 ## Bugfixes
+
+* CIA Bug fixed: The bug prevented demos like Comalight and Apparatus to run
+  and in games like Commando, the joystick's fire button did not work.
 
 * User Port "low active" bug fixed: The bug prevented games like
   Bomberman C64, that support a Multiplayer Joystick Interface

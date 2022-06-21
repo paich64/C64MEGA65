@@ -1,3 +1,23 @@
+Version 3 - Release Candidate 2
+===============================
+
+`C64MEGA65-3rc2.cor` and `C64MEGA65-3rc2.bit` are the Release Candidate 2
+(V3rc2) for Version 3 of the C64 for MEGA65 core.
+
+V3RC2 heavily increases the compatibility of the core by fixing a CIA bug:
+
+* Demos like Comalight and Apparatus work
+* The fire button that did sometimes not work in games (for example
+  in Commando) is now working reliably
+
+Technical background:
+
+CIA output signals (per pin) need to be AND-ed with their very input signal
+(same pin) instead of "overwriting" a pin with "just" the input signal even
+if there already was an existing output signal:
+
+https://github.com/MJoergen/C64MEGA65/commit/d0a88f7f4fa6d81822d97a21a830507507dd405b
+
 Version 3 - Release Candidate 1
 ===============================
 
