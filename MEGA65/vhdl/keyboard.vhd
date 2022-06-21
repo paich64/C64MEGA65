@@ -185,7 +185,8 @@ begin
    -- See also: https://www.c64-wiki.com/wiki/Keyboard#Keyboard_Matrix
    ------------------------------------------------------------------------------
     
-   cia1_pai_o(0) <=  (cia1_pbo_i(0) or key_pressed_n(m65_ins_del))      and
+   cia1_pai_o(0) <=  cia1_pao_i(0)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_ins_del))      and
                      (cia1_pbo_i(1) or key_pressed_n(m65_return))       and
                      
                      -- right cursor is "natural" for the C64, left cursor is emulated with RIGHT SHIFT + HORZ CRSR
@@ -202,7 +203,8 @@ begin
                                     and key_pressed_n(m65_up_crsr)))    and
                      j2_up_n;
 
-   cia1_pai_o(1) <=  (cia1_pbo_i(0) or key_pressed_n(m65_3))            and
+   cia1_pai_o(1) <=  cia1_pao_i(1)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_3))            and
                      (cia1_pbo_i(1) or key_pressed_n(m65_w))            and
                      (cia1_pbo_i(2) or key_pressed_n(m65_a))            and
                      (cia1_pbo_i(3) or key_pressed_n(m65_4))            and
@@ -212,7 +214,8 @@ begin
                      (cia1_pbo_i(7) or key_pressed_n(m65_left_shift))   and
                      j2_down_n;
 
-   cia1_pai_o(2) <=  (cia1_pbo_i(0) or key_pressed_n(m65_5))            and
+   cia1_pai_o(2) <=  cia1_pao_i(2)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_5))            and
                      (cia1_pbo_i(1) or key_pressed_n(m65_r))            and
                      (cia1_pbo_i(2) or key_pressed_n(m65_d))            and
                      (cia1_pbo_i(3) or key_pressed_n(m65_6))            and
@@ -222,7 +225,8 @@ begin
                      (cia1_pbo_i(7) or key_pressed_n(m65_x))            and
                      j2_left_n;
                      
-   cia1_pai_o(3) <=  (cia1_pbo_i(0) or key_pressed_n(m65_7))            and
+   cia1_pai_o(3) <=  cia1_pao_i(3)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_7))            and
                      (cia1_pbo_i(1) or key_pressed_n(m65_y))            and
                      (cia1_pbo_i(2) or key_pressed_n(m65_g))            and
                      (cia1_pbo_i(3) or key_pressed_n(m65_8))            and
@@ -232,7 +236,8 @@ begin
                      (cia1_pbo_i(7) or key_pressed_n(m65_v))            and
                      j2_right_n;
                      
-   cia1_pai_o(4) <=  (cia1_pbo_i(0) or key_pressed_n(m65_9))            and
+   cia1_pai_o(4) <=  cia1_pao_i(4)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_9))            and
                      (cia1_pbo_i(1) or key_pressed_n(m65_i))            and
                      (cia1_pbo_i(2) or key_pressed_n(m65_j))            and
                      (cia1_pbo_i(3) or key_pressed_n(m65_0))            and
@@ -242,7 +247,8 @@ begin
                      (cia1_pbo_i(7) or key_pressed_n(m65_n))            and
                      j2_fire_n;
                      
-   cia1_pai_o(5) <=  (cia1_pbo_i(0) or key_pressed_n(m65_plus))         and
+   cia1_pai_o(5) <=  cia1_pao_i(5)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_plus))         and
                      (cia1_pbo_i(1) or key_pressed_n(m65_p))            and
                      (cia1_pbo_i(2) or key_pressed_n(m65_l))            and
                      (cia1_pbo_i(3) or key_pressed_n(m65_minus))        and
@@ -251,7 +257,8 @@ begin
                      (cia1_pbo_i(6) or key_pressed_n(m65_at))           and
                      (cia1_pbo_i(7) or key_pressed_n(m65_comma));
                      
-   cia1_pai_o(6) <=  (cia1_pbo_i(0) or key_pressed_n(m65_gbp))          and
+   cia1_pai_o(6) <=  cia1_pao_i(6)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_gbp))          and
                      (cia1_pbo_i(1) or key_pressed_n(m65_asterisk))     and
                      (cia1_pbo_i(2) or key_pressed_n(m65_semicolon))    and
                      (cia1_pbo_i(3) or key_pressed_n(m65_clr_home))     and
@@ -265,7 +272,8 @@ begin
                      (cia1_pbo_i(6) or key_pressed_n(m65_arrow_up))     and
                      (cia1_pbo_i(7) or key_pressed_n(m65_slash));
 
-   cia1_pai_o(7) <=  (cia1_pbo_i(0) or key_pressed_n(m65_1))            and
+   cia1_pai_o(7) <=  cia1_pao_i(7)                                      and
+                     (cia1_pbo_i(0) or key_pressed_n(m65_1))            and
                      (cia1_pbo_i(1) or key_pressed_n(m65_arrow_left))   and
                      (cia1_pbo_i(2) or key_pressed_n(m65_ctrl))         and
                      (cia1_pbo_i(3) or key_pressed_n(m65_2))            and
@@ -278,7 +286,8 @@ begin
    -- Reading via port B and scanning (by setting bits to 0) on port A
    ------------------------------------------------------------------------------
     
-   cia1_pbi_o(0) <=  (cia1_pao_i(0) or key_pressed_n(m65_ins_del))      and
+   cia1_pbi_o(0) <=  cia1_pbo_i(0)                                      and
+                     (cia1_pao_i(0) or key_pressed_n(m65_ins_del))      and
                      (cia1_pao_i(1) or key_pressed_n(m65_3))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_5))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_7))            and
@@ -288,7 +297,8 @@ begin
                      (cia1_pao_i(7) or key_pressed_n(m65_1))            and
                      j1_up_n;
 
-   cia1_pbi_o(1) <=  (cia1_pao_i(0) or key_pressed_n(m65_return))       and
+   cia1_pbi_o(1) <=  cia1_pbo_i(1)                                      and
+                     (cia1_pao_i(0) or key_pressed_n(m65_return))       and
                      (cia1_pao_i(1) or key_pressed_n(m65_w))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_r))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_y))            and
@@ -299,7 +309,8 @@ begin
                      j1_down_n;
                                           
                      -- right cursor is "natural" for the C64, left cursor is emulated with RIGHT SHIFT + HORZ CRSR
-   cia1_pbi_o(2) <=  (cia1_pao_i(0) or (key_pressed_n(m65_horz_crsr)
+   cia1_pbi_o(2) <=  cia1_pbo_i(2)                                      and
+                     (cia1_pao_i(0) or (key_pressed_n(m65_horz_crsr)
                                     and key_pressed_n(m65_left_crsr)))  and
                                     
                      (cia1_pao_i(1) or key_pressed_n(m65_a))            and
@@ -311,7 +322,8 @@ begin
                      (cia1_pao_i(7) or key_pressed_n(m65_ctrl))         and
                      j1_left_n;
                      
-   cia1_pbi_o(3) <=  (cia1_pao_i(0) or key_pressed_n(m65_f7))           and
+   cia1_pbi_o(3) <=  cia1_pbo_i(3)                                      and
+                     (cia1_pao_i(0) or key_pressed_n(m65_f7))           and
                      (cia1_pao_i(1) or key_pressed_n(m65_4))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_6))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_8))            and
@@ -321,7 +333,8 @@ begin
                      (cia1_pao_i(7) or key_pressed_n(m65_2))            and
                      j1_right_n;
                      
-   cia1_pbi_o(4) <=  (cia1_pao_i(0) or key_pressed_n(m65_f1))           and
+   cia1_pbi_o(4) <=  cia1_pbo_i(4)                                      and
+                     (cia1_pao_i(0) or key_pressed_n(m65_f1))           and
                      (cia1_pao_i(1) or key_pressed_n(m65_z))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_c))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_b))            and
@@ -336,7 +349,8 @@ begin
                      (cia1_pao_i(7) or key_pressed_n(m65_space))        and
                      j1_fire_n;
                      
-   cia1_pbi_o(5) <=  (cia1_pao_i(0) or key_pressed_n(m65_f3))           and
+   cia1_pbi_o(5) <=  cia1_pbo_i(5)                                      and
+                     (cia1_pao_i(0) or key_pressed_n(m65_f3))           and
                      (cia1_pao_i(1) or key_pressed_n(m65_s))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_f))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_h))            and
@@ -345,7 +359,8 @@ begin
                      (cia1_pao_i(6) or key_pressed_n(m65_equal))        and
                      (cia1_pao_i(7) or key_pressed_n(m65_mega));
                      
-   cia1_pbi_o(6) <=  (cia1_pao_i(0) or key_pressed_n(m65_f5))           and
+   cia1_pbi_o(6) <=  cia1_pbo_i(6)                                      and
+                     (cia1_pao_i(0) or key_pressed_n(m65_f5))           and
                      (cia1_pao_i(1) or key_pressed_n(m65_e))            and
                      (cia1_pao_i(2) or key_pressed_n(m65_t))            and
                      (cia1_pao_i(3) or key_pressed_n(m65_u))            and
@@ -355,7 +370,8 @@ begin
                      (cia1_pao_i(7) or key_pressed_n(m65_q));
 
                      -- down cursor is "natural" for the C64, up cursor is emulated with RIGHT SHIFT + VERT CRSR
-   cia1_pbi_o(7) <=  (cia1_pao_i(0) or (key_pressed_n(m65_vert_crsr)
+   cia1_pbi_o(7) <=  cia1_pbo_i(7)                                      and
+                     (cia1_pao_i(0) or (key_pressed_n(m65_vert_crsr)
                                     and key_pressed_n(m65_up_crsr)))    and
                                     
                      (cia1_pao_i(1) or key_pressed_n(m65_left_shift))   and
