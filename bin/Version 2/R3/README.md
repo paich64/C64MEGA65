@@ -1,3 +1,16 @@
+Version 3 - Release Candidate 3
+===============================
+
+`C64MEGA65-3rc3.cor` and `C64MEGA65-3rc3.bit` are the Release Candidate 3
+(V3rc2) for Version 3 of the C64 for MEGA65 core.
+
+Fixes the "Arkanoid" bug by merging a bugfix from MiSTer upstream:
+https://github.com/MiSTer-devel/C64_MiSTer/commit/f9d38a72aff7f5374b47d783eed3b138a46402ba
+
+Additionally RC3 also fixes a wrong default value of Zero Page $01: When you
+do a `PRINT PEEK(1)` on a real C64 or on VICE you get `55` (i.e. `$37`). This
+is now also the case on our core.
+
 Version 3 - Release Candidate 2
 ===============================
 

@@ -9,11 +9,19 @@ heavily increase the C64 compatibility of the core.
 * CIA Bug fixed: The bug prevented demos like Comalight and Apparatus to run
   and in games like Commando, the joystick's fire button did not work.
 
+* CIA Bug fixed: "icr3 set priority over clear", merged from from MiSTer to
+  our codebase. This bug prevented games like Arkanoid to run.
+
 * User Port "low active" bug fixed: The bug prevented games like
   Bomberman C64, that support a Multiplayer Joystick Interface
   (https://www.c64-wiki.com/wiki/Multiplayer_Interface), to work. Reason is,
   that due to the low-active nature of the User Port these games detected
   "ghost activites" on the (not existent) joystick connected via User Port.
+
+* Zero Page register $01 has the correct default value $37 now. It had the
+  wrong value $C7 due to two bugs that have been fixed:
+  a) The Cassette Port's s SENSE and READ input are low active
+  b) The wrapper code that turns the 6502 into a 6510 contained a bug
 
 Version 2 - June, 18 2022
 =========================
