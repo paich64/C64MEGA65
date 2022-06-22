@@ -310,8 +310,8 @@ begin
 
          cass_motor  => open,
          cass_write  => open,
-         cass_sense  => '0',
-         cass_read   => '0'
+         cass_sense  => '1',           -- low active
+         cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
    -- The M2M framework needs the signals vga_hblank_o, vga_vblank_o, and vga_ce_o.
