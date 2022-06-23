@@ -35,7 +35,7 @@ entity main is
       kb_key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in std_logic;               -- low active: debounced feedback: is kb_key_num_i pressed right now?
 
-      -- MEGA65 joysticks
+      -- MEGA65 joysticks and paddles
       joy_1_up_n_i            : in std_logic;
       joy_1_down_n_i          : in std_logic;
       joy_1_left_n_i          : in std_logic;
@@ -47,6 +47,11 @@ entity main is
       joy_2_left_n_i          : in std_logic;
       joy_2_right_n_i         : in std_logic;
       joy_2_fire_n_i          : in std_logic;
+      
+      paddle_1_x              : in std_logic_vector(7 downto 0);
+      paddle_1_y              : in std_logic_vector(7 downto 0);
+      paddle_2_x              : in std_logic_vector(7 downto 0);
+      paddle_2_y              : in std_logic_vector(7 downto 0);
 
       -- C64 video out (after scandoubler)
       vga_red_o               : out std_logic_vector(7 downto 0);
@@ -158,6 +163,12 @@ architecture synthesis of main is
    signal hard_reset_n        : std_logic;
    signal hard_rst_counter    : natural := 0;
    signal c64_ram_data        : unsigned(7 downto 0);
+   
+   -- Paddles
+   signal pot1                : std_logic_vector(7 downto 0);  -- port 1, x
+   signal pot2                : std_logic_vector(7 downto 0);  -- port 1, y
+   signal pot3                : std_logic_vector(7 downto 0);  -- port 2, x
+   signal pot4                : std_logic_vector(7 downto 0);  -- port 2, y
 
 begin
 
@@ -262,10 +273,10 @@ begin
          irq_ext_n   => '1',
 
          -- paddle interface
-         pot1        => x"00",
-         pot2        => x"00",
-         pot3        => x"00",
-         pot4        => x"00",
+         pot1        => pot1,
+         pot2        => pot2,
+         pot3        => pot3,
+         pot4        => pot4,
 
          -- SID
          audio_l     => c64_sid_l,
@@ -313,6 +324,11 @@ begin
          cass_sense  => '1',           -- low active
          cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
+      
+   pot1 <= paddle_2_x when flip_joys_i else paddle_1_x;
+   pot2 <= paddle_2_y when flip_joys_i else paddle_1_y;
+   pot3 <= paddle_1_x when flip_joys_i else paddle_2_x;
+   pot4 <= paddle_1_y when flip_joys_i else paddle_2_y;
 
    -- The M2M framework needs the signals vga_hblank_o, vga_vblank_o, and vga_ce_o.
    -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
@@ -342,7 +358,6 @@ begin
          vga_ce <= vga_ce(0) & vga_ce(vga_ce'left downto 1);
       end if;
    end process p_vga_ce;
-
 
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;

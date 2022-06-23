@@ -76,7 +76,7 @@ port (
    pwm_l          : out std_logic;
    pwm_r          : out std_logic;
 
-   -- Joysticks
+   -- Joysticks and Paddles
    joy_1_up_n     : in std_logic;
    joy_1_down_n   : in std_logic;
    joy_1_left_n   : in std_logic;
@@ -88,6 +88,9 @@ port (
    joy_2_left_n   : in std_logic;
    joy_2_right_n  : in std_logic;
    joy_2_fire_n   : in std_logic;
+   
+   paddle         : in std_logic_vector(3 downto 0);
+   paddle_drain   : out std_logic;
 
    -- Built-in HyperRAM
    hr_d           : inout std_logic_vector(7 downto 0);    -- Data/Address
@@ -233,6 +236,23 @@ signal j2_down_n              : std_logic;
 signal j2_left_n              : std_logic;
 signal j2_right_n             : std_logic;
 signal j2_fire_n              : std_logic;
+
+-- Paddles in 50 MHz clock domain which happens to be QNICE's 
+signal qnice_pot1_x           : unsigned(7 downto 0);
+signal qnice_pot1_y           : unsigned(7 downto 0);
+signal qnice_pot2_x           : unsigned(7 downto 0);
+signal qnice_pot2_y           : unsigned(7 downto 0);
+
+signal qnice_pot1_x_n         : unsigned(7 downto 0);
+signal qnice_pot1_y_n         : unsigned(7 downto 0);
+signal qnice_pot2_x_n         : unsigned(7 downto 0);
+signal qnice_pot2_y_n         : unsigned(7 downto 0);
+
+-- Paddles after CDC to C64's clock domain
+signal main_pot1_x            : std_logic_vector(7 downto 0);
+signal main_pot1_y            : std_logic_vector(7 downto 0);
+signal main_pot2_x            : std_logic_vector(7 downto 0);
+signal main_pot2_y            : std_logic_vector(7 downto 0);
 
 -- On-Screen-Menu (OSM) for VGA
 signal video_osm_cfg_enable   : std_logic;
@@ -497,6 +517,11 @@ begin
          joy_2_right_n_i      => j2_right_n,
          joy_2_fire_n_i       => j2_fire_n,
 
+         paddle_1_x           => main_pot1_x,
+         paddle_1_y           => main_pot1_y,
+         paddle_2_x           => main_pot2_x,
+         paddle_2_y           => main_pot2_y,
+
          -- C64 video out
          vga_red_o            => main_red,
          vga_green_o          => main_green,
@@ -735,6 +760,61 @@ begin
          when others => null;
       end case;
    end process qnice_ramrom_devices;
+   
+   -- Generate the paddle readings (mouse not supported, yet)
+   -- Works with 50 MHz, which happens to be the QNICE clock domain 
+   i_mouse_paddles: entity work.mouse_input
+      port map (
+         clk                     => qnice_clk,
+   
+         mouse_debug             => open,
+         amiga_mouse_enable_a    => '0',
+         amiga_mouse_enable_b    => '0',
+         amiga_mouse_assume_a    => '0',
+         amiga_mouse_assume_b    => '0',
+      
+         -- These are the 1351 mouse / C64 paddle inputs and drain control
+         fa_potx                 => paddle(0),
+         fa_poty                 => paddle(1),
+         fb_potx                 => paddle(2),
+         fb_poty                 => paddle(3),
+         pot_drain               => paddle_drain,
+           
+         -- To allow auto-detection of Amiga mouses, we need to know what the
+         -- rest of the joystick pins are doing
+         fa_fire                 => '1',
+         fa_left                 => '1',
+         fa_right                => '1',
+         fa_up                   => '1',
+         fa_down                 => '1',
+         fb_fire                 => '1',
+         fb_left                 => '1',
+         fb_right                => '1',
+         fb_up                   => '1',
+         fb_down                 => '1',
+   
+         fa_up_out               => open,
+         fa_down_out             => open,
+         fa_left_out             => open,
+         fa_right_out            => open,
+   
+         fb_up_out               => open,
+         fb_down_out             => open,
+         fb_left_out             => open,
+         fb_right_out            => open,
+         
+         -- We output the four sampled pot values
+         pota_x                  => qnice_pot1_x,
+         pota_y                  => qnice_pot1_y,
+         potb_x                  => qnice_pot2_x,
+         potb_y                  => qnice_pot2_y
+      );
+      
+   -- C64 games seem to expect an inverted signal compared to what we receive from i_mouse_paddles
+   qnice_pot1_x_n <= x"FF" - qnice_pot1_x;
+   qnice_pot1_y_n <= x"FF" - qnice_pot1_y;
+   qnice_pot2_x_n <= x"FF" - qnice_pot2_x;
+   qnice_pot2_y_n <= x"FF" - qnice_pot2_y;
 
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
@@ -775,23 +855,31 @@ begin
    -- Clock domain crossing: QNICE to C64
    i_qnice2main: xpm_cdc_array_single
       generic map (
-         WIDTH => 261
+         WIDTH => 293
       )
       port map (
-         src_clk                => qnice_clk,
-         src_in(0)              => qnice_csr_reset,
-         src_in(1)              => qnice_csr_pause,
-         src_in(2)              => qnice_csr_keyboard_on,
-         src_in(3)              => qnice_csr_joy1_on,
-         src_in(4)              => qnice_csr_joy2_on,
-         src_in(260 downto 5)   => qnice_osm_control_m,
-         dest_clk               => main_clk,
-         dest_out(0)            => main_qnice_reset,
-         dest_out(1)            => main_qnice_pause,
-         dest_out(2)            => main_csr_keyboard_on,
-         dest_out(3)            => main_csr_joy1_on,
-         dest_out(4)            => main_csr_joy2_on,
-         dest_out(260 downto 5) => main_osm_control_m
+         src_clk                    => qnice_clk,
+         src_in(0)                  => qnice_csr_reset,
+         src_in(1)                  => qnice_csr_pause,
+         src_in(2)                  => qnice_csr_keyboard_on,
+         src_in(3)                  => qnice_csr_joy1_on,
+         src_in(4)                  => qnice_csr_joy2_on,
+         src_in(260 downto 5)       => qnice_osm_control_m,
+         src_in(268 downto 261)     => std_logic_vector(qnice_pot1_x_n),
+         src_in(276 downto 269)     => std_logic_vector(qnice_pot1_y_n),
+         src_in(284 downto 277)     => std_logic_vector(qnice_pot2_x_n),
+         src_in(292 downto 285)     => std_logic_vector(qnice_pot2_y_n),
+         dest_clk                   => main_clk,
+         dest_out(0)                => main_qnice_reset,
+         dest_out(1)                => main_qnice_pause,
+         dest_out(2)                => main_csr_keyboard_on,
+         dest_out(3)                => main_csr_joy1_on,
+         dest_out(4)                => main_csr_joy2_on,
+         dest_out(260 downto 5)     => main_osm_control_m,
+         dest_out(268 downto 261)   => main_pot1_x,
+         dest_out(276 downto 269)   => main_pot1_y,
+         dest_out(284 downto 277)   => main_pot2_x,
+         dest_out(292 downto 285)   => main_pot2_y
       ); -- i_qnice2main
 
    -- Clock domain crossing: C64 to QNICE

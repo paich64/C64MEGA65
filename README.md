@@ -24,12 +24,12 @@ on-screen-menu.
 Features
 --------
 
-With our [Release 2](VERSIONS.md), we are striving for a **retro C64 PAL
+With our [Release 3](VERSIONS.md), we are striving for a **retro C64 PAL
 experience**: The core turns your MEGA65 into a Commodore 64, with a
-C1541 drive and a pair of Joysticks. No frills. The C64 runs the original
-Commodore KERNAL and the C1541 runs the original Commodore DOS, which leads to
-authentic loading speeds. You will be surprised, how slowly the C64/C1541
-were loading... :-)
+C1541 drive and a pair of Joysticks or Paddles. No frills. The C64 runs the
+original Commodore KERNAL and the C1541 runs the original Commodore DOS, which
+leads to authentic loading speeds. You will be surprised, how slowly the
+C64/C1541 were loading... :-)
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
@@ -72,16 +72,16 @@ recognizing this core as genuine C64 hardware.
 
 ### Constraints and Roadmap
 
-Our Release 2 is still an early release. Thanks to all the folks who
+Our Release 3 is still an early release. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
-Commodore 64. With our Release 2 you can play nearly all the available games
+Commodore 64. With our Release 3 you can play nearly all the available games
 and watch almost all demos ever written for the C64. It happens more often
 than not, that the core is recognized as real hardware by software.
 
 At this moment, our MEGA65 version of the core is not supporting
 some of the very nice hardware offerings that the MEGA65 makes, such as:
 
-* Mouse / Paddles
+* Mouse
 * Expansion port: Support hardware cartridges
 * IEC port: Support real drives, printers, ...
 * Use the MEGA65's drive as a C1581
@@ -122,7 +122,7 @@ supporting older R2 machines. If you are not sure what MEGA65 version you have
 then you very probably have an R3, R3A or newer: The Devkits are R3 and the
 machines from Trenz are R3A.
 
-1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V2/C64MEGA65-V2.zip)
+1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V3/C64MEGA65-V3.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Copy the `.cor` file on an SD card that has been formatted using the
    MEGA65's built-in formatting tool. If you want to be on the safe side, just

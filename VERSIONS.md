@@ -2,7 +2,12 @@ Version 3 - Month, Day 2022
 ===========================
 
 This version is mainly a bugfix & compatibility release that is meant to
-heavily increase the C64 compatibility of the core.
+heavily increase the C64 compatibility of the core. It also adds support
+for Paddles.
+
+## New feature
+
+* Support for Paddles added: Connect compatible paddles to the joystick ports.
 
 ## Bugfixes
 
@@ -20,8 +25,8 @@ heavily increase the C64 compatibility of the core.
 
 * Zero Page register $01 has the correct default value $37 now. It had the
   wrong value $C7 due to two bugs that have been fixed:
-  a) The Cassette Port's s SENSE and READ input are low active
-  b) The wrapper code that turns the 6502 into a 6510 contained a bug
+  (a) The Cassette Port's s SENSE and READ input are low active.
+  (b) The wrapper code that turns the 6502 into a 6510 contained a bug.
 
 Version 2 - June, 18 2022
 =========================
@@ -100,7 +105,7 @@ stage:
 * REU and GeoRAM using HyperRAM
 * The following MEGA65 hardware ports are not yet working:
   * Cartridges via the MEGA65's hardware Expansion Port
-  * Paddles / mouse via the joystick ports
+  * Mouse via the joystick ports
   * IEC port (for example to plug in a real C1541)	
   * C1581 via MEGA65's disk drive
   * REU via expansion port

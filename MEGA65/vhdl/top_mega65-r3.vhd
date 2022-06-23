@@ -65,7 +65,7 @@ port (
    pwm_l          : out std_logic;
    pwm_r          : out std_logic;
 
-   -- Joysticks
+   -- Joysticks and Paddles
    joy_1_up_n     : in  std_logic;
    joy_1_down_n   : in  std_logic;
    joy_1_left_n   : in  std_logic;
@@ -77,7 +77,10 @@ port (
    joy_2_left_n   : in  std_logic;
    joy_2_right_n  : in  std_logic;
    joy_2_fire_n   : in  std_logic;
-
+   
+   paddle         : in std_logic_vector(3 downto 0);
+   paddle_drain   : out std_logic;
+   
    -- Built-in HyperRAM
    hr_d           : inout std_logic_vector(7 downto 0);    -- Data/Address
    hr_rwds        : inout std_logic;               -- RW Data strobe
@@ -244,7 +247,7 @@ begin
          pwm_l          => pwm_l,
          pwm_r          => pwm_r,
 
-         -- Joysticks
+         -- Joysticks and Paddles
          joy_1_up_n     => dbnce_joy1_up_n,
          joy_1_down_n   => dbnce_joy1_down_n,
          joy_1_left_n   => dbnce_joy1_left_n,
@@ -256,7 +259,11 @@ begin
          joy_2_left_n   => dbnce_joy2_left_n,
          joy_2_right_n  => dbnce_joy2_right_n,
          joy_2_fire_n   => dbnce_joy2_fire_n,
+         
+         paddle         => paddle,
+         paddle_drain   => paddle_drain,         
 
+         -- HyperRAM
          hr_d           => hr_d,
          hr_rwds        => hr_rwds,
          hr_reset       => hr_reset,
