@@ -162,7 +162,7 @@ then try this (while the display is black):
 8. Press <kbd>Return</kbd>.
 9. Wait a few seconds.
 
-### Explanation
+### Explanation: DVI mode
 
 The recipe above first activates the "DVI mode" as you are choosing the
 menu item "HDMI: DVI (no sound)" in the On-Screen-Menu when you press the

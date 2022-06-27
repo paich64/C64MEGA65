@@ -1,5 +1,5 @@
-Version 3 - Month, Day 2022
-===========================
+Version 3 - June, 27 2022
+=========================
 
 This version is mainly a bugfix & compatibility release that is meant to
 heavily increase the C64 compatibility of the core. It also adds support
