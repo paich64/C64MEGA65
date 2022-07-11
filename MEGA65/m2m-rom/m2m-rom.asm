@@ -185,8 +185,6 @@ D64_STDSIZE_H   .EQU    0x0002
                 .ORG    0x8000                  ; RAM starts at 0x8000
 #endif
 
-FINPUT_BUF      .BLOCK  256
-
 ; M2M shell variables
 #include "../../M2M/rom/shell_vars.asm"
 
