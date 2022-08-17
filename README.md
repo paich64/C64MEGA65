@@ -96,7 +96,7 @@ supported yet, such as:
 
 The MiSTer core, which is the basis of this MEGA65 core offers a ton of
 additional convenience features and nerdy stuff. We are not yet supporting
-most of it. Have a look at our [Roadmap](VERSIONS.md#feature-roadmap)
+most of it. Have a look at our [Roadmap](ROADMAP.md)
 to learn more.
 
 Since we do this as a hobby, it might take a year or longer until these
