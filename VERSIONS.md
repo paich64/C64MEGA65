@@ -1,3 +1,9 @@
+Version 4 - MONTH, DD, YYYY
+===========================
+
+* Reduced joystick latency from 5ms to 1ms by decreasing the stable time of
+  the signal debouncer.
+
 Version 3 - June, 27 2022
 =========================
 

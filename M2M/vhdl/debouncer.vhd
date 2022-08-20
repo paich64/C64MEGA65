@@ -59,19 +59,19 @@ begin
    -- 1ms for the fire button
         
    do_dbnce_joy1_up : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_1_up_n, result => dbnce_joy1_up_n);
 
    do_dbnce_joy1_down : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_1_down_n, result => dbnce_joy1_down_n);
 
    do_dbnce_joy1_left : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_1_left_n, result => dbnce_joy1_left_n);
 
    do_dbnce_joy1_right : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_1_right_n, result => dbnce_joy1_right_n);
 
    do_dbnce_joy1_fire : entity work.debounce
@@ -79,19 +79,19 @@ begin
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_1_fire_n, result => dbnce_joy1_fire_n);
       
    do_dbnce_joy2_up : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_2_up_n, result => dbnce_joy2_up_n);
 
    do_dbnce_joy2_down : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_2_down_n, result => dbnce_joy2_down_n);
 
    do_dbnce_joy2_left : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_2_left_n, result => dbnce_joy2_left_n);
 
    do_dbnce_joy2_right : entity work.debounce
-      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 5)
+      generic map(initial => '1', clk_freq => CLK_FREQ, stable_time => 1)
       port map (clk => clk, reset_n => dbnce_reset_n, button => joy_2_right_n, result => dbnce_joy2_right_n);
 
    do_dbnce_joy2_fire : entity work.debounce
