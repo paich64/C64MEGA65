@@ -40,6 +40,7 @@
 ;;  DEC-2016:    Completely redone string input: gets, gets_s, gets_slf, gets_core (by sy2002)
 ;;               Added file system support: mount, browse, load/run (by sy2002)
 ;;  AUG-2020:    Support for new ISA, improved disassembly of relative branches (by vaxman)
+;;  AUG-2021:    Support for writing to FAT32 files: f32_fwrite (by sy2002)
 ;;
 ;;
 ;; Bits and pieces:
@@ -129,6 +130,7 @@ enter!          RBRA    MISC$ENTER, 1
 leave!          RBRA    MISC$LEAVE, 1
 strcpy!         RBRA    STR$CPY, 1
 strstr!         RBRA    STR$STRSTR, 1
+f32_fwrite!     RBRA    FAT32$FILE_WB, 1
 ;
 ;  The actual monitor code starts here:
 ;
