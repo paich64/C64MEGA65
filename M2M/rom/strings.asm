@@ -102,6 +102,8 @@ ERR_FATAL_HEAP2 .ASCII_W "Heap corruption: Hint: OPTM_HEAP_SIZE\n"
 ERR_FATAL_BSTCK .ASCII_W "Stack overflow: Hint: B_STACK_SIZE\n"
 ERR_FATAL_VDMAX .ASCII_W "Too many virtual drives: Hint: VDRIVES_MAX\n"
 ERR_FATAL_VDBUF .ASCII_W "Not enough buffers for virtual drives.\n"
+ERR_FATAL_FZERO .ASCII_W "Write disk: File handle is zero.\n"
+ERR_FATAL_SEEK  .ASCII_W "Write disk: Seek failed.\n"
 
 ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 

@@ -409,7 +409,7 @@ _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
                 MOVE    HANDLE_FILE, R10
                 ADD     FAT32$FDH_SIZE_HI, R10
                 MOVE    @R10, R10               ; R10: file size: high word
-                MOVE    1, R11                  ; R11=1=read only @TODO
+                XOR     R11, R11                ; 0=read/write disk
                 MOVE    R6, R12                 ; R12: disk image type
                 RSUB    VD_STROBE_IM, 1         ; notify MiSTer
 
@@ -433,7 +433,7 @@ _HM_MOUNTED     CMP     OPTM_KEY_SELALT, R6     ; unmount the whole drive?
                 MOVE    R7, R8                  ; virtual drive number
                 XOR     R9, R9                  ; low word of image size
                 XOR     R10, R10                ; high word of image size
-                XOR     R11, R11                ; read-only
+                XOR     R11, R11                ; 0=read/write disk
                 XOR     R12, R12
                 RSUB    VD_STROBE_IM, 1
                 RBRA    _HM_SDMOUNTED7, 1       ; redraw menu and exit
@@ -620,6 +620,23 @@ _HANDLE_IO_NXT  ADD     1, R0                   ; next drive
                 CMP     R0, R1                  ; done?
                 RBRA    _HANDLE_IO_1, !Z        ; no, continue
 
+                ; write request pending?
+                XOR     R0, R0                  ; R0: number of virtual drive
+_HANDLE_IO_2    MOVE    R0, R8
+                MOVE    VD_WR, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8                   ; write request?
+                RBRA    _HANDLE_IO_NXT2, !Z     ; no: next drive, if any
+
+                ; handle write request
+                MOVE    R0, R8
+                RSUB    HANDLE_DRV_WR, 1
+
+                ; next drive, if applicable
+_HANDLE_IO_NXT2 ADD     1, R0                   ; next drive
+                CMP     R0, R1                  ; done?
+                RBRA    _HANDLE_IO_2, !Z        ; no, continue
+
                 SYSCALL(leave, 1)
                 RET
 
@@ -674,7 +691,7 @@ _HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
                 MOVE    R12, R9
                 RSUB    VD_CAD_WRITE, 1
 
-                MOVE    VD_B_WREN, R8       ; strobe write enable
+                MOVE    VD_B_WREN, R8           ; strobe write enable
                 MOVE    1, R9
                 RSUB    VD_CAD_WRITE, 1
                 XOR     0, R9
@@ -691,11 +708,132 @@ _HDR_SEND_LOOP  CMP     R6, R0                  ; transmission done?
                 ; unassert ACK
 _HDR_SEND_DONE  MOVE    R11, R8                 ; virtual drive ID
                 MOVE    VD_ACK, R9              ; unassert ACK
-                MOVE    0, R10
+                XOR     R10, R10
                 RSUB    VD_DRV_WRITE, 1
 
                 SYSCALL(leave, 1)
                 RET
+
+; Handle write request from drive number in R8:
+;
+; Transfer the data provided by the core to the linear disk image buffer
+; and in parallel write it to the SD card
+HANDLE_DRV_WR   SYSCALL(enter, 1)
+
+                MOVE    R8, R0                  ; R0: drive number
+
+                ; continue if file-handle is not zero, fatal otherwise
+                MOVE    HANDLE_FILE, R8
+                CMP     0, @R8
+                RBRA    _HDW_START, !Z
+                MOVE    ERR_FATAL_FZERO, R8
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+                ; target write address in bytes HI/LO
+_HDW_START      MOVE    R0, R8
+                MOVE    VD_BYTES_H, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R1                  ; R1: target bytes hi
+
+                ; DEBUG
+                SYSCALL(puthex, 1)
+
+                MOVE    R0, R8
+                MOVE    VD_BYTES_L, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R2                  ; R2: target bytes lo
+
+                ; DEBUG
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                ; to-be-written block-size in bytes
+                MOVE    R0, R8
+                MOVE    VD_SIZEB, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R3                  ; R3: to-be-written amt bytes
+
+                ; DEBUG
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                ; 4k window and offset in disk mount buffer
+                MOVE    R0, R8
+                MOVE    VD_4K_WIN, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R4                  ; R4: 4k window
+                MOVE    R0, R8
+                MOVE    VD_4K_OFFS, R9
+                RSUB    VD_DRV_READ, 1
+                MOVE    M2M$RAMROM_DATA, R5
+                ADD     R8, R5                  ; R5: offset in 4k window
+
+                XOR     R6, R6                  ; R6: transmitted bytes
+                MOVE    M2M$RAMROM_DATA, R7     ; R7=end of window marker
+                ADD     0x1000, R7
+
+                ; read next to-be-written byte from disks internal buffer
+_HDW_NEXT_BYTE  MOVE    VD_B_ADDR, R8           ; set address within buffer
+                MOVE    R6, R9                  ; R6: transm. bytes = address
+                RSUB    VD_CAD_WRITE, 1
+                MOVE    R0, R8
+                MOVE    VD_B_DIN, R9            ; read byte from above addr
+                RSUB    VD_DRV_READ, 1
+                MOVE    R8, R12                 ; R12: next byte from int. buf
+
+                ; prepare disk image buffer to store next byte
+                MOVE    M2M$RAMROM_DEV, R8
+                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
+                ADD     R0, R9                  ; select right ID for vdrive
+                MOVE    @R9, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    R4, @R8
+
+;                ; DEBUG
+;                MOVE    R5, R8
+;                SYSCALL(puthex, 1)
+;                MOVE    R12, R8
+;                SYSCALL(puthex, 1)
+;                SYSCALL(crlf, 1)
+
+                ; write next byte to disk image buffer and
+                ; store it on the SD card
+                MOVE    R12, @R5++              ; write byte to RAM buffer
+                ;@TODO                          ; write byte to SD card
+                ADD     1, R6                   ; one more byte transmitted
+                CMP     R3, R6                  ; done?
+                RBRA    _HDW_DONE, Z            ; yes
+
+                ; handle 4k window boundary
+                CMP     R5, R7                  ; 4k boundary reached?
+                RBRA    _HDW_NEXT_BYTE, !Z      ; no: next byte
+                MOVE    M2M$RAMROM_DATA, R5     ; yes: reset offset
+                ADD     1, R4                   ; next 4k window
+                RBRA    _HDW_NEXT_BYTE, 1
+
+                ; increase target address aka transmitted bytes
+                ; and check if we are done
+                ADD     1, R6
+
+                ; ackknowledge sd_wr_i
+_HDW_DONE       MOVE    R0, R8
+                MOVE    VD_ACK, R9
+                MOVE    1, R10
+                RSUB    VD_DRV_WRITE, 1
+
+                ; unassert ACK
+                MOVE    R0, R8
+                MOVE    VD_ACK, R9
+                XOR     R10, R10
+                RSUB    VD_DRV_WRITE, 1
+
+                ; make sure that the SD card write buffer is flushed
+                ; @TODO flush
+
+                SYSCALL(leave, 1)
+                RET
+
 
 ; ----------------------------------------------------------------------------
 ; Debug mode:

@@ -44,7 +44,9 @@
 --
 -- This protocol is implemented in the MiSTerMEGA65 firmware. In standard use cases, you do not
 -- need to worry about it. Nevertheless, we are documenting it here for our own purposes and
--- "just in case". Currently, we only support reading.
+-- "just in case".
+--
+-- RESET & READING:
 --
 -- 1. Reset: There are several options in the original MiSTer how and when a drive should be made
 --    available (i.e. not being reset). Implement your choice. Use drive_mounted_o as needed, because
@@ -337,7 +339,7 @@ begin
                      when x"7" =>                        
                         sd_buff_wr <= qnice_data_i(0);
                         
-                     -- 7 and 8 are read-only: Number of virtual drives and Block size for LBA adressing
+                     -- 8 .. A are read-only: Number of virtual drives, Block size for LBA adressing, drive_mounted_o
                      when x"8" =>
                      when x"9" =>
                         null;
@@ -492,7 +494,11 @@ begin
                
             -- sd_wr_i
             when x"9" =>
-               null;
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= sd_wr_i(i);
+                  end if;
+               end loop;
             
             -- sd_ack_o
             when x"A" =>
