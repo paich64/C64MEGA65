@@ -763,11 +763,13 @@ _HDW_START      MOVE    R0, R8
                 MOVE    VD_4K_WIN, R9
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R4                  ; R4: 4k window
+                MOVE    R4, @--SP               ; remember R4
                 MOVE    R0, R8
                 MOVE    VD_4K_OFFS, R9
                 RSUB    VD_DRV_READ, 1
                 MOVE    M2M$RAMROM_DATA, R5
                 ADD     R8, R5                  ; R5: offset in 4k window
+                MOVE    R5, @--SP               ; remember R5
 
                 XOR     R6, R6                  ; R6: transmitted bytes
                 MOVE    M2M$RAMROM_DATA, R7     ; R7=end of window marker
@@ -790,17 +792,8 @@ _HDW_NEXT_BYTE  MOVE    VD_B_ADDR, R8           ; set address within buffer
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    R4, @R8
 
-;                ; DEBUG
-;                MOVE    R5, R8
-;                SYSCALL(puthex, 1)
-;                MOVE    R12, R8
-;                SYSCALL(puthex, 1)
-;                SYSCALL(crlf, 1)
-
-                ; write next byte to disk image buffer and
-                ; store it on the SD card
+                ; write next byte to disk image buffer
                 MOVE    R12, @R5++              ; write byte to RAM buffer
-                ;@TODO                          ; write byte to SD card
                 ADD     1, R6                   ; one more byte transmitted
                 CMP     R3, R6                  ; done?
                 RBRA    _HDW_DONE, Z            ; yes
@@ -811,10 +804,6 @@ _HDW_NEXT_BYTE  MOVE    VD_B_ADDR, R8           ; set address within buffer
                 MOVE    M2M$RAMROM_DATA, R5     ; yes: reset offset
                 ADD     1, R4                   ; next 4k window
                 RBRA    _HDW_NEXT_BYTE, 1
-
-                ; increase target address aka transmitted bytes
-                ; and check if we are done
-                ADD     1, R6
 
                 ; ackknowledge sd_wr_i
 _HDW_DONE       MOVE    R0, R8
@@ -828,12 +817,58 @@ _HDW_DONE       MOVE    R0, R8
                 XOR     R10, R10
                 RSUB    VD_DRV_WRITE, 1
 
+                ; seek to the right spot within the disk image
+                MOVE    HANDLE_FILE, R8
+                MOVE    R2, R9                  ; R9: lo word of seek pos
+                MOVE    R1, R10                 ; R10: hi word of seek pos
+                SYSCALL(f32_fseek, 1)
+                CMP     0, R9                   ; seek worked?
+                RBRA    _HDW_RESTORE, Z         ; yes
+                MOVE    ERR_FATAL_SEEK, R8      ; no, R9 contains err. no.
+                RBRA    FATAL, 1                ; show err msg and halt core
+
+                ; read data from internal disk buffer and write it to SD card
+_HDW_RESTORE    MOVE    @SP++, R5               ; restore start offset
+                MOVE    @SP++, R4               ; restore start 4k window
+                XOR     R6, R6                  ; reset byte counter
+
+_HDW_NSDBYTE    MOVE    M2M$RAMROM_DEV, R8
+                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
+                ADD     R0, R9                  ; select right ID for vdrive
+                MOVE    @R9, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    R4, @R8
+                MOVE    @R5++, R12              ; read byte from img buffer
+
+                MOVE    HANDLE_FILE, R8         ; write byte to SD card
+                MOVE    R12, R9
+                SYSCALL(f32_fwrite, 1)
+                CMP     0, R9                   ; write successful?
+                RBRA    _HDW_SDINCADDR, Z       ; yes
+                MOVE    ERR_FATAL_WRITE, R8     ; no, R9 contains err. no.
+                RBRA    FATAL, 1                ; show err msg and halt core
+
+_HDW_SDINCADDR  ADD     1, R6                   ; one more byte transmitted
+                CMP     R3, R6                  ; done?
+                RBRA    _HDW_FLUSH, Z           ; yes                
+
+                ; handle 4k window boundary
+                CMP     R5, R7                  ; 4k boundary reached?
+                RBRA    _HDW_NSDBYTE, !Z        ; no: next byte
+                MOVE    M2M$RAMROM_DATA, R5     ; yes: reset offset
+                ADD     1, R4                   ; next 4k window
+                RBRA    _HDW_NSDBYTE, 1
+
                 ; make sure that the SD card write buffer is flushed
-                ; @TODO flush
+_HDW_FLUSH      MOVE    HANDLE_FILE, R8
+                SYSCALL(f32_fflush, 1)
+                CMP     0, R9                   ; flush OK?
+                RBRA    _HDW_RET, Z             ; yes
+                MOVE    ERR_FATAL_FLUSH, R8     ; no, R9 contains err. no.
+                RBRA    FATAL, 1                ; show err msg and halt core
 
-                SYSCALL(leave, 1)
+_HDW_RET        SYSCALL(leave, 1)
                 RET
-
 
 ; ----------------------------------------------------------------------------
 ; Debug mode:

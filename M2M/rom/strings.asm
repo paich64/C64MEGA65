@@ -104,6 +104,8 @@ ERR_FATAL_VDMAX .ASCII_W "Too many virtual drives: Hint: VDRIVES_MAX\n"
 ERR_FATAL_VDBUF .ASCII_W "Not enough buffers for virtual drives.\n"
 ERR_FATAL_FZERO .ASCII_W "Write disk: File handle is zero.\n"
 ERR_FATAL_SEEK  .ASCII_W "Write disk: Seek failed.\n"
+ERR_FATAL_WRITE .ASCII_W "Write disk: Writing failed.\n"
+ERR_FATAL_FLUSH .ASCII_W "Write disk: Flush failed.\n"
 
 ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 
