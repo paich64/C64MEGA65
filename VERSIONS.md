@@ -4,6 +4,14 @@ Version 4 - MONTH, DD, YYYY
 * Reduced joystick latency from 5ms to 1ms by decreasing the stable time of
   the signal debouncer.
 
+TODO: @MH discuss with @MJoergen: Can we improve the HDMI reliability, i.e.
+  ability to run on more displays by using PBLOCKs? What triggered this idea
+  is this post on Discord:
+  https://discord.com/channels/719326990221574164/794775503818588200/991106092539068476
+  We did not change anything in the core when it comes to HDMI, so the only
+  thing that changed in this respect was the random placement of the HDMI
+  component in another run of Vivado.
+
 Version 3 - June, 27 2022
 =========================
 
