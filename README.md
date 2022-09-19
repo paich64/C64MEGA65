@@ -81,7 +81,6 @@ than not, that the core is recognized as real hardware by software.
 At this moment, our MEGA65 version of the core is not supporting
 some of the very nice hardware offerings that the MEGA65 makes, such as:
 
-* Mouse
 * Expansion port: Support hardware cartridges
 * IEC port: Support real drives, printers, ...
 * Use the MEGA65's drive as a C1581
@@ -92,7 +91,6 @@ supported yet, such as:
 * NTSC mode
 * Mounting tapes (`*.tap`)
 * Mounting cartridges (`*.crt`)
-* Writing to mounted disks (all file operations are read-only)
 
 The MiSTer core, which is the basis of this MEGA65 core offers a ton of
 additional convenience features and nerdy stuff. We are not yet supporting

@@ -12,7 +12,6 @@ Feature Roadmap
 * NTSC
 * Support two drives: 8 and 9
 * Dual SID
-* Writing to virtual disks
 * Ability to save the settings of the core
 * More sophisticated scalers and scandoublers
 * Tape mounting via SD card
@@ -27,7 +26,6 @@ Feature Roadmap
 * REU and GeoRAM using HyperRAM
 * The following MEGA65 hardware ports are not yet working:
   * Cartridges via the MEGA65's hardware Expansion Port
-  * Mouse via the joystick ports
   * IEC port (for example to plug in a real C1541)
   * C1581 via MEGA65's disk drive
   * REU via expansion port
@@ -53,7 +51,6 @@ particular order:
   to improve flicker-free HDMI further (maybe there is a possibility to
   achieve flicker-free without the need of slowing down by 0.25%)
 * Re-do QNICE's SD Card controller: Go from SPI to native
-* Enhance QNICE's FAT32 library so that it supports writing
 * HyperRAM device support to QNICE
 * Hardware debugger (single-step the CPU via the on-screen-menu)
 * Line 65 in fdc1772.v: back to 2 or work with generic?

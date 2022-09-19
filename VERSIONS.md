@@ -1,8 +1,23 @@
 Version 4 - MONTH, DD, YYYY
 ===========================
 
+Write support for the C1541 is the main feature of this release: Save your
+high-scores and your progress in games that support it and work with GEOS.
+
+## New Features
+
+WIP C1541 write support: Ability to write to D64 image files on the SD card.
+
+## Changes
+
 * Reduced joystick latency from 5ms to 1ms by decreasing the stable time of
   the signal debouncer.
+
+TODO: C64 Mouse should work (since paddles work): Check with MouSTer and any
+  mouse checking tool: If Mouse works: Mention it here in versions; otherwise
+  re-add "Mouse" to ROADMAP.md and README.md
+
+TODO: Check GEOS: Mouse + writing to D64 disk images
 
 TODO: @MH discuss with @MJoergen: Can we improve the HDMI reliability, i.e.
   ability to run on more displays by using PBLOCKs? What triggered this idea
