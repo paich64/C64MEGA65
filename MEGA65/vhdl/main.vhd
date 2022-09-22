@@ -82,7 +82,15 @@ entity main is
       c64_qnice_data_i        : in std_logic_vector(15 downto 0);
       c64_qnice_data_o        : out std_logic_vector(15 downto 0);
       c64_qnice_ce_i          : in std_logic;
-      c64_qnice_we_i          : in std_logic
+      c64_qnice_we_i          : in std_logic;
+
+      -- RAM Expansion Unit
+      ext_cycle_o             : out std_logic;
+      reu_cycle_i             : in  std_logic;
+      reu_addr_o              : out std_logic_vector(24 downto 0);
+      reu_dout_o              : out std_logic_vector(7 downto 0);
+      reu_din_i               : in  std_logic_vector(7 downto 0);
+      reu_we_o                : out std_logic
    );
 end entity main;
 
@@ -170,6 +178,42 @@ architecture synthesis of main is
    signal pot3                : std_logic_vector(7 downto 0);  -- port 2, x
    signal pot4                : std_logic_vector(7 downto 0);  -- port 2, y
 
+   signal dma_req             : std_logic;
+   signal dma_cycle           : std_logic;
+   signal dma_addr            : std_logic_vector(15 downto 0);
+   signal dma_dout            : std_logic_vector(7 downto 0);
+   signal dma_din             : unsigned(7 downto 0);
+   signal dma_we              : std_logic;
+   signal reu_irq             : std_logic;
+   signal reu_oe              : std_logic;
+   signal reu_dout            : unsigned(7 downto 0);
+   signal iof                 : std_logic;
+
+   component reu
+      port (
+         clk         : in  std_logic;
+         reset       : in  std_logic;
+         cfg         : in  std_logic_vector(1 downto 0);
+         dma_req     : out std_logic;
+         dma_cycle   : in  std_logic;
+         dma_addr    : out std_logic_vector(15 downto 0);
+         dma_dout    : out std_logic_vector(7 downto 0);
+         dma_din     : in  std_logic_vector(7 downto 0);
+         dma_we      : out std_logic;
+         ram_cycle   : in  std_logic;
+         ram_addr    : out std_logic_vector(24 downto 0);
+         ram_dout    : out std_logic_vector(7 downto 0);
+         ram_din     : in  std_logic_vector(7 downto 0);
+         ram_we      : out std_logic;
+         cpu_addr    : in  unsigned(15 downto 0);
+         cpu_dout    : in  unsigned(7 downto 0);
+         cpu_din     : out unsigned(7 downto 0);
+         cpu_we      : in  std_logic;
+         cpu_cs      : in  std_logic;
+         irq         : out std_logic
+      );
+   end component reu;
+
 begin
 
    --------------------------------------------------------------------------------------------------
@@ -228,7 +272,7 @@ begin
          ramWE       => c64_ram_we,
 
          io_cycle    => open,
-         ext_cycle   => open,
+         ext_cycle   => ext_cycle_o,
          refresh     => open,
 
          cia_mode    => '0',              -- 0 - 6526 "old", 1 - 8521 "new"
@@ -249,8 +293,8 @@ begin
          game        => '1',           -- low active, 1 is default so that KERNAL ROM can be read
          exrom       => '1',           -- ditto
          io_rom      => '0',
-         io_ext      => '0',
-         io_data     => x"00",
+         io_ext      => reu_oe,        -- input
+         io_data     => reu_dout,      -- input
          irq_n       => '1',
          nmi_n       => restore_key_n,    -- TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
          nmi_ack     => open,
@@ -258,19 +302,19 @@ begin
          romH        => open,
          UMAXromH    => open,
          IOE         => open,
-         IOF         => open,
+         IOF         => iof,           -- output
 --         freeze_key  => open,
 --         mod_key     => open,
 --         tape_play   => open,
 
          -- dma access
-         dma_req     => '0',
-         dma_cycle   => open,
-         dma_addr    => x"0000",
-         dma_dout    => x"00",
-         dma_din     => open,
-         dma_we      => '0',
-         irq_ext_n   => '1',
+         dma_req     => dma_req,
+         dma_cycle   => dma_cycle,
+         dma_addr    => unsigned(dma_addr),
+         dma_dout    => unsigned(dma_dout),
+         dma_din     => dma_din,
+         dma_we      => dma_we,
+         irq_ext_n   => not reu_irq,
 
          -- paddle interface
          pot1        => pot1,
@@ -324,7 +368,34 @@ begin
          cass_sense  => '1',           -- low active
          cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
-      
+
+
+   i_reu : reu
+      port map (
+         clk       => clk_main_i,
+         reset     => not reset_core_n,
+         cfg       => "10",   -- 00:None, 01:512k, 10:2M, 11:16M
+         dma_req   => dma_req,
+         dma_cycle => dma_cycle,
+         dma_addr  => dma_addr,
+         dma_dout  => dma_dout,
+         dma_din   => std_logic_vector(dma_din),
+         dma_we    => dma_we,
+         ram_cycle => reu_cycle_i,
+         ram_addr  => reu_addr_o,
+         ram_dout  => reu_dout_o,
+         ram_din   => reu_din_i,
+         ram_we    => reu_we_o,
+         cpu_addr  => c64_ram_addr_o,
+         cpu_dout  => c64_ram_data_o,
+         cpu_din   => reu_dout,
+         cpu_we    => c64_ram_we,
+         cpu_cs    => iof,
+         irq       => reu_irq
+      ); -- i_reu
+
+   reu_oe <= iof;
+
    pot1 <= paddle_2_x when flip_joys_i else paddle_1_x;
    pot2 <= paddle_2_y when flip_joys_i else paddle_1_y;
    pot3 <= paddle_1_x when flip_joys_i else paddle_2_x;

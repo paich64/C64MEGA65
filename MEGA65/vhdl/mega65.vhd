@@ -195,6 +195,14 @@ signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data o
 signal main_ram_we            : std_logic;                     -- C64 RAM write enable
 signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data in
 
+-- RAM Expansion Unit
+signal main_ext_cycle         : std_logic;
+signal main_reu_cycle         : std_logic;
+signal main_reu_addr          : std_logic_vector(24 downto 0);
+signal main_reu_dout          : std_logic_vector(7 downto 0);
+signal main_reu_din           : std_logic_vector(7 downto 0);
+signal main_reu_we            : std_logic;
+
 -- QNICE On Screen Menu selections
 signal main_osm_control_m     : std_logic_vector(255 downto 0);
 
@@ -365,22 +373,42 @@ constant C_MENU_HDMI_DVI      : natural := 21;
 constant C_MENU_HDMI_FF       : natural := 22;
 
 -- HyperRAM
-signal hr_write         : std_logic;
-signal hr_read          : std_logic;
-signal hr_address       : std_logic_vector(31 downto 0) := (others => '0');
-signal hr_writedata     : std_logic_vector(15 downto 0);
-signal hr_byteenable    : std_logic_vector(1 downto 0);
-signal hr_burstcount    : std_logic_vector(7 downto 0);
-signal hr_readdata      : std_logic_vector(15 downto 0);
-signal hr_readdatavalid : std_logic;
-signal hr_waitrequest   : std_logic;
+signal hr_dig_write         : std_logic;
+signal hr_dig_read          : std_logic;
+signal hr_dig_address       : std_logic_vector(31 downto 0) := (others => '0');
+signal hr_dig_writedata     : std_logic_vector(15 downto 0);
+signal hr_dig_byteenable    : std_logic_vector(1 downto 0);
+signal hr_dig_burstcount    : std_logic_vector(7 downto 0);
+signal hr_dig_readdata      : std_logic_vector(15 downto 0);
+signal hr_dig_readdatavalid : std_logic;
+signal hr_dig_waitrequest   : std_logic;
 
-signal hr_rwds_in       : std_logic;
-signal hr_rwds_out      : std_logic;
-signal hr_rwds_oe       : std_logic;   -- Output enable for RWDS
-signal hr_dq_in         : std_logic_vector(7 downto 0);
-signal hr_dq_out        : std_logic_vector(7 downto 0);
-signal hr_dq_oe         : std_logic;   -- Output enable for DQ
+signal hr_reu_write         : std_logic;
+signal hr_reu_read          : std_logic;
+signal hr_reu_address       : std_logic_vector(31 downto 0) := (others => '0');
+signal hr_reu_writedata     : std_logic_vector(15 downto 0);
+signal hr_reu_byteenable    : std_logic_vector(1 downto 0);
+signal hr_reu_burstcount    : std_logic_vector(7 downto 0);
+signal hr_reu_readdata      : std_logic_vector(15 downto 0);
+signal hr_reu_readdatavalid : std_logic;
+signal hr_reu_waitrequest   : std_logic;
+
+signal hr_write             : std_logic;
+signal hr_read              : std_logic;
+signal hr_address           : std_logic_vector(31 downto 0) := (others => '0');
+signal hr_writedata         : std_logic_vector(15 downto 0);
+signal hr_byteenable        : std_logic_vector(1 downto 0);
+signal hr_burstcount        : std_logic_vector(7 downto 0);
+signal hr_readdata          : std_logic_vector(15 downto 0);
+signal hr_readdatavalid     : std_logic;
+signal hr_waitrequest       : std_logic;
+
+signal hr_rwds_in           : std_logic;
+signal hr_rwds_out          : std_logic;
+signal hr_rwds_oe           : std_logic;   -- Output enable for RWDS
+signal hr_dq_in             : std_logic_vector(7 downto 0);
+signal hr_dq_out            : std_logic_vector(7 downto 0);
+signal hr_dq_oe             : std_logic;   -- Output enable for DQ
 
 -- These values are copied from C64_MiSTerMEGA65/sys/sys_top.v
 constant audio_flt_rate : std_logic_vector(31 downto 0) := std_logic_vector(to_signed(7056000, 32));
@@ -551,7 +579,14 @@ begin
          c64_qnice_data_i     => qnice_ramrom_data_o,
          c64_qnice_data_o     => qnice_c64_qnice_data,
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
-         c64_qnice_we_i       => qnice_c64_qnice_we
+         c64_qnice_we_i       => qnice_c64_qnice_we,
+
+         ext_cycle_o          => main_ext_cycle,
+         reu_cycle_i          => main_reu_cycle,
+         reu_addr_o           => main_reu_addr,
+         reu_dout_o           => main_reu_dout,
+         reu_din_i            => main_reu_din,
+         reu_we_o             => main_reu_we
       ); -- i_main
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
@@ -819,6 +854,33 @@ begin
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
    ---------------------------------------------------------------------------------------------
+
+   i_reu_mapper : entity work.reu_mapper
+      generic map (
+         G_BASE_ADDRESS => X"0040_0000"  -- 4MB
+      )
+      port map (
+         clk_i              => main_clk,
+         rst_i              => main_rst,
+         ext_cycle_i        => main_ext_cycle,
+         reu_cycle_o        => main_reu_cycle,
+         reu_addr_i         => main_reu_addr,
+         reu_dout_i         => main_reu_dout,
+         reu_din_o          => main_reu_din,
+         reu_we_i           => main_reu_we,
+         hr_clk_i           => hr_clk_x1,
+         hr_rst_i           => hr_rst,
+         hr_write_o         => hr_reu_write,
+         hr_read_o          => hr_reu_read,
+         hr_address_o       => hr_reu_address,
+         hr_writedata_o     => hr_reu_writedata,
+         hr_byteenable_o    => hr_reu_byteenable,
+         hr_burstcount_o    => hr_reu_burstcount,
+         hr_readdata_i      => hr_reu_readdata,
+         hr_readdatavalid_i => hr_reu_readdatavalid,
+         hr_waitrequest_i   => hr_reu_waitrequest
+      ); -- i_reu_mapper
+
 
    -- Clock domain crossing: 100 MHz system main clock to core
    i_system2main: xpm_cdc_array_single
@@ -1192,16 +1254,57 @@ begin
          -- Connect to HyperRAM controller
          hr_clk_i                 => hr_clk_x1,
          hr_rst_i                 => hr_rst,
-         hr_write_o               => hr_write,
-         hr_read_o                => hr_read,
-         hr_address_o             => hr_address,
-         hr_writedata_o           => hr_writedata,
-         hr_byteenable_o          => hr_byteenable,
-         hr_burstcount_o          => hr_burstcount,
-         hr_readdata_i            => hr_readdata,
-         hr_readdatavalid_i       => hr_readdatavalid,
-         hr_waitrequest_i         => hr_waitrequest
+         hr_write_o               => hr_dig_write,
+         hr_read_o                => hr_dig_read,
+         hr_address_o             => hr_dig_address,
+         hr_writedata_o           => hr_dig_writedata,
+         hr_byteenable_o          => hr_dig_byteenable,
+         hr_burstcount_o          => hr_dig_burstcount,
+         hr_readdata_i            => hr_dig_readdata,
+         hr_readdatavalid_i       => hr_dig_readdatavalid,
+         hr_waitrequest_i         => hr_dig_waitrequest
       ); -- i_digital_pipeline
+
+   --------------------------------------------------------
+   -- Instantiate HyperRAM arbiter
+   --------------------------------------------------------
+
+   i_avm_arbit : entity work.avm_arbit
+      generic map (
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         clk_i                  => hr_clk_x1,
+         rst_i                  => hr_rst,
+         s0_avm_write_i         => hr_dig_write,
+         s0_avm_read_i          => hr_dig_read,
+         s0_avm_address_i       => hr_dig_address,
+         s0_avm_writedata_i     => hr_dig_writedata,
+         s0_avm_byteenable_i    => hr_dig_byteenable,
+         s0_avm_burstcount_i    => hr_dig_burstcount,
+         s0_avm_readdata_o      => hr_dig_readdata,
+         s0_avm_readdatavalid_o => hr_dig_readdatavalid,
+         s0_avm_waitrequest_o   => hr_dig_waitrequest,
+         s1_avm_write_i         => hr_reu_write,
+         s1_avm_read_i          => hr_reu_read,
+         s1_avm_address_i       => hr_reu_address,
+         s1_avm_writedata_i     => hr_reu_writedata,
+         s1_avm_byteenable_i    => hr_reu_byteenable,
+         s1_avm_burstcount_i    => hr_reu_burstcount,
+         s1_avm_readdata_o      => hr_reu_readdata,
+         s1_avm_readdatavalid_o => hr_reu_readdatavalid,
+         s1_avm_waitrequest_o   => hr_reu_waitrequest,
+         m_avm_write_o          => hr_write,
+         m_avm_read_o           => hr_read,
+         m_avm_address_o        => hr_address,
+         m_avm_writedata_o      => hr_writedata,
+         m_avm_byteenable_o     => hr_byteenable,
+         m_avm_burstcount_o     => hr_burstcount,
+         m_avm_readdata_i       => hr_readdata,
+         m_avm_readdatavalid_i  => hr_readdatavalid,
+         m_avm_waitrequest_i    => hr_waitrequest
+      ); -- i_avm_arbit
 
    --------------------------------------------------------
    -- Instantiate HyperRAM controller
