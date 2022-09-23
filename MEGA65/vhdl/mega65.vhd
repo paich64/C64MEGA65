@@ -860,10 +860,10 @@ begin
          G_BASE_ADDRESS => X"0040_0000"  -- 4MB
       )
       port map (
-         clk_i              => main_clk,
-         rst_i              => main_rst,
-         ext_cycle_i        => main_ext_cycle,
-         reu_cycle_o        => main_reu_cycle,
+         reu_clk_i          => main_clk,
+         reu_rst_i          => main_rst,
+         reu_ext_cycle_i    => main_ext_cycle,
+         reu_ext_cycle_o    => main_reu_cycle,
          reu_addr_i         => main_reu_addr,
          reu_dout_i         => main_reu_dout,
          reu_din_o          => main_reu_din,
