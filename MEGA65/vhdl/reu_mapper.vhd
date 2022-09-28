@@ -40,11 +40,16 @@ end entity reu_mapper;
 
 architecture synthesis of reu_mapper is
 
+   subtype R_FIFO_DOUT is natural range 7 downto 0;
+   subtype R_FIFO_ADDR is natural range 32 downto 8;
+   subtype R_FIFO_WE   is natural range 33 downto 33;
+   constant C_FIFO_SIZE : natural := 40;
+
    signal reu_ext_cycle_d   : std_logic;
 
    signal reu_wr_fifo_ready : std_logic;
    signal reu_wr_fifo_valid : std_logic;
-   signal reu_wr_fifo_data  : std_logic_vector((25+8+1)-1 downto 0);
+   signal reu_wr_fifo_data  : std_logic_vector(C_FIFO_SIZE-1 downto 0);
 
    signal hr_addr           : std_logic_vector(24 downto 0);
    signal hr_dout           : std_logic_vector(7 downto 0);
@@ -52,7 +57,7 @@ architecture synthesis of reu_mapper is
 
    signal hr_wr_fifo_ready  : std_logic;
    signal hr_wr_fifo_valid  : std_logic;
-   signal hr_wr_fifo_data   : std_logic_vector((25+8+1)-1 downto 0);
+   signal hr_wr_fifo_data   : std_logic_vector(C_FIFO_SIZE-1 downto 0);
 
    signal reu_rd_fifo_valid : std_logic;
 
@@ -76,8 +81,8 @@ begin
    i_axi_fifo_wr : entity work.axi_fifo
       generic map (
          G_DEPTH     => 16,
-         G_DATA_SIZE => reu_wr_fifo_data'length,
-         G_USER_SIZE => 0
+         G_DATA_SIZE => C_FIFO_SIZE,
+         G_USER_SIZE => 8
       )
       port map (
          s_aclk_i        => reu_clk_i,
@@ -97,8 +102,12 @@ begin
          m_axis_tuser_o  => open
       ); -- i_axi_fifo_wr
 
-   reu_wr_fifo_data  <= reu_we_i & reu_addr_i & reu_dout_i;
-   (hr_we, hr_addr, hr_dout) <= hr_wr_fifo_data;
+   reu_wr_fifo_data(R_FIFO_DOUT) <= reu_dout_i;
+   reu_wr_fifo_data(R_FIFO_ADDR) <= reu_addr_i;
+   reu_wr_fifo_data(R_FIFO_WE)   <= "" & reu_we_i;
+   hr_dout <= hr_wr_fifo_data(R_FIFO_DOUT);
+   hr_addr <= hr_wr_fifo_data(R_FIFO_ADDR);
+   hr_we   <= hr_wr_fifo_data(R_FIFO_WE)(0);
 
    hr_wr_fifo_ready <= not hr_waitrequest_i;
    hr_write_o       <= hr_wr_fifo_valid and hr_we;
@@ -113,14 +122,14 @@ begin
       generic map (
          G_DEPTH     => 16,
          G_DATA_SIZE => 8,
-         G_USER_SIZE => 0
+         G_USER_SIZE => 8
       )
       port map (
          s_aclk_i        => hr_clk_i,
          s_aresetn_i     => not hr_rst_i,
          s_axis_tready_o => open,               -- This should always be asserted.
          s_axis_tvalid_i => hr_readdatavalid_i,
-         s_axis_tdata_i  => hr_readdata_i,
+         s_axis_tdata_i  => hr_readdata_i(7 downto 0),
          s_axis_tkeep_i  => (others => '1'),
          s_axis_tlast_i  => '1',
          s_axis_tuser_i  => (others => '0'),
