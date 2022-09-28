@@ -76,39 +76,6 @@ architecture synthesis of avm_arbit is
    signal cnt_s0_waiting_max  : integer range 0 to G_FREQ_HZ-1;
    signal cnt_s1_waiting_max  : integer range 0 to G_FREQ_HZ-1;
 
-   attribute mark_debug                           : string;
---   attribute mark_debug of s0_avm_write_i         : signal is "true";
---   attribute mark_debug of s0_avm_read_i          : signal is "true";
---   attribute mark_debug of s0_avm_readdatavalid_o : signal is "true";
---   attribute mark_debug of s0_avm_waitrequest_o   : signal is "true";
---   attribute mark_debug of s1_avm_write_i         : signal is "true";
---   attribute mark_debug of s1_avm_read_i          : signal is "true";
---   attribute mark_debug of s1_avm_readdatavalid_o : signal is "true";
---   attribute mark_debug of s1_avm_waitrequest_o   : signal is "true";
---   attribute mark_debug of m_avm_write_o          : signal is "true";
---   attribute mark_debug of m_avm_read_o           : signal is "true";
---   attribute mark_debug of m_avm_readdatavalid_i  : signal is "true";
---   attribute mark_debug of m_avm_waitrequest_i    : signal is "true";
-
-   attribute mark_debug of s0_active_req          : signal is "true";
-   attribute mark_debug of s1_active_req          : signal is "true";
-   attribute mark_debug of s0_active_grant        : signal is "true";
-   attribute mark_debug of s1_active_grant        : signal is "true";
-   attribute mark_debug of s0_last                : signal is "true";
-   attribute mark_debug of s1_last                : signal is "true";
-   attribute mark_debug of last_grant             : signal is "true";
-   attribute mark_debug of burstcount             : signal is "true";
-
-   attribute mark_debug of cnt                    : signal is "true";
-   attribute mark_debug of cnt_s0_active_grant    : signal is "true";
-   attribute mark_debug of cnt_s1_active_grant    : signal is "true";
-   attribute mark_debug of cnt_s0_waiting         : signal is "true";
-   attribute mark_debug of cnt_s1_waiting         : signal is "true";
-   attribute mark_debug of cnt_s0_waiting_tot     : signal is "true";
-   attribute mark_debug of cnt_s1_waiting_tot     : signal is "true";
-   attribute mark_debug of cnt_s0_waiting_max     : signal is "true";
-   attribute mark_debug of cnt_s1_waiting_max     : signal is "true";
-
 begin
 
    p_cnt : process (clk_i)
