@@ -202,6 +202,7 @@ signal main_reu_addr          : std_logic_vector(24 downto 0);
 signal main_reu_dout          : std_logic_vector(7 downto 0);
 signal main_reu_din           : std_logic_vector(7 downto 0);
 signal main_reu_we            : std_logic;
+signal main_reu_cs            : std_logic;
 
 -- QNICE On Screen Menu selections
 signal main_osm_control_m     : std_logic_vector(255 downto 0);
@@ -586,7 +587,8 @@ begin
          reu_addr_o           => main_reu_addr,
          reu_dout_o           => main_reu_dout,
          reu_din_i            => main_reu_din,
-         reu_we_o             => main_reu_we
+         reu_we_o             => main_reu_we,
+         reu_cs_o             => main_reu_cs
       ); -- i_main
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
@@ -857,7 +859,7 @@ begin
 
    i_reu_mapper : entity work.reu_mapper
       generic map (
-         G_BASE_ADDRESS => X"0040_0000"  -- 4MB
+         G_BASE_ADDRESS => X"0020_0000"  -- 2MW
       )
       port map (
          reu_clk_i          => main_clk,
@@ -868,6 +870,7 @@ begin
          reu_dout_i         => main_reu_dout,
          reu_din_o          => main_reu_din,
          reu_we_i           => main_reu_we,
+         reu_cs_i           => main_reu_cs,
          hr_clk_i           => hr_clk_x1,
          hr_rst_i           => hr_rst,
          hr_write_o         => hr_reu_write,

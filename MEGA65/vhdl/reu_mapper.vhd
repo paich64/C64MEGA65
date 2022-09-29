@@ -22,6 +22,7 @@ entity reu_mapper is
       reu_dout_i         : in  std_logic_vector(7 downto 0);
       reu_din_o          : out std_logic_vector(7 downto 0);
       reu_we_i           : in  std_logic;
+      reu_cs_i           : in  std_logic;
 
       -- HyperRAM clock @ 100 MHz
       hr_clk_i           : in  std_logic;
@@ -76,7 +77,7 @@ begin
    -- TBD: Should this depend on reu_rd_fifo_valid as well ?
    reu_ext_cycle_o <= reu_wr_fifo_ready and reu_ext_cycle_i;
 
-   reu_wr_fifo_valid <= reu_ext_cycle_i and not reu_ext_cycle_d;  -- Pulse on rising edge
+   reu_wr_fifo_valid <= reu_cs_i and reu_ext_cycle_i and not reu_ext_cycle_d;  -- Pulse on rising edge
 
    i_axi_fifo_wr : entity work.axi_fifo
       generic map (
@@ -112,7 +113,7 @@ begin
    hr_wr_fifo_ready <= not hr_waitrequest_i;
    hr_write_o       <= hr_wr_fifo_valid and hr_we;
    hr_read_o        <= hr_wr_fifo_valid and (not hr_we);
-   hr_address_o     <= ("0000000" & hr_addr) + G_BASE_ADDRESS;
+   hr_address_o     <= (("0000000" & hr_addr) + G_BASE_ADDRESS) and X"003FFFFF";
    hr_writedata_o   <= X"00" & hr_dout;
    hr_byteenable_o  <= "01";
    hr_burstcount_o  <= X"01";

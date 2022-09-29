@@ -90,7 +90,8 @@ entity main is
       reu_addr_o              : out std_logic_vector(24 downto 0);
       reu_dout_o              : out std_logic_vector(7 downto 0);
       reu_din_i               : in  std_logic_vector(7 downto 0);
-      reu_we_o                : out std_logic
+      reu_we_o                : out std_logic;
+      reu_cs_o                : out std_logic
    );
 end entity main;
 
@@ -205,6 +206,7 @@ architecture synthesis of main is
          ram_dout    : out std_logic_vector(7 downto 0);
          ram_din     : in  std_logic_vector(7 downto 0);
          ram_we      : out std_logic;
+         ram_cs      : out std_logic;
          cpu_addr    : in  unsigned(15 downto 0);
          cpu_dout    : in  unsigned(7 downto 0);
          cpu_din     : out unsigned(7 downto 0);
@@ -386,6 +388,7 @@ begin
          ram_dout  => reu_dout_o,
          ram_din   => reu_din_i,
          ram_we    => reu_we_o,
+         ram_cs    => reu_cs_o,
          cpu_addr  => c64_ram_addr_o,
          cpu_dout  => c64_ram_data_o,
          cpu_din   => reu_dout,
