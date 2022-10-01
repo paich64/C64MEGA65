@@ -26,8 +26,9 @@ VD_INIT         SYSCALL(enter, 1)
                 MOVE    VDRIVES_NUM, R0         ; number of virtual drives
                 MOVE    @R8, @R0
                 MOVE    @R0, R0
+                MOVE    R0, R7                  ; R7: remember # of vdrives
                 MOVE    VDRIVES_MAX, R1
-                CMP     R0, @R1                 ; vdrives > maximum?
+                CMP     R0, R1                  ; vdrives > maximum?
                 RBRA    _START_VD, !N           ; no: continue
 
                 MOVE    ERR_FATAL_VDMAX, R8     ; yes: stop core
@@ -57,6 +58,23 @@ _START_VD_CPY_2 ADD     1, R1
 
                 ; remember current mount status
                 RSUB    VD_MNT_ST_SET, 1
+
+                ; retrieve anti-trashing-delay from config.vhd and store
+                ; it to the appropriate vdrives register for each drive
+                ; @TODO: potential for more flexibility see config.vhd
+                MOVE    M2M$RAMROM_DEV, R8
+                MOVE    M2M$CONFIG, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    M2M$CFG_GENERAL, @R8
+                MOVE    M2M$CFG_VD_AT_DELAY, R8
+                MOVE    @R8, R0                 ; R0: anti-trashing-delay
+_START_VD_LP    SUB     1, R7                   ; walk backwards through drvs
+                MOVE    R7, R8
+                MOVE    VD_CACHE_FLUSH_DE, R9
+                MOVE    R0, R10
+                RSUB    VD_DRV_WRITE, 1
+                CMP     0, R7
+                RBRA    _START_VD_LP, !Z
 
                 SYSCALL(leave, 1)
                 RET

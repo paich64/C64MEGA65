@@ -29,9 +29,16 @@ OPTM_HEAP_SIZE  .BLOCK 1                        ; size of this scratch buffer
 
 SCRATCH_HEX     .BLOCK 5
 
-; SD card and file handling
+; SD card device handle and array of pointers to file handles for disk images
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
-HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLES_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
+
+; Important: Make sure you have as many ".BLOCK FAT32$FDH_STRUCT_SIZE"
+; statements listed one after another as the .EQU VDRIVES_MAX (below) demands
+; and make sure that the HANDLE_FILE array points to all of them
+HANDLE_FILE1    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE2    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE3    .BLOCK  FAT32$FDH_STRUCT_SIZE
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
 
@@ -56,12 +63,32 @@ SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE
 ; VDRIVES_NUM:      Amount of virtual, mountable drives; needs to correlate
 ;                   with the actual hardware in vdrives.vhd and the menu items
 ;                   tagged with OPTM_G_MOUNT_DRV in config.vhd
+;                   VDRIVES_MAX must be equal or larger than the value stored
+;                   in this variable
+;                   Variable is initialized in VD_INIT in vdrives.asm
+;
+; VDRIVES_MAX:      Maximum amount of supported virtual drives.
+;                   VD_INIT expects an .EQU and also the assembler does not
+;                   allow this value to be a variable. Don't forget to
+;                   adjust the file handles (see above) accordingly.
+;                   Try to keep small for RAM preservation reasons.
 ;
 ; VDRIVES_DEVICE:   Device ID of the IEC bridge in vdrives.vhd
 ;
 ; VDRIVES_BUFS:     Array of device IDs of size VDRIVES_NUM that contains the
 ;                   RAM buffer-devices that will hold the mounted drives
+;
+; VDRIVES_FLUSH_*:  Array of high/low words of the amount of bytes that still
+;                   need to be flushed to ensure that the cache is written
+;                   completely to the SD card
+;
+; VDRIVES_ITERSIZ   Array of amount of bytes stored in one iteration of the
+;                   background saving (buffer flushing) process
+;
 VDRIVES_NUM     .BLOCK  1
-VDRIVES_MAX     .EQU    5
+VDRIVES_MAX     .EQU    3
 VDRIVES_DEVICE  .BLOCK  1
 VDRIVES_BUFS    .BLOCK  VDRIVES_MAX
+VDRIVES_FLUSH_H .BLOCK  VDRIVES_MAX
+VDRIVES_FLUSH_L .BLOCK  VDRIVES_MAX
+VDRIVES_ITERSIZ .BLOCK  VDRIVES_MAX

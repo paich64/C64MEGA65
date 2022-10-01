@@ -52,8 +52,12 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; initialize device (SD card) and file handle
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8
-                MOVE    HANDLE_FILE, R8
-                MOVE    0, @R8
+                MOVE    HANDLES_FILES, R8
+                MOVE    VDRIVES_MAX, R9
+_SS_INITFH_L    MOVE    @R8++, R0
+                MOVE    0, @R0
+                SUB     1, R9
+                RBRA    _SS_INITFH_L, !Z
 
                 ; initialize file browser persistence variables
                 MOVE    M2M$CSR, R8             ; get active SD card
@@ -403,10 +407,12 @@ _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
 
                 ; Step #5: Notify MiSTer using the "SD" protocol
                 MOVE    R7, R8                  ; R8: drive number
-                MOVE    HANDLE_FILE, R9
+                MOVE    HANDLES_FILES, R9
+                ADD     R7, R9
+                MOVE    @R9, R9
+                MOVE    R9, R10
                 ADD     FAT32$FDH_SIZE_LO, R9
                 MOVE    @R9, R9                 ; R9: file size: low word
-                MOVE    HANDLE_FILE, R10
                 ADD     FAT32$FDH_SIZE_HI, R10
                 MOVE    @R10, R10               ; R10: file size: high word
                 XOR     R11, R11                ; 0=read/write disk
@@ -430,9 +436,10 @@ _HM_MOUNTED     CMP     OPTM_KEY_SELALT, R6     ; unmount the whole drive?
 
                 ; Unmount the whole drive by stobing the image mount signal
                 ; while setting the image size to zero
+
                 ; @TEMP / @TODO: Before doing so: Flush the disk image buffer        
-                MOVE    R7, R8                  ; virtual drive number
-                RSUB    FLUSH_CACHE, 1
+;                MOVE    R7, R8                  ; virtual drive number
+;                RSUB    FLUSH_CACHE, 1
 
                 XOR     R9, R9                  ; low word of image size
                 XOR     R10, R10                ; high word of image size
@@ -526,17 +533,19 @@ _HM_SETMENU_1   MOVE    OPTM_X, R9              ; R9: x-pos
 ;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
 LOAD_IMAGE      SYSCALL(enter, 1)
 
-                MOVE    VDRIVES_BUFS, R0
-                ADD     R8, R0
-                MOVE    @R0, R0                 ; R0: device number of buffer
-                MOVE    R0, R8
-
                 MOVE    R8, R1                  ; R1: drive number
                 MOVE    R9, R2                  ; R2: file name
 
+                MOVE    VDRIVES_BUFS, R0
+                ADD     R1, R0
+                MOVE    @R0, R0                 ; R0: device number of buffer
+
                 ; Open file
                 MOVE    HANDLE_DEV, R8
-                MOVE    HANDLE_FILE, R9
+                MOVE    HANDLES_FILES, R9
+                ADD     R1, R9
+                MOVE    @R9, R9
+                MOVE    R9, R5                  ; R5: remember file handle
                 MOVE    R2, R10
                 XOR     R11, R11
                 SYSCALL(f32_fopen, 1)
@@ -548,7 +557,7 @@ LOAD_IMAGE      SYSCALL(enter, 1)
 
                 ; Callback function that can handle headers, sanity check
                 ; the disk image, determine the type of the disk image, etc.
-_LI_FOPEN_OK    MOVE    HANDLE_FILE, R8
+_LI_FOPEN_OK    MOVE    R5, R8
                 RSUB    PREP_LOAD_IMAGE, 1
                 MOVE    R8, R6                  ; R6: error code=0 (means OK)
                 MOVE    R9, R7                  ; R7: img type or error msg
@@ -567,7 +576,7 @@ _LI_FOPEN_OK    MOVE    HANDLE_FILE, R8
 _LI_FREAD_NXTWN MOVE    M2M$RAMROM_4KWIN, R8    ; set 4k window
                 MOVE    R1, @R8
 
-_LI_FREAD_NXTB  MOVE    HANDLE_FILE, R8         ; read next byte to R9
+_LI_FREAD_NXTB  MOVE    R5, R8                  ; read next byte to R9
                 SYSCALL(f32_fread, 1)
                 CMP     FAT32$EOF, R10
                 RBRA    _LI_FREAD_EOF, Z
@@ -639,6 +648,23 @@ _HANDLE_IO_2    MOVE    R0, R8
 _HANDLE_IO_NXT2 ADD     1, R0                   ; next drive
                 CMP     R0, R1                  ; done?
                 RBRA    _HANDLE_IO_2, !Z        ; no, continue
+
+                ; any cache dirty => handle background writing
+                XOR     R0, R0                  ; R0: number of virtual drive
+_HANDLE_IO_3    MOVE    R0, R8
+                MOVE    VD_CACHE_DIRTY, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8                   ; cache dirty?
+                RBRA    _HANDLE_IO_NXT3, !Z     ; no: next drive, if any
+
+                ; handle dirty cache and background writing (aka flushing)
+                MOVE    R0, R8
+                RSUB    FLUSH_CACHE, 1
+
+                ; next drive, if applicable
+_HANDLE_IO_NXT3 ADD     1, R0                   ; next drive
+                CMP     R0, R1                  ; done?
+                RBRA    _HANDLE_IO_3, !Z        ; no, continue
 
                 SYSCALL(leave, 1)
                 RET
@@ -821,7 +847,19 @@ _HDW_RET        SYSCALL(leave, 1)
 
 ; ----------------------------------------------------------------------------
 ; Disk image cache flushing:
-; @TODO describe the iterative cache flushing strategy
+;
+; 1. Any write (i.e. any sd_wr_i for the current drive) resets the flushing
+;    process because the cache is dirty again and we need to prevent
+;    inconsistencies. To "reset" means to "restart at the appropriate time".
+; 
+; 2. We only start flushing, if for the last two seconds there were no writes.
+;    Reason: The drives tend to perform multiple writes to the virtual drive
+;    in a row and this would lead to "trashing" when it comes to flushing the
+;    cache as each write restarts the whole flushing process.
+; 
+; 3. The logic of waiting at least two seconds before we can start flushing
+;    and the logic to reset the flushing when a new write comes in is
+;    implemented in hardware in vdrives.vhd.
 ; ----------------------------------------------------------------------------
 
 ; FLUSH_CACHE
@@ -831,94 +869,123 @@ FLUSH_CACHE     SYSCALL(enter, 1)
 
                 MOVE    R8, R0                  ; R0: virtual drive number
 
-                ; @TODO / TEMP This is not yet the real mechanism but just
-                ; a temporary solution so that we can start testing the
-                ; D64 writing using the "unmount mechanism": The cache is
-                ; completely flushed when the disk is unmounted using the
-                ; Space key.
+                ; has the flushing already begun earlier?
+                MOVE    VD_CACHE_FLUSHING, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8
+                RBRA    _FC_CONT, Z             ; yes: continue
 
-                ; continue if file-handle is not zero, fatal otherwise
-                MOVE    HANDLE_FILE, R8
-                CMP     0, @R8
-                RBRA    _FC_1, !Z
-                MOVE    ERR_FATAL_FZERO, R8
-                XOR     R9, R9
-                RBRA    FATAL, 1
+                ; flushing has not begun, yet: can we start because the
+                ; minimum delay is over?
+                MOVE    R0, R8
+                MOVE    VD_CACHE_FLUSH_ST, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8  
+                RBRA    _FC_RET, !Z             ; no: return from FLUSH_CACHE
 
-                ; seek to the beginning of the disk image
-_FC_1           XOR     R9, R9
-                XOR     R10, R10
-                SYSCALL(f32_fseek, 1)
-                CMP     0, R9                   ; seek worked?
-                RBRA    _FC_2, Z                ; yes
-                MOVE    ERR_FATAL_SEEK, R8      ; no, R9 contains err. no.
-                RBRA    FATAL, 1                ; show err msg and halt core
-
-                ; get size of the image file which equals to the size of
-                ; the cache, i.e. amount of data to be written
-_FC_2           MOVE    R8, R1                  ; R1: lo word of cache size
-                ADD     FAT32$FDH_SIZE_LO, R1
-                MOVE    @R1, R1
-                MOVE    R8, R2                  ; R2: hi word of cache size
-                ADD     FAT32$FDH_SIZE_HI, R2
-                MOVE    @R2, R2
-
-                MOVE    M2M$RAMROM_DATA, R3     ; R3: end-of-window marker
-                ADD     0x1000, R3
-                XOR     R4, R4                  ; R4: 4k win
-                MOVE    M2M$RAMROM_DATA, R5     ; R5: offset in win
-                XOR     R6, R6                  ; R6: lo word of bytes written
-                XOR     R7, R7                  ; R7: hi word of bytes written
-
-                ; DEBUG
-                MOVE    R2, R8
+                MOVE    0xABCD, R8
                 SYSCALL(puthex, 1)
-                MOVE    R1, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)                
+                SYSCALL(crlf, 1)
+                SYSCALL(exit, 1)
 
-                ; access cache RAM: select device and 4k window
-_FC_3           MOVE    M2M$RAMROM_DEV, R8
-                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
-                ADD     R0, R9                  ; select right ID for vdrive
-                MOVE    @R9, @R8
-                MOVE    M2M$RAMROM_4KWIN, R8
-                MOVE    R4, @R8
+                ; Continue with a flushing process that alrady begun earlier
+_FC_CONT
 
-                MOVE    HANDLE_FILE, R8         ; write byte to SD card
-                MOVE    @R5++, R9               ; read byte from img buffer..
-                SYSCALL(f32_fwrite, 1)          ; ..and write it to the SD crd
-                CMP     0, R9                   ; write successful?
-                RBRA    _FC_4, Z                ; yes
-                MOVE    ERR_FATAL_WRITE, R8     ; no, R9 contains err. no.
-                RBRA    FATAL, 1                ; show err msg and halt core
-
-                ; one more byte transmitted: are we done?
-                ; perform 16-bit add and compare to check
-_FC_4           ADD     1, R6                   ; one more byte transmitted
-                ADDC    0, R7                   ; 16-bit add
-                CMP     R6, R1                  ; lo-words equal?
-                RBRA    _FC_5, !Z               ; no: continue
-                CMP     R7, R2                  ; hi-words equal?
-                RBRA    _FC_DONE, Z             ; yes: we are done
-
-                ; handle 4k window boundary
-_FC_5           CMP     R5, R3                  ; 4k boundary reached?
-                RBRA    _FC_3, !Z               ; no: next byte
-                MOVE    M2M$RAMROM_DATA, R5     ; yes: reset offset
-                ADD     1, R4                   ; next 4k window
-                RBRA    _FC_3, 1                ; next byte
-
-                ; make sure that the SD card write buffer is flushed
-_FC_DONE        MOVE    HANDLE_FILE, R8
-                SYSCALL(f32_fflush, 1)
-                CMP     0, R9                   ; flush OK?
-                RBRA    _HDW_RET, Z             ; yes
-                MOVE    ERR_FATAL_FLUSH, R8     ; no, R9 contains err. no.
-                RBRA    FATAL, 1                ; show err msg and halt core
-
-                SYSCALL(leave, 1)
+_FC_RET         SYSCALL(leave, 1)
                 RET
+
+;FLUSH_CACHE     SYSCALL(enter, 1)
+;
+;                MOVE    R8, R0                  ; R0: virtual drive number
+;
+;                ; @TODO / TEMP This is not yet the real mechanism but just
+;                ; a temporary solution so that we can start testing the
+;                ; D64 writing using the "unmount mechanism": The cache is
+;                ; completely flushed when the disk is unmounted using the
+;                ; Space key.
+;
+;                ; continue if file-handle is not zero, fatal otherwise
+;                MOVE    HANDLE_FILE, R8
+;                CMP     0, @R8
+;                RBRA    _FC_1, !Z
+;                MOVE    ERR_FATAL_FZERO, R8
+;                XOR     R9, R9
+;                RBRA    FATAL, 1
+;
+;                ; seek to the beginning of the disk image
+;_FC_1           XOR     R9, R9
+;                XOR     R10, R10
+;                SYSCALL(f32_fseek, 1)
+;                CMP     0, R9                   ; seek worked?
+;                RBRA    _FC_2, Z                ; yes
+;                MOVE    ERR_FATAL_SEEK, R8      ; no, R9 contains err. no.
+;                RBRA    FATAL, 1                ; show err msg and halt core
+;
+;                ; get size of the image file which equals to the size of
+;                ; the cache, i.e. amount of data to be written
+;_FC_2           MOVE    R8, R1                  ; R1: lo word of cache size
+;                ADD     FAT32$FDH_SIZE_LO, R1
+;                MOVE    @R1, R1
+;                MOVE    R8, R2                  ; R2: hi word of cache size
+;                ADD     FAT32$FDH_SIZE_HI, R2
+;                MOVE    @R2, R2
+;
+;                MOVE    M2M$RAMROM_DATA, R3     ; R3: end-of-window marker
+;                ADD     0x1000, R3
+;                XOR     R4, R4                  ; R4: 4k win
+;                MOVE    M2M$RAMROM_DATA, R5     ; R5: offset in win
+;                XOR     R6, R6                  ; R6: lo word of bytes written
+;                XOR     R7, R7                  ; R7: hi word of bytes written
+;
+;                ; DEBUG
+;                MOVE    R2, R8
+;                SYSCALL(puthex, 1)
+;                MOVE    R1, R8
+;                SYSCALL(puthex, 1)
+;                SYSCALL(crlf, 1)                
+;
+;                ; access cache RAM: select device and 4k window
+;_FC_3           MOVE    M2M$RAMROM_DEV, R8
+;                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
+;                ADD     R0, R9                  ; select right ID for vdrive
+;                MOVE    @R9, @R8
+;                MOVE    M2M$RAMROM_4KWIN, R8
+;                MOVE    R4, @R8
+;
+;                MOVE    HANDLE_FILE, R8         ; write byte to SD card
+;                MOVE    @R5++, R9               ; read byte from img buffer..
+;                SYSCALL(f32_fwrite, 1)          ; ..and write it to the SD crd
+;                CMP     0, R9                   ; write successful?
+;                RBRA    _FC_4, Z                ; yes
+;                MOVE    ERR_FATAL_WRITE, R8     ; no, R9 contains err. no.
+;                RBRA    FATAL, 1                ; show err msg and halt core
+;
+;                ; one more byte transmitted: are we done?
+;                ; perform 16-bit add and compare to check
+;_FC_4           ADD     1, R6                   ; one more byte transmitted
+;                ADDC    0, R7                   ; 16-bit add
+;                CMP     R6, R1                  ; lo-words equal?
+;                RBRA    _FC_5, !Z               ; no: continue
+;                CMP     R7, R2                  ; hi-words equal?
+;                RBRA    _FC_DONE, Z             ; yes: we are done
+;
+;                ; handle 4k window boundary
+;_FC_5           CMP     R5, R3                  ; 4k boundary reached?
+;                RBRA    _FC_3, !Z               ; no: next byte
+;                MOVE    M2M$RAMROM_DATA, R5     ; yes: reset offset
+;                ADD     1, R4                   ; next 4k window
+;                RBRA    _FC_3, 1                ; next byte
+;
+;                ; make sure that the SD card write buffer is flushed
+;_FC_DONE        MOVE    HANDLE_FILE, R8
+;                SYSCALL(f32_fflush, 1)
+;                CMP     0, R9                   ; flush OK?
+;                RBRA    _HDW_RET, Z             ; yes
+;                MOVE    ERR_FATAL_FLUSH, R8     ; no, R9 contains err. no.
+;                RBRA    FATAL, 1                ; show err msg and halt core
+;
+;                SYSCALL(leave, 1)
+;                RET
 
 ; ----------------------------------------------------------------------------
 ; Debug mode:

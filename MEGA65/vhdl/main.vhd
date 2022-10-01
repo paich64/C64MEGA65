@@ -69,6 +69,7 @@ entity main is
 
       -- C64 drive led
       drive_led_o             : out std_logic;
+      drive_led_col_o         : out std_logic_vector(23 downto 0);
 
       -- C64 RAM: No address latching necessary and the chip can always be enabled
       c64_ram_addr_o          : out unsigned(15 downto 0);  -- C64 address bus
@@ -95,6 +96,7 @@ architecture synthesis of main is
    signal c64_r               : unsigned(7 downto 0);
    signal c64_g               : unsigned(7 downto 0);
    signal c64_b               : unsigned(7 downto 0);
+   signal c64_drive_led       : std_logic;
 
    -- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
    signal cia1_pa_i           : std_logic_vector(7 downto 0);
@@ -177,6 +179,14 @@ begin
 
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
+   
+   -- the color of the drive led is green normally, but it turns yellow when the cache is
+   -- currently being flushed
+   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"FFFF00";
+   
+   -- the drive led is on if either the C64 is writing to the virtual disk (cached in RAM)
+   -- or if the dirty cache is currently being flushed to the SD card
+   drive_led_o <= c64_drive_led when unsigned(cache_flushing) = 0 else '1';
 
    --------------------------------------------------------------------------------------------------
    -- Hard reset
@@ -509,7 +519,7 @@ begin
          sd_buff_wr     => iec_sd_buf_wr_i,
 
          -- drive led
-         led            => drive_led_o,
+         led            => c64_drive_led,
 
          -- Parallel C1541 port
          par_stb_i      => iec_par_stb_i,
