@@ -165,6 +165,10 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
 ; SD card & virtual drive mount handling
 ; ----------------------------------------------------------------------------
 
+; array of pointers to all the file handles for the virtual drives
+; needs to be in line with VDRIVES_MAX (see shell_vars.asm)
+HANDLES_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
+
 ; Handle mounting:
 ;
 ; Input:

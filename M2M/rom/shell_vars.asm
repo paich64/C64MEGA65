@@ -31,11 +31,11 @@ SCRATCH_HEX     .BLOCK 5
 
 ; SD card device handle and array of pointers to file handles for disk images
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
-HANDLES_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
 
 ; Important: Make sure you have as many ".BLOCK FAT32$FDH_STRUCT_SIZE"
 ; statements listed one after another as the .EQU VDRIVES_MAX (below) demands
-; and make sure that the HANDLE_FILE array points to all of them
+; and make sure that the HANDLES_FILES array in shell.asm points 
+; to all of them, i.e. you need to edit shell.asm
 HANDLE_FILE1    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE2    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE3    .BLOCK  FAT32$FDH_STRUCT_SIZE
