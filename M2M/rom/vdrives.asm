@@ -62,19 +62,36 @@ _START_VD_CPY_2 ADD     1, R1
                 ; retrieve anti-trashing-delay from config.vhd and store
                 ; it to the appropriate vdrives register for each drive
                 ; @TODO: potential for more flexibility see config.vhd
+                MOVE    R7, R6                  ; R6: remember drive count
                 MOVE    M2M$RAMROM_DEV, R8
                 MOVE    M2M$CONFIG, @R8
                 MOVE    M2M$RAMROM_4KWIN, R8
                 MOVE    M2M$CFG_GENERAL, @R8
                 MOVE    M2M$CFG_VD_AT_DELAY, R8
                 MOVE    @R8, R0                 ; R0: anti-trashing-delay
-_START_VD_LP    SUB     1, R7                   ; walk backwards through drvs
+_START_VD_LP1   SUB     1, R7                   ; walk backwards through drvs
                 MOVE    R7, R8
                 MOVE    VD_CACHE_FLUSH_DE, R9
                 MOVE    R0, R10
                 RSUB    VD_DRV_WRITE, 1
                 CMP     0, R7
-                RBRA    _START_VD_LP, !Z
+                RBRA    _START_VD_LP1, !Z
+
+                ; retrieve amount of bytes saved in one iteration of the 
+                ; background saving (buffer flushing) process
+                ; @TODO: similar as above; see config.vhd
+                MOVE    M2M$RAMROM_DEV, R8
+                MOVE    M2M$CONFIG, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    M2M$CFG_GENERAL, @R8
+                MOVE    M2M$CFG_VD_ITERSIZE, R8
+                MOVE    @R8, R0                 ; R0: iteration size in bytes
+                MOVE    VDRIVES_ITERSIZ, R1
+                XOR     R7, R7
+_START_VD_LP2   MOVE    R0, @R1++
+                ADD     1, R7
+                CMP     R6, R7
+                RBRA    _START_VD_LP2, !Z
 
                 SYSCALL(leave, 1)
                 RET

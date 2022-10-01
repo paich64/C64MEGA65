@@ -69,7 +69,7 @@ SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE
 ;
 ; VDRIVES_MAX:      Maximum amount of supported virtual drives.
 ;                   VD_INIT expects an .EQU and also the assembler does not
-;                   allow this value to be a variable. Don't forget to
+;                   allow this value to be a variable. Do not forget to
 ;                   adjust the file handles (see above) accordingly.
 ;                   Try to keep small for RAM preservation reasons.
 ;
@@ -85,6 +85,8 @@ SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE
 ; VDRIVES_ITERSIZ   Array of amount of bytes stored in one iteration of the
 ;                   background saving (buffer flushing) process
 ;
+; VDRIVES_FL_*:     Array of current 4k window and offset within window of the
+;                   disk image buffer in RAM
 VDRIVES_NUM     .BLOCK  1
 VDRIVES_MAX     .EQU    3
 VDRIVES_DEVICE  .BLOCK  1
@@ -92,3 +94,5 @@ VDRIVES_BUFS    .BLOCK  VDRIVES_MAX
 VDRIVES_FLUSH_H .BLOCK  VDRIVES_MAX
 VDRIVES_FLUSH_L .BLOCK  VDRIVES_MAX
 VDRIVES_ITERSIZ .BLOCK  VDRIVES_MAX
+VDRIVES_FL_4K   .BLOCK  VDRIVES_MAX
+VDRIVES_FL_OFS  .BLOCK  VDRIVES_MAX

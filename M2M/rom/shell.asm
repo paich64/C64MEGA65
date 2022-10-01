@@ -763,27 +763,16 @@ HANDLE_DRV_WR   SYSCALL(enter, 1)
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R1                  ; R1: target bytes hi
 
-;                ; DEBUG
-;                SYSCALL(puthex, 1)
-
                 MOVE    R0, R8
                 MOVE    VD_BYTES_L, R9
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R2                  ; R2: target bytes lo
-
-;                ; DEBUG
-;                SYSCALL(puthex, 1)
-;                SYSCALL(crlf, 1)
 
                 ; to-be-written block-size in bytes
                 MOVE    R0, R8
                 MOVE    VD_SIZEB, R9
                 RSUB    VD_DRV_READ, 1
                 MOVE    R8, R3                  ; R3: to-be-written amt bytes
-
-;                ; DEBUG
-;                SYSCALL(puthex, 1)
-;                SYSCALL(crlf, 1)
 
                 ; 4k window and offset in disk mount buffer
                 MOVE    R0, R8
@@ -857,9 +846,16 @@ _HDW_RET        SYSCALL(leave, 1)
 ;    in a row and this would lead to "trashing" when it comes to flushing the
 ;    cache as each write restarts the whole flushing process.
 ; 
-; 3. The logic of waiting at least two seconds before we can start flushing
+;    The logic of waiting at least two seconds before we can start flushing
 ;    and the logic to reset the flushing when a new write comes in is
 ;    implemented in hardware in vdrives.vhd.
+;
+; 3. We work in iterations (amount defined in config.vhd): Only a very small
+;    amount of bytes is written per iteration to make sure we do not
+;    time-out the core: Some cores are very strict when it comes to the
+;    intervals between sd_wr_i and sd_ack_o.
+;
+; 4. The state between iterations is saved in VDRIVES_* variables.
 ; ----------------------------------------------------------------------------
 
 ; FLUSH_CACHE
@@ -868,6 +864,9 @@ _HDW_RET        SYSCALL(leave, 1)
 FLUSH_CACHE     SYSCALL(enter, 1)
 
                 MOVE    R8, R0                  ; R0: virtual drive number
+                MOVE    HANDLES_FILES, R1
+                ADD     R0, R1
+                MOVE    @R1, R1                 ; R1: image-file handle
 
                 ; has the flushing already begun earlier?
                 MOVE    VD_CACHE_FLUSHING, R9
@@ -883,109 +882,149 @@ FLUSH_CACHE     SYSCALL(enter, 1)
                 CMP     1, R8  
                 RBRA    _FC_RET, !Z             ; no: return from FLUSH_CACHE
 
-                MOVE    0xABCD, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                SYSCALL(exit, 1)
+                ; Prepare the flushing process
+
+                ; check for valid file handle
+                CMP     0, R1
+                RBRA    _FC_PREP, !Z
+                MOVE    ERR_FATAL_FZERO, R8
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+                ; the size of the image file is equal to the size of the
+                ; RAM cache: determine size and store as counter that
+                ; will decrement to zero as we are flushing the buffer
+                ; (aka amount of bytes still to be written)
+_FC_PREP        MOVE    R1, R8
+                ADD     FAT32$FDH_SIZE_LO, R8
+                MOVE    VDRIVES_FLUSH_L, R9
+                ADD     R0, R9
+                MOVE    @R8, @R9
+                MOVE    R1, R8
+                ADD     FAT32$FDH_SIZE_HI, R8
+                MOVE    VDRIVES_FLUSH_H, R9
+                ADD     R0, R9
+                MOVE    @R8, @R9
+
+                ; reset 4K window and offset
+                MOVE    VDRIVES_FL_4K, R8
+                ADD     R0, R8
+                MOVE    0, @R8
+                MOVE    VDRIVES_FL_OFS, R8
+                ADD     R0, R8
+                MOVE    0, @R8
+
+                ; seek to position 0 within the image file
+                MOVE    R1, R8
+                XOR     R9, R9
+                XOR     R10, R10
+                SYSCALL(f32_fseek, 1)
+                CMP     0, R9                   ; seek worked?
+                RBRA    _FC_START, Z            ; yes
+                MOVE    ERR_FATAL_SEEK, R8      ; no, R9 contains err. no.
+                RBRA    FATAL, 1                ; show err msg and halt core
+
+                ; set the flag that signals: flushing in progress
+_FC_START       MOVE    R0, R8
+                MOVE    VD_CACHE_FLUSHING, R9
+                MOVE    1, R10
+                RSUB    VD_DRV_WRITE, 1
+                RBRA    _FC_RET, 1
 
                 ; Continue with a flushing process that alrady begun earlier
-_FC_CONT
+
+                ; retrieve 4K window and offset and retrieve amount of
+                ; bytes that still need to be written
+_FC_CONT        XOR     R3, R3                  ; R3: bytes wrtn. in this itr.
+                MOVE    VDRIVES_FL_4K, R4
+                ADD     R0, R4
+                MOVE    @R4, R4                 ; R4: 4k win
+                MOVE    VDRIVES_FL_OFS, R5
+                ADD     R0, R5
+                MOVE    @R5, R5                 ; R5: offset in win
+                MOVE    VDRIVES_FLUSH_L, R6
+                ADD     R0, R6
+                MOVE    @R6, R6                 ; R6: bytes to-be-written lo
+                MOVE    VDRIVES_FLUSH_H, R7
+                ADD     R0, R7
+                MOVE    @R7, R7                 ; R7: bytes to-be-written hi
+
+                ; access cache RAM: select device and 4k window
+_FC_FL          MOVE    M2M$RAMROM_DEV, R8
+                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
+                ADD     R0, R9
+                MOVE    @R9, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    R4, @R8
+                MOVE    M2M$RAMROM_DATA, R8
+                ADD     R5, R8
+                MOVE    @R8, R9                 ; R9: next byte to be written
+
+                ; write next byte to SD card
+                MOVE    R1, R8                  ; R1: file handle
+                SYSCALL(f32_fwrite, 1)          ; write R9 to the SD card
+                CMP     0, R9                   ; write successful?
+                RBRA    _FC_1, Z                ; yes
+                MOVE    ERR_FATAL_WRITE, R8     ; no, R9 contains err. no.
+                RBRA    FATAL, 1                ; show err msg and halt core
+
+                ; one more byte was written: handle various counters
+_FC_1           ADD     1, R3                   ; +1 in current iteration
+                ADD     1, R5                   ; +1 in current 4k win. offs.
+                SUB     1, R6                   ; 16-bit -1 for tbw counter
+                SUBC    0, R7
+
+                ; 16-bit check, if complete buffer was written
+                CMP     0, R6
+                RBRA    _FC_2, !Z
+                CMP     0, R7
+                RBRA    _FC_2, !Z
+
+                ; we are done: complete buffer was written
+                ; flush SD card internal buffer
+                MOVE    R1, R8
+                SYSCALL(f32_fflush, 1)
+                CMP     0, R9                   ; successful?
+                RBRA    _FC_DONE, Z             ; yes
+                MOVE    ERR_FATAL_FLUSH, R8     ; no, R9 contains err. no
+                RBRA    FATAL, 1                ; show err msg and halt core
+
+                ; done: mark cache as clean and return from subroutine
+_FC_DONE        MOVE    R0, R8
+                MOVE    VD_CACHE_DIRTY, R9
+                MOVE    0, R10
+                RSUB    VD_DRV_WRITE, 1
+                RBRA    _FC_RET, 1
+
+                ; not done: did the increase of the offs. lead to new 4k win.?
+_FC_2           CMP     0x1000, R5
+                RBRA    _FC_3, !Z
+                XOR     R5, R5                  ; reset offset within window
+                ADD     1, R4                   ; next window
+
+                ; iteration complete?
+_FC_3           MOVE    VDRIVES_ITERSIZ, R8
+                ADD     R0, R8
+                CMP     R3, @R8
+                RBRA    _FC_FL, !Z              ; no: continue with iteration
+
+                ; iteration complete: remember next valid 4k window and offset
+                ; and remember 16-bit to-be-written (tbw) counter
+                MOVE    VDRIVES_FL_4K, R8
+                ADD     R0, R8
+                MOVE    R4, @R8
+                MOVE    VDRIVES_FL_OFS, R8
+                ADD     R0, R8
+                MOVE    R5, @R8
+                MOVE    VDRIVES_FLUSH_L, R8
+                ADD     R0, R8
+                MOVE    R6, @R8
+                MOVE    VDRIVES_FLUSH_H, R8
+                ADD     R0, R8
+                MOVE    R7, @R8
 
 _FC_RET         SYSCALL(leave, 1)
                 RET
-
-;FLUSH_CACHE     SYSCALL(enter, 1)
-;
-;                MOVE    R8, R0                  ; R0: virtual drive number
-;
-;                ; @TODO / TEMP This is not yet the real mechanism but just
-;                ; a temporary solution so that we can start testing the
-;                ; D64 writing using the "unmount mechanism": The cache is
-;                ; completely flushed when the disk is unmounted using the
-;                ; Space key.
-;
-;                ; continue if file-handle is not zero, fatal otherwise
-;                MOVE    HANDLE_FILE, R8
-;                CMP     0, @R8
-;                RBRA    _FC_1, !Z
-;                MOVE    ERR_FATAL_FZERO, R8
-;                XOR     R9, R9
-;                RBRA    FATAL, 1
-;
-;                ; seek to the beginning of the disk image
-;_FC_1           XOR     R9, R9
-;                XOR     R10, R10
-;                SYSCALL(f32_fseek, 1)
-;                CMP     0, R9                   ; seek worked?
-;                RBRA    _FC_2, Z                ; yes
-;                MOVE    ERR_FATAL_SEEK, R8      ; no, R9 contains err. no.
-;                RBRA    FATAL, 1                ; show err msg and halt core
-;
-;                ; get size of the image file which equals to the size of
-;                ; the cache, i.e. amount of data to be written
-;_FC_2           MOVE    R8, R1                  ; R1: lo word of cache size
-;                ADD     FAT32$FDH_SIZE_LO, R1
-;                MOVE    @R1, R1
-;                MOVE    R8, R2                  ; R2: hi word of cache size
-;                ADD     FAT32$FDH_SIZE_HI, R2
-;                MOVE    @R2, R2
-;
-;                MOVE    M2M$RAMROM_DATA, R3     ; R3: end-of-window marker
-;                ADD     0x1000, R3
-;                XOR     R4, R4                  ; R4: 4k win
-;                MOVE    M2M$RAMROM_DATA, R5     ; R5: offset in win
-;                XOR     R6, R6                  ; R6: lo word of bytes written
-;                XOR     R7, R7                  ; R7: hi word of bytes written
-;
-;                ; DEBUG
-;                MOVE    R2, R8
-;                SYSCALL(puthex, 1)
-;                MOVE    R1, R8
-;                SYSCALL(puthex, 1)
-;                SYSCALL(crlf, 1)                
-;
-;                ; access cache RAM: select device and 4k window
-;_FC_3           MOVE    M2M$RAMROM_DEV, R8
-;                MOVE    VDRIVES_BUFS, R9        ; array of buf RAM device IDs
-;                ADD     R0, R9                  ; select right ID for vdrive
-;                MOVE    @R9, @R8
-;                MOVE    M2M$RAMROM_4KWIN, R8
-;                MOVE    R4, @R8
-;
-;                MOVE    HANDLE_FILE, R8         ; write byte to SD card
-;                MOVE    @R5++, R9               ; read byte from img buffer..
-;                SYSCALL(f32_fwrite, 1)          ; ..and write it to the SD crd
-;                CMP     0, R9                   ; write successful?
-;                RBRA    _FC_4, Z                ; yes
-;                MOVE    ERR_FATAL_WRITE, R8     ; no, R9 contains err. no.
-;                RBRA    FATAL, 1                ; show err msg and halt core
-;
-;                ; one more byte transmitted: are we done?
-;                ; perform 16-bit add and compare to check
-;_FC_4           ADD     1, R6                   ; one more byte transmitted
-;                ADDC    0, R7                   ; 16-bit add
-;                CMP     R6, R1                  ; lo-words equal?
-;                RBRA    _FC_5, !Z               ; no: continue
-;                CMP     R7, R2                  ; hi-words equal?
-;                RBRA    _FC_DONE, Z             ; yes: we are done
-;
-;                ; handle 4k window boundary
-;_FC_5           CMP     R5, R3                  ; 4k boundary reached?
-;                RBRA    _FC_3, !Z               ; no: next byte
-;                MOVE    M2M$RAMROM_DATA, R5     ; yes: reset offset
-;                ADD     1, R4                   ; next 4k window
-;                RBRA    _FC_3, 1                ; next byte
-;
-;                ; make sure that the SD card write buffer is flushed
-;_FC_DONE        MOVE    HANDLE_FILE, R8
-;                SYSCALL(f32_fflush, 1)
-;                CMP     0, R9                   ; flush OK?
-;                RBRA    _HDW_RET, Z             ; yes
-;                MOVE    ERR_FATAL_FLUSH, R8     ; no, R9 contains err. no.
-;                RBRA    FATAL, 1                ; show err msg and halt core
-;
-;                SYSCALL(leave, 1)
-;                RET
 
 ; ----------------------------------------------------------------------------
 ; Debug mode:
