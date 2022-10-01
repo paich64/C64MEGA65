@@ -319,6 +319,8 @@ VD_RD               .EQU 0x7008     ; SD read request
 VD_WR               .EQU 0x7009     ; SD write request
 VD_ACK              .EQU 0x700A     ; SD acknowledge
 VD_B_DIN            .EQU 0x700B     ; drive buffer: data in (from drive)
+VD_CACHE_DIRTY      .EQU 0x700C     ; cache dirty flag
+VD_CACHE_FLUSHING   .EQU 0x700D     ; cache flushing flag
 
 ; ----------------------------------------------------------------------------
 ; Situation and context identifiers for custom messages

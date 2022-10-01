@@ -41,6 +41,7 @@ entity m2m_keyb is
 
       -- control the drive led on the MEGA65 keyboard      
       drive_led_i          : in std_logic;
+      drive_led_col_i      : in std_logic_vector(23 downto 0);
             
       -- interface to QNICE: used by the firmware and the Shell (see sysdef.asm for details)
       qnice_keys_n_o       : out std_logic_vector(15 downto 0)
@@ -70,6 +71,7 @@ begin
       
        flopmotor        => '0',
        flopled          => drive_led_i,
+       flopled_col      => drive_led_col_i,
        powerled         => '1',    
        
        kio8             => kio8_o,

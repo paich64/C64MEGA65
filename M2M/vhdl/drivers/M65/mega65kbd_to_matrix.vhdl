@@ -16,6 +16,7 @@ entity mega65kbd_to_matrix is
 
     flopmotor : in std_logic;
     flopled : in std_logic;
+    flopled_col : in std_logic_vector(23 downto 0);
     powerled : in std_logic;    
     
     kio8 : out std_logic; -- clock to keyboard
@@ -176,8 +177,8 @@ begin  -- behavioural
             sync_pulse <= '1';
             output_vector <= (others => '0');
             if flopmotor='1' or (flopled='1' and counter(24)='1') then
-              output_vector(23 downto 0) <= x"00FF00";
-              output_vector(47 downto 24) <= x"00FF00";
+              output_vector(23 downto 0)  <= flopled_col;
+              output_vector(47 downto 24) <= flopled_col;
             end if;
             if powerled='1' then
               output_vector(71 downto 48) <= x"00FF00";

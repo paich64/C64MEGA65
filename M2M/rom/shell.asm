@@ -602,7 +602,7 @@ _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
 
 HANDLE_IO       SYSCALL(enter, 1)
 
-                ; Loop through all VDRIVES and check for read requests
+                ; Loop through all VDRIVES and check for requests
                 XOR     R0, R0                  ; R0: number of virtual drive
                 MOVE    VDRIVES_NUM, R1
                 MOVE    @R1, R1                 ; R1: amount of vdrives

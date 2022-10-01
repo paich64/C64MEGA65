@@ -1,12 +1,20 @@
 Version 4 - MONTH, DD, YYYY
 ===========================
 
-Write support for the C1541 is the main feature of this release: Save your
-high-scores and your progress in games that support it and work with GEOS.
+Productivity release: Write support for the virtual C1541 and a 512 KB RAM
+Expansion Unit (REU) are the main features: Save your high-scores and your
+gaming progress to disk (D64) and work productively with GEOS by speeding up
+10x using the REU and by saving your work persistently to disk.
+And the demo fans can now enjoy all the awesome REU releases on CSDB.
 
 ## New Features
 
-WIP C1541 write support: Ability to write to D64 image files on the SD card.
+WIP C1541 write support using D64 image files on the SD card.
+
+WIP REU support: @TODO add technical details, REU version, ...
+CSDB: https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6
+
+* Mouse: Support for C64 mice and MouSTer
 
 ## Changes
 

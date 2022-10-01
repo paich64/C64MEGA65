@@ -39,6 +39,8 @@
 --    0x0009   sd_wr_i
 --    0x000A   sd_ack_o
 --    0x000B   sd_buff_din_i
+--    0x000C   cache_dirty_o
+--    0x000D   cache_flushing_o
 --
 -- MiSTer's "SD" interface protocol (reverse-engineered, so accuracy may be only 95%):
 --
@@ -132,6 +134,14 @@ port (
    -- so that it can be used for resetting (and unresetting) the drive.
    drive_mounted_o   : out std_logic_vector(VDNUM - 1 downto 0);
    
+   -- Cache output signals: The dirty flags can be used to enforce data consistency
+   -- (for example by ignoring/delaying a reset or delaying a drive unmount/mount, etc.)
+   -- The flushing flags can be used to signal the fact that the caches are currently
+   -- flushing to the user, for example using a special color/signal for example
+   -- at the drive led
+   cache_dirty_o     : out std_logic_vector(VDNUM - 1 downto 0);
+   cache_flushing_o  : out std_logic_vector(VDNUM - 1 downto 0);
+   
    ---------------------------------------------------------------------------------------
    -- QNICE clock domain
    ---------------------------------------------------------------------------------------
@@ -193,9 +203,16 @@ signal img_readonly_out : std_logic;
 signal img_size_out     : std_logic_vector(31 downto 0);
 signal img_type_out     : std_logic_vector(1 downto 0);
 
--- Drive mounted register in core's ane QNICE's clock domain
+-- Drive mounted register in core's and QNICE's clock domain
 signal drive_mounted_reg         : std_logic_vector(VDNUM - 1 downto 0);
 signal drive_mounted_reg_qnice   : std_logic_vector(VDNUM - 1 downto 0);
+
+-- Cache signalling registers in core's and QNICE's clock domain
+signal cache_dirty_r_core        : std_logic_vector(VDNUM - 1 downto 0);
+signal cache_dirty_r_qnice       : std_logic_vector(VDNUM - 1 downto 0);
+signal cache_flushing_r_core     : std_logic_vector(VDNUM - 1 downto 0);
+signal cache_flushing_r_qnice    : std_logic_vector(VDNUM - 1 downto 0);
+signal latch_sd_wr               : vd_std_array(VDNUM - 1 downto 0);
 
 begin
    -- Core clock domain: Output registers
@@ -204,16 +221,22 @@ begin
    img_size_o        <= img_size_out;
    img_type_o        <= img_type_out;
    drive_mounted_o   <= drive_mounted_reg;
+   cache_dirty_o     <= cache_dirty_r_core;
+   cache_flushing_o  <= cache_flushing_r_core;
 
    i_cdc_q2m_img_mounted: xpm_cdc_array_single
       generic map (
-         WIDTH => VDNUM
+         WIDTH => 3 * VDNUM 
       )
       port map (
-         src_clk                       => clk_qnice_i,
-         src_in(VDNUM - 1 downto 0)    => img_mounted(VDNUM - 1 downto 0),
-         dest_clk                      => clk_core_i,
-         dest_out(VDNUM - 1 downto 0)  => img_mounted_out(VDNUM - 1 downto 0) 
+         src_clk                                      => clk_qnice_i,
+         src_in((VDNUM * 1) - 1 downto (VDNUM * 0))   => img_mounted(VDNUM - 1 downto 0),
+         src_in((VDNUM * 2) - 1 downto (VDNUM * 1))   => cache_dirty_r_qnice(VDNUM - 1 downto 0),
+         src_in((VDNUM * 3) - 1 downto (VDNUM * 2))   => cache_flushing_r_qnice(VDNUM - 1 downto 0),        
+         dest_clk                                     => clk_core_i,
+         dest_out((VDNUM * 1) - 1 downto (VDNUM * 0)) => img_mounted_out(VDNUM - 1 downto 0),
+         dest_out((VDNUM * 2) - 1 downto (VDNUM * 1)) => cache_dirty_r_core(VDNUM - 1 downto 0),
+         dest_out((VDNUM * 3) - 1 downto (VDNUM * 2)) => cache_flushing_r_core(VDNUM - 1 downto 0)
       );
 
    i_cdc_qnice2main: xpm_cdc_array_single
@@ -293,15 +316,25 @@ begin
    begin
       if falling_edge(clk_qnice_i) then
          if reset_qnice = '1' then
-            img_mounted    <= (others => '0');
-            img_readonly   <= '0';
-            img_size       <= (others => '0');
-            img_type       <= (others => '0');
-            sd_buff_addr   <= (others => '0');
-            sd_buff_dout   <= (others => '0');
-            sd_buff_wr     <= '0';
-            sd_ack         <= (others => '0');            
-         else         
+            img_mounted             <= (others => '0');
+            img_readonly            <= '0';
+            img_size                <= (others => '0');
+            img_type                <= (others => '0');
+            
+            sd_buff_addr            <= (others => '0');
+            sd_buff_dout            <= (others => '0');
+            sd_buff_wr              <= '0';
+            sd_ack                  <= (others => '0');
+            
+            cache_dirty_r_qnice     <= (others => '0');
+            cache_flushing_r_qnice  <= (others => '0');
+            latch_sd_wr             <= (others => '0');
+         else
+            -- we need to latch sd_wr_i so that in conjunction with sd_ack_o we can determine cache_dirty_r_qnice
+            for i in 0 to VDNUM - 1 loop
+               latch_sd_wr(i) <= latch_sd_wr(i) or sd_wr_i(i);            
+            end loop;
+                  
             -- QNICE registers written by QNICE
             if qnice_we_i = '1' then
                -- Window 0x0000: Control and data registers              
@@ -355,9 +388,39 @@ begin
                      for i in 0 to VDNUM - 1 loop
                         if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
                            sd_ack(i) <= qnice_data_i(0);
+                           
+                           -- if we are acknowledging a write request then the cache is dirty from now on
+                           -- we need to delete the latched write request because we handled it (otherwise we would not acknowledge)
+                           if latch_sd_wr(i) = '1' then
+                              cache_dirty_r_qnice(i) <= '1';
+                              latch_sd_wr(i) <= '0';
+                           end if;
                         end if;                  
                      end loop;                                 
                   end if;
+                  
+                  -- cache_dirty_o
+                  if qnice_addr_i(3 downto 0) = x"C" then
+                     for i in 0 to VDNUM - 1 loop
+                        if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                           cache_dirty_r_qnice(i) <= qnice_data_i(0);
+                           
+                           -- if the cache is not dirty any more then we logically can also not be flushing the cache any more
+                           if qnice_data_i(0) = '0' then
+                              cache_flushing_r_qnice(i) <= '0';
+                           end if;
+                        end if;                  
+                     end loop;                                 
+                  end if;
+                  
+                  -- cache_flushing_o
+                  if qnice_addr_i(3 downto 0) = x"D" then
+                     for i in 0 to VDNUM - 1 loop
+                        if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                           cache_flushing_r_qnice(i) <= qnice_data_i(0);
+                        end if;                  
+                     end loop;                                 
+                  end if;                  
                end if;
             end if;          
          end if;
@@ -514,7 +577,23 @@ begin
                   if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
                      qnice_data_o(DW downto 0) <= sd_buff_din_i(i);
                   end if;                  
-               end loop;                                        
+               end loop;
+               
+            -- cache_dirty_o
+            when x"C" =>                           
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= cache_dirty_r_qnice(i);
+                  end if;                  
+               end loop;
+               
+            -- cache_flushing_o
+            when x"D" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= cache_flushing_r_qnice(i);
+                  end if;                  
+               end loop;
                         
             when others =>
                null;

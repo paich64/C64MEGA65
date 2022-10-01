@@ -24,7 +24,7 @@ entity main is
       flip_joys_i             : in std_logic;
 
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
-
+      
       -- MiSTer core main clock speed:
       -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
       clk_main_speed_i        : in natural;
@@ -125,7 +125,10 @@ architecture synthesis of main is
    signal iec_img_type_i      : std_logic_vector(1 downto 0);
 
    signal iec_drives_reset    : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal vdrives_mounted_o   : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal vdrives_mounted     : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal cache_dirty         : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal cache_flushing      : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal prevent_reset       : std_logic;
 
    signal c64_iec_clk_o       : std_logic;
    signal c64_iec_clk_i       : std_logic;
@@ -172,6 +175,9 @@ architecture synthesis of main is
 
 begin
 
+   -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
+   prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
+
    --------------------------------------------------------------------------------------------------
    -- Hard reset
    --------------------------------------------------------------------------------------------------
@@ -181,7 +187,11 @@ begin
       if rising_edge(clk_main_i) then
          if reset_soft_i or reset_hard_i then
             hard_rst_counter  <= hard_rst_delay;
-            reset_core_n      <= '0';
+            
+            -- reset_core_n is low-active, so prevent_reset = 0 means execute reset
+            -- but a hard reset can override
+            reset_core_n      <= prevent_reset and (not reset_hard_i);     
+            
             hard_reset_n      <= not reset_hard_i;  -- "not" converts to low-active
          else
             reset_core_n      <= '1';
@@ -457,7 +467,7 @@ begin
    --        "P2oNO,Enable Drive #9,If Mounted,Always,Never;"
    --        This code currently only implements the "If Mounted" option
    g_iec_drv_reset : for i in 0 to G_VDNUM - 1 generate
-      iec_drives_reset(i) <= (not reset_core_n) or (not vdrives_mounted_o(i));
+      iec_drives_reset(i) <= (not reset_core_n) or (not vdrives_mounted(i));
    end generate g_iec_drv_reset;
 
    i_iec_drive : entity work.iec_drive
@@ -556,8 +566,16 @@ begin
 
          -- While "img_mounted_o" needs to be strobed, "drive_mounted" latches the strobe in the core's clock domain,
          -- so that it can be used for resetting (and unresetting) the drive.
-         drive_mounted_o      => vdrives_mounted_o,
-
+         drive_mounted_o      => vdrives_mounted,
+         
+         -- Cache output signals: The dirty flags can be used to enforce data consistency
+         -- (for example by ignoring/delaying a reset or delaying a drive unmount/mount, etc.)
+         -- The flushing flags can be used to signal the fact that the caches are currently
+         -- flushing to the user, for example using a special color/signal for example
+         -- at the drive led
+         cache_dirty_o        => cache_dirty,
+         cache_flushing_o     => cache_flushing,         
+   
          -- MiSTer's "SD block level access" interface, which runs in QNICE's clock domain
          -- using dedicated signal on Mister's side such as "clk_sys"
          sd_lba_i             => iec_sd_lba_o,

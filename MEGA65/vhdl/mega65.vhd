@@ -572,6 +572,7 @@ begin
 
          -- control the drive led on the MEGA65 keyboard
          drive_led_i          => main_drive_led,
+         drive_led_col_i      => x"FFFF00",
 
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n
