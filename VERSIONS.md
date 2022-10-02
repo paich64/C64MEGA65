@@ -9,10 +9,13 @@ And the demo fans can now enjoy all the awesome REU releases on CSDB.
 
 ## New Features
 
-WIP C1541 write support using D64 image files on the SD card.
+* C1541 write support using D64 image files on the SD card.
 
 WIP REU support: @TODO add technical details, REU version, ...
 CSDB: https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6
+
+WIP Ability to save the configuration settings of the core. You need to copy
+  the file .c64mega65 to the folder /c64 to activate this feature.
 
 * Mouse: Support for C64 mice and MouSTer
 

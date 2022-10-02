@@ -182,7 +182,7 @@ begin
    
    -- the color of the drive led is green normally, but it turns yellow when the cache is
    -- currently being flushed
-   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"FFFF00";
+   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"00FFFF";
    
    -- the drive led is on if either the C64 is writing to the virtual disk (cached in RAM)
    -- or if the dirty cache is currently being flushed to the SD card
