@@ -45,12 +45,14 @@ architecture synthesis of reu_mapper is
    subtype R_FIFO_ADDR is natural range 32 downto 8;
    subtype R_FIFO_WE   is natural range 33 downto 33;
    constant C_FIFO_SIZE : natural := 40;
+   constant C_FILL_SIZE : natural := 5;
 
    signal reu_ext_cycle_d   : std_logic;
 
    signal reu_wr_fifo_ready : std_logic;
    signal reu_wr_fifo_valid : std_logic;
    signal reu_wr_fifo_data  : std_logic_vector(C_FIFO_SIZE-1 downto 0);
+   signal reu_wr_fifo_size  : std_logic_vector(C_FILL_SIZE-1 downto 0);
 
    signal hr_addr           : std_logic_vector(24 downto 0);
    signal hr_dout           : std_logic_vector(7 downto 0);
@@ -59,8 +61,13 @@ architecture synthesis of reu_mapper is
    signal hr_wr_fifo_ready  : std_logic;
    signal hr_wr_fifo_valid  : std_logic;
    signal hr_wr_fifo_data   : std_logic_vector(C_FIFO_SIZE-1 downto 0);
+   signal hr_wr_fifo_size   : std_logic_vector(C_FILL_SIZE-1 downto 0);
+
+   signal hr_rd_fifo_ready  : std_logic;
+   signal hr_rd_fifo_size   : std_logic_vector(C_FILL_SIZE-1 downto 0);
 
    signal reu_rd_fifo_valid : std_logic;
+   signal reu_rd_fifo_size  : std_logic_vector(C_FILL_SIZE-1 downto 0);
 
 begin
 
@@ -82,6 +89,7 @@ begin
    i_axi_fifo_wr : entity work.axi_fifo
       generic map (
          G_DEPTH     => 16,
+         G_FILL_SIZE => C_FILL_SIZE,
          G_DATA_SIZE => C_FIFO_SIZE,
          G_USER_SIZE => 8
       )
@@ -94,13 +102,15 @@ begin
          s_axis_tkeep_i  => (others => '1'),
          s_axis_tlast_i  => '1',
          s_axis_tuser_i  => (others => '0'),
+         s_fill_o        => reu_wr_fifo_size,
          m_aclk_i        => hr_clk_i,
          m_axis_tready_i => hr_wr_fifo_ready,
          m_axis_tvalid_o => hr_wr_fifo_valid,
          m_axis_tdata_o  => hr_wr_fifo_data,
          m_axis_tkeep_o  => open,
          m_axis_tlast_o  => open,
-         m_axis_tuser_o  => open
+         m_axis_tuser_o  => open,
+         m_fill_o        => hr_wr_fifo_size
       ); -- i_axi_fifo_wr
 
    reu_wr_fifo_data(R_FIFO_DOUT) <= reu_dout_i;
@@ -122,25 +132,28 @@ begin
    i_axi_fifo_rd : entity work.axi_fifo
       generic map (
          G_DEPTH     => 16,
+         G_FILL_SIZE => C_FILL_SIZE,
          G_DATA_SIZE => 8,
          G_USER_SIZE => 8
       )
       port map (
          s_aclk_i        => hr_clk_i,
          s_aresetn_i     => not hr_rst_i,
-         s_axis_tready_o => open,               -- This should always be asserted.
+         s_axis_tready_o => hr_rd_fifo_ready,               -- This should always be asserted.
          s_axis_tvalid_i => hr_readdatavalid_i,
          s_axis_tdata_i  => hr_readdata_i(7 downto 0),
          s_axis_tkeep_i  => (others => '1'),
          s_axis_tlast_i  => '1',
          s_axis_tuser_i  => (others => '0'),
+         s_fill_o        => hr_rd_fifo_size,
          m_aclk_i        => reu_clk_i,
          m_axis_tready_i => '1',                -- TBD ???
          m_axis_tvalid_o => reu_rd_fifo_valid,  -- TBD ???
          m_axis_tdata_o  => reu_din_o,
          m_axis_tkeep_o  => open,
          m_axis_tlast_o  => open,
-         m_axis_tuser_o  => open
+         m_axis_tuser_o  => open,
+         m_fill_o        => reu_rd_fifo_size
       ); -- i_axi_fifo_rd
 
 end architecture synthesis;

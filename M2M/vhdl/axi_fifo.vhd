@@ -8,6 +8,7 @@ use xpm.vcomponents.all;
 entity axi_fifo is
    generic (
       G_DEPTH     : natural;
+      G_FILL_SIZE : natural;
       G_DATA_SIZE : natural;
       G_USER_SIZE : natural
    );
@@ -20,13 +21,15 @@ entity axi_fifo is
       s_axis_tkeep_i  : in  std_logic_vector(G_DATA_SIZE/8-1 downto 0);
       s_axis_tlast_i  : in  std_logic;
       s_axis_tuser_i  : in  std_logic_vector(G_USER_SIZE-1 downto 0);
+      s_fill_o        : out std_logic_vector(G_FILL_SIZE-1 downto 0);
       m_aclk_i        : in  std_logic;
       m_axis_tready_i : in  std_logic;
       m_axis_tvalid_o : out std_logic;
       m_axis_tdata_o  : out std_logic_vector(G_DATA_SIZE-1 downto 0);
       m_axis_tkeep_o  : out std_logic_vector(G_DATA_SIZE/8-1 downto 0);
       m_axis_tlast_o  : out std_logic;
-      m_axis_tuser_o  : out std_logic_vector(G_USER_SIZE-1 downto 0)
+      m_axis_tuser_o  : out std_logic_vector(G_USER_SIZE-1 downto 0);
+      m_fill_o        : out std_logic_vector(G_FILL_SIZE-1 downto 0)
    );
 end entity axi_fifo;
 
@@ -44,15 +47,15 @@ begin
          PACKET_FIFO          => "false",
          PROG_EMPTY_THRESH    => 10,
          PROG_FULL_THRESH     => 10,
-         RD_DATA_COUNT_WIDTH  => 1,
+         RD_DATA_COUNT_WIDTH  => G_FILL_SIZE,
          RELATED_CLOCKS       => 0,
          SIM_ASSERT_CHK       => 0,
          TDATA_WIDTH          => G_DATA_SIZE,
          TDEST_WIDTH          => 1,
          TID_WIDTH            => 1,
          TUSER_WIDTH          => G_USER_SIZE,
-         USE_ADV_FEATURES     => "1000",
-         WR_DATA_COUNT_WIDTH  => 1
+         USE_ADV_FEATURES     => "1404",
+         WR_DATA_COUNT_WIDTH  => G_FILL_SIZE
       )
       port map (
          almost_empty_axis  => open,
@@ -72,7 +75,7 @@ begin
          m_axis_tvalid      => m_axis_tvalid_o,
          prog_empty_axis    => open,
          prog_full_axis     => open,
-         rd_data_count_axis => open,
+         rd_data_count_axis => m_fill_o,
          s_aclk             => s_aclk_i,
          s_aresetn          => s_aresetn_i,
          s_axis_tdata       => s_axis_tdata_i,
@@ -85,7 +88,7 @@ begin
          s_axis_tuser       => s_axis_tuser_i,
          s_axis_tvalid      => s_axis_tvalid_i,
          sbiterr_axis       => open,
-         wr_data_count_axis => open
+         wr_data_count_axis => s_fill_o
       ); -- i_xpm_fifo_axis
 
 end architecture synthesis;
