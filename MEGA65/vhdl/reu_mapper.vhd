@@ -43,7 +43,7 @@ architecture synthesis of reu_mapper is
 
    subtype R_FIFO_DOUT is natural range 7 downto 0;
    subtype R_FIFO_ADDR is natural range 32 downto 8;
-   subtype R_FIFO_WE   is natural range 33 downto 33;
+   constant R_FIFO_WE   : natural := 33;
    constant C_FIFO_SIZE : natural := 40;
    constant C_FILL_SIZE : natural := 5;
 
@@ -115,10 +115,10 @@ begin
 
    reu_wr_fifo_data(R_FIFO_DOUT) <= reu_dout_i;
    reu_wr_fifo_data(R_FIFO_ADDR) <= reu_addr_i;
-   reu_wr_fifo_data(R_FIFO_WE)   <= "" & reu_we_i;
+   reu_wr_fifo_data(R_FIFO_WE)   <= reu_we_i;
    hr_dout <= hr_wr_fifo_data(R_FIFO_DOUT);
    hr_addr <= hr_wr_fifo_data(R_FIFO_ADDR);
-   hr_we   <= hr_wr_fifo_data(R_FIFO_WE)(0);
+   hr_we   <= hr_wr_fifo_data(R_FIFO_WE);
 
    hr_wr_fifo_ready <= not hr_waitrequest_i;
    hr_write_o       <= hr_wr_fifo_valid and hr_we;
