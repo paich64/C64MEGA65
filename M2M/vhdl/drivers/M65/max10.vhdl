@@ -19,7 +19,7 @@ entity max10 is
          ----------------------------------------------------------------------
          max10_rx : out std_logic := '1';
          max10_tx : in std_logic;
-         max10_clkandsync : inout std_logic;
+         max10_clkandsync : out std_logic;
 
          ----------------------------------------------------------------------
          -- Data to/from MAX10
@@ -55,6 +55,8 @@ architecture Behavioral of max10 is
   
   signal reset_button_counter : integer range 0 to 255 := 0;
   
+  signal clock_divider : std_logic := '0';
+  
 begin
 
   process (pixelclock,cpuclock) is
@@ -82,6 +84,8 @@ begin
     end if;
     
     if rising_edge(pixelclock) then
+     clock_divider <= not clock_divider;
+     if clock_divider = '1' then
       -- We were previously using a 4-wire protocol with RX and TX lines,
       -- a sync line and clock line. But the clock was supposed to be via
       -- FPGA_DONE pin under user-control, but that didn't work.
@@ -97,7 +101,7 @@ begin
 --        led <= max10_clock_toggle;
         max10_clkandsync <= max10_clock_toggle;
       else
-        max10_clkandsync <= 'Z';
+        max10_clkandsync <= '0';
 --        led <= '1';
         max10_out_vector(11 downto 0) <= j21ddr;
         max10_out_vector(23 downto 12) <= j21out;
@@ -155,6 +159,7 @@ begin
         max10_out_vector(23 downto 12) <= j21out;
       end if;            
     end if;
+   end if;
   end process;
   
   
