@@ -243,6 +243,7 @@ M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
 M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item
 M2M$CFG_OPTM_MSTR   .EQU 0x0308     ; Mount string to display instead of %s
 M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
+M2M$CFG_OPTM_SSTR   .EQU 0x030A     ; Saving string to display instead of %s
 M2M$CFG_OPTM_HELP   .EQU 0x0310     ; Menu item = show a help menu
 
 ; M2M$CFG_WHS

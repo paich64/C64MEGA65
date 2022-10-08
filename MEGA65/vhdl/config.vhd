@@ -301,6 +301,7 @@ constant SEL_OPTM_MOUNT_DRV   : std_logic_vector(15 downto 0) := x"0306";
 constant SEL_OPTM_SINGLESEL   : std_logic_vector(15 downto 0) := x"0307";
 constant SEL_OPTM_MOUNT_STR   : std_logic_vector(15 downto 0) := x"0308";
 constant SEL_OPTM_DIMENSIONS  : std_logic_vector(15 downto 0) := x"0309";
+constant SEL_OPTM_SAVING_STR  : std_logic_vector(15 downto 0) := x"030A";
 constant SEL_OPTM_HELP        : std_logic_vector(15 downto 0) := x"0310";
 
 -- !!! DO NOT TOUCH !!! Configuration constants for OPTM_GROUPS (shell.asm and menu.asm expect them to be like this)
@@ -316,8 +317,9 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 
 -- START YOUR CONFIGURATION BELOW THIS LINE:
 
--- String with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
-constant OPTM_S_MOUNT         : string :=  "<Mount Drive>";
+-- Strings with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
+constant OPTM_S_MOUNT      : string := "<Mount Drive>";  -- no disk image mounted, yet
+constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write cache is dirty and not yet written back to the SD card
 
 -- Size of menu and menu items
 -- CAUTION: 1. End each line (also the last one) with a \n and make sure empty lines / separator lines are only consisting of a "\n"
@@ -512,6 +514,7 @@ begin
          when SEL_DIR_START         => data_o <= str2data(DIR_START);
          when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
          when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
+         when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);
          when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
                                                  std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
                                                  std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));

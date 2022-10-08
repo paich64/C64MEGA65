@@ -18,7 +18,7 @@ SPACE           .ASCII_W " "
 
 FN_ROOT_DIR     .ASCII_W "/"
 FN_UPDIR        .ASCII_W ".."
-FN_ELLIPSIS     .ASCII_W "..." ; hardcoded to a len. of 3, see comment below
+FN_ELLIPSIS     .ASCII_W "..." ; caution: hardcoded to a len. of 3
 
 ; ----------------------------------------------------------------------------
 ; Debug Mode and log messages for the serial terminal

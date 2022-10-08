@@ -155,11 +155,23 @@ _HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
                 ; equals to @SCR$OSM_O_DX and the maximum amount of such kind
                 ; of "%s" strings equals to the actual amount of virtual
                 ; drives, i.e. VDRIVES_NUM
+                ;
+                ; But need one more than VDRIVES_NUM (i.e. VDRIVES_NUM + 1)
+                ; because we need a scratch buffer to remember the adjusted
+                ; filename during the period, where OPTM_S_SAVING from
+                ; config.vhd is being shown, i.e. while the save buffer
+                ; is dirty. We store the pointer to this in OPTM_HEAP_LAST.
                 MOVE    SCR$OSM_O_DX, R8
                 MOVE    @R8, R8
                 MOVE    VDRIVES_NUM, R9
                 MOVE    @R9, R9
                 SYSCALL(mulu, 1)                ; R10 = result lo word of mulu
+                MOVE    OPTM_HEAP_LAST, R8      ; clc. addr. of OPTM_HEAP_LAST
+                MOVE    R10, @R8
+                MOVE    OPTM_HEAP, R11
+                ADD     @R11, @R8
+                MOVE    SCR$OSM_O_DX, R8        ; VDRIVES_NUM + 1 
+                ADD     @R8, R10 
                 MOVE    OPTM_HEAP_SIZE, R8
                 CMP     R10, @R8                ; demand > heap?
                 RBRA    _HLP_HEAP2_OK, !N       ; no, all OK
@@ -615,10 +627,11 @@ _OPTMCB_RET     DECRB
 ; if there is a "%s" within a menu item.
 ;
 ; menu.asm is not aware of the semantics that we are implementing here:
-; "%s" is meant to use to denote the space where we will either print
+; "%s" is meant to denote the space where we will either print
 ; OPTM_S_MOUNT from config.vhd, which is "<Mount Drive>" by default, if the
 ; drive is not mounted, yet, or we print the file name of the disk image,
-; abbreviated to the width of the frame.
+; abbreviated to the width of the frame. We also handle the "cache diry"
+; situation and show OPTM_S_SAVING which defaults to "<Saving>".
 ;
 ; Input:
 ;   R8: pointer to the string that includes the "%s"
@@ -676,7 +689,53 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 RSUB    _OPTM_CBS_REPL, 1       ; replace %s with OPTM_S_MOUNT
                 RBRA    _OPTM_CBS_RET, 1
 
-                ; Case #2: Drive is mounted: Show name of disk image
+                ; Case #2: Drive is mounted: 
+                ;
+                ; Two sub-cases: If drive is mounted but the write cache is
+                ; dirty, then proceed with Case #2a, else with #2b.
+                ; R8 still contains the virtual drive id.
+_OPTM_CBS_1     MOVE    VD_CACHE_DIRTY, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8                   ; cache dirty?
+                RBRA    _OPTM_CBS_2, !Z         ; no: proceed with case #2b
+
+                ; Case #2a: Show OPTM_S_SAVING (default: "<Saving>") if
+                ; the cache is dirty, i.e. the core wrote to the disk image
+                ; but it has not yet been flushed to the SD card
+
+                ; See comment at case #2b "Check, if..." to get the context
+                ; for what is happening here. But in contrast to case #2b,
+                ; we use "2" instead of "1" as flag here. This has the
+                ; advantage that case #2b can use this "2" to notice
+                ; that we need to restore the original filename
+                MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
+                MOVE    @R8, R8
+                SUB     1, R8
+                ADD     R0, R8
+                CMP     2, @R8                  ; did we replace earlier?
+                RBRA    _OPTM_CBS_RET, Z        ; yes: return
+
+                MOVE    R0, R8                  ; remember filename
+                MOVE    OPTM_HEAP_LAST, R9
+                MOVE    @R9, R9
+                SYSCALL(strcpy, 1)
+
+                MOVE    M2M$RAMROM_DEV, R3      ; replace %s w. OPTM_S_SAVING
+                MOVE    M2M$CONFIG, @R3
+                MOVE    M2M$RAMROM_4KWIN, R3
+                MOVE    M2M$CFG_OPTM_SSTR, @R3
+                MOVE    M2M$RAMROM_DATA, R8
+                RSUB    _OPTM_CBS_REPL, 1
+
+                MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
+                MOVE    @R8, R8
+                SUB     1, R8
+                ADD     R0, R8
+                MOVE    2, @R8                  ; we use "2" instead of "1"
+
+                RBRA    _OPTM_CBS_RET, 1            
+
+                ; Case #2b: Show name of disk image
                 ; the replacement string was placed at R0 by HANDLE_MOUNTING
                 ; in shell.asm; since this is "just" the replacement string
                 ; for the "%s", we need to save it on the stack so that
@@ -689,14 +748,31 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 ; of the string; one of these bytes is used for the zero
                 ; terminator in case of a long string and one is used for
                 ; this flag.
-_OPTM_CBS_1     MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
+                ; We need to check this, because otherwise we will have a
+                ; nested replacement because %s will replaced by something
+                ; that has already been the result of a replacement.
+                ;
+                ; Flag = 1: We replaced the file name in a former run of #2b
+                ; Flag = 2: We replaced due to case #2a, i.e. we need to
+                ;           restore the original filename
+_OPTM_CBS_2     MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
                 MOVE    @R8, R8
                 SUB     1, R8
                 ADD     R0, R8
                 CMP     1, @R8                  ; did we replace earlier?
                 RBRA    _OPTM_CBS_RET, Z        ; yes: return
+                CMP     2, @R8                  ; case #2a before?
+                RBRA    _OPTM_CBS_3, !Z         ; no: normal case #2b
 
-                MOVE    R0, R8
+                ; we need to restore the original filename
+                MOVE    OPTM_HEAP_LAST, R8
+                MOVE    @R8, R8
+                MOVE    R0, R9
+                SYSCALL(strcpy, 1)
+                RBRA    _OPTM_CBS_4, 1          ; set replaced flag
+
+                ; Replace %s by filename
+_OPTM_CBS_3     MOVE    R0, R8
                 SYSCALL(strlen, 1)
                 ADD     1, R9                   ; space for zero terminator
                 SUB     R9, SP
@@ -709,7 +785,7 @@ _OPTM_CBS_1     MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
                 MOVE    @SP++, R3
                 ADD     R3, SP
 
-                MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
+_OPTM_CBS_4     MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 MOVE    @R8, R8
                 SUB     1, R8
                 ADD     R0, R8

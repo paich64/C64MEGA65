@@ -23,8 +23,16 @@ OPTM_ICOUNT     .BLOCK 1                        ; amount of menu items
 OPTM_START      .BLOCK 1                        ; initially selected menu item
 OPTM_SELECTED   .BLOCK 1                        ; last options menu selection
 OPTM_MNT_STATUS .BLOCK 1                        ; drive mount status
-OPTM_HEAP       .BLOCK 1                        ; pointer to a place that can
-                                                ; be used as a scratch buffer
+
+; OPTM_HEAP is used by the option menu to save the modified filenames of
+; disk images used by mounted drives: Filenames need to be abbreviated by
+; "..." if they are too long. See also HELP_MENU and HANDLE_MOUNTING.
+;
+; OPTM_HEAP_LAST points to a scratch buffer that can hold a modified filename
+; for saving/restoring while the cache dirty "Saving" message is shown.
+; See also OPTM_CB_SHOW. 
+OPTM_HEAP       .BLOCK 1
+OPTM_HEAP_LAST  .BLOCK 1
 OPTM_HEAP_SIZE  .BLOCK 1                        ; size of this scratch buffer
 
 SCRATCH_HEX     .BLOCK 5

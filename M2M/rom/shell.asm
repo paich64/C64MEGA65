@@ -349,7 +349,7 @@ _HM_SDMOUNTED3  MOVE    R8, R0                  ; R8: selected file name
 
                 ; if the length of the name is <= the maximum size then just
                 ; copy as is; otherwise copy maximum size + 1 so that the
-                ;  ellipsis is triggered (see _OPTM_CBS_REPL in options.asm)
+                ; ellipsis is triggered (see _OPTM_CBS_REPL in options.asm)
                 MOVE    R2, R8
                 SYSCALL(strlen, 1)
                 CMP     R9, R1                  ; strlen(name) > maximum?
@@ -440,11 +440,6 @@ _HM_MOUNTED     CMP     OPTM_KEY_SELALT, R6     ; unmount the whole drive?
 
                 ; Unmount the whole drive by stobing the image mount signal
                 ; while setting the image size to zero
-
-                ; @TEMP / @TODO: Before doing so: Flush the disk image buffer        
-;                MOVE    R7, R8                  ; virtual drive number
-;                RSUB    FLUSH_CACHE, 1
-
                 XOR     R9, R9                  ; low word of image size
                 XOR     R10, R10                ; high word of image size
                 XOR     R11, R11                ; 0=read/write disk
