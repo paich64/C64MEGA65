@@ -180,8 +180,14 @@ When you press <kbd>Return</kbd> for the second time, the 60Hz mode is
 activated, independent of the C64's output, which is still 50Hz in PAL mode.
 This works fine in general, but leads to some flickering here and there.
 
-How to use the file- and directory browser for mounting a disk image
---------------------------------------------------------------------
+Working with disk images
+------------------------
+
+Currently, we only support standard D64 disk images. This covers 99% of all
+use cases. We do have support for non-standard D64 disk images and G64 disk
+images on our [Roadmap](ROADMAP.md).
+
+### Mounting disk images
 
 Thanks to long filename support and alphabetically sorted file- and directory
 listings, mounting a disk image is straightforward. Press MEGA65's
@@ -206,8 +212,6 @@ Here is how the browser works:
 * Within the file browser you can use <kbd>F1</kbd> to manually select
   the internal SD card (bottom tray) and <kbd>F3</kbd> to select the
   external SD card (back slot).
-* The disk image is internally buffered, which means you can remove or
-  switch the SD card even while the C64 is accessing the disk.
 * An already mounted drive can be unmounted (i.e. "switch the drive off"), if
   you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
   If you select an already mounted drive with the <kbd>Return</kbd> key
@@ -218,6 +222,28 @@ Here is how the browser works:
   Otherwise it starts at the root folder.
 * The file browser only shows files with a valid file extension.
   Currently, we only support `.d64`.
+
+### Writing to disk images
+
+The C64 core supports not only reading from D64 disk images but also writing
+so that you can save your gaming high-scores and work productively with the
+C64 for example by saving documents in GEOS or by saving your BASIC programs.
+
+Important things to know about how writing to disk images works:
+
+* While the C64 is saving something, the drive led is green.
+* When the C64 is done saving and everything is OK, the led goes off.
+* In case of an error, the led is blinking green.
+* When the C64 successfully saved something then it was only written to
+  an internal buffer; it is not yet written to the SD card. Wait 2 seconds
+  after the C64 is done writing and you will see the drive led will
+  automatically turn yellow. This is the process of actually saving all the
+  changes to the SD card. It happens seamlessly in the background, you do not
+  need to do anything specific.
+* To prevent data corruption after saving something: Never turn the MEGA65 off
+  or remove the SD card before the drive led turned yellow and went off
+  afterwards.
+* If you did not save anything, then the drive led will not turn yellow.
 
 Flicker-free HDMI
 -----------------

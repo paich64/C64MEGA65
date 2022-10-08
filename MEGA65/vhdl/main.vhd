@@ -67,7 +67,7 @@ entity main is
       sid_l                   : out signed(15 downto 0);
       sid_r                   : out signed(15 downto 0);
 
-      -- C64 drive led
+      -- C64 drive led (color is RGB)
       drive_led_o             : out std_logic;
       drive_led_col_o         : out std_logic_vector(23 downto 0);
 
@@ -180,9 +180,9 @@ begin
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
    
-   -- the color of the drive led is green normally, but it turns yellow when the cache is
-   -- currently being flushed
-   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"00FFFF";
+   -- the color of the drive led is green normally, but it turns yellow
+   -- when the cache is currently being flushed
+   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"FFFF00";
    
    -- the drive led is on if either the C64 is writing to the virtual disk (cached in RAM)
    -- or if the dirty cache is currently being flushed to the SD card
