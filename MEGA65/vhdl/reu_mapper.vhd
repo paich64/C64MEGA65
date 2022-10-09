@@ -48,6 +48,7 @@ architecture synthesis of reu_mapper is
    constant C_FILL_SIZE : natural := 5;
 
    signal reu_ext_cycle_d   : std_logic;
+   signal reu_cs_d          : std_logic;
 
    signal reu_wr_fifo_ready : std_logic;
    signal reu_wr_fifo_valid : std_logic;
@@ -66,8 +67,12 @@ architecture synthesis of reu_mapper is
    signal hr_rd_fifo_ready  : std_logic;
    signal hr_rd_fifo_size   : std_logic_vector(C_FILL_SIZE-1 downto 0);
 
+   signal reu_rd_fifo_ready : std_logic;
    signal reu_rd_fifo_valid : std_logic;
    signal reu_rd_fifo_size  : std_logic_vector(C_FILL_SIZE-1 downto 0);
+
+   signal active_s          : std_logic;
+   signal active            : std_logic;
 
 begin
 
@@ -75,16 +80,11 @@ begin
    begin
       if rising_edge(reu_clk_i) then
          reu_ext_cycle_d <= reu_ext_cycle_i;
+         reu_cs_d        <= reu_cs_i;
       end if;
    end process p_ext_cycle_d;
 
-   -- TBD: Should there be edge detection on reu_wr_fifo_ready ?
-   --      E.g. will this still work if reu_wr_fifo_ready is asserted only
-   --      on the last clock cycle of reu_ext_cycle_i ?
-   -- TBD: Should this depend on reu_rd_fifo_valid as well ?
-   reu_ext_cycle_o <= reu_wr_fifo_ready and reu_ext_cycle_i;
-
-   reu_wr_fifo_valid <= reu_cs_i and reu_ext_cycle_i and not reu_ext_cycle_d;  -- Pulse on rising edge
+   reu_wr_fifo_valid <= reu_cs_i and not reu_cs_d;
 
    i_axi_fifo_wr : entity work.axi_fifo
       generic map (
@@ -147,7 +147,7 @@ begin
          s_axis_tuser_i  => (others => '0'),
          s_fill_o        => hr_rd_fifo_size,
          m_aclk_i        => reu_clk_i,
-         m_axis_tready_i => '1',                -- TBD ???
+         m_axis_tready_i => reu_rd_fifo_ready,
          m_axis_tvalid_o => reu_rd_fifo_valid,  -- TBD ???
          m_axis_tdata_o  => reu_din_o,
          m_axis_tkeep_o  => open,
@@ -155,6 +155,22 @@ begin
          m_axis_tuser_o  => open,
          m_fill_o        => reu_rd_fifo_size
       ); -- i_axi_fifo_rd
+
+   active_s <= (reu_wr_fifo_ready and reu_we_i) or (reu_rd_fifo_valid and not reu_we_i);
+
+   p_active : process (reu_clk_i)
+   begin
+      if rising_edge(reu_clk_i) then
+         if reu_ext_cycle_i and not reu_ext_cycle_d then
+            active <= active_s;
+         end if;
+      end if;
+   end process p_active;
+
+   reu_rd_fifo_ready <= active and reu_ext_cycle_d and not reu_ext_cycle_i;
+
+   reu_ext_cycle_o <= (reu_ext_cycle_i and active_s and active) or
+                      (reu_ext_cycle_i and active_s and not reu_ext_cycle_d);
 
 end architecture synthesis;
 
