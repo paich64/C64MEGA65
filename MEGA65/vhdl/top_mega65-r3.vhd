@@ -13,12 +13,12 @@ use ieee.numeric_std.all;
 
 entity mega65_r3 is
 port (
-   CLK            : in  std_logic;                  -- 100 MHz clock
+   CLK               : in  std_logic;                  -- 100 MHz clock
    
    -- MAX10 FPGA (delivers reset)
    max10_tx          : in std_logic;
    max10_rx          : out std_logic;
-   max10_clkandsync  : inout std_logic;
+   max10_clkandsync  : out std_logic;
    
    -- serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
@@ -278,7 +278,7 @@ begin
       port map (
          clk                  => CLK,
  
-         reset_n              => RESET_N,
+         reset_n              => reset_n,
          dbnce_reset_n        => dbnce_reset_n,
  
          joy_1_up_n           => joy_1_up_n,
