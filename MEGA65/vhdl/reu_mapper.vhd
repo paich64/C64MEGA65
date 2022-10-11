@@ -161,7 +161,7 @@ begin
    p_active : process (reu_clk_i)
    begin
       if rising_edge(reu_clk_i) then
-         if reu_ext_cycle_i and not reu_ext_cycle_d then
+         if reu_ext_cycle_i = '1' and reu_ext_cycle_d = '0' then
             active <= active_s;
          end if;
       end if;
