@@ -56,9 +56,9 @@ begin
 
    avm_write_o       <= reu_cs_i and not reu_cs_d and reu_we_i;
    avm_read_o        <= reu_cs_i and not reu_cs_d and (not reu_we_i);
-   avm_address_o     <= (("0000000" & reu_addr_i) + G_BASE_ADDRESS) and X"003FFFFF";
-   avm_writedata_o   <= X"00" & reu_dout_i;
-   avm_byteenable_o  <= "01";
+   avm_address_o     <= (("00000000" & reu_addr_i(24 downto 1)) + G_BASE_ADDRESS) and X"003FFFFF";
+   avm_writedata_o   <= reu_dout_i & reu_dout_i;
+   avm_byteenable_o  <= "01" when reu_addr_i(0) = '0' else "10";
    avm_burstcount_o  <= X"01";
 
    reu_rd_fifo_ready <= active and reu_ext_cycle_d and not reu_ext_cycle_i;
@@ -71,7 +71,14 @@ begin
          end if;
          if avm_readdatavalid_i = '1' then
             reu_rd_fifo_valid <= avm_readdatavalid_i;
-            reu_din_o         <= avm_readdata_i(7 downto 0);
+            if reu_addr_i(0) = '0' then
+               reu_din_o <= avm_readdata_i(7 downto 0);
+            else
+               reu_din_o <= avm_readdata_i(15 downto 8);
+            end if;
+         end if;
+         if rst_i = '1' then
+            reu_rd_fifo_valid <= '0';
          end if;
       end if;
    end process p_avm_rd_fifo;
