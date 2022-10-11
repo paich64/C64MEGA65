@@ -102,23 +102,6 @@ begin
       wait;
    end process p_rst;
 
-   p_avm_clk : process
-   begin
-      avm_clk <= '1';
-      wait for 5 ns;
-      avm_clk <= '0';
-      wait for 5 ns;
-   end process p_avm_clk;
-
-   p_avm_rst : process
-   begin
-      avm_rst <= '1';
-      wait for 200 ns;
-      wait until avm_clk = '1';
-      avm_rst <= '0';
-      wait;
-   end process p_avm_rst;
-
 
    -----------------------
    -- CPU synchronization
@@ -210,6 +193,7 @@ begin
       assert ram(2) = X"44";
       assert ram(3) = X"55";
 
+      report "Test finished";
       wait;
    end process p_test;
 
@@ -259,26 +243,24 @@ begin
          G_BASE_ADDRESS => X"0020_0000"  -- 2MW
       )
       port map (
-         reu_clk_i          => clk,
-         reu_rst_i          => rst,
-         reu_ext_cycle_i    => ram_cycle,
-         reu_ext_cycle_o    => ram_cycle_reu,
-         reu_addr_i         => ram_addr,
-         reu_dout_i         => ram_dout,
-         reu_din_o          => ram_din,
-         reu_we_i           => ram_we,
-         reu_cs_i           => ram_cs,
-         hr_clk_i           => avm_clk,
-         hr_rst_i           => avm_rst,
-         hr_write_o         => avm_write,
-         hr_read_o          => avm_read,
-         hr_address_o       => avm_address,
-         hr_writedata_o     => avm_writedata,
-         hr_byteenable_o    => avm_byteenable,
-         hr_burstcount_o    => avm_burstcount,
-         hr_readdata_i      => avm_readdata,
-         hr_readdatavalid_i => avm_readdatavalid,
-         hr_waitrequest_i   => avm_waitrequest
+         clk_i               => clk,
+         rst_i               => rst,
+         reu_ext_cycle_i     => ram_cycle,
+         reu_ext_cycle_o     => ram_cycle_reu,
+         reu_addr_i          => ram_addr,
+         reu_dout_i          => ram_dout,
+         reu_din_o           => ram_din,
+         reu_we_i            => ram_we,
+         reu_cs_i            => ram_cs,
+         avm_write_o         => avm_write,
+         avm_read_o          => avm_read,
+         avm_address_o       => avm_address,
+         avm_writedata_o     => avm_writedata,
+         avm_byteenable_o    => avm_byteenable,
+         avm_burstcount_o    => avm_burstcount,
+         avm_readdata_i      => avm_readdata,
+         avm_readdatavalid_i => avm_readdatavalid,
+         avm_waitrequest_i   => avm_waitrequest
       ); -- i_reu_mapper
 
    i_avm_memory : entity work.avm_memory
@@ -287,8 +269,8 @@ begin
          G_DATA_SIZE    => 16
       )
       port map (
-         clk_i               => avm_clk,
-         rst_i               => avm_rst,
+         clk_i               => clk,
+         rst_i               => rst,
          avm_write_i         => avm_write,
          avm_read_i          => avm_read,
          avm_address_i       => avm_address(7 downto 0),
