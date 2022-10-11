@@ -85,6 +85,7 @@ entity main is
       c64_qnice_we_i          : in std_logic;
 
       -- RAM Expansion Unit
+      reu_cfg_i               : in  std_logic;
       ext_cycle_o             : out std_logic;
       reu_cycle_i             : in  std_logic;
       reu_addr_o              : out std_logic_vector(24 downto 0);
@@ -376,7 +377,7 @@ begin
       port map (
          clk       => clk_main_i,
          reset     => not reset_core_n,
-         cfg       => "10",   -- 00:None, 01:512k, 10:2M, 11:16M
+         cfg       => reu_cfg_i & "0", -- 00:None, 01:512k, 10:2M, 11:16M
          dma_req   => dma_req,
          dma_cycle => dma_cycle,
          dma_addr  => dma_addr,

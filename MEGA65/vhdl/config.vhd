@@ -305,14 +305,14 @@ constant OPTM_S_MOUNT         : string :=  "<Mount Drive>";
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 27;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 28;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- We advise to use OPTM_SIZE as height, but there might be reasons for you to change it.
 constant OPTM_DX           : natural := 23;
 constant OPTM_DY           : natural := OPTM_SIZE;
-                                             
+
 constant OPTM_ITEMS        : string :=
 
    " C64 for MEGA65\n"        &
@@ -338,11 +338,12 @@ constant OPTM_ITEMS        : string :=
    " HDMI: Force 60Hz\n"      &
    " HDMI: DVI (no sound)\n"  &
    " HDMI: Flicker-free\n"    &
+   " REU: Enable\n"           &
    "\n"                       &
    " About & Help\n"          &
-   "\n"                       &      
+   "\n"                       &
    " Close Menu\n";
-        
+
 constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
 constant OPTM_G_FLIP_JOYS     : integer := 3;
@@ -355,6 +356,7 @@ constant OPTM_G_HDMI_60HZ     : integer := 9;
 constant OPTM_G_HDMI_DVI      : integer := 10;
 constant OPTM_G_HDMI_FF       : integer := 11;
 constant OPTM_G_ABOUT_HELP    : integer := 12;
+constant OPTM_G_REU           : integer := 13;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -379,7 +381,8 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                            
+                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_REU           + OPTM_G_SINGLESEL,
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,
                                              OPTM_G_LINE,
