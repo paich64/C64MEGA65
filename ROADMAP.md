@@ -10,6 +10,7 @@ Feature Roadmap
 
 
 * NTSC
+* Choice between 16:9 or 4:3 HDMI output resolutions
 * Support two drives: 8 and 9
 * Dual SID
 * Ability to save the settings of the core
