@@ -21,6 +21,7 @@ Feature Roadmap
   map, 40 track & 40 track with error map
 * Support for raw GCR mode (`*.G64`)
 * C1581 virtual drive support via SD card (`*.D81`)
+* Support the creation of empty disk images
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * REU and GeoRAM using HyperRAM
