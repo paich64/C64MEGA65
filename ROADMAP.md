@@ -43,7 +43,6 @@ particular order:
 
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
-* Fix the behavior of the floppy led
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,
   when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
 * Update to newer ascal version (wait until MiSTer does the same upstream)
