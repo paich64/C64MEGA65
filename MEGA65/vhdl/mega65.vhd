@@ -204,6 +204,16 @@ signal main_reu_din           : std_logic_vector(7 downto 0);
 signal main_reu_we            : std_logic;
 signal main_reu_cs            : std_logic;
 
+signal main_avm_write         : std_logic;
+signal main_avm_read          : std_logic;
+signal main_avm_address       : std_logic_vector(31 downto 0) := (others => '0');
+signal main_avm_writedata     : std_logic_vector(15 downto 0);
+signal main_avm_byteenable    : std_logic_vector(1 downto 0);
+signal main_avm_burstcount    : std_logic_vector(7 downto 0);
+signal main_avm_readdata      : std_logic_vector(15 downto 0);
+signal main_avm_readdatavalid : std_logic;
+signal main_avm_waitrequest   : std_logic;
+
 -- QNICE On Screen Menu selections
 signal main_osm_control_m     : std_logic_vector(255 downto 0);
 
@@ -862,27 +872,57 @@ begin
          G_BASE_ADDRESS => X"0020_0000"  -- 2MW
       )
       port map (
-         reu_clk_i          => main_clk,
-         reu_rst_i          => main_rst,
-         reu_ext_cycle_i    => main_ext_cycle,
-         reu_ext_cycle_o    => main_reu_cycle,
-         reu_addr_i         => main_reu_addr,
-         reu_dout_i         => main_reu_dout,
-         reu_din_o          => main_reu_din,
-         reu_we_i           => main_reu_we,
-         reu_cs_i           => main_reu_cs,
-         hr_clk_i           => hr_clk_x1,
-         hr_rst_i           => hr_rst,
-         hr_write_o         => hr_reu_write,
-         hr_read_o          => hr_reu_read,
-         hr_address_o       => hr_reu_address,
-         hr_writedata_o     => hr_reu_writedata,
-         hr_byteenable_o    => hr_reu_byteenable,
-         hr_burstcount_o    => hr_reu_burstcount,
-         hr_readdata_i      => hr_reu_readdata,
-         hr_readdatavalid_i => hr_reu_readdatavalid,
-         hr_waitrequest_i   => hr_reu_waitrequest
+         clk_i               => main_clk,
+         rst_i               => main_rst,
+         reu_ext_cycle_i     => main_ext_cycle,
+         reu_ext_cycle_o     => main_reu_cycle,
+         reu_addr_i          => main_reu_addr,
+         reu_dout_i          => main_reu_dout,
+         reu_din_o           => main_reu_din,
+         reu_we_i            => main_reu_we,
+         reu_cs_i            => main_reu_cs,
+         avm_write_o         => main_avm_write,
+         avm_read_o          => main_avm_read,
+         avm_address_o       => main_avm_address,
+         avm_writedata_o     => main_avm_writedata,
+         avm_byteenable_o    => main_avm_byteenable,
+         avm_burstcount_o    => main_avm_burstcount,
+         avm_readdata_i      => main_avm_readdata,
+         avm_readdatavalid_i => main_avm_readdatavalid,
+         avm_waitrequest_i   => main_avm_waitrequest
       ); -- i_reu_mapper
+
+   i_avm_fifo : entity work.avm_fifo
+      generic map (
+         G_DEPTH        => 16,
+         G_FILL_SIZE    => 1,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         s_clk_i               => main_clk,
+         s_rst_i               => main_rst,
+         s_avm_waitrequest_o   => main_avm_waitrequest,
+         s_avm_write_i         => main_avm_write,
+         s_avm_read_i          => main_avm_read,
+         s_avm_address_i       => main_avm_address,
+         s_avm_writedata_i     => main_avm_writedata,
+         s_avm_byteenable_i    => main_avm_byteenable,
+         s_avm_burstcount_i    => main_avm_burstcount,
+         s_avm_readdata_o      => main_avm_readdata,
+         s_avm_readdatavalid_o => main_avm_readdatavalid,
+         m_clk_i               => hr_clk_x1,
+         m_rst_i               => hr_rst,
+         m_avm_waitrequest_i   => hr_reu_waitrequest,
+         m_avm_write_o         => hr_reu_write,
+         m_avm_read_o          => hr_reu_read,
+         m_avm_address_o       => hr_reu_address,
+         m_avm_writedata_o     => hr_reu_writedata,
+         m_avm_byteenable_o    => hr_reu_byteenable,
+         m_avm_burstcount_o    => hr_reu_burstcount,
+         m_avm_readdata_i      => hr_reu_readdata,
+         m_avm_readdatavalid_i => hr_reu_readdatavalid
+      ); -- i_avm_fifo
 
 
    -- Clock domain crossing: 100 MHz system main clock to core
