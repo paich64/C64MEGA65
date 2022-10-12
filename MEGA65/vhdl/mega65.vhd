@@ -214,6 +214,16 @@ signal main_avm_readdata      : std_logic_vector(15 downto 0);
 signal main_avm_readdatavalid : std_logic;
 signal main_avm_waitrequest   : std_logic;
 
+signal main_cache_write         : std_logic;
+signal main_cache_read          : std_logic;
+signal main_cache_address       : std_logic_vector(31 downto 0) := (others => '0');
+signal main_cache_writedata     : std_logic_vector(15 downto 0);
+signal main_cache_byteenable    : std_logic_vector(1 downto 0);
+signal main_cache_burstcount    : std_logic_vector(7 downto 0);
+signal main_cache_readdata      : std_logic_vector(15 downto 0);
+signal main_cache_readdatavalid : std_logic;
+signal main_cache_waitrequest   : std_logic;
+
 -- QNICE On Screen Menu selections
 signal main_osm_control_m     : std_logic_vector(255 downto 0);
 
@@ -894,6 +904,35 @@ begin
          avm_waitrequest_i   => main_avm_waitrequest
       ); -- i_reu_mapper
 
+   i_avm_cache : entity work.avm_cache
+      generic map (
+         G_CACHE_SIZE   => 1,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         clk_i                 => main_clk,
+         rst_i                 => main_rst,
+         s_avm_waitrequest_o   => main_avm_waitrequest,
+         s_avm_write_i         => main_avm_write,
+         s_avm_read_i          => main_avm_read,
+         s_avm_address_i       => main_avm_address,
+         s_avm_writedata_i     => main_avm_writedata,
+         s_avm_byteenable_i    => main_avm_byteenable,
+         s_avm_burstcount_i    => main_avm_burstcount,
+         s_avm_readdata_o      => main_avm_readdata,
+         s_avm_readdatavalid_o => main_avm_readdatavalid,
+         m_avm_waitrequest_i   => main_cache_waitrequest,
+         m_avm_write_o         => main_cache_write,
+         m_avm_read_o          => main_cache_read,
+         m_avm_address_o       => main_cache_address,
+         m_avm_writedata_o     => main_cache_writedata,
+         m_avm_byteenable_o    => main_cache_byteenable,
+         m_avm_burstcount_o    => main_cache_burstcount,
+         m_avm_readdata_i      => main_cache_readdata,
+         m_avm_readdatavalid_i => main_cache_readdatavalid
+      ); -- i_avm_cache
+
    i_avm_fifo : entity work.avm_fifo
       generic map (
          G_DEPTH        => 16,
@@ -904,15 +943,15 @@ begin
       port map (
          s_clk_i               => main_clk,
          s_rst_i               => main_rst,
-         s_avm_waitrequest_o   => main_avm_waitrequest,
-         s_avm_write_i         => main_avm_write,
-         s_avm_read_i          => main_avm_read,
-         s_avm_address_i       => main_avm_address,
-         s_avm_writedata_i     => main_avm_writedata,
-         s_avm_byteenable_i    => main_avm_byteenable,
-         s_avm_burstcount_i    => main_avm_burstcount,
-         s_avm_readdata_o      => main_avm_readdata,
-         s_avm_readdatavalid_o => main_avm_readdatavalid,
+         s_avm_waitrequest_o   => main_cache_waitrequest,
+         s_avm_write_i         => main_cache_write,
+         s_avm_read_i          => main_cache_read,
+         s_avm_address_i       => main_cache_address,
+         s_avm_writedata_i     => main_cache_writedata,
+         s_avm_byteenable_i    => main_cache_byteenable,
+         s_avm_burstcount_i    => main_cache_burstcount,
+         s_avm_readdata_o      => main_cache_readdata,
+         s_avm_readdatavalid_o => main_cache_readdatavalid,
          m_clk_i               => hr_clk_x1,
          m_rst_i               => hr_rst,
          m_avm_waitrequest_i   => hr_reu_waitrequest,

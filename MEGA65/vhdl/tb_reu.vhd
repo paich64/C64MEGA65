@@ -32,8 +32,6 @@ architecture simulation of tb_reu is
    signal cpu_cs            : std_logic;
    signal irq               : std_logic;
 
-   signal avm_clk           : std_logic;
-   signal avm_rst           : std_logic;
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
    signal avm_address       : std_logic_vector(31 downto 0);
@@ -43,6 +41,16 @@ architecture simulation of tb_reu is
    signal avm_readdata      : std_logic_vector(15 downto 0);
    signal avm_readdatavalid : std_logic;
    signal avm_waitrequest   : std_logic;
+
+   signal cache_write         : std_logic;
+   signal cache_read          : std_logic;
+   signal cache_address       : std_logic_vector(31 downto 0);
+   signal cache_writedata     : std_logic_vector(15 downto 0);
+   signal cache_byteenable    : std_logic_vector(1 downto 0);
+   signal cache_burstcount    : std_logic_vector(7 downto 0);
+   signal cache_readdata      : std_logic_vector(15 downto 0);
+   signal cache_readdatavalid : std_logic;
+   signal cache_waitrequest   : std_logic;
 
    component reu
       port (
@@ -263,23 +271,54 @@ begin
          avm_waitrequest_i   => avm_waitrequest
       ); -- i_reu_mapper
 
-   i_avm_memory : entity work.avm_memory
+   i_avm_cache : entity work.avm_cache
       generic map (
+         G_CACHE_SIZE   => 8,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         clk_i                 => clk,
+         rst_i                 => rst,
+         s_avm_waitrequest_o   => avm_waitrequest,
+         s_avm_write_i         => avm_write,
+         s_avm_read_i          => avm_read,
+         s_avm_address_i       => avm_address,
+         s_avm_writedata_i     => avm_writedata,
+         s_avm_byteenable_i    => avm_byteenable,
+         s_avm_burstcount_i    => avm_burstcount,
+         s_avm_readdata_o      => avm_readdata,
+         s_avm_readdatavalid_o => avm_readdatavalid,
+         m_avm_waitrequest_i   => cache_waitrequest,
+         m_avm_write_o         => cache_write,
+         m_avm_read_o          => cache_read,
+         m_avm_address_o       => cache_address,
+         m_avm_writedata_o     => cache_writedata,
+         m_avm_byteenable_o    => cache_byteenable,
+         m_avm_burstcount_o    => cache_burstcount,
+         m_avm_readdata_i      => cache_readdata,
+         m_avm_readdatavalid_i => cache_readdatavalid
+      ); -- i_avm_cache
+
+   i_avm_memory_pause : entity work.avm_memory_pause
+      generic map (
+         G_REQ_PAUSE    => 3,
+         G_RESP_PAUSE   => 6,
          G_ADDRESS_SIZE => 8,
          G_DATA_SIZE    => 16
       )
       port map (
          clk_i               => clk,
          rst_i               => rst,
-         avm_write_i         => avm_write,
-         avm_read_i          => avm_read,
-         avm_address_i       => avm_address(7 downto 0),
-         avm_writedata_i     => avm_writedata,
-         avm_byteenable_i    => avm_byteenable,
-         avm_burstcount_i    => avm_burstcount,
-         avm_readdata_o      => avm_readdata,
-         avm_readdatavalid_o => avm_readdatavalid,
-         avm_waitrequest_o   => avm_waitrequest
+         avm_write_i         => cache_write,
+         avm_read_i          => cache_read,
+         avm_address_i       => cache_address(7 downto 0),
+         avm_writedata_i     => cache_writedata,
+         avm_byteenable_i    => cache_byteenable,
+         avm_burstcount_i    => cache_burstcount,
+         avm_readdata_o      => cache_readdata,
+         avm_readdatavalid_o => cache_readdatavalid,
+         avm_waitrequest_o   => cache_waitrequest
       ); -- i_avm_memory
 
 end architecture simulation;
