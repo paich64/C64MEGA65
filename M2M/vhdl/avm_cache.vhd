@@ -82,10 +82,6 @@ begin
          if m_avm_waitrequest_i = '0' then
             m_avm_write_o      <= '0';
             m_avm_read_o       <= '0';
-            m_avm_address_o    <= (others => '0');
-            m_avm_writedata_o  <= (others => '0');
-            m_avm_byteenable_o <= (others => '0');
-            m_avm_burstcount_o <= (others => '0');
          end if;
 
          case state is
@@ -111,7 +107,7 @@ begin
                      s_avm_readdatavalid_o <= '1';
                   end if;
 
-                  if cache_rd_hit_s = '0' or cache_offset_s = G_CACHE_SIZE-1 then
+                  if cache_rd_hit_s = '0' or (cache_offset_s = G_CACHE_SIZE-1 and s_avm_byteenable_i(G_DATA_SIZE/8-1) = '1') then
                      m_avm_write_o      <= '0';
                      m_avm_read_o       <= '1';
                      m_avm_address_o    <= s_avm_address_i;
