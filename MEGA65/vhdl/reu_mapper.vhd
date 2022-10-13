@@ -84,7 +84,7 @@ begin
    end process p_avm_rd_fifo;
 
 
-   active_s <= (reu_we_i and not avm_waitrequest_i) or (reu_rd_fifo_valid and not reu_we_i);
+   active_s <= reu_we_i or (reu_rd_fifo_valid and not reu_we_i);
 
    p_active : process (clk_i)
    begin

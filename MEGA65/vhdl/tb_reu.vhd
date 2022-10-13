@@ -80,11 +80,17 @@ architecture simulation of tb_reu is
 
    -- This defines a type containing an array of bytes
    type ram_t is array (0 to 255) of std_logic_vector(7 downto 0);
-   signal ram : ram_t := (0 => X"11",
-                          1 => X"22",
-                          2 => X"33",
-                          3 => X"44",
-                          4 => X"55",
+   signal ram : ram_t := ( 0 => X"11",
+                           1 => X"22",
+                           2 => X"33",
+                           3 => X"44",
+                           4 => X"55",
+                           5 => X"66",
+                           6 => X"77",
+                           7 => X"88",
+                           8 => X"99",
+                           9 => X"AA",
+                          10 => X"BB",
                           others => X"UU");
 
 begin
@@ -182,17 +188,23 @@ begin
       wait for 500 ns;
       wait until clk = '1';
 
-      assert ram(0) = X"11";
-      assert ram(1) = X"22";
-      assert ram(2) = X"33";
-      assert ram(3) = X"44";
-      assert ram(4) = X"55";
+      assert ram( 0) = X"11";
+      assert ram( 1) = X"22";
+      assert ram( 2) = X"33";
+      assert ram( 3) = X"44";
+      assert ram( 4) = X"55";
+      assert ram( 5) = X"66";
+      assert ram( 6) = X"77";
+      assert ram( 7) = X"88";
+      assert ram( 8) = X"99";
+      assert ram( 9) = X"AA";
+      assert ram(10) = X"BB";
 
-      write_to_hr(X"0000", X"000100", X"0005");
+      write_to_hr(X"0000", X"000100", X"000B");
       wait until dma_req = '0';
       wait until clk = '1';
 
-      read_from_hr(X"0000", X"000101", X"0004");
+      read_from_hr(X"0000", X"000101", X"000A");
       wait until dma_req = '0';
       wait until clk = '1';
 
@@ -200,6 +212,12 @@ begin
       assert ram(1) = X"33";
       assert ram(2) = X"44";
       assert ram(3) = X"55";
+      assert ram(4) = X"66";
+      assert ram(5) = X"77";
+      assert ram(6) = X"88";
+      assert ram(7) = X"99";
+      assert ram(8) = X"AA";
+      assert ram(9) = X"BB";
 
       report "Test finished";
       wait;
@@ -273,7 +291,7 @@ begin
 
    i_avm_cache : entity work.avm_cache
       generic map (
-         G_CACHE_SIZE   => 8,
+         G_CACHE_SIZE   => 4,
          G_ADDRESS_SIZE => 32,
          G_DATA_SIZE    => 16
       )

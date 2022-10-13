@@ -59,16 +59,14 @@ begin
    begin
       if rising_edge(clk_i) then
          if G_REQ_PAUSE > 0 then
-            if m_avm_waitrequest_i = '0' then
-               cnt <= (cnt + 1) mod G_REQ_PAUSE;
-
-               if s_avm_write_i = '0' and s_avm_read_i = '0' then
-                  cnt <= 1;
-               end if;
+            if (s_avm_write_i = '1' or s_avm_read_i = '1') and cnt > 0 then
+               cnt <= cnt - 1;
+            else
+               cnt <= G_REQ_PAUSE;
             end if;
 
             if rst_i = '1' then
-               cnt <= 1;
+               cnt <= G_REQ_PAUSE;
             end if;
          end if;
       end if;
@@ -94,7 +92,7 @@ begin
    end process p_rd_burstcount;
 
 
-   allow <= '1' when cnt /= 0 or G_REQ_PAUSE = 0 else '0';
+   allow <= '1' when cnt = 0 or G_REQ_PAUSE = 0 else '0';
 
    m_avm_write_o         <= s_avm_write_i and allow when rd_burstcount = 0 else '0';
    m_avm_read_o          <= s_avm_read_i and allow when rd_burstcount = 0 else '0';
