@@ -320,7 +320,7 @@ begin
 
    i_avm_memory_pause : entity work.avm_memory_pause
       generic map (
-         G_REQ_PAUSE    => 3,
+         G_REQ_PAUSE    => 30,
          G_RESP_PAUSE   => 6,
          G_ADDRESS_SIZE => 8,
          G_DATA_SIZE    => 16
