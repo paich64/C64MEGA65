@@ -12,6 +12,8 @@ use ieee.numeric_std.all;
 
 entity config is
 port (
+   clk_i       : in std_logic;
+
    -- bits 27 .. 12:    select configuration data block; called "Selector" hereafter
    -- bits 11 downto 0: address the up to 4k the configuration data
    address_i   : in std_logic_vector(27 downto 0);
@@ -417,7 +419,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
 
 begin
 
-addr_decode : process(all)
+addr_decode : process(clk_i, address_i)
    variable index : integer;
    variable whs_array_index : integer;
    variable whs_page_index : integer;
@@ -478,60 +480,62 @@ addr_decode : process(all)
    end;
 
 begin
-   data_o <= x"EEEE";
    index := to_integer(unsigned(address_i(11 downto 0)));
    whs_array_index := to_integer(unsigned(address_i(23 downto 20)));
-   whs_page_index  := to_integer(unsigned(address_i(19 downto 12)));   
-
-   -----------------------------------------------------------------------------------
-   -- Welcome & Help System: upper 4 bits of address equal SEL_WHS' upper 4 bits
-   -----------------------------------------------------------------------------------
+   whs_page_index  := to_integer(unsigned(address_i(19 downto 12)));
    
-   if address_i(27 downto 24) = SEL_WHS(15 downto 12) then
-
-      if  whs_array_index < WHS_RECORDS then
-         if index = 4095 then
-            data_o <= std_logic_vector(to_unsigned(WHS(whs_array_index).page_count, 16));
-         else
-            if index < WHS(whs_array_index).page_length(whs_page_index) then
-               data_o <= std_logic_vector(to_unsigned(character'pos(
-                                          WHS_DATA(WHS(whs_array_index).page_start(whs_page_index) + index + 1)
-                                         ), 16));
+   if falling_edge(clk_i) then
+      data_o <= x"EEEE";  
+   
+      -----------------------------------------------------------------------------------
+      -- Welcome & Help System: upper 4 bits of address equal SEL_WHS' upper 4 bits
+      -----------------------------------------------------------------------------------
+      
+      if address_i(27 downto 24) = SEL_WHS(15 downto 12) then
+   
+         if  whs_array_index < WHS_RECORDS then
+            if index = 4095 then
+               data_o <= std_logic_vector(to_unsigned(WHS(whs_array_index).page_count, 16));
             else
-               data_o <= (others => '0'); -- zero-terminated strings
+               if index < WHS(whs_array_index).page_length(whs_page_index) then
+                  data_o <= std_logic_vector(to_unsigned(character'pos(
+                                             WHS_DATA(WHS(whs_array_index).page_start(whs_page_index) + index + 1)
+                                            ), 16));
+               else
+                  data_o <= (others => '0'); -- zero-terminated strings
+               end if;
             end if;
          end if;
-      end if;
+         
+      -----------------------------------------------------------------------------------
+      -- All other selectors, which are 16-bit values
+      -----------------------------------------------------------------------------------
       
-   -----------------------------------------------------------------------------------
-   -- All other selectors, which are 16-bit values
-   -----------------------------------------------------------------------------------
+      else
    
-   else
-
-      case address_i(27 downto 12) is   
-         when SEL_GENERAL           => data_o <= getGenConf(index);
-         when SEL_DIR_START         => data_o <= str2data(DIR_START);
-         when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
-         when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
-         when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);
-         when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
-                                                 std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
-                                                 std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
-         when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
-         when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
-         when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
-         when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
-         when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
-         when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
-         when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
-         when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
-
-         when others                => null;         
-      end case;
-
-   end if;
-
+         case address_i(27 downto 12) is   
+            when SEL_GENERAL           => data_o <= getGenConf(index);
+            when SEL_DIR_START         => data_o <= str2data(DIR_START);
+            when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
+            when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
+            when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);
+            when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
+                                                    std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
+                                                    std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
+            when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
+            when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
+            when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
+            when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
+            when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
+            when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
+            when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
+            when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
+   
+            when others                => null;         
+         end case;
+   
+      end if;
+   end if;   
 end process;
 
 end beh;
