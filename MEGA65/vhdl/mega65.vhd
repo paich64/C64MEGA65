@@ -906,7 +906,7 @@ begin
 
    i_avm_cache : entity work.avm_cache
       generic map (
-         G_CACHE_SIZE   => 1,
+         G_CACHE_SIZE   => 8,
          G_ADDRESS_SIZE => 32,
          G_DATA_SIZE    => 16
       )

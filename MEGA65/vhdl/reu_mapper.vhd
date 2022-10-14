@@ -35,6 +35,7 @@ end entity reu_mapper;
 
 architecture synthesis of reu_mapper is
 
+   signal reu_cs_d          : std_logic;
    signal avm_write_s       : std_logic;
    signal avm_read_s        : std_logic;
    signal avm_address_s     : std_logic_vector(31 downto 0);
@@ -69,27 +70,32 @@ begin
    p_avm : process (clk_i)
    begin
       if rising_edge(clk_i) then
-         if reu_cs_i = '1' then
-            avm_write_r       <= avm_write_s;
-            avm_read_r        <= avm_read_s;
-            avm_address_r     <= avm_address_s;
-            avm_writedata_r   <= avm_writedata_s;
-            avm_byteenable_r  <= avm_byteenable_s;
-            avm_burstcount_r  <= avm_burstcount_s;
-         end if;
          if avm_waitrequest_i = '0' then
             avm_write_r <= '0';
             avm_read_r  <= '0';
          end if;
+         if reu_cs_i = '1' and reu_cs_d = '0' then
+            avm_write_r      <= avm_write_s;
+            avm_read_r       <= avm_read_s;
+            avm_address_r    <= avm_address_s;
+            avm_writedata_r  <= avm_writedata_s;
+            avm_byteenable_r <= avm_byteenable_s;
+            avm_burstcount_r <= avm_burstcount_s;
+         end if;
+         if rst_i = '1' then
+            avm_write_r <= '0';
+            avm_read_r  <= '0';
+         end if;
+         reu_cs_d <= reu_cs_i;
       end if;
    end process p_avm;
 
-   avm_write_o       <= avm_write_s      when reu_cs_i = '1' else avm_write_r;
-   avm_read_o        <= avm_read_s       when reu_cs_i = '1' else avm_read_r;
-   avm_address_o     <= avm_address_s    when reu_cs_i = '1' else avm_address_r;
-   avm_writedata_o   <= avm_writedata_s  when reu_cs_i = '1' else avm_writedata_r;
-   avm_byteenable_o  <= avm_byteenable_s when reu_cs_i = '1' else avm_byteenable_r;
-   avm_burstcount_o  <= avm_burstcount_s when reu_cs_i = '1' else avm_burstcount_r;
+   avm_write_o       <= avm_write_r;
+   avm_read_o        <= avm_read_r;
+   avm_address_o     <= avm_address_r;
+   avm_writedata_o   <= avm_writedata_r;
+   avm_byteenable_o  <= avm_byteenable_r;
+   avm_burstcount_o  <= avm_burstcount_r;
 
 
    p_ext_cycle_d : process (clk_i)
@@ -122,7 +128,7 @@ begin
    end process p_avm_rd_fifo;
 
 
-   active_s <= reu_we_i or (reu_rd_fifo_valid and not reu_we_i);
+   active_s <= reu_we_i or reu_rd_fifo_valid or avm_readdatavalid_i;
 
    p_active : process (clk_i)
    begin
