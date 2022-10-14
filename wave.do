@@ -78,7 +78,6 @@ add wave -noupdate -expand -group reu_mapper /tb_reu/i_reu_mapper/avm_burstcount
 add wave -noupdate -expand -group reu_mapper -color yellow /tb_reu/i_reu_mapper/avm_readdatavalid_i
 add wave -noupdate -expand -group reu_mapper /tb_reu/i_reu_mapper/avm_readdata_i
 add wave -noupdate -expand -group reu_mapper -group Internal /tb_reu/i_reu_mapper/reu_ext_cycle_d
-add wave -noupdate -expand -group reu_mapper -group Internal /tb_reu/i_reu_mapper/reu_cs_d
 add wave -noupdate -expand -group reu_mapper -group Internal /tb_reu/i_reu_mapper/reu_rd_fifo_ready
 add wave -noupdate -expand -group reu_mapper -group Internal /tb_reu/i_reu_mapper/reu_rd_fifo_valid
 add wave -noupdate -expand -group reu_mapper -group Internal /tb_reu/i_reu_mapper/active_s
