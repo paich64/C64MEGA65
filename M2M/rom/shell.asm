@@ -435,7 +435,26 @@ _HM_SDMOUNTED7  RSUB    OPTM_SHOW, 1
                 RBRA    _HM_RET, 1
 
                 ; Virtual drive (number in R8) is already mounted
-_HM_MOUNTED     CMP     OPTM_KEY_SELALT, R6     ; unmount the whole drive?
+
+                ; Write cache of drive dirty? Prevent any unmount/remount
+_HM_MOUNTED     MOVE    R7, R8
+                MOVE    VD_CACHE_DIRTY, R9
+                RSUB    VD_DRV_READ, 1
+                CMP     1, R8
+                RBRA    _HM_MOUNTED_C, !Z       ; cache not dirty: continue
+
+                ; cache dirty: make sure the menu items mounted-marker is not
+                ; deleted and then do nothing else and return
+                MOVE    R7, R8                  ; R7: virtual drive number
+                RSUB    VD_MENGRP, 1            ; get index of menu item
+                RBRA    _HM_MOUNTED_F, !C       ; unsuccessful? fatal!
+                MOVE    R9, R8                  ; OK! set menu index
+                MOVE    1, R9                   ; set as "mounted"
+                RSUB    _HM_SETMENU, 1
+                RBRA    _HM_SDMOUNTED7, 1       ; redraw menu and exit
+
+                ; unmount the whole drive?
+_HM_MOUNTED_C   CMP     OPTM_KEY_SELALT, R6
                 RBRA    _HM_MOUNTED_S, !Z       ; no
 
                 ; Unmount the whole drive by stobing the image mount signal
@@ -465,7 +484,7 @@ _HM_MOUNTED_S   MOVE    R7, R8                  ; R7: virtual drive number
                 RSUB    VD_MENGRP, 1            ; get index of menu item
                 RBRA    _HM_MOUNTED_1, C
 
-                MOVE    ERR_FATAL_INST, R8
+_HM_MOUNTED_F   MOVE    ERR_FATAL_INST, R8
                 MOVE    ERR_FATAL_INST2, R9
                 RBRA    FATAL, 1 
 

@@ -364,7 +364,11 @@ begin
                   if latch_sd_wr(i) = '1' then
                      cache_flushing_r_qnice(i) <= '0';
                      cache_flush_st_r_qnice(i) <= '0';
-                     cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32); 
+                     cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32);
+                     
+                     -- since the cache is already marked dirty and since we did reset the waiting period,
+                     -- we need to clear this latch, otherwise it will keep resetting the counter until next ack
+                     latch_sd_wr(i) <= '0';
                   else
                      if cache_flush_de_cnt_qnice(i) = 0 then
                         cache_flush_st_r_qnice(i) <= '1';
@@ -434,6 +438,9 @@ begin
                               -- we need to delete the latched write request because we handled it (otherwise we would not acknowledge)
                               if latch_sd_wr(i) = '1' then
                                  cache_dirty_r_qnice(i) <= '1';
+                                 cache_flushing_r_qnice(i) <= '0';
+                                 cache_flush_st_r_qnice(i) <= '0';
+                                 cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32);                                 
                                  latch_sd_wr(i) <= '0';
                               end if;
                            end if;
@@ -450,6 +457,8 @@ begin
                               -- if the cache is not dirty any more then we logically can also not be flushing the cache any more
                               if qnice_data_i(0) = '0' then
                                  cache_flushing_r_qnice(i) <= '0';
+                                 cache_flush_st_r_qnice(i) <= '0';
+                                 cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32);
                               end if;
                            end if;
                         end loop;
