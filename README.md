@@ -241,8 +241,8 @@ Important things to know about how writing to disk images works:
   changes to the SD card. It happens seamlessly in the background, you do not
   need to do anything specific.
 * To prevent data corruption after saving something: Never turn the MEGA65 off
-  or remove the SD card before the drive led turned yellow and went off
-  afterwards.
+  or remove the SD card while the led is green or before the drive led turned
+  yellow and went off afterwards.
 * If you did not save anything, then the drive led will not turn yellow.
 
 Flicker-free HDMI
