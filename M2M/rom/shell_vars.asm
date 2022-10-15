@@ -22,7 +22,8 @@ WELCOME_SHOWN   .BLOCK 1                        ; we need to trust that this
 OPTM_ICOUNT     .BLOCK 1                        ; amount of menu items
 OPTM_START      .BLOCK 1                        ; initially selected menu item
 OPTM_SELECTED   .BLOCK 1                        ; last options menu selection
-OPTM_MNT_STATUS .BLOCK 1                        ; drive mount status
+OPTM_MNT_STATUS .BLOCK 1                        ; drive mount status; all drvs
+OPTM_DTY_STATUS .BLOCK 1                        ; cache dirty status; all drvs
 
 ; OPTM_HEAP is used by the option menu to save the modified filenames of
 ; disk images used by mounted drives: Filenames need to be abbreviated by

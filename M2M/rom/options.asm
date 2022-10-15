@@ -20,7 +20,10 @@
                 ; Check if Help is pressed and if yes, run the Options menu
 HELP_MENU       SYSCALL(enter, 1)
                 CMP     M2M$KEY_HELP, R8        ; help key pressed?
-                RBRA    _HLP_RET_DIRECT, !Z                
+                RBRA    _HLP_RET_DIRECT, !Z
+
+                ; remember status of the write cache of all vdrives, if any
+                RSUB    VD_DTY_ST_SET, 1
 
                 ; If configured in config.vhd, deactivate keyboard and
                 ; joysticks, so that the key strokes done during the OSD is on
@@ -418,14 +421,34 @@ _OPTM_FPS_RET   DECRB
 
 ; Waits until one of the five Option Menu keys is pressed
 ; and returns the OPTM_KEY_* code in R8
+;
+; since the "wait for keypress" loop would otherwise block the entire QNICE
+; (we are currently not using interrupts), we need to put everything that
+; needs to continue to run in the background in here
 OPT_MENU_GETKEY INCRB
+
+                ; handle IO and react to IO-induced events so that opening
+                ; the options menu is not interrupting any IO and so that the
+                ; status shown by the options menu is always real-time
 _OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 RSUB    VD_MNT_ST_GET, 1        ; did mount status change..
                 RSUB    _OPTM_GK_MNT, C         ; ..while OPTM is open?
-                RSUB    KEYB$SCAN, 1            ; wait until key is pressed
+                RSUB    VD_DTY_ST_GET, 1        ; did cache status change..
+                RBRA    _OPTMGK_KEYSCAN, !C     ; ..while OPTM is open?
+                RSUB    OPTM_SHOW, 1            ; yes: redraw menu and..
+                MOVE    OPTM_CUR_SEL, R8        ; ..re-show menu item selector
+                MOVE    @R8, R8
+                MOVE    OPTM_SEL_SEL, R9
+                RSUB    OPTM_SELECT, 1
+
+                ; scan for any key
+_OPTMGK_KEYSCAN RSUB    KEYB$SCAN, 1            ; wait until key is pressed
                 RSUB    KEYB$GETKEY, 1
                 CMP     0, R8
                 RBRA    _OPTMGK_LOOP, Z
+
+                ; check, if one of the options menu keys is pressed and
+                ; act accordingly
 
                 CMP     M2M$KEY_UP, R8          ; Up
                 RBRA    _OPTM_GK_1, !Z
@@ -703,9 +726,9 @@ _OPTM_CBS_1     MOVE    VD_CACHE_DIRTY, R9
                 ; the cache is dirty, i.e. the core wrote to the disk image
                 ; but it has not yet been flushed to the SD card
 
-                ; See comment at case #2b "Check, if..." to get the context
-                ; for what is happening here. But in contrast to case #2b,
-                ; we use "2" instead of "1" as flag here. This has the
+                ; See comment below at case #2b "Check, if..." to get the
+                ; context of what is happening here. But in contrast to case
+                ; #2b we use "2" instead of "1" as flag here. This has the
                 ; advantage that case #2b can use this "2" to notice
                 ; that we need to restore the original filename
                 MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
