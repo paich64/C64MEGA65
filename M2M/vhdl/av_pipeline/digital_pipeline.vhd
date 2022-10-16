@@ -305,7 +305,7 @@ begin
          IHRES     => 1024,         -- Maximum horizontal input resolution. (Also here no parameter for vertical.)
          N_DW      => C_AVM_DATA_SIZE,
          N_AW      => C_AVM_ADDRESS_SIZE,
-         N_BURST   => 256           -- 256 bytes per burst
+         N_BURST   => 128           -- 128 bytes per burst
       )
       port map (
          -- Input video
