@@ -243,6 +243,7 @@ M2M$CFG_OPTM_MOUNT  .EQU 0x0306     ; Menu item = mount a drive
 M2M$CFG_OPTM_SINGLE .EQU 0x0307     ; Single-select menu item
 M2M$CFG_OPTM_MSTR   .EQU 0x0308     ; Mount string to display instead of %s
 M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
+M2M$CFG_OPTM_SSTR   .EQU 0x030A     ; Saving string to display instead of %s
 M2M$CFG_OPTM_HELP   .EQU 0x0310     ; Menu item = show a help menu
 
 ; M2M$CFG_WHS
@@ -274,6 +275,9 @@ M2M$CFG_RP_J2_OSD   .EQU 0x700A     ; connect the joystick 2 at OSD
 
 M2M$CFG_ASCAL_USAGE .EQU 0x700B     ; firmware treatment of ascal mode
 M2M$CFG_ASCAL_MODE  .EQU 0x700C     ; hardcoded ascal mode, if applicable
+
+M2M$CFG_VD_AT_DELAY .EQU 0x700D     ; Anti-Thrashing delay (virtual drives)
+M2M$CFG_VD_ITERSIZE .EQU 0x700E     ; Bytes that are saving per flushing-iter.
 
 ; M2M$CFG_ASCAL_USAGE modes
 M2M$CFG_AUSE_CFG    .EQU 0x0000     ; use ASCAL_MODE from config.vhd
@@ -319,6 +323,10 @@ VD_RD               .EQU 0x7008     ; SD read request
 VD_WR               .EQU 0x7009     ; SD write request
 VD_ACK              .EQU 0x700A     ; SD acknowledge
 VD_B_DIN            .EQU 0x700B     ; drive buffer: data in (from drive)
+VD_CACHE_DIRTY      .EQU 0x700C     ; cache dirty flag
+VD_CACHE_FLUSHING   .EQU 0x700D     ; cache flushing flag
+VD_CACHE_FLUSH_ST   .EQU 0x700E     ; cache flushing can start now
+VD_CACHE_FLUSH_DE   .EQU 0x700F     ; delay in ms between VD_WR and FLUSH_ST
 
 ; ----------------------------------------------------------------------------
 ; Situation and context identifiers for custom messages

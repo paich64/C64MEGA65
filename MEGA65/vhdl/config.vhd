@@ -12,6 +12,8 @@ use ieee.numeric_std.all;
 
 entity config is
 port (
+   clk_i       : in std_logic;
+
    -- bits 27 .. 12:    select configuration data block; called "Selector" hereafter
    -- bits 11 downto 0: address the up to 4k the configuration data
    address_i   : in std_logic_vector(27 downto 0);
@@ -74,7 +76,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 Version 3\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-a3]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -94,7 +96,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 Version 3\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-a3]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -124,7 +126,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 Version 3\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-a3]\n\n" &
    
    " Post-processing:\n\n" &
 
@@ -153,7 +155,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 Version 3\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-a3]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -261,6 +263,25 @@ constant JOY_2_AT_OSD      : boolean := false;
 constant ASCAL_USAGE       : natural := 2;
 constant ASCAL_MODE        : natural := 0;   -- see ascal.vhd for the meaning of this value
 
+-- Delay in ms between the last write request to a virtual drive from the core and the start of the
+-- cache flushing (i.e. writing to the SD card). Since every new write from the core invalidates the cache,
+-- and therefore leads to a completely new writing of the cache (flushing), this constant prevents thrashing.
+-- The default is 2 seconds (2000 ms). Should be reasonable for many systems, but if you have a very fast
+-- or very slow system, you might need to change this constant.
+--
+-- Constraint (@TODO): Currently we have only one constant for all virtual drives, i.e. the delay is
+-- the same for all virtual drives. This might be absolutely OK; future will tell. If we need to have
+-- more flexibility: vdrives.vhd already supports one delay per virtual drive. All what would need
+-- to be done in such a case is: Enhance config.vhd to have more constants plus enhance the initialization
+-- routine VD_INIT in vdrives.asm (tagged by @TODO) to store different values in the appropriate registers.
+constant VD_ANTI_THRASHING_DELAY : natural := 2000;
+
+-- Amount of bytes saved in one iteration background saving (buffer flushing) process
+-- Constraint (@TODO): Similar constraint as in VD_ANTI_THRASHING_DELAY: Only one value for all drives.
+-- shell.asm and shell_vars.asm already supports distinct values per drive; config.vhd and VD_INIT would
+-- needs to be updated in case we would need this feature in future
+constant VD_ITERATION_SIZE       : natural := 100;
+
 --------------------------------------------------------------------------------------------------------------------
 -- Load one or more mandatory or optional BIOS/ROMs  (Selectors 0x0200 .. 0x02FF) 
 --------------------------------------------------------------------------------------------------------------------
@@ -282,6 +303,7 @@ constant SEL_OPTM_MOUNT_DRV   : std_logic_vector(15 downto 0) := x"0306";
 constant SEL_OPTM_SINGLESEL   : std_logic_vector(15 downto 0) := x"0307";
 constant SEL_OPTM_MOUNT_STR   : std_logic_vector(15 downto 0) := x"0308";
 constant SEL_OPTM_DIMENSIONS  : std_logic_vector(15 downto 0) := x"0309";
+constant SEL_OPTM_SAVING_STR  : std_logic_vector(15 downto 0) := x"030A";
 constant SEL_OPTM_HELP        : std_logic_vector(15 downto 0) := x"0310";
 
 -- !!! DO NOT TOUCH !!! Configuration constants for OPTM_GROUPS (shell.asm and menu.asm expect them to be like this)
@@ -297,8 +319,9 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 
 -- START YOUR CONFIGURATION BELOW THIS LINE:
 
--- String with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
-constant OPTM_S_MOUNT         : string :=  "<Mount Drive>";
+-- Strings with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
+constant OPTM_S_MOUNT      : string := "<Mount Drive>";  -- no disk image mounted, yet
+constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write cache is dirty and not yet written back to the SD card
 
 -- Size of menu and menu items
 -- CAUTION: 1. End each line (also the last one) with a \n and make sure empty lines / separator lines are only consisting of a "\n"
@@ -399,7 +422,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
 
 begin
 
-addr_decode : process(all)
+addr_decode : process(clk_i, address_i)
    variable index : integer;
    variable whs_array_index : integer;
    variable whs_page_index : integer;
@@ -453,64 +476,69 @@ addr_decode : process(all)
          when 10     => return bool2slv(JOY_2_AT_OSD);
          when 11     => return std_logic_vector(to_unsigned(ASCAL_USAGE, 16));
          when 12     => return std_logic_vector(to_unsigned(ASCAL_MODE, 16));
+         when 13     => return std_logic_vector(to_unsigned(VD_ANTI_THRASHING_DELAY, 16));
+         when 14     => return std_logic_vector(to_unsigned(VD_ITERATION_SIZE, 16));
          when others => return x"0000";
       end case;
    end;
 
 begin
-   data_o <= x"EEEE";
    index := to_integer(unsigned(address_i(11 downto 0)));
    whs_array_index := to_integer(unsigned(address_i(23 downto 20)));
-   whs_page_index  := to_integer(unsigned(address_i(19 downto 12)));   
-
-   -----------------------------------------------------------------------------------
-   -- Welcome & Help System: upper 4 bits of address equal SEL_WHS' upper 4 bits
-   -----------------------------------------------------------------------------------
+   whs_page_index  := to_integer(unsigned(address_i(19 downto 12)));
    
-   if address_i(27 downto 24) = SEL_WHS(15 downto 12) then
-
-      if  whs_array_index < WHS_RECORDS then
-         if index = 4095 then
-            data_o <= std_logic_vector(to_unsigned(WHS(whs_array_index).page_count, 16));
-         else
-            if index < WHS(whs_array_index).page_length(whs_page_index) then
-               data_o <= std_logic_vector(to_unsigned(character'pos(
-                                          WHS_DATA(WHS(whs_array_index).page_start(whs_page_index) + index + 1)
-                                         ), 16));
+   if falling_edge(clk_i) then
+      data_o <= x"EEEE";  
+   
+      -----------------------------------------------------------------------------------
+      -- Welcome & Help System: upper 4 bits of address equal SEL_WHS' upper 4 bits
+      -----------------------------------------------------------------------------------
+      
+      if address_i(27 downto 24) = SEL_WHS(15 downto 12) then
+   
+         if  whs_array_index < WHS_RECORDS then
+            if index = 4095 then
+               data_o <= std_logic_vector(to_unsigned(WHS(whs_array_index).page_count, 16));
             else
-               data_o <= (others => '0'); -- zero-terminated strings
+               if index < WHS(whs_array_index).page_length(whs_page_index) then
+                  data_o <= std_logic_vector(to_unsigned(character'pos(
+                                             WHS_DATA(WHS(whs_array_index).page_start(whs_page_index) + index + 1)
+                                            ), 16));
+               else
+                  data_o <= (others => '0'); -- zero-terminated strings
+               end if;
             end if;
          end if;
-      end if;
+         
+      -----------------------------------------------------------------------------------
+      -- All other selectors, which are 16-bit values
+      -----------------------------------------------------------------------------------
       
-   -----------------------------------------------------------------------------------
-   -- All other selectors, which are 16-bit values
-   -----------------------------------------------------------------------------------
+      else
    
-   else
-
-      case address_i(27 downto 12) is   
-         when SEL_GENERAL           => data_o <= getGenConf(index);
-         when SEL_DIR_START         => data_o <= str2data(DIR_START);
-         when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
-         when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
-         when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
-                                                 std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
-                                                 std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
-         when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
-         when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
-         when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
-         when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
-         when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
-         when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
-         when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
-         when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
-
-         when others                => null;         
-      end case;
-
-   end if;
-
+         case address_i(27 downto 12) is   
+            when SEL_GENERAL           => data_o <= getGenConf(index);
+            when SEL_DIR_START         => data_o <= str2data(DIR_START);
+            when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
+            when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
+            when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);
+            when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
+                                                    std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
+                                                    std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
+            when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
+            when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
+            when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
+            when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
+            when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
+            when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
+            when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
+            when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
+   
+            when others                => null;         
+         end case;
+   
+      end if;
+   end if;   
 end process;
 
 end beh;

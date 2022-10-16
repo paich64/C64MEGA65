@@ -24,7 +24,7 @@ entity main is
       flip_joys_i             : in std_logic;
 
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
-
+      
       -- MiSTer core main clock speed:
       -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
       clk_main_speed_i        : in natural;
@@ -67,8 +67,9 @@ entity main is
       sid_l                   : out signed(15 downto 0);
       sid_r                   : out signed(15 downto 0);
 
-      -- C64 drive led
+      -- C64 drive led (color is RGB)
       drive_led_o             : out std_logic;
+      drive_led_col_o         : out std_logic_vector(23 downto 0);
 
       -- C64 RAM: No address latching necessary and the chip can always be enabled
       c64_ram_addr_o          : out unsigned(15 downto 0);  -- C64 address bus
@@ -105,6 +106,7 @@ architecture synthesis of main is
    signal c64_r               : unsigned(7 downto 0);
    signal c64_g               : unsigned(7 downto 0);
    signal c64_b               : unsigned(7 downto 0);
+   signal c64_drive_led       : std_logic;
 
    -- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
    signal cia1_pa_i           : std_logic_vector(7 downto 0);
@@ -135,7 +137,10 @@ architecture synthesis of main is
    signal iec_img_type_i      : std_logic_vector(1 downto 0);
 
    signal iec_drives_reset    : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal vdrives_mounted_o   : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal vdrives_mounted     : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal cache_dirty         : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal cache_flushing      : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal prevent_reset       : std_logic;
 
    signal c64_iec_clk_o       : std_logic;
    signal c64_iec_clk_i       : std_logic;
@@ -219,6 +224,17 @@ architecture synthesis of main is
 
 begin
 
+   -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
+   prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
+   
+   -- the color of the drive led is green normally, but it turns yellow
+   -- when the cache is currently being flushed
+   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"FFFF00";
+   
+   -- the drive led is on if either the C64 is writing to the virtual disk (cached in RAM)
+   -- or if the dirty cache is currently being flushed to the SD card
+   drive_led_o <= c64_drive_led when unsigned(cache_flushing) = 0 else '1';
+
    --------------------------------------------------------------------------------------------------
    -- Hard reset
    --------------------------------------------------------------------------------------------------
@@ -228,7 +244,11 @@ begin
       if rising_edge(clk_main_i) then
          if reset_soft_i or reset_hard_i then
             hard_rst_counter  <= hard_rst_delay;
-            reset_core_n      <= '0';
+            
+            -- reset_core_n is low-active, so prevent_reset = 0 means execute reset
+            -- but a hard reset can override
+            reset_core_n      <= prevent_reset and (not reset_hard_i);     
+            
             hard_reset_n      <= not reset_hard_i;  -- "not" converts to low-active
          else
             reset_core_n      <= '1';
@@ -532,7 +552,7 @@ begin
    --        "P2oNO,Enable Drive #9,If Mounted,Always,Never;"
    --        This code currently only implements the "If Mounted" option
    g_iec_drv_reset : for i in 0 to G_VDNUM - 1 generate
-      iec_drives_reset(i) <= (not reset_core_n) or (not vdrives_mounted_o(i));
+      iec_drives_reset(i) <= (not reset_core_n) or (not vdrives_mounted(i));
    end generate g_iec_drv_reset;
 
    i_iec_drive : entity work.iec_drive
@@ -574,7 +594,7 @@ begin
          sd_buff_wr     => iec_sd_buf_wr_i,
 
          -- drive led
-         led            => drive_led_o,
+         led            => c64_drive_led,
 
          -- Parallel C1541 port
          par_stb_i      => iec_par_stb_i,
@@ -631,8 +651,16 @@ begin
 
          -- While "img_mounted_o" needs to be strobed, "drive_mounted" latches the strobe in the core's clock domain,
          -- so that it can be used for resetting (and unresetting) the drive.
-         drive_mounted_o      => vdrives_mounted_o,
-
+         drive_mounted_o      => vdrives_mounted,
+         
+         -- Cache output signals: The dirty flags can be used to enforce data consistency
+         -- (for example by ignoring/delaying a reset or delaying a drive unmount/mount, etc.)
+         -- The flushing flags can be used to signal the fact that the caches are currently
+         -- flushing to the user, for example using a special color/signal for example
+         -- at the drive led
+         cache_dirty_o        => cache_dirty,
+         cache_flushing_o     => cache_flushing,         
+   
          -- MiSTer's "SD block level access" interface, which runs in QNICE's clock domain
          -- using dedicated signal on Mister's side such as "clk_sys"
          sd_lba_i             => iec_sd_lba_o,

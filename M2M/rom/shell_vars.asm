@@ -22,16 +22,32 @@ WELCOME_SHOWN   .BLOCK 1                        ; we need to trust that this
 OPTM_ICOUNT     .BLOCK 1                        ; amount of menu items
 OPTM_START      .BLOCK 1                        ; initially selected menu item
 OPTM_SELECTED   .BLOCK 1                        ; last options menu selection
-OPTM_MNT_STATUS .BLOCK 1                        ; drive mount status
-OPTM_HEAP       .BLOCK 1                        ; pointer to a place that can
-                                                ; be used as a scratch buffer
+OPTM_MNT_STATUS .BLOCK 1                        ; drive mount status; all drvs
+OPTM_DTY_STATUS .BLOCK 1                        ; cache dirty status; all drvs
+
+; OPTM_HEAP is used by the option menu to save the modified filenames of
+; disk images used by mounted drives: Filenames need to be abbreviated by
+; "..." if they are too long. See also HELP_MENU and HANDLE_MOUNTING.
+;
+; OPTM_HEAP_LAST points to a scratch buffer that can hold a modified filename
+; for saving/restoring while the cache dirty "Saving" message is shown.
+; See also OPTM_CB_SHOW. 
+OPTM_HEAP       .BLOCK 1
+OPTM_HEAP_LAST  .BLOCK 1
 OPTM_HEAP_SIZE  .BLOCK 1                        ; size of this scratch buffer
 
 SCRATCH_HEX     .BLOCK 5
 
-; SD card and file handling
+; SD card device handle and array of pointers to file handles for disk images
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
-HANDLE_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
+
+; Important: Make sure you have as many ".BLOCK FAT32$FDH_STRUCT_SIZE"
+; statements listed one after another as the .EQU VDRIVES_MAX (below) demands
+; and make sure that the HANDLES_FILES array in shell.asm points 
+; to all of them, i.e. you need to edit shell.asm
+HANDLE_FILE1    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE2    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE3    .BLOCK  FAT32$FDH_STRUCT_SIZE
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
 
@@ -56,12 +72,36 @@ SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE
 ; VDRIVES_NUM:      Amount of virtual, mountable drives; needs to correlate
 ;                   with the actual hardware in vdrives.vhd and the menu items
 ;                   tagged with OPTM_G_MOUNT_DRV in config.vhd
+;                   VDRIVES_MAX must be equal or larger than the value stored
+;                   in this variable
+;                   Variable is initialized in VD_INIT in vdrives.asm
+;
+; VDRIVES_MAX:      Maximum amount of supported virtual drives.
+;                   VD_INIT expects an .EQU and also the assembler does not
+;                   allow this value to be a variable. Do not forget to
+;                   adjust the file handles (see above) accordingly.
+;                   Try to keep small for RAM preservation reasons.
 ;
 ; VDRIVES_DEVICE:   Device ID of the IEC bridge in vdrives.vhd
 ;
 ; VDRIVES_BUFS:     Array of device IDs of size VDRIVES_NUM that contains the
 ;                   RAM buffer-devices that will hold the mounted drives
+;
+; VDRIVES_FLUSH_*:  Array of high/low words of the amount of bytes that still
+;                   need to be flushed to ensure that the cache is written
+;                   completely to the SD card
+;
+; VDRIVES_ITERSIZ   Array of amount of bytes stored in one iteration of the
+;                   background saving (buffer flushing) process
+;
+; VDRIVES_FL_*:     Array of current 4k window and offset within window of the
+;                   disk image buffer in RAM
 VDRIVES_NUM     .BLOCK  1
-VDRIVES_MAX     .EQU    5
+VDRIVES_MAX     .EQU    3
 VDRIVES_DEVICE  .BLOCK  1
 VDRIVES_BUFS    .BLOCK  VDRIVES_MAX
+VDRIVES_FLUSH_H .BLOCK  VDRIVES_MAX
+VDRIVES_FLUSH_L .BLOCK  VDRIVES_MAX
+VDRIVES_ITERSIZ .BLOCK  VDRIVES_MAX
+VDRIVES_FL_4K   .BLOCK  VDRIVES_MAX
+VDRIVES_FL_OFS  .BLOCK  VDRIVES_MAX

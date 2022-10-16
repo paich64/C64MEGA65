@@ -52,6 +52,11 @@ create_pblock pblock_m65driver
 add_cells_to_pblock pblock_m65driver [get_cells [list MEGA65/i_m2m_keyb/m65driver]]
 resize_pblock pblock_m65driver -add {SLICE_X0Y225:SLICE_X7Y243}
 
+# Place SD card controller in the middle between the left and right FPGA boundary because the output ports are at the opposide edges
+create_pblock pblock_sdcard
+add_cells_to_pblock pblock_sdcard [get_cells [list MEGA65/QNICE_SOC/sd_card]]
+resize_pblock pblock_sdcard -add {SLICE_X67Y178:SLICE_X98Y193}
+
 # Timing between ascal.vhd and HyperRAM is asynchronous.
 set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks hdmi_clk]
 set_false_path   -to [get_clocks hr_clk_x1]   -from [get_clocks hdmi_clk]

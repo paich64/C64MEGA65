@@ -24,18 +24,24 @@ on-screen-menu.
 Features
 --------
 
-With our [Release 3](VERSIONS.md), we are striving for a **retro C64 PAL
+With our [Release 4](VERSIONS.md), we are striving for a **retro C64 PAL
 experience**: The core turns your MEGA65 into a Commodore 64, with a
-C1541 drive and a pair of Joysticks or Paddles. No frills. The C64 runs the
-original Commodore KERNAL and the C1541 runs the original Commodore DOS, which
-leads to authentic loading speeds. You will be surprised, how slowly the
-C64/C1541 were loading... :-)
+C1541 drive, a pair of Joysticks, a Mouse and/or Paddles. No frills.
+The C64 runs the original Commodore KERNAL and the C1541 runs the original
+Commodore DOS, which leads to authentic loading speeds. You will be surprised,
+how slowly the C64/C1541 were loading... :-)
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
 recognizing this core as genuine C64 hardware.
 
 ### Video and Audio
+
+Our philosophy on the MEGA65's outputs is that VGA is the "pure" retro-output
+(and you can also switch it to 15 kHZ for a true retro feeling) while HDMI is
+the "processed" modern output. So there is be no "processing" such as CRT
+emulation and other things on the VGA output, while on the HDMI output several
+algorithms are working for a very nice looking authentic image.
 
 * HDMI: The core outputs 1280×720 pixels (720p) at 50 Hz and HDMI audio at
   a sampling rate of 48 kHz. This is supported by a vast majority of monitors
@@ -72,9 +78,9 @@ recognizing this core as genuine C64 hardware.
 
 ### Constraints and Roadmap
 
-Our Release 3 is still an early release. Thanks to all the folks who
+Our Release 4 is still an early release. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
-Commodore 64. With our Release 3 you can play nearly all the available games
+Commodore 64. With our Release 4 you can play nearly all the available games
 and watch almost all demos ever written for the C64. It happens more often
 than not, that the core is recognized as real hardware by software.
 
@@ -120,7 +126,7 @@ supporting older R2 machines. If you are not sure what MEGA65 version you have
 then you very probably have an R3, R3A or newer: The Devkits are R3 and the
 machines from Trenz are R3A.
 
-1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V3/C64MEGA65-V3.zip)
+1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V4/C64MEGA65-V4.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Copy the `.cor` file on an SD card that has been formatted using the
    MEGA65's built-in formatting tool. If you want to be on the safe side, just
@@ -174,8 +180,14 @@ When you press <kbd>Return</kbd> for the second time, the 60Hz mode is
 activated, independent of the C64's output, which is still 50Hz in PAL mode.
 This works fine in general, but leads to some flickering here and there.
 
-How to use the file- and directory browser for mounting a disk image
---------------------------------------------------------------------
+Working with disk images
+------------------------
+
+Currently, we only support standard D64 disk images. This covers 99% of all
+use cases. We do have support for non-standard D64 disk images and G64 disk
+images on our [Roadmap](ROADMAP.md).
+
+### Mounting disk images
 
 Thanks to long filename support and alphabetically sorted file- and directory
 listings, mounting a disk image is straightforward. Press MEGA65's
@@ -200,8 +212,6 @@ Here is how the browser works:
 * Within the file browser you can use <kbd>F1</kbd> to manually select
   the internal SD card (bottom tray) and <kbd>F3</kbd> to select the
   external SD card (back slot).
-* The disk image is internally buffered, which means you can remove or
-  switch the SD card even while the C64 is accessing the disk.
 * An already mounted drive can be unmounted (i.e. "switch the drive off"), if
   you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
   If you select an already mounted drive with the <kbd>Return</kbd> key
@@ -212,6 +222,28 @@ Here is how the browser works:
   Otherwise it starts at the root folder.
 * The file browser only shows files with a valid file extension.
   Currently, we only support `.d64`.
+
+### Writing to disk images
+
+The C64 core supports not only reading from D64 disk images but also writing
+so that you can save your gaming high-scores and work productively with the
+C64 for example by saving documents in GEOS or by saving your BASIC programs.
+
+Important things to know about how writing to disk images works:
+
+* While the C64 is saving something, the drive led is green.
+* When the C64 is done saving and everything is OK, the led goes off.
+* In case of an error, the led is blinking green.
+* When the C64 successfully saved something then it was only written to
+  an internal buffer; it is not yet written to the SD card. Wait 2 seconds
+  after the C64 is done writing and you will see the drive led will
+  automatically turn yellow. This is the process of actually saving all the
+  changes to the SD card. It happens seamlessly in the background, you do not
+  need to do anything specific.
+* To prevent data corruption after saving something: Never turn the MEGA65 off
+  or remove the SD card while the led is green or before the drive led turned
+  yellow and went off afterwards.
+* If you did not save anything, then the drive led will not turn yellow.
 
 Flicker-free HDMI
 -----------------

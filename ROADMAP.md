@@ -10,6 +10,7 @@ Feature Roadmap
 
 
 * NTSC
+* Choice between 16:9 or 4:3 HDMI output resolutions
 * Support two drives: 8 and 9
 * Dual SID
 * Ability to save the settings of the core
@@ -21,10 +22,11 @@ Feature Roadmap
   map, 40 track & 40 track with error map
 * Support for raw GCR mode (`*.G64`)
 * C1581 virtual drive support via SD card (`*.D81`)
+* Support the creation of empty disk images
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * REU and GeoRAM using HyperRAM
-* The following MEGA65 hardware ports are not yet working:
+* Suport the following MEGA65 hardware ports:
   * Cartridges via the MEGA65's hardware Expansion Port
   * IEC port (for example to plug in a real C1541)
   * C1581 via MEGA65's disk drive
@@ -43,7 +45,6 @@ particular order:
 
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
-* Fix the behavior of the floppy led
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,
   when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
 * Update to newer ascal version (wait until MiSTer does the same upstream)

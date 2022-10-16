@@ -1,14 +1,23 @@
 Version 4 - MONTH, DD, YYYY
 ===========================
 
-Write support for the C1541 is the main feature of this release: Save your
-high-scores and your progress in games that support it and work with GEOS.
+Productivity release: Write support for the virtual C1541 and a 512 KB RAM
+Expansion Unit (REU) are the main features: Save your high-scores and your
+gaming progress to disk (D64) and work productively with GEOS by speeding up
+10x using the REU and by saving your work persistently to disk.
+And the demo fans can now enjoy all the awesome REU releases on CSDB.
 
 ## New Features
 
-WIP C1541 write support: Ability to write to D64 image files on the SD card.
+* C1541 write support using D64 image files on the SD card.
 
-## Changes
+WIP REU support: @TODO add technical details, REU version, ...
+CSDB: https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6
+
+WIP Ability to save the configuration settings of the core. You need to copy
+  the file .c64mega65 to the folder /c64 to activate this feature.
+
+* Mouse: Support for C64 mice and MouSTer
 
 * Reduced joystick latency from 5ms to 1ms by decreasing the stable time of
   the signal debouncer.
@@ -17,7 +26,10 @@ TODO: C64 Mouse should work (since paddles work): Check with MouSTer and any
   mouse checking tool: If Mouse works: Mention it here in versions; otherwise
   re-add "Mouse" to ROADMAP.md and README.md
 
-TODO: Check GEOS: Mouse + writing to D64 disk images
+## Bugfixes
+
+* The drive led is not blinking any more during normal read/write operations.
+  It behaves now like the real drive led and only blinks on errors.
 
 TODO: @MH discuss with @MJoergen: Can we improve the HDMI reliability, i.e.
   ability to run on more displays by using PBLOCKs? What triggered this idea

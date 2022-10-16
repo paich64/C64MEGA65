@@ -188,6 +188,7 @@ signal main_key_num           : integer range 0 to 79;
 signal main_key_pressed_n     : std_logic;
 signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
 signal main_drive_led         : std_logic;
+signal main_drive_led_col     : std_logic_vector(23 downto 0);
 
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
@@ -588,6 +589,7 @@ begin
 
          -- C64 drive led
          drive_led_o          => main_drive_led,
+         drive_led_col_o      => main_drive_led_col,
 
          -- C64 RAM
          c64_ram_addr_o       => main_ram_addr,
@@ -631,6 +633,7 @@ begin
 
          -- control the drive led on the MEGA65 keyboard
          drive_led_i          => main_drive_led,
+         drive_led_col_i      => main_drive_led_col,
 
          -- interface to QNICE: used by the firmware and the Shell
          qnice_keys_n_o       => main_qnice_keys_n
@@ -713,6 +716,8 @@ begin
 
    shell_cfg : entity work.config
       port map (
+         clk_i                   => qnice_clk,
+      
          -- bits 27 .. 12:    select configuration data block; called "Selector" hereafter
          -- bits 11 downto 0: address the up to 4k the configuration data
          address_i               => qnice_ramrom_addr,

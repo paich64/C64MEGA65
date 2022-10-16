@@ -38,7 +38,11 @@
 --    0x0008   sd_rd_i
 --    0x0009   sd_wr_i
 --    0x000A   sd_ack_o
---    0x000B   sd_buff_din_i
+--    0x000B   sd_buff_din_i (read-only)
+--    0x000C   cache_dirty_o
+--    0x000D   cache_flushing_o: Writing to this resets the cache flush start signal to 0
+--    0x000E   Cache flush start signal: 1=It is time to start flushing (read-only, to be checked by software)
+--    0x000F   Delay in ms between last sd_wr_i and cache flush start signaling "start"
 --
 -- MiSTer's "SD" interface protocol (reverse-engineered, so accuracy may be only 95%):
 --
@@ -94,6 +98,7 @@ use ieee.numeric_std.all;
 package vdrives_pkg is
    type vd_vec_array is array(natural range <>) of std_logic_vector;
    type vd_std_array is array(natural range <>) of std_logic;
+   type vd_unsigned_array is array(natural range <>) of unsigned; 
    
    constant AW: natural := 13;   -- 14-bit
    constant DW: natural := 7;    -- 8-bit
@@ -103,6 +108,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use work.vdrives_pkg.all;
+use work.env1_globals.all;
 
 library xpm;
 use xpm.vcomponents.all;
@@ -131,6 +137,14 @@ port (
    -- While "img_mounted_o" needs to be strobed, "drive_mounted" latches the strobe,
    -- so that it can be used for resetting (and unresetting) the drive.
    drive_mounted_o   : out std_logic_vector(VDNUM - 1 downto 0);
+   
+   -- Cache output signals: The dirty flags can be used to enforce data consistency
+   -- (for example by ignoring/delaying a reset or delaying a drive unmount/mount, etc.)
+   -- The flushing flags can be used to signal the fact that the caches are currently
+   -- flushing to the user, for example using a special color/signal for example
+   -- at the drive led
+   cache_dirty_o     : out std_logic_vector(VDNUM - 1 downto 0);
+   cache_flushing_o  : out std_logic_vector(VDNUM - 1 downto 0);
    
    ---------------------------------------------------------------------------------------
    -- QNICE clock domain
@@ -193,9 +207,22 @@ signal img_readonly_out : std_logic;
 signal img_size_out     : std_logic_vector(31 downto 0);
 signal img_type_out     : std_logic_vector(1 downto 0);
 
--- Drive mounted register in core's ane QNICE's clock domain
+-- Drive mounted register in core's and QNICE's clock domain
 signal drive_mounted_reg         : std_logic_vector(VDNUM - 1 downto 0);
 signal drive_mounted_reg_qnice   : std_logic_vector(VDNUM - 1 downto 0);
+
+-- Cache signalling registers in core's and QNICE's clock domain
+signal cache_dirty_r_core        : std_logic_vector(VDNUM - 1 downto 0);
+signal cache_dirty_r_qnice       : std_logic_vector(VDNUM - 1 downto 0);
+signal cache_flushing_r_core     : std_logic_vector(VDNUM - 1 downto 0);
+signal cache_flushing_r_qnice    : std_logic_vector(VDNUM - 1 downto 0);
+signal latch_sd_wr               : vd_std_array(VDNUM - 1 downto 0);
+signal cache_flush_st_r_qnice    : std_logic_vector(VDNUM - 1 downto 0);
+
+-- cache_flush_de_r_qnice: Delay in ms between last sd_wr_i and cache flush start signaling "start"
+-- cache_flush_de_counter: QNICE CPU cycles that represent the delay in ms
+signal cache_flush_de_r_qnice    : vd_unsigned_array(VDNUM - 1 downto 0)(15 downto 0);
+signal cache_flush_de_cnt_qnice  : vd_unsigned_array(VDNUM - 1 downto 0)(31 downto 0);
 
 begin
    -- Core clock domain: Output registers
@@ -204,16 +231,22 @@ begin
    img_size_o        <= img_size_out;
    img_type_o        <= img_type_out;
    drive_mounted_o   <= drive_mounted_reg;
+   cache_dirty_o     <= cache_dirty_r_core;
+   cache_flushing_o  <= cache_flushing_r_core;
 
    i_cdc_q2m_img_mounted: xpm_cdc_array_single
       generic map (
-         WIDTH => VDNUM
+         WIDTH => 3 * VDNUM 
       )
       port map (
-         src_clk                       => clk_qnice_i,
-         src_in(VDNUM - 1 downto 0)    => img_mounted(VDNUM - 1 downto 0),
-         dest_clk                      => clk_core_i,
-         dest_out(VDNUM - 1 downto 0)  => img_mounted_out(VDNUM - 1 downto 0) 
+         src_clk                                      => clk_qnice_i,
+         src_in((VDNUM * 1) - 1 downto (VDNUM * 0))   => img_mounted(VDNUM - 1 downto 0),
+         src_in((VDNUM * 2) - 1 downto (VDNUM * 1))   => cache_dirty_r_qnice(VDNUM - 1 downto 0),
+         src_in((VDNUM * 3) - 1 downto (VDNUM * 2))   => cache_flushing_r_qnice(VDNUM - 1 downto 0),        
+         dest_clk                                     => clk_core_i,
+         dest_out((VDNUM * 1) - 1 downto (VDNUM * 0)) => img_mounted_out(VDNUM - 1 downto 0),
+         dest_out((VDNUM * 2) - 1 downto (VDNUM * 1)) => cache_dirty_r_core(VDNUM - 1 downto 0),
+         dest_out((VDNUM * 3) - 1 downto (VDNUM * 2)) => cache_flushing_r_core(VDNUM - 1 downto 0)
       );
 
    i_cdc_qnice2main: xpm_cdc_array_single
@@ -293,15 +326,59 @@ begin
    begin
       if falling_edge(clk_qnice_i) then
          if reset_qnice = '1' then
-            img_mounted    <= (others => '0');
-            img_readonly   <= '0';
-            img_size       <= (others => '0');
-            img_type       <= (others => '0');
-            sd_buff_addr   <= (others => '0');
-            sd_buff_dout   <= (others => '0');
-            sd_buff_wr     <= '0';
-            sd_ack         <= (others => '0');            
-         else         
+            img_mounted             <= (others => '0');
+            img_readonly            <= '0';
+            img_size                <= (others => '0');
+            img_type                <= (others => '0');
+            
+            sd_buff_addr            <= (others => '0');
+            sd_buff_dout            <= (others => '0');
+            sd_buff_wr              <= '0';
+            sd_ack                  <= (others => '0');
+            
+            cache_dirty_r_qnice     <= (others => '0');
+            cache_flushing_r_qnice  <= (others => '0');
+            latch_sd_wr             <= (others => '0');
+            cache_flush_st_r_qnice  <= (others => '0');
+            
+            -- 2 seconds is the default delay between the last sd_wr_i and the start of the cache flushing:
+            -- 2 seconds = 2000 milliseconds = 2 x QNICE_CLK_SPEED (constant from qnice_globals.vhd) = 100_000_000 clock cycles
+            for i in 0 to VDNUM - 1 loop 
+               cache_flush_de_r_qnice(i)     <= to_unsigned(2000, 16);
+               cache_flush_de_cnt_qnice(i)   <= to_unsigned(2 * QNICE_CLK_SPEED, 32);
+            end loop;
+         else
+            -- we need to latch sd_wr_i so that in conjunction with sd_ack_o we can determine cache_dirty_r_qnice
+            for i in 0 to VDNUM - 1 loop
+               latch_sd_wr(i) <= latch_sd_wr(i) or sd_wr_i(i);            
+            end loop;
+            
+            -- Only relevant if the cache is dirty:
+            -- We only start flushing, if for the period defined by cache_flush_de_r_qnice (in ms) there were no writes.
+            -- Reason: The drives tend to perform multiple writes to the virtual drive in a row and this would lead
+            -- to "trashing" when it comes to flushing the cache to the SD card as each write makes the cache dirty again
+            -- and therefore restarts the whole flushing process.
+            for i in 0 to VDNUM - 1 loop
+               if cache_dirty_r_qnice(i) then
+                  -- writing resets the counter and also the flushing process as such
+                  if latch_sd_wr(i) = '1' then
+                     cache_flushing_r_qnice(i) <= '0';
+                     cache_flush_st_r_qnice(i) <= '0';
+                     cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32);
+                     
+                     -- since the cache is already marked dirty and since we did reset the waiting period,
+                     -- we need to clear this latch, otherwise it will keep resetting the counter until next ack
+                     latch_sd_wr(i) <= '0';
+                  else
+                     if cache_flush_de_cnt_qnice(i) = 0 then
+                        cache_flush_st_r_qnice(i) <= '1';
+                     else
+                        cache_flush_de_cnt_qnice(i) <= cache_flush_de_cnt_qnice(i) - 1;                     
+                     end if;
+                  end if;
+               end if;
+            end loop;
+                  
             -- QNICE registers written by QNICE
             if qnice_we_i = '1' then
                -- Window 0x0000: Control and data registers              
@@ -350,14 +427,67 @@ begin
                                     
                -- Window 0x0001 and onwards: window 1 = drive 0, window 2 = drive 1, ...         
                elsif qnice_addr_i(27 downto 12) > x"0000" and qnice_addr_i(11 downto 4) = x"00" then
-                  -- sd_ack_o
-                  if qnice_addr_i(3 downto 0) = x"A" then
-                     for i in 0 to VDNUM - 1 loop
-                        if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
-                           sd_ack(i) <= qnice_data_i(0);
-                        end if;                  
-                     end loop;                                 
-                  end if;
+                  case qnice_addr_i(3 downto 0) is
+                     -- sd_ack_o
+                     when x"A" =>
+                        for i in 0 to VDNUM - 1 loop
+                           if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                              sd_ack(i) <= qnice_data_i(0);
+                              
+                              -- if we are acknowledging a write request then the cache is dirty from now on
+                              -- we need to delete the latched write request because we handled it (otherwise we would not acknowledge)
+                              if latch_sd_wr(i) = '1' then
+                                 cache_dirty_r_qnice(i) <= '1';
+                                 cache_flushing_r_qnice(i) <= '0';
+                                 cache_flush_st_r_qnice(i) <= '0';
+                                 cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32);                                 
+                                 latch_sd_wr(i) <= '0';
+                              end if;
+                           end if;
+                        end loop;
+                        
+                     -- x"B" = sd_buff_din_i: read-only
+                  
+                     -- cache_dirty_o
+                     when x"C" =>
+                        for i in 0 to VDNUM - 1 loop
+                           if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                              cache_dirty_r_qnice(i) <= qnice_data_i(0);
+                              
+                              -- if the cache is not dirty any more then we logically can also not be flushing the cache any more
+                              if qnice_data_i(0) = '0' then
+                                 cache_flushing_r_qnice(i) <= '0';
+                                 cache_flush_st_r_qnice(i) <= '0';
+                                 cache_flush_de_cnt_qnice(i) <= cache_flush_de_r_qnice(i) * to_unsigned(QNICE_CLK_SPEED / 1000, 32);
+                              end if;
+                           end if;
+                        end loop;
+                  
+                     -- cache_flushing_o
+                     when x"D" =>
+                        for i in 0 to VDNUM - 1 loop
+                           if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                              cache_flushing_r_qnice(i) <= qnice_data_i(0);
+                              -- as soon as flushing goes to '1' we have already started, so we can clear the start flag
+                              if qnice_data_i(0) = '1' then
+                                 cache_flush_st_r_qnice(i) <= '0';
+                              end if;
+                           end if;                  
+                        end loop;
+                        
+                     -- x"E" = Cache flush start signal: read-only
+
+                     -- Delay in ms between last sd_wr_i and cache flush start signaling "start"
+                     when x"F" =>
+                        for i in 0 to VDNUM - 1 loop
+                           if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                              cache_flush_de_r_qnice(i) <= unsigned(qnice_data_i);
+                           end if;
+                        end loop;                      
+                        
+                     when others =>
+                        null;                                                  
+                  end case;
                end if;
             end if;          
          end if;
@@ -514,8 +644,40 @@ begin
                   if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
                      qnice_data_o(DW downto 0) <= sd_buff_din_i(i);
                   end if;                  
-               end loop;                                        
-                        
+               end loop;
+               
+            -- cache_dirty_o
+            when x"C" =>                           
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= cache_dirty_r_qnice(i);
+                  end if;                  
+               end loop;
+               
+            -- cache_flushing_o
+            when x"D" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= cache_flushing_r_qnice(i);
+                  end if;                  
+               end loop;
+               
+            -- Cache flush start signal
+            when x"E" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o(0) <= cache_flush_st_r_qnice(i);
+                  end if;                  
+               end loop;
+               
+            -- Delay in ms between last sd_wr_i and cache flush start signaling "start"
+            when x"F" =>
+               for i in 0 to VDNUM - 1 loop
+                  if to_integer(unsigned(qnice_addr_i(19 downto 12))) = (i + 1) then
+                     qnice_data_o <= std_logic_vector(cache_flush_de_r_qnice(i));
+                  end if;                  
+               end loop;
+               
             when others =>
                null;
          end case;
