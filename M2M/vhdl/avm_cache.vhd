@@ -65,6 +65,7 @@ begin
                      '0';
 
    s_avm_waitrequest_o <= '0' when cache_filled_s = '1' and s_avm_write_i = '0' and rd_burstcount = X"00" else
+                          '0' when cache_rd_hit_s = '1' and s_avm_write_i = '0' and state = READING_ST else
                            m_avm_waitrequest_i and (m_avm_write_o or m_avm_read_o) when state = IDLE_ST else
                           '1' when rd_burstcount /= X"00" else
                           '0' when cache_count = G_CACHE_SIZE else
@@ -109,22 +110,28 @@ begin
                   if cache_rd_hit_s = '1' then
                      s_avm_readdata_o      <= cache_data(to_integer(cache_offset_s));
                      s_avm_readdatavalid_o <= '1';
-                  end if;
-
-                  if cache_rd_hit_s = '0' or (cache_offset_s = G_CACHE_SIZE-1 and s_avm_byteenable_i(G_DATA_SIZE/8-1) = '1') then
+                     if cache_offset_s = G_CACHE_SIZE/2-1 and s_avm_byteenable_i(G_DATA_SIZE/8-1) = '1' then
+                        -- Half the cache has now been read.
+                        -- Invalidate the first half of the cache, and pre-emptively fill the rest.
+                        m_avm_write_o      <= '0';
+                        m_avm_read_o       <= '1';
+                        m_avm_address_o    <= std_logic_vector(unsigned(cache_addr) + G_CACHE_SIZE);
+                        m_avm_burstcount_o <= to_stdlogicvector(G_CACHE_SIZE/2, 8);
+                        cache_data(0 to G_CACHE_SIZE/2-1) <= cache_data(G_CACHE_SIZE/2 to G_CACHE_SIZE-1);
+                        cache_addr         <= std_logic_vector(unsigned(cache_addr) + G_CACHE_SIZE/2);
+                        cache_count        <= G_CACHE_SIZE/2;
+                        rd_burstcount      <= (others => '0'); -- Don't return any more data to client right now
+                        state              <= READING_ST;
+                     end if;
+                  else
                      m_avm_write_o      <= '0';
                      m_avm_read_o       <= '1';
                      m_avm_address_o    <= s_avm_address_i;
                      m_avm_burstcount_o <= to_stdlogicvector(G_CACHE_SIZE, 8);
-                     rd_burstcount      <= s_avm_burstcount_i;
-                     cache_count        <= 0;
                      cache_addr         <= s_avm_address_i;
+                     cache_count        <= 0;
+                     rd_burstcount      <= s_avm_burstcount_i;
                      state              <= READING_ST;
-                     if cache_rd_hit_s = '1' then
-                        cache_addr      <= std_logic_vector(unsigned(cache_addr) + G_CACHE_SIZE);
-                        m_avm_address_o <= std_logic_vector(unsigned(cache_addr) + G_CACHE_SIZE);
-                        rd_burstcount   <= (others => '0');
-                     end if;
                   end if;
                end if;
 
