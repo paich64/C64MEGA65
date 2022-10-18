@@ -361,7 +361,7 @@ constant OPTM_ITEMS        : string :=
    " HDMI: Force 60Hz\n"      &
    " HDMI: DVI (no sound)\n"  &
    " HDMI: Flicker-free\n"    &
-   " REU: Enable\n"           &
+   " REU: 1750 with 512KB\n"     &
    "\n"                       &
    " About & Help\n"          &
    "\n"                       &
