@@ -35,35 +35,61 @@ end entity reu_mapper;
 
 architecture synthesis of reu_mapper is
 
-   signal reu_cs_d          : std_logic;
-   signal avm_valid_s       : std_logic;
-   signal avm_write_s       : std_logic;
-   signal avm_read_s        : std_logic;
-   signal avm_address_s     : std_logic_vector(31 downto 0);
-   signal avm_writedata_s   : std_logic_vector(15 downto 0);
-   signal avm_byteenable_s  : std_logic_vector(1 downto 0);
-   signal avm_burstcount_s  : std_logic_vector(7 downto 0);
+   signal reu_addr_d           : std_logic_vector(24 downto 0);
+   signal avm_preemptive_s     : std_logic;
+   signal avm_preemptive_r     : std_logic;
+   signal avm_preemptive_block : std_logic;
 
-   signal avm_write_r       : std_logic;
-   signal avm_read_r        : std_logic;
-   signal avm_address_r     : std_logic_vector(31 downto 0);
-   signal avm_writedata_r   : std_logic_vector(15 downto 0);
-   signal avm_byteenable_r  : std_logic_vector(1 downto 0);
-   signal avm_burstcount_r  : std_logic_vector(7 downto 0);
+   signal reu_cs_d             : std_logic;
+   signal avm_valid_s          : std_logic;
+   signal avm_write_s          : std_logic;
+   signal avm_read_s           : std_logic;
+   signal avm_address_s        : std_logic_vector(31 downto 0);
+   signal avm_writedata_s      : std_logic_vector(15 downto 0);
+   signal avm_byteenable_s     : std_logic_vector(1 downto 0);
+   signal avm_burstcount_s     : std_logic_vector(7 downto 0);
 
-   signal reu_ext_cycle_d   : std_logic;
+   signal avm_write_r          : std_logic;
+   signal avm_read_r           : std_logic;
+   signal avm_address_r        : std_logic_vector(31 downto 0);
+   signal avm_writedata_r      : std_logic_vector(15 downto 0);
+   signal avm_byteenable_r     : std_logic_vector(1 downto 0);
+   signal avm_burstcount_r     : std_logic_vector(7 downto 0);
 
-   signal reu_rd_fifo_ready : std_logic;
-   signal reu_rd_fifo_valid : std_logic;
+   signal reu_ext_cycle_d      : std_logic;
 
-   signal active_s          : std_logic;
-   signal active            : std_logic;
+   signal reu_rd_fifo_ready    : std_logic;
+   signal reu_rd_fifo_valid    : std_logic;
+
+   signal active_s             : std_logic;
+   signal active               : std_logic;
 
 begin
 
-   avm_valid_s      <= reu_cs_i and not reu_cs_d;
-   avm_write_s      <= avm_valid_s and reu_we_i;
-   avm_read_s       <= avm_valid_s and not reu_we_i;
+   -- This is a massive hack!
+   -- In order to prevent delays when reading from the HyperRAM
+   -- this will preemptively read from HyperRAM as soon as the
+   -- address changes. This has the effect to "warm up" the cache.
+   -- At the same time we must block the read response, so it
+   -- doesn't lead to a RAM access.
+   p_preemptive : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         reu_addr_d         <= reu_addr_i;
+         avm_preemptive_r   <= avm_preemptive_s;
+         if avm_preemptive_r and not (reu_cs_i and not reu_cs_d) then
+            avm_preemptive_block <= '1';
+         end if;
+         if avm_readdatavalid_i = '1' then
+            avm_preemptive_block <= '0';
+         end if;
+      end if;
+   end process p_preemptive;
+   avm_preemptive_s <= '1' when (reu_addr_d+1 /= reu_addr_i and reu_addr_d /= reu_addr_i) else '0';
+
+   avm_valid_s      <= '1' when avm_preemptive_r else reu_cs_i and not reu_cs_d;
+   avm_write_s      <= '0' when avm_preemptive_r else avm_valid_s and reu_we_i;
+   avm_read_s       <= '1' when avm_preemptive_r else avm_valid_s and not reu_we_i;
    avm_address_s    <= (("00000000" & reu_addr_i(24 downto 1)) + G_BASE_ADDRESS) and X"003FFFFF";
    avm_writedata_s  <= reu_dout_i & reu_dout_i;
    avm_byteenable_s <= "01" when reu_addr_i(0) = '0' else "10";
@@ -116,7 +142,7 @@ begin
             reu_rd_fifo_valid <= '0';
          end if;
          if avm_readdatavalid_i = '1' then
-            reu_rd_fifo_valid <= avm_readdatavalid_i;
+            reu_rd_fifo_valid <= avm_readdatavalid_i and not avm_preemptive_block;
             if reu_addr_i(0) = '0' then
                reu_din_o <= avm_readdata_i(7 downto 0);
             else
@@ -130,7 +156,7 @@ begin
    end process p_avm_rd_fifo;
 
 
-   active_s <= (reu_we_i and not avm_waitrequest_i) or reu_rd_fifo_valid or avm_readdatavalid_i;
+   active_s <= (reu_we_i and not avm_waitrequest_i) or reu_rd_fifo_valid or (avm_readdatavalid_i and not avm_preemptive_block);
 
    p_active : process (clk_i)
    begin
