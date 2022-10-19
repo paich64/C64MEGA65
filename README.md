@@ -26,10 +26,11 @@ Features
 
 With our [Release 4](VERSIONS.md), we are striving for a **retro C64 PAL
 experience**: The core turns your MEGA65 into a Commodore 64, with a
-C1541 drive, a pair of Joysticks, a Mouse and/or Paddles. No frills.
-The C64 runs the original Commodore KERNAL and the C1541 runs the original
-Commodore DOS, which leads to authentic loading speeds. You will be surprised,
-how slowly the C64/C1541 were loading... :-)
+C1541 drive, a pair of Joysticks, a Mouse and/or Paddles. No frills but
+optionally including a 512KB 1750 REU. The C64 runs the original Commodore 
+KERNAL and the C1541 runs the original Commodore DOS, which leads to authentic
+loading speeds. You will be surprised, how slowly the C64/C1541 were
+loading... :-)
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
@@ -75,6 +76,32 @@ algorithms are working for a very nice looking authentic image.
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
+
+### 512 KB RAM Expansion Unit (1750 REU)
+
+The 1750 512KB REU is as close to cycle accurate as it can go on a MEGA65.
+Remember, we are pretty constrained by the quirky HyperRAM. This means our REU
+is not perfect, but 99.9% perfect: It even runs the very picky
+[TreuLove_ForReal1750Reu.d64](http://csdb.dk/getinternalfile.php/144854/TreuLove_ForReal1750Reu.d64)
+version of Booze Design's Treu Love demo
+([see CSDB page](https://csdb.dk/release/?id=144105))
+that is supposed to only run on real hardware.
+
+Please feel free to browse
+[CSDB's REU Releases](https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6)
+and enjoy them on your MEGA65.
+
+The REU also works perfectly with GEOS: Configure a RAM drive, copy the
+programs, fonts and file you want to work with on the RAM drive and enjoy a
+10x acceleration of your GEOS workflows. Don't forget to copy the results
+of your work on a "real disk" (D64 data disk that you have mounted) before
+ending your GEOS session so that all your data is persistently saved to the
+MEGA65's SD card (see also the section
+["Writing to disk images"](#writing-to-disk-images)
+below).
+
+The REU is switched off by default. You can switch it on using the options
+menu.
 
 ### Constraints and Roadmap
 

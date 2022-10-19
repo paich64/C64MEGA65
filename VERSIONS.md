@@ -1,18 +1,35 @@
 Version 4 - MONTH, DD, YYYY
 ===========================
 
+RELEASE CURRENTLY PLANNED "BEFORE CHRISTMAS" or "OVER THE NEW YEAR".
+
+BETA 2 RELEASED ON November 19 2022
+
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
-Expansion Unit (REU) are the main features: Save your high-scores and your
-gaming progress to disk (D64) and work productively with GEOS by speeding up
-10x using the REU and by saving your work persistently to disk.
+Expansion Unit (1750 REU) are the main features: Save your high-scores and
+your gaming progress to disk (D64) and work productively with GEOS by speeding
+up 10x using the REU and by saving your work persistently to disk.
 And the demo fans can now enjoy all the awesome REU releases on CSDB.
 
 ## New Features
 
 * C1541 write support using D64 image files on the SD card.
+WIP Formatting does not work, yet - to be fixed until release
 
-WIP REU support: @TODO add technical details, REU version, ...
-CSDB: https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6
+* 1750 REU support: The REU is as close to cycle accurate as it can go. It is
+  not perfect, but 99.9% perfect - it even runs the picky
+  [TreuLove_ForReal1750Reu.d64](http://csdb.dk/getinternalfile.php/144854/TreuLove_ForReal1750Reu.d64)
+  version of Booze Design's Treu Love demo
+  ([see CSDB page](https://csdb.dk/release/?id=144105))
+  that is supposed to only run on real hardware. The REU also works perfectly
+  with GEOS. You can switch the REU on/off using the options menu.
+
+WIP Choice between 16:9 or 4:3 HDMI output resolutions: By default the core
+  outputs 720p on HDMI which is a 16:9 resolution (even though the actual
+  C64's output is pixel-perfect 4:3 as we are adding black bars left and
+  right). With this new feature you can switch from 720p to PAL over HDMI
+  which is a native 4:3 resolution (@TODO resolution). This is feature is 
+  essential if you want to connect to a 4:3 monitor over HDMI.
 
 WIP Ability to save the configuration settings of the core. You need to copy
   the file .c64mega65 to the folder /c64 to activate this feature.
@@ -21,10 +38,6 @@ WIP Ability to save the configuration settings of the core. You need to copy
 
 * Reduced joystick latency from 5ms to 1ms by decreasing the stable time of
   the signal debouncer.
-
-TODO: C64 Mouse should work (since paddles work): Check with MouSTer and any
-  mouse checking tool: If Mouse works: Mention it here in versions; otherwise
-  re-add "Mouse" to ROADMAP.md and README.md
 
 ## Bugfixes
 
