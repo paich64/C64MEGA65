@@ -44,6 +44,10 @@ WIP Ability to save the configuration settings of the core. You need to copy
 * The drive led is not blinking any more during normal read/write operations.
   It behaves now like the real drive led and only blinks on errors.
 
+* Fixed a small (probably inaudible) SID bug by merging
+  [this](https://github.com/MiSTer-devel/C64_MiSTer/commit/711dffbddf0b591fadfe81e4e3ed4dd3af6be143)
+  an upstream fix from MiSTer.
+
 TODO: @MH discuss with @MJoergen: Can we improve the HDMI reliability, i.e.
   ability to run on more displays by using PBLOCKs? What triggered this idea
   is this post on Discord:

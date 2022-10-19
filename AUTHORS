@@ -86,12 +86,15 @@ The following resources and tools were invaluable for developing C64MEGA65:
     Special thanks to Spiro Trikaliotis, who made it legally available online:
     https://spiro.trikaliotis.net/Book#vic1541
 
+  * All About Your 1541 by Ninja/The Dreams
+    https://www.the-dreams.de/aay.html
+
   * "Emulator file formats", chapter 17 of the Vice emulator's user manual:
     https://vice-emu.sourceforge.io/vice_17.html#SEC351
 
   * "MCS6500, MICROCOMPUTER FAMILY PROGRAMMING MANUAL" by MOS Technology
     Special thanks to Erik Van den Broeck for the excellent HTML version:
-    http://users.telenet.be/kim1-6502/6502/proman.html
+    https://web.archive.org/web/20211204223049/http://users.telenet.be/kim1-6502/6502/proman.html
 
   * The MOS 6567/6569 video controller and its application in the Commodore 64
     by Christian Bauer: For making sure our video pipeline is accurate
