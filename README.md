@@ -253,23 +253,29 @@ Here is how the browser works:
 ### Writing to disk images
 
 The C64 core supports not only reading from D64 disk images but also writing
-so that you can save your gaming high-scores and work productively with the
-C64 for example by saving documents in GEOS or by saving your BASIC programs.
+to them (and to the MEGA65's SD cards) so that you can save your gaming
+high-scores and play games that are able to save and restore the game's state.
+And you can now work productively with the C64 core on the MEGA65 for example
+by saving documents in GEOS or by saving your BASIC programs.
 
 Important things to know about how writing to disk images works:
 
 * While the C64 is saving something, the drive led is green.
-* When the C64 is done saving and everything is OK, the led goes off.
 * In case of an error, the led is blinking green.
 * When the C64 successfully saved something then it was only written to
-  an internal buffer; it is not yet written to the SD card. Wait 2 seconds
-  after the C64 is done writing and you will see the drive led will
-  automatically turn yellow. This is the process of actually saving all the
+  an internal buffer; it is not yet written to the SD card. This is why you
+  will see the drive led quickly turn from green to yellow after the C64 is
+  done with saving. This is the process of actually saving all the
   changes to the SD card. It happens seamlessly in the background, you do not
   need to do anything specific.
 * To prevent data corruption after saving something: Never turn the MEGA65 off
   or remove the SD card while the led is green or before the drive led turned
   yellow and went off afterwards.
+* Sometimes the C64 saves things "in chunks" / "in batches", so that it might
+  happen that you see the drive led being green, then yellow, then off and
+  then green/yellow/off for a second or third time. Always give the system
+  the time to settle before you turn it off or reset it or remove the
+  SD card.
 * If you did not save anything, then the drive led will not turn yellow.
 
 Flicker-free HDMI
