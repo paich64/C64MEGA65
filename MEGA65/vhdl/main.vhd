@@ -139,7 +139,6 @@ architecture synthesis of main is
    signal iec_drives_reset    : std_logic_vector(G_VDNUM - 1 downto 0);
    signal vdrives_mounted     : std_logic_vector(G_VDNUM - 1 downto 0);
    signal cache_dirty         : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal cache_flushing      : std_logic_vector(G_VDNUM - 1 downto 0);
    signal prevent_reset       : std_logic;
 
    signal c64_iec_clk_o       : std_logic;
@@ -228,12 +227,12 @@ begin
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
    
    -- the color of the drive led is green normally, but it turns yellow
-   -- when the cache is currently being flushed
-   drive_led_col_o <= x"00FF00" when unsigned(cache_flushing) = 0 else x"FFFF00";
+   -- when the cache is dirty and/or currently being flushed
+   drive_led_col_o <= x"00FF00" when unsigned(cache_dirty) = 0 else x"FFFF00";
    
    -- the drive led is on if either the C64 is writing to the virtual disk (cached in RAM)
-   -- or if the dirty cache is currently being flushed to the SD card
-   drive_led_o <= c64_drive_led when unsigned(cache_flushing) = 0 else '1';
+   -- or if the dirty cache is dirty and/orcurrently being flushed to the SD card
+   drive_led_o <= c64_drive_led when unsigned(cache_dirty) = 0 else '1';
 
    --------------------------------------------------------------------------------------------------
    -- Hard reset
@@ -653,13 +652,12 @@ begin
          -- so that it can be used for resetting (and unresetting) the drive.
          drive_mounted_o      => vdrives_mounted,
          
-         -- Cache output signals: The dirty flags can be used to enforce data consistency
+         -- Cache output signals: The dirty flags is used to enforce data consistency
          -- (for example by ignoring/delaying a reset or delaying a drive unmount/mount, etc.)
-         -- The flushing flags can be used to signal the fact that the caches are currently
-         -- flushing to the user, for example using a special color/signal for example
-         -- at the drive led
+         -- and to signal via "the yellow led" to the user that the cache is not yet
+         -- written to the SD card, i.e. that writing is in progress
          cache_dirty_o        => cache_dirty,
-         cache_flushing_o     => cache_flushing,         
+         cache_flushing_o     => open,         
    
          -- MiSTer's "SD block level access" interface, which runs in QNICE's clock domain
          -- using dedicated signal on Mister's side such as "clk_sys"
