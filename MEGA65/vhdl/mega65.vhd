@@ -494,6 +494,7 @@ begin
          reset_hard_i         => main_rst or main_qnice_reset,
          pause_i              => main_qnice_pause,
          flip_joys_i          => main_osm_control_m(C_MENU_FLIP_JOYS),
+         uart_tx_o            => UART_TXD,
 
          -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
          c64_ntsc_i           => c64_ntsc,
@@ -600,7 +601,7 @@ begin
          -- serial communication (rxd, txd only; rts/cts are not available)
          -- 115.200 baud, 8-N-1
          uart_rxd_i              => UART_RXD,
-         uart_txd_o              => UART_TXD,
+         uart_txd_o              => open,
 
          -- SD Card (internal on bottom)
          sd_reset_o              => SD_RESET,

@@ -22,6 +22,7 @@ entity main is
       reset_hard_i            : in std_logic;
       pause_i                 : in std_logic;
       flip_joys_i             : in std_logic;
+      uart_tx_o               : out std_logic;
 
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
       
@@ -491,6 +492,7 @@ begin
          ce             => iec_drive_ce,
          reset          => iec_drives_reset,
          pause          => pause_i,
+         uart_tx_o      => uart_tx_o,
 
          -- interface to the C64 core
          iec_clk_i      => c64_iec_clk_o,
