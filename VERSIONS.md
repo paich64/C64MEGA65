@@ -16,14 +16,9 @@ And the demo fans can now enjoy all the awesome REU releases on CSDB.
 * C1541 write support using D64 image files on the SD card.
 WIP Formatting does not work, yet - to be fixed until release
 
-WIP Read/write support for non-standard D64 images with 40 tracks and no error
-bytes, i.e. additionally to D64 files that are exactly 174,848 bytes in size
-you can now also use files that are 196,608 bytes in size.
-TODO: Update documentation after implementation and use the table from here
-to visually show which disk types we are supporting at the moment at which
-now: http://unusedino.de/ec64/technical/formats/d64.html
-TODO: If this really makes it into the release: Adjust ROADMAP.md and
-be more specific about the remaining formats
+* Read/write support for non-standard D64 images with 40 tracks and no error
+  bytes, i.e. additionally to D64 files that are exactly 174,848 bytes in size
+  you can now also use files that are 196,608 bytes in size.
 
 * 1750 REU support: The REU is as close to cycle accurate as it can go. It is
   not perfect, but 99.9% perfect - it even runs the picky

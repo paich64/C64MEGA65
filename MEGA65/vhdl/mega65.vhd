@@ -1111,7 +1111,7 @@ begin
       generic map (
          ADDR_WIDTH        => 18,
          DATA_WIDTH        => 8,
-         MAXIMUM_SIZE      => 174848,        -- size of standard D64
+         MAXIMUM_SIZE      => 197376,        -- maximum size of any D64 image: non-standard 40-track incl. 768 error bytes
          FALLING_A         => true
       )
       port map (

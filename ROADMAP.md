@@ -8,20 +8,16 @@ more features than our current Release of the port. Here is a list of features
 Feature Roadmap
 ---------------
 
-
 * NTSC
-* Choice between 16:9 or 4:3 HDMI output resolutions
 * Support two drives: 8 and 9
 * Dual SID
-* Ability to save the settings of the core
 * More sophisticated scalers and scandoublers
-* Tape mounting via SD card
+* Tape mounting via SD card (`*.TAP`)
 * Directly load program files (`*.PRG`)
 * Cartridge mounting via SD card (`*.CRT`)
-* Support variations of the `*.D64` format, including 35 track with an error
-  map, 40 track & 40 track with error map
 * Support for raw GCR mode (`*.G64`)
 * C1581 virtual drive support via SD card (`*.D81`)
+* Support `*.D64` images with error maps (filesizes 175,531 and 197,376)
 * Support the creation of empty disk images
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
@@ -35,13 +31,18 @@ Feature Roadmap
 * Simulate the blending of colours when ALM and DCM are used
   as described here: https://github.com/MiSTer-devel/C64_MiSTer/issues/104
 
-### Technical Roadmap
+Technical Roadmap
+-----------------
 
 To implement some of the above-mentioned features and also to improve the
 robustness, performance, and stability of the whole system, we will need
 to implement certain technical improvements in the "backend", again in no
 particular order:
 
+* Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode which
+  exclusively uses GCR internally (c1541_direct_gcr.sv instead of
+  c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
+  from SD card.
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,

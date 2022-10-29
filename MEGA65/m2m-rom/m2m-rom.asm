@@ -92,23 +92,34 @@ PREP_LOAD_IMAGE INCRB
                 MOVE    R0, R1
 
                 ADD     FAT32$FDH_SIZE_LO, R0
-                MOVE    @R0, R0                 ; low word of file size
+                MOVE    @R0, R0                 ; R0: low word of file size
                 ADD     FAT32$FDH_SIZE_HI, R1
-                MOVE    @R1, R1                 ; high word of file size
+                MOVE    @R1, R1                 ; R1: high word of file size
 
-                CMP     D64_STDSIZE_L, R0       ; check filesize
-                RBRA    _PREP_LI_ERR, !Z
-                CMP     D64_STDSIZE_H, R1
-                RBRA    _PREP_LI_ERR, !Z
+                ; check if the D64 filesize equals one of the valid variants
+                MOVE    D64_VARIANT_CNT, R2     ; R2: amount of valid variants
+                MOVE    D64_STDSIZE_L, R3       ; R3: table of valid lo words
+                MOVE    D64_STDSIZE_H, R4       ; R4: table of valid hi words
 
-                ; filesize correct
-                XOR     R8, R8                  ; no errors
-                MOVE    C64_IMGTYPE_D64, R9     ; image type hardcoded to D64
-                RBRA    _PREP_LI_RET, 1
+_PREP_LI_CMP    MOVE    @R3++, R5               ; R5: valid lo word
+                MOVE    @R4++, R6               ; R6: valid hi word
+
+                CMP     R5, R0                  ; lo word equals table entry?
+                RBRA    _PREP_LI_NEXT, !Z       ; no: check next variant
+                CMP     R6, R1                  ; hi word equals table entry?
+                RBRA    _PREP_LI_OK, Z          ; yes: correct filesize
+
+_PREP_LI_NEXT   SUB     1, R2                   ; next variant
+                RBRA    _PREP_LI_CMP, !Z
 
                 ; filesize wrong
-_PREP_LI_ERR    MOVE    1, R8                   ; R8: error code
+                MOVE    1, R8                   ; R8: error code
                 MOVE    WRN_WRONG_D64, R9       ; R9: error message
+                RBRA    _PREP_LI_RET, 1
+
+                ; filesize correct
+_PREP_LI_OK     XOR     R8, R8                  ; no errors
+                MOVE    C64_IMGTYPE_D64, R9     ; image type hardcoded to D64
 
 _PREP_LI_RET    DECRB
                 RET
@@ -146,7 +157,8 @@ _CUSTOM_MSG_RET DECRB
 ; ----------------------------------------------------------------------------
 
 ; Warning: At this point we are only supporting standard D64 files
-WRN_WRONG_D64   .ASCII_P "\n\nD64 file size must be exactly 174848 bytes."
+WRN_WRONG_D64   .ASCII_P "\n\nD64 file size must be exactly 174848 bytes\n"
+                .ASCII_P "(35 tracks) or 196608 bytes (40 tracks)."
                 .ASCII_W "\n\nPress SPACE to continue.\n"
 
 ; Warning: Nothing to browse
@@ -172,10 +184,13 @@ C64_IMGTYPE_D64 .EQU    0x0000  ; 1541 emulated GCR: D64
 C64_IMGTYPE_G64 .EQU    0x0001  ; 1541 real GCR mode: G64, D64
 C64_IMGTYPE_D81 .EQU    0x0002  ; 1581: D81
 
-; We currently only support D64 images that are exactly 174.848 bytes in
-; size, which is the standard format. 174848 decimal = 0x0002AB00 hex
-D64_STDSIZE_L   .EQU    0xAB00
-D64_STDSIZE_H   .EQU    0x0002
+; We currently only support D64 images with 35 tracks (filesize 174,848 bytes)
+; or 40 tracks (filesize 196,608 bytes).
+; 174848 decimal = 0x0002AB00 hex
+; 196608 decimal = 0x00030000 hex
+D64_VARIANT_CNT .EQU    2
+D64_STDSIZE_L   .DW     0xAB00, 0x0000
+D64_STDSIZE_H   .DW     0x0002, 0x0003
 
 ; ----------------------------------------------------------------------------
 ; Variables: Need to be located in RAM

@@ -210,9 +210,10 @@ This works fine in general, but leads to some flickering here and there.
 Working with disk images
 ------------------------
 
-Currently, we only support standard D64 disk images. This covers 99% of all
-use cases. We do have support for non-standard D64 disk images and G64 disk
-images on our [Roadmap](ROADMAP.md).
+Currently, we support D64 disk images with 35 or 40 tracks (standard format,
+no error bytes). This covers 99% of all use cases. We do have support for
+additional D64 disk image variants and G64 disk images on our
+[Roadmap](ROADMAP.md).
 
 ### Mounting disk images
 
