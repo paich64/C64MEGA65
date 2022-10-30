@@ -33,9 +33,9 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; seems to last.
 
                 ; Remember cycle counter for SD Card "stabilization" via
-                ; waiting at least three seconds before allowing to mount it
+                ; waiting at least two seconds before allowing to mount it
                 ; IO$CYC_MID updates with 50 MHz / 65535 = 763 Hz
-                ; 3 seconds are 2289 updates of IO$CYC_MID (2289 = 0x08F1)
+                ; 2 seconds are 1526 updates of IO$CYC_MID (1526 = 0x05F6)
                 MOVE    SD_WAIT_DONE, R8        ; set boolean flag to false
                 MOVE    0, @R8                            
                 MOVE    SD_CYC_MID, R8
@@ -58,6 +58,10 @@ _SS_INITFH_L    MOVE    @R8++, R0
                 MOVE    0, @R0
                 SUB     1, R9
                 RBRA    _SS_INITFH_L, !Z
+                MOVE    CONFIG_DEVH, R8
+                MOVE    0, @R8
+                MOVE    CONFIG_FILE, R8
+                MOVE    0, @R8
 
                 ; initialize file browser persistence variables
                 MOVE    M2M$CSR, R8             ; get active SD card

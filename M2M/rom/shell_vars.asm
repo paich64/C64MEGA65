@@ -49,10 +49,21 @@ HANDLE_FILE1    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE2    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE3    .BLOCK  FAT32$FDH_STRUCT_SIZE
 
+; Remember configuration handling:
+; File-handle for config file (saving/loading OSM settings) is valid (i.e.
+; not null) when SAVE_SETTINGS (config.vhd) is true and when the file
+; specified by CFG_FILE (config.vhd) exists and has exactly the size of
+; OPTM_SIZE (config.vhd). The convention "checking CONFIG_FILE for not null"
+; can be used as a trigger for various actions in the shell.
+; We are using a separate device handle because some logic around SD card
+; switching in shell.asm is tied to the status of HANDLE_DEV.
+CONFIG_DEVH     .BLOCK  FAT32$DEV_STRUCT_SIZE
+CONFIG_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
+
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
 
 ; SD card "stability" workaround
-SD_WAIT         .EQU 0x08F1                     ; 3 seconds @ 50 MHz
+SD_WAIT         .EQU   0x05F6                   ; 2 seconds @ 50 MHz
 SD_CYC_MID      .BLOCK 1                        ; cycle counter for SD card..
 SD_CYC_HI       .BLOCK 1                        ; .."stability workaround"
 SD_WAIT_DONE    .BLOCK 1                        ; initial waiting done

@@ -76,7 +76,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b2]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -96,7 +96,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b2]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -126,7 +126,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b2]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
    
    " Post-processing:\n\n" &
 
@@ -155,7 +155,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b2]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -210,14 +210,17 @@ constant WHS : WHS_RECORD_ARRAY_TYPE := (
 );
 
 --------------------------------------------------------------------------------------------------------------------
--- Set start folder for file browser (Selector 0x0100) 
+-- Set start folder for file browser and specify config file for menu persistence (Selectors 0x0100 and 0x0101) 
 --------------------------------------------------------------------------------------------------------------------
 
-constant SEL_DIR_START     : std_logic_vector(15 downto 0) := x"0100";  -- !!! DO NOT TOUCH !!!
+-- !!! DO NOT TOUCH !!!
+constant SEL_DIR_START     : std_logic_vector(15 downto 0) := x"0100";
+constant SEL_CFG_FILE      : std_logic_vector(15 downto 0) := x"0101";
 
 -- START YOUR CONFIGURATION BELOW THIS LINE
 
 constant DIR_START         : string := "/c64";
+constant CFG_FILE          : string := "/c64/c64mega65";
 
 --------------------------------------------------------------------------------------------------------------------
 -- General configuration settings: Reset, Pause, OSD behavior, Ascal
@@ -262,6 +265,12 @@ constant JOY_2_AT_OSD      : boolean := false;
 --   where you would wire the output of certain options menu bits with ascal_mode_i
 constant ASCAL_USAGE       : natural := 2;
 constant ASCAL_MODE        : natural := 0;   -- see ascal.vhd for the meaning of this value
+
+-- Save on-screen-display settings if the file specified by CFG_FILE exists and if it has
+-- the length of OPTM_SIZE bytes. If the first byte of the file has the value 0xFF then it
+-- is considered as "default", i.e. the menu items specified by OPTM_G_STDSEL are selected.
+-- If the file does not exists, then settings are not saved and OPTM_G_STDSEL always denotes the standard settings.
+constant SAVE_SETTINGS     : boolean := true;
 
 -- Delay in ms between the last write request to a virtual drive from the core and the start of the
 -- cache flushing (i.e. writing to the SD card). Since every new write from the core invalidates the cache,
@@ -478,6 +487,7 @@ addr_decode : process(clk_i, address_i)
          when 12     => return std_logic_vector(to_unsigned(ASCAL_MODE, 16));
          when 13     => return std_logic_vector(to_unsigned(VD_ANTI_THRASHING_DELAY, 16));
          when 14     => return std_logic_vector(to_unsigned(VD_ITERATION_SIZE, 16));
+         when 15     => return bool2slv(SAVE_SETTINGS);
          when others => return x"0000";
       end case;
    end;
@@ -519,6 +529,7 @@ begin
          case address_i(27 downto 12) is   
             when SEL_GENERAL           => data_o <= getGenConf(index);
             when SEL_DIR_START         => data_o <= str2data(DIR_START);
+            when SEL_CFG_FILE          => data_o <= str2data(CFG_FILE);
             when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
             when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
             when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);

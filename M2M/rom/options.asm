@@ -277,6 +277,158 @@ _HLP_START      MOVE    OPTM_START, R8
                 MOVE    R0, @R8
                 MOVE    R0, @R9
 
+                ; M2M$CFM_DATA controls the QNICE register that contains all
+                ; on-screen-menu setting and therefore is responsible for many
+                ; aspects of the behavior of the core.
+                ;
+                ; There are two ways how M2M$CFM_DATA gets initialized:
+                ;
+                ; a) In config.vhd: If SAVE_SETTINGS is true and the file
+                ;    specified by CFG_FILE exists and is exactly OPTM_SIZE
+                ;    bytes in size and the first byte of this file is not
+                ;    0xFF, then this file is read and each byte of this file
+                ;    that is 1 represents a set bit (byte 0 = bit 0).
+                ;
+                ; b) If the conditions of (a) are not met, then M2M$CFM_DATA
+                ;    is initialized using the standard selectors specified by
+                ;    OPTM_G_STDSEL in config.vhd
+
+                ; ------------------------------------------------------------
+                ; Case (a): Config file / Remember settings
+                ; ------------------------------------------------------------
+
+                MOVE    LOG_STR_CONFIG, R8
+                SYSCALL(puts, 1)
+
+                ; Is SAVE_SETTINGS (config.vhd) true?
+                ; If no, then we proceed with Case (b)
+                MOVE    M2M$RAMROM_DEV, R0
+                MOVE    M2M$CONFIG, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0
+                MOVE    M2M$CFG_GENERAL, @R0
+                MOVE    M2M$CFG_SAVEOSDCFG, R1
+                CMP     1, @R1
+                RBRA    _HLP_CA_1, Z            ; yes, SAVE_SETTINGS is true
+
+                MOVE    LOG_STR_CFG_OFF, R8     ; no: log and go to case (b)
+                SYSCALL(puts, 1)
+                RBRA    _HLP_STDSEL, 1
+
+_HLP_CA_1       MOVE    LOG_STR_CFG_ON, R8
+                SYSCALL(puts, 1)
+
+                ; Before trying to mount the SD card, wait the time period
+                ; specified by SD_WAIT (shell_vars.asm). This is a workaround
+                ; that allows us to mount more SD cards successfully.
+                ; 
+                ; While we wait: Keep the core in reset mode and switch the
+                ; keyboard and joystick off (due to the fact, that we MOVE
+                ; M2M$CSR_RESET instead or using OR). The "unreset" including
+                ; the activation of keyboard and joystick will be done in
+                ; RP_SYSTEM_START (gencfg.asm)
+                MOVE    M2M$CSR, R2
+                MOVE    M2M$CSR_RESET, @R2
+
+                ; wait SD_WAIT cycles
+                MOVE    SD_CYC_MID, R8          ; 32-bit addition to calculate
+                MOVE    @R8, R8                 ; ..the target cycles
+                MOVE    SD_CYC_HI, R9
+                MOVE    @R9, R9
+                ADD     SD_WAIT, R8
+                ADDC    0, R9
+                MOVE    IO$CYC_MID, R10
+                MOVE    IO$CYC_HI, R11
+_HLP_CA_2A      CMP     @R11, R9
+                RBRA    _HLP_CA_2B, N           ; wait until @R11 >= R9
+                RBRA    _HLP_CA_2A, !Z
+_HLP_CA_2B      CMP     @R10, R8
+                RBRA    _HLP_CA_2B, !N          ; wait while @R10 <= R8
+
+                ; Mount SD card
+_HLP_CA_3       MOVE    CONFIG_DEVH, R8         ; device handle
+                MOVE    1, R9                   ; partition #1 hardcoded
+                SYSCALL(f32_mnt_sd, 1)
+                CMP     0, R9                   ; R9=error code; 0=OK
+                RBRA    _HLP_CA_4, Z
+
+                MOVE    LOG_STR_CFG_E1, R8      ; cannot mount
+                SYSCALL(puts, 1)
+                RBRA    _HLP_STDSEL, 1          ; use factory defaults
+
+                ; Open config file
+_HLP_CA_4       MOVE    M2M$CFG_CFG_FILE, @R0
+                MOVE    CONFIG_FILE, R9
+                MOVE    M2M$RAMROM_DATA, R10
+                XOR     R11, R11
+                SYSCALL(f32_fopen, 1)
+                CMP     0, R10                  ; file open worked
+                RBRA    _HLP_CA_5, Z            ; yes
+
+                ; No config file or corrupt config file
+                MOVE    LOG_STR_CFG_E2, R8
+_HLP_CA_NCF     SYSCALL(puts, 1)
+                MOVE    M2M$RAMROM_DATA, R8
+                SYSCALL(puts, 1)
+                MOVE    LOG_STR_CFG_SP, R8
+                SYSCALL(puts, 1)
+                MOVE    CONFIG_FILE, R8         ; file handle dubs as flag
+                MOVE    0, @R8                  ; therefore reset it
+                RBRA    _HLP_STDSEL, 1          ; use factory defaults
+
+                ; Check filesize of config file
+_HLP_CA_5       MOVE    R9, R8                  ; R9: file handle
+                ADD     FAT32$FDH_SIZE_HI, R8
+                CMP     0, @R8                  ; file larger than 64 KB?
+                RBRA    _HLP_CA_CCF, !Z         ; yes: corrupt config file
+                MOVE    R9, R8
+                ADD     FAT32$FDH_SIZE_LO, R8
+                CMP     R7, @R8                 ; filesize = menu size?
+                RBRA    _HLP_CA_CCF, !Z         ; no: corrupt config file
+                RBRA    _HLP_CA_6, 1            ; yes
+
+_HLP_CA_CCF     MOVE    LOG_STR_CFG_E4, R8      ; corrupt config file
+                RBRA    _HLP_CA_NCF, 1          ; use factory defaults
+
+                ; Check first byte of config file: 0xFF means that the config
+                ; file is an empty default config file
+_HLP_CA_6       MOVE    R9, R8                  ; R9: file handle
+                SYSCALL(f32_fread, 1)
+                CMP     0, R10                  ; read error?
+                RBRA    _HLP_CA_CCF, !Z         ; yes: use factory defaults
+                CMP     0xFF, R9                ; new config file?
+                RBRA    _HLP_CA_7, !Z           ; no: read it
+
+                MOVE    LOG_STR_CFG_E3, R8      ; yes: use factory defaults..
+                SYSCALL(puts, 1)                ; ..but leave CONFIG_FILE..
+                MOVE    M2M$RAMROM_DATA, R8     ; ..intact so that the config.
+                SYSCALL(puts, 1)                ; ..will be saved later
+                MOVE    LOG_STR_CFG_SP, R8
+                SYSCALL(puts, 1)
+                RBRA    _HLP_STDSEL, 1
+
+                ; Load configuration from file and write it to M2M$CFM_DATA
+_HLP_CA_7       XOR     R9, R9                  ; restart reading from byte 0
+                XOR     R10, R10
+                SYSCALL(f32_fseek, 1)
+                CMP     0, R9                   ; seek error?
+                RBRA    _HLP_CA_CCF, !Z         ; yes: use factory defaults
+
+                MOVE    LOG_STR_CFG_FOK, R8
+                SYSCALL(puts, 1)
+                MOVE    M2M$RAMROM_DATA, R8
+                SYSCALL(puts, 1)
+                SYSCALL(crlf, 1)                
+
+                ; @TODO CONTINUE HERE AFTER CONFIG FILE WRITING IS IMPLEMENTED
+                SYSCALL(exit, 1)
+
+                ; ------------------------------------------------------------
+                ; Case (b): Use standard selectors from config.vhd
+                ; ------------------------------------------------------------
+
+_HLP_STDSEL     MOVE    LOG_STR_CFG_STD, R8
+                SYSCALL(puts, 1)
+
                 ; Get the standard selectors (which menu items are selcted by
                 ; default) from config.vhd and store them in M2M$CFM_DATA                
                 MOVE    M2M$CFM_ADDR, R0        ; R0: select "bank" (0..15)
@@ -292,8 +444,7 @@ _HLP_S0         MOVE    0, @R1                  ; between 0 and 15, so we need
 _HLP_S0E        MOVE    M2M$RAMROM_4KWIN, R2
                 MOVE    M2M$CFG_OPTM_STDSEL, @R2
                 MOVE    M2M$RAMROM_DATA, R2     ; R2: read config.vhd data
-                MOVE    OPTM_ICOUNT, R3         ; R3: amount of menu items
-                MOVE    @R3, R3
+                MOVE    R7, R3                  ; R3: amount of menu items
                 XOR     R4, R4                  ; R4: bit counter for R0
                 XOR     R5, R5                  ; R5: bit pattern
 

@@ -49,6 +49,16 @@ LOG_STR_ITM_AMT .ASCII_W "Items in current directory (in hex): "
 LOG_STR_FILE    .ASCII_W "Selected file: "
 LOG_STR_LOADOK  .ASCII_W "Successfully loaded disk image to buffer RAM.\n"
 LOG_STR_MOUNT   .ASCII_W "Mounted disk image for drive #"
+LOG_STR_CONFIG  .ASCII_W "Configuration: Remember settings: "
+LOG_STR_CFG_ON  .ASCII_W "ON  "
+LOG_STR_CFG_OFF .ASCII_W "OFF  " 
+LOG_STR_CFG_E1  .ASCII_W "Unable to mount SD card.  "
+LOG_STR_CFG_E2  .ASCII_W "Config file not found: "
+LOG_STR_CFG_E3  .ASCII_W "New config file found: "
+LOG_STR_CFG_E4  .ASCII_W "Corrupt config file: "
+LOG_STR_CFG_SP  .ASCII_W "  "
+LOG_STR_CFG_FOK .ASCII_W "Using config file: "
+LOG_STR_CFG_STD .ASCII_W "Using factory defaults.\n"
 
 ; ----------------------------------------------------------------------------
 ; Infos

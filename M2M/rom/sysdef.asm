@@ -230,6 +230,7 @@ M2M$SHELL_M_DXDY    .EQU 0x7002     ; main screen: dx|dy width and height
 
 M2M$CFG_WHS         .EQU 0x1000     ; Welcome & Help screens
 M2M$CFG_DIR_START   .EQU 0x0100     ; Start folder for file browser
+M2M$CFG_CFG_FILE    .EQU 0x0101     ; Config file for OSM persistence
 M2M$CFG_GENERAL     .EQU 0x0110     ; General configuration settings
 M2M$CFG_ROMS        .EQU 0x0200     ; Mandatory and optional ROMs
 
@@ -278,6 +279,8 @@ M2M$CFG_ASCAL_MODE  .EQU 0x700C     ; hardcoded ascal mode, if applicable
 
 M2M$CFG_VD_AT_DELAY .EQU 0x700D     ; Anti-Thrashing delay (virtual drives)
 M2M$CFG_VD_ITERSIZE .EQU 0x700E     ; Bytes that are saving per flushing-iter.
+
+M2M$CFG_SAVEOSDCFG  .EQU 0x700F     ; Remember on-screen-menu settings
 
 ; M2M$CFG_ASCAL_USAGE modes
 M2M$CFG_AUSE_CFG    .EQU 0x0000     ; use ASCAL_MODE from config.vhd

@@ -176,6 +176,29 @@ Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
 syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
 into the FPGA of the MEGA65 and automatically started.
 
+### Config file
+
+If you want the core to remember the settings you made in the on-screen-menu,
+then make sure that you copy the
+[config file](https://github.com/MJoergen/C64MEGA65/raw/V4/bin/Version%204/R3/c64mega65)
+into a folder called `/c64`. This `/c64` folder needs to be located in the
+root folder of the SD card that is active when you boot the core. The config
+file is called `c64mega65` and is located in the ZIP file that you downloaded
+from the
+[MEGA 65 filehost](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
+
+The very first time you start the core after you copied the `c64mega65` config
+file into the `/c64` folder, it will detect the new config file and present
+you with factory default settings when you press <kbd>Help</kbd> to open the
+on-screen-menu. After that, the core will always save the settings when you
+close the on-screen-menu and remember them when you restart the core at a
+later time.
+
+Important: If you change the SD card, for example by using <kbd>F1</kbd> or
+<kbd>F3</kbd> in the file browser or by physically changing or removing the
+card that contains your `/c64/c64mega65` config file, then the core will not
+remember your newest on-screen-menu settings upon next start.
+
 HDMI compatibility
 ------------------
 
@@ -196,7 +219,7 @@ then try this (while the display is black):
 ### Explanation: DVI mode
 
 The recipe above first activates the "DVI mode" as you are choosing the
-menu item "HDMI: DVI (no sound)" in the On-Screen-Menu when you press the
+menu item "HDMI: DVI (no sound)" in the on-screen-menu when you press the
 <kbd>Return</kbd> key for the first time.
 
 In DVI mode, the HDMI data stream sent by the core to your display has a
