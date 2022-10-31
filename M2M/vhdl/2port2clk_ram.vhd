@@ -48,12 +48,13 @@ constant    MEMORY_SIZE : integer := MINIMUM(2**ADDR_WIDTH, MAXIMUM_SIZE);
 type        memory_t is array(0 to MEMORY_SIZE - 1) of std_logic_vector((DATA_WIDTH - 1) downto 0);
 
 impure function InitRAMFromFile(ramfilename: string) return memory_t is
-   file     ramfile	   : text is in ramfilename;
+   file     ramfile	   : text;
    variable ramfileline : line;
    variable ram_data	   : memory_t;
    variable bitvec      : bit_vector(DATA_WIDTH - 1 downto 0);
    variable i           : natural := 0;
 begin
+   file_open(ramfile, ramfilename, read_mode);
    while not endfile(ramfile) loop
       readline(ramfile, ramfileline);
       if ROM_FILE_HEX then
