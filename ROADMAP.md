@@ -43,6 +43,9 @@ particular order:
   exclusively uses GCR internally (c1541_direct_gcr.sv instead of
   c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
   from SD card.
+* Offer option to configure CIA version (6526 or 8521): There is at least one
+  demo known - XXX from Lethargy - where the demo only runs flawlessly if the
+  CIA is a 8521.
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,
