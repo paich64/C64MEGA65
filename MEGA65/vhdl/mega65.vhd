@@ -505,8 +505,9 @@ begin
          audio_clk_o       => audio_clk,       -- Audio's 30 MHz
          audio_rst_o       => audio_rst,       -- Audio's reset, synchronized
 
-         tmds_clk_o        => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
-         hdmi_clk_o        => hdmi_clk,        -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
+         hdmi_clk_sel_i    => '0',             -- 0: 720p (74.25 MHz), 1: 576p (27.00 MHz)
+         tmds_clk_o        => tmds_clk,        -- TMDS's pixelclock (5 * HDMI)
+         hdmi_clk_o        => hdmi_clk,        -- HDMI's pixelclock
          hdmi_rst_o        => hdmi_rst,        -- HDMI's reset, synchronized
 
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-fix, 2=NTSC
