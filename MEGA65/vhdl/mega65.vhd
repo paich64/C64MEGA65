@@ -389,11 +389,12 @@ constant C_MENU_8580          : natural := 9;
 constant C_MENU_CRT_EMULATION : natural := 13;
 constant C_MENU_HDMI_ZOOM     : natural := 14;
 constant C_MENU_IMPROVE_AUDIO : natural := 15;
-constant C_MENU_VGA_RETRO     : natural := 19;
-constant C_MENU_HDMI_60HZ     : natural := 20;
-constant C_MENU_HDMI_DVI      : natural := 21;
-constant C_MENU_HDMI_FF       : natural := 22;
-constant C_MENU_REU           : natural := 23;
+constant C_MENU_8521          : natural := 19;
+constant C_MENU_VGA_RETRO     : natural := 20;
+constant C_MENU_HDMI_60HZ     : natural := 21;
+constant C_MENU_HDMI_DVI      : natural := 22;
+constant C_MENU_HDMI_FF       : natural := 23;
+constant C_MENU_REU           : natural := 24;
 
 -- HyperRAM
 signal hr_dig_write         : std_logic;
@@ -549,7 +550,9 @@ begin
          c64_ntsc_i           => c64_ntsc,
          clk_main_speed_i     => c64_clock_speed,
 
+         -- SID and CIA versions
          c64_sid_ver_i        => main_osm_control_m(C_MENU_8580) & main_osm_control_m(C_MENU_8580),
+         c64_cia_ver_i        => main_osm_control_m(C_MENU_8521),
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_key_num,

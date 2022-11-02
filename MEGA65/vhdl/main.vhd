@@ -29,7 +29,9 @@ entity main is
       -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
       clk_main_speed_i        : in natural;
 
+      -- SID and CIA versions
       c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
+      c64_cia_ver_i           : in std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"
 
       -- M2M Keyboard interface
       kb_key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
@@ -275,7 +277,7 @@ begin
          clk32       => clk_main_i,
          clk32_speed => clk_main_speed_i,
          reset_n     => reset_core_n,
-         bios        => "01",             -- standard C64, internal ROM
+         bios        => "01",          -- standard C64, internal ROM
 
          pause       => pause_i,
          pause_out   => c64_pause,
@@ -297,7 +299,7 @@ begin
          ext_cycle   => ext_cycle_o,
          refresh     => open,
 
-         cia_mode    => '0',              -- 0 - 6526 "old", 1 - 8521 "new"
+         cia_mode    => c64_cia_ver_i, -- 0 - 6526 "old", 1 - 8521 "new"
          turbo_mode  => "00",
          turbo_speed => "00",
 
@@ -318,7 +320,7 @@ begin
          io_ext      => reu_oe,        -- input
          io_data     => reu_dout,      -- input
          irq_n       => '1',
-         nmi_n       => restore_key_n,    -- TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
+         nmi_n       => restore_key_n, -- TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
          nmi_ack     => open,
          romL        => open,
          romH        => open,

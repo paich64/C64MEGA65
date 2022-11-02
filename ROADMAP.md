@@ -46,9 +46,9 @@ particular order:
 * Refactor asynchronous resets and other things around clk.vhd to reduce
   warnings upon `report_cdc` and to make sure the whole clock architecture
   is cleaner. (Also need to double-check M2M itself.)
-* Offer option to configure CIA version (6526 or 8521): There is at least one
-  demo known - XXX from Lethargy - where the demo only runs flawlessly if the
-  CIA is a 8521.
+* Put major/minor version in the first two bytes of the config file so that
+  in case of a mismatch a warning can be issued (e.g. by directly printing
+  it into the C64's screen RAM). Needs new version of make_config.sh.
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,

@@ -37,6 +37,10 @@ WIP Choice between 16:9 or 4:3 HDMI output resolutions: By default the core
 * Ability to save the configuration settings of the core. You need to copy
   the file c64mega65 to the folder /c64 to activate this feature.
 
+* CIA: New option to configure CIA version (6526 or 8521): There is at least
+  one demo known - XXX from Lethargy - where the demo only runs flawlessly if
+  the CIA is a 8521.
+
 * Mouse: Support for C64 mice and MouSTer
 
 * Reduced joystick latency from 5ms to 1ms by decreasing the stable time of
