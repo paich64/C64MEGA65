@@ -69,6 +69,8 @@ _SS_INITFH_L    MOVE    @R8++, R0
                 AND     M2M$CSR_SD_ACTIVE, R8
                 MOVE    SD_ACTIVE, R9
                 MOVE    R8, @R9
+                MOVE    INITIAL_SD, R9
+                MOVE    R8, @R9
                 RSUB    FB_INIT, 1              ; init persistence variables
                 MOVE    FB_HEAP, R8             ; heap for file browsing
                 MOVE    HEAP, @R8                 
@@ -632,6 +634,10 @@ _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
 ; ----------------------------------------------------------------------------
 
 HANDLE_IO       SYSCALL(enter, 1)
+
+                ; Ensure data integrity by preventing random writes to random
+                ; SD cards when remembering on-screen-menu settings
+                RSUB    ROSM_INTEGRITY, 1
 
                 ; Loop through all VDRIVES and check for requests
                 XOR     R0, R0                  ; R0: number of virtual drive

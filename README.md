@@ -419,13 +419,13 @@ framework has a debug mode that consists of a real-time log of various system
 states and an interactive debug console.
 
 To access the log and the console, connect a serial terminal to the MEGA65
-using the JTAG adator while making sure that the serial terminal's parameters
+using the JTAG adater while making sure that the serial terminal's parameters
 are set to 115,200 baud 8-N-1, no flow control such as XON/XOFF, RTS/CTS,
 DTR/DSR. Set any terminal emulation to "None" and if you can configure it,
 set the send mode to "Interactive" (instead of things like "Line buffered").
 
 To switch from the real-time log to the interactive mode, press
-<kbd>Run/Stop</kbd> + <kbd>&#8593;</kbd> and then while holding these press
+<kbd>Run/Stop</kbd> + <kbd>Cursor Up</kbd> and then while holding these press
 <kbd>Help</kbd>.
 
 Learn more about the debug mode in the MiSTer2MEGA65 Wiki in the "Hello World"

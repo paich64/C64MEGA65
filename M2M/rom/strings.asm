@@ -59,6 +59,10 @@ LOG_STR_CFG_E4  .ASCII_W "Corrupt config file: "
 LOG_STR_CFG_SP  .ASCII_W "  "
 LOG_STR_CFG_FOK .ASCII_W "Using config file: "
 LOG_STR_CFG_STD .ASCII_W "Using factory defaults.\n"
+LOG_STR_CFG_SDC .ASCII_P "Configuration: Remember settings: OFF  "
+                .ASCII_W "Reason: SD card changed.\n"
+LOG_STR_CFG_REM .ASCII_P "Configuration: New settings successfully stored to "
+                .ASCII_W "SD card.\n"
 
 ; ----------------------------------------------------------------------------
 ; Infos
@@ -116,6 +120,11 @@ ERR_FATAL_FZERO .ASCII_W "Write disk: File handle is zero.\n"
 ERR_FATAL_SEEK  .ASCII_W "Write disk: Seek failed.\n"
 ERR_FATAL_WRITE .ASCII_W "Write disk: Writing failed.\n"
 ERR_FATAL_FLUSH .ASCII_W "Write disk: Flushing of SD card buffer failed.\n"
+ERR_FATAL_ROSMS .ASCII_W "Settings file: Seek failed.\n"
+ERR_FATAL_ROSMR .ASCII_W "Settings file: Reading failed.\n"
+ERR_FATAL_ROSMW .ASCII_W "Settings file: Writing failed.\n"
+ERR_FATAL_ROSMF .ASCII_W "Settings file: Flushing of SD card buffer failed.\n"
+ERR_FATAL_ROSMC .ASCII_W "Settings file: Corrupt: Illegal config value.\n"
 
 ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 

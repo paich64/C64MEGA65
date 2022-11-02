@@ -185,12 +185,14 @@ _HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
                 RSUB    FATAL, 1 
 
                 ; run the menu
-_HLP_HEAP2_OK   RSUB    OPTM_SHOW, 1            ; fill VRAM
+_HLP_HEAP2_OK   RSUB    ROSM_REM_OLD, 1         ; remember current settings
+                RSUB    OPTM_SHOW, 1            ; fill VRAM
                 RSUB    SCR$OSM_O_ON, 1         ; make overlay visible
                 MOVE    OPTM_SELECTED, R9       ; use recently selected line
                 MOVE    @R9, R8
                 RSUB    OPTM_RUN, 1             ; run menu
                 RSUB    SCR$OSM_OFF, 1          ; make overlay invisible
+                RSUB    ROSM_SAVE, 1            ; save settings if appropriate
 
                 ; Smart handling of last-recently-selected: only remember
                 ; LRS when the menu is closed via pressing the Help key again.
@@ -411,16 +413,59 @@ _HLP_CA_7       XOR     R9, R9                  ; restart reading from byte 0
                 XOR     R10, R10
                 SYSCALL(f32_fseek, 1)
                 CMP     0, R9                   ; seek error?
-                RBRA    _HLP_CA_CCF, !Z         ; yes: use factory defaults
+                RBRA    _HLP_CA_8, Z            ; no: proceed
+                MOVE    ERR_FATAL_ROSMS, R8     ; yes: fatal; R9: error code
+                RBRA    FATAL, 1
 
+_HLP_CA_8       MOVE    R8, R0
                 MOVE    LOG_STR_CFG_FOK, R8
                 SYSCALL(puts, 1)
                 MOVE    M2M$RAMROM_DATA, R8
                 SYSCALL(puts, 1)
                 SYSCALL(crlf, 1)                
 
-                ; @TODO CONTINUE HERE AFTER CONFIG FILE WRITING IS IMPLEMENTED
-                SYSCALL(exit, 1)
+                MOVE    R0, R8                  ; R8: file handle
+                MOVE    M2M$CFM_ADDR, R0        ; R0: select "bank" (0..15)
+                MOVE    M2M$CFM_DATA, R1        ; R1: menu settings
+                XOR     R2, R2                  ; R2: current "bank"/"window"
+                MOVE    OPTM_ICOUNT, R3         ; R3: amount of bits to write
+                MOVE    @R3, R3
+
+_HLP_CA_9       MOVE    R2, @R0                 ; currently active window
+                MOVE    1, R4                   ; R4: bit-pointer (bit 0)
+
+_HLP_CA_10      SYSCALL(f32_fread, 1)           ; read byte from config file
+                CMP     0, R10                  ; error?
+                RBRA    _HLP_CA_11, Z           ; no: proceed
+                MOVE    ERR_FATAL_ROSMR, R8     ; yes: fatal; R9: error code
+                RBRA    FATAL, 1
+
+_HLP_CA_11      CMP     0, R9                   ; current bit not set?
+                RBRA    _HLP_CA_12, Z           ; yes: delete current bit
+                CMP     1, R9                   ; current bit set?
+                RBRA    _HLP_CA_13, Z           ; yes: set current bit
+                MOVE    ERR_FATAL_ROSMC, R8     ; illegal value: corrupt file
+                RBRA    FATAL, 1                ; and this is fatal
+
+_HLP_CA_12      MOVE    R4, R5                  ; delete current bit
+                NOT     R5, R5
+                AND     R5, @R1
+                RBRA    _HLP_CA_14, 1
+
+_HLP_CA_13      OR      R4, @R1                 ; set current bit
+
+_HLP_CA_14      SUB     1, R3                   ; done reading config file?
+                RBRA    _HLP_CA_15, Z           ; yes
+
+                AND     0xFFFD, SR              ; clear X flag
+                SHL     1, R4                   ; move bit-pointer to next bit
+                RBRA    _HLP_CA_10, !Z          ; next bit
+
+                ADD     1, R2                   ; next M2M$CFM_DATA window
+                CMP     16, R2
+                RBRA    _HLP_CA_9, !Z
+
+_HLP_CA_15      RBRA    _HLP_S3, 1              ; Case (a) successful
 
                 ; ------------------------------------------------------------
                 ; Case (b): Use standard selectors from config.vhd
@@ -466,6 +511,144 @@ _HLP_S2         SUB     1, R3                   ; one less menu item to go
                 MOVE    R5, @R1                 ; yes: update @R1
 
 _HLP_S3         SYSCALL(leave, 1)
+                RET
+
+; ----------------------------------------------------------------------------
+; Helper functions for remembering the OSM settings
+; ----------------------------------------------------------------------------
+
+; Copy the current state of M2M$CFM_DATA to OLD_SETTINGS
+ROSM_REM_OLD    INCRB
+
+                ; If CONFIG_FILE is null: We are not remembering the settings
+                MOVE    CONFIG_FILE, R0
+                CMP     0, @R0
+                RBRA    _ROSMRO_RET, Z
+
+                ; Copy by iterating through the 16 "windows" of M2M$CFM_DATA
+                XOR     R0, R0                  ; R1 is only 4-bits (0..15)
+                MOVE    M2M$CFM_ADDR, R1
+                MOVE    M2M$CFM_DATA, R2
+                MOVE    OLD_SETTINGS, R3
+_ROSMRO_LOOP    MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
+                MOVE    @R2, @R3++              ; copy to OLD_SETTINGS
+                ADD     1, R0
+                CMP     16, R0
+                RBRA    _ROSMRO_LOOP, !Z
+
+_ROSMRO_RET     DECRB
+                RET
+
+; For preventing data corruption by for example writing to random spots on
+; SD cards other than the one containing the original config file: Any SD card
+; change, even switching cards back and forth in the file browser will stop
+; us from remembering settings from that point in time on (until the next
+; hard reset or reboot of the core).
+; Important: Call this function needs to be polled "always" so that any change
+; can be instantly detected. This is why it needs to be called in HANDLE_IO.
+ROSM_INTEGRITY  SYSCALL(enter, 1)
+
+                ; If CONFIG_FILE is null: We are not remembering the settings
+                MOVE    CONFIG_FILE, R0
+                CMP     0, @R0
+                RBRA    _ROSMI_RET, Z
+
+                ; If the currently active SD card is different than the one
+                ; we remembered upon startup then we clear the CONFIG_FILE
+                ; handle as this will stop us from remembering settings.
+                MOVE    M2M$CSR, R8             ; get active SD card
+                MOVE    @R8, R8
+                AND     M2M$CSR_SD_ACTIVE, R8   ; isolate the relevant bit
+                MOVE    INITIAL_SD, R9
+                CMP     R8, @R9                 ; SD card the same?
+                RBRA    _ROSMI_RET, Z           ; yes
+
+                MOVE    LOG_STR_CFG_SDC, R8     ; log switch off remember msg
+                SYSCALL(puts, 1)
+
+                MOVE    CONFIG_FILE, R0         ; switch off remembering
+                MOVE    0, @R0
+
+_ROSMI_RET      SYSCALL(leave, 1)
+                RET
+
+; Save the current state of M2M$CFG_DATA to the SD card
+; Byte 0 in the file represents bit 0 in the register, byte 1 = bit1, ...
+ROSM_SAVE       SYSCALL(enter, 1)
+
+                ; If CONFIG_FILE is null: We are not remembering the settings
+                MOVE    CONFIG_FILE, R8
+                CMP     0, @R8
+                RBRA    _ROSMS_RET, Z
+
+                ; Iterate through the 16 windows of M2M$CFM_DATA to detect
+                ; changes because we only save if there are changes
+                XOR     R0, R0                  ; R1 is only 4-bits (0..15)
+                MOVE    M2M$CFM_ADDR, R1
+                MOVE    M2M$CFM_DATA, R2
+                MOVE    OLD_SETTINGS, R3
+_ROSMS_1        MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
+                CMP     @R2, @R3++              ; OLD_SETTINGS=current setngs?
+                RBRA    _ROSMS_SAVE, !Z         ; no: we need to save settings
+                ADD     1, R0
+                CMP     16, R0
+                RBRA    _ROSMS_1, !Z
+                RBRA    _ROSMS_RET, 1           ; no changes, nothing to save
+
+                ; Start at the beginning of the config file (R8: file handle)
+_ROSMS_SAVE     XOR     R9, R9                  ; restart reading from byte 0
+                XOR     R10, R10
+                SYSCALL(f32_fseek, 1)
+                CMP     0, R9                   ; seek error?
+                RBRA    _ROSMS_2, Z             ; no: proceed
+                MOVE    ERR_FATAL_ROSMS, R8     ; yes: fatal; R9: error code
+                RBRA    FATAL, 1
+
+                ; Save settings by iterating through the 16 windows of
+                ; M2M$CFM_DATA (accessed by R1 & R2; R8: file handle) and then
+                ; going from the lowest bit to the highest and saving each
+                ; set-bit as a "1" and each deleted-bit as a "0".
+_ROSMS_2        XOR     R0, R0                  ; R0: M2M$CFM_ADDR 
+                MOVE    OPTM_ICOUNT, R5         ; R5: amount of bits to write
+                MOVE    @R5, R5
+_ROSMS_3        MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
+                MOVE    1, R7                   ; "pointer" to current bit 0
+
+_ROSMS_4        XOR     R9, R9
+                MOVE    R7, R6
+                AND     @R2, R6                 ; current bit set?
+                RBRA    _ROSMS_5, Z             ; no: write R9, which is 0
+                MOVE    1, R9                   ; yes: set R9 to 1 and write
+
+_ROSMS_5        SYSCALL(f32_fwrite, 1)          ; write byte to config file
+                CMP     0, R9                   ; error?
+                RBRA    _ROSMS_6, Z             ; no: proceed
+                MOVE    ERR_FATAL_ROSMW, R8     ; yes: fatal; R9: error code
+                RBRA    FATAL, 1
+
+_ROSMS_6        SUB     1, R5                   ; all menu items written?
+                RBRA    _ROSMS_7, Z             ; yes
+
+                AND     0xFFFD, SR              ; clear X flag
+                SHL     1, R7                   ; move bit pointer to next bit
+                RBRA    _ROSMS_4, !Z            ; next bit
+
+                ADD     1, R0                   ; next M2M$CFM_DATA "window"
+                CMP     16, R0
+                RBRA    _ROSMS_3, !Z
+
+                ; Flush SD card write buffer (R8: file handle)
+_ROSMS_7        SYSCALL(f32_fflush, 1)
+                CMP     0, R9                   ; error?
+                RBRA    _ROSMS_8, Z             ; no: proceed
+                MOVE    ERR_FATAL_ROSMF, R8     ; yes: fatal; R9: error code
+                RBRA    FATAL, 1
+
+                ; Log success message
+_ROSMS_8        MOVE    LOG_STR_CFG_REM, R8
+                SYSCALL(puts, 1)                
+
+_ROSMS_RET      SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------

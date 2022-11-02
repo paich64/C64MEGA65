@@ -50,15 +50,23 @@ HANDLE_FILE2    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE3    .BLOCK  FAT32$FDH_STRUCT_SIZE
 
 ; Remember configuration handling:
-; File-handle for config file (saving/loading OSM settings) is valid (i.e.
-; not null) when SAVE_SETTINGS (config.vhd) is true and when the file
-; specified by CFG_FILE (config.vhd) exists and has exactly the size of
-; OPTM_SIZE (config.vhd). The convention "checking CONFIG_FILE for not null"
-; can be used as a trigger for various actions in the shell.
-; We are using a separate device handle because some logic around SD card
-; switching in shell.asm is tied to the status of HANDLE_DEV.
+; * We are using a separate device handle because some logic around SD card
+;   switching in shell.asm is tied to the status of HANDLE_DEV.
+; * File-handle for config file (saving/loading OSM settings) is valid (i.e.
+;   not null) when SAVE_SETTINGS (config.vhd) is true and when the file
+;   specified by CFG_FILE (config.vhd) exists and has exactly the size of
+;   OPTM_SIZE (config.vhd). The convention "checking CONFIG_FILE for not null"
+;   can be used as a trigger for various actions in the shell.
+; * OLD_SETTINGS is used to determine changes in the 256-bit (16-word)
+;   M2M$CFM_DATA register so that we can implement a smart saving mechanism:
+;   When pressing "Help" to close the on-screen-menu, we only save the
+;   settings to the SD card when the settings changed.
+; * Initially (upon core start time) active SD card: Used for protecting the
+;   data integrity: see comment for ROSM_INTEGRITY in options.asm
 CONFIG_DEVH     .BLOCK  FAT32$DEV_STRUCT_SIZE
 CONFIG_FILE     .BLOCK  FAT32$FDH_STRUCT_SIZE
+OLD_SETTINGS    .BLOCK  16
+INITIAL_SD      .BLOCK  1
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
 
@@ -80,6 +88,7 @@ FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 ; context variables (see CTX_* constants in sysdef.asm)
 SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE
 
+; Virtual drive system (aka mounting disk/module/tape images):
 ; VDRIVES_NUM:      Amount of virtual, mountable drives; needs to correlate
 ;                   with the actual hardware in vdrives.vhd and the menu items
 ;                   tagged with OPTM_G_MOUNT_DRV in config.vhd
