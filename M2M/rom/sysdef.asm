@@ -129,7 +129,8 @@ M2M$ASCAL_TRIPLEBUF .EQU 0x0008 ; Activate triple-buffering
 M2M$ASCAL_RESERVED  .EQU 0x0010 ; reserved (see ascal.vhd)
 
 ; ----------------------------------------------------------------------------
-; Special-purpose and general-purpose 16-bit input registers
+; Special-purpose and general-purpose 16-bit input flags
+; Read-only; direct pass through from SOC inputs, not buffered in a register.
 ; (Currently reserved and not used, yet)
 ; ----------------------------------------------------------------------------
 
@@ -170,18 +171,18 @@ M2M$KEY_F3          .EQU 0x0200
 ; 256-bit General purpose control flags
 ; ----------------------------------------------------------------------------
 
-; 128-bit directly controled by the programmer (not used by the Shell)
-; Select a window between 0 and 7 in M2M$CFD_ADDR and access the control flags
-; sliced into 16-bit chunks via M2M$CFD_DATA
+; 256-bit directly controled by the programmer (not used by the Shell)
+; Select a window between 0 and 15 in M2M$CFD_ADDR and access the control
+; flags sliced into 16-bit chunks via M2M$CFD_DATA
 ; exposed by QNICE via control_d_o
 M2M$CFD_ADDR        .EQU 0xFFF0
 M2M$CFD_DATA        .EQU 0xFFF1
 
-; 128-bit controled by the Shell via the options menu, i.e. the menu that
+; 256-bit controled by the Shell via the options menu, i.e. the menu that
 ; opens when the core is running and the user presses "Help" on the keyboard:
 ; the bit order is: bit 0 = topmost menu entry, the mapping is 1-to-1 to
 ; OPTM_ITEMS / OPTM_GROUPS in config.vhd
-; exposed by QNICE via control_m_o
+; exposed by QNICE via control_m_o; M2M$CFM_ADDR runs from 0 to 15
 M2M$CFM_ADDR        .EQU 0xFFF2
 M2M$CFM_DATA        .EQU 0xFFF3
 
@@ -230,6 +231,7 @@ M2M$SHELL_M_DXDY    .EQU 0x7002     ; main screen: dx|dy width and height
 
 M2M$CFG_WHS         .EQU 0x1000     ; Welcome & Help screens
 M2M$CFG_DIR_START   .EQU 0x0100     ; Start folder for file browser
+M2M$CFG_CFG_FILE    .EQU 0x0101     ; Config file for OSM persistence
 M2M$CFG_GENERAL     .EQU 0x0110     ; General configuration settings
 M2M$CFG_ROMS        .EQU 0x0200     ; Mandatory and optional ROMs
 
@@ -278,6 +280,8 @@ M2M$CFG_ASCAL_MODE  .EQU 0x700C     ; hardcoded ascal mode, if applicable
 
 M2M$CFG_VD_AT_DELAY .EQU 0x700D     ; Anti-Thrashing delay (virtual drives)
 M2M$CFG_VD_ITERSIZE .EQU 0x700E     ; Bytes that are saving per flushing-iter.
+
+M2M$CFG_SAVEOSDCFG  .EQU 0x700F     ; Remember on-screen-menu settings
 
 ; M2M$CFG_ASCAL_USAGE modes
 M2M$CFG_AUSE_CFG    .EQU 0x0000     ; use ASCAL_MODE from config.vhd

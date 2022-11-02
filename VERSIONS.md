@@ -14,7 +14,6 @@ And the demo fans can now enjoy all the awesome REU releases on CSDB.
 ## New Features
 
 * C1541 write support using D64 image files on the SD card.
-WIP Formatting does not work, yet - to be fixed until release
 
 * Read/write support for non-standard D64 images with 40 tracks and no error
   bytes, i.e. additionally to D64 files that are exactly 174,848 bytes in size
@@ -51,6 +50,16 @@ WIP Ability to save the configuration settings of the core. You need to copy
 * Fixed a small (probably inaudible) SID bug by merging
   [this](https://github.com/MiSTer-devel/C64_MiSTer/commit/711dffbddf0b591fadfe81e4e3ed4dd3af6be143)
   an upstream fix from MiSTer.
+
+WIP Fixed file browsing bug that occured while browsing directories with a
+  large amount of subdirectories (e.g. large game libraries): When you entered
+  a subdirectory located on a page other than page one (e.g. by scrolling down
+  quite a bit) and then left this very subdirectory (one level up), then the
+  selection cursor jumped back to page one.
+
+## Known problems
+
+* Formatting disks does not work.
 
 TODO: @MH discuss with @MJoergen: Can we improve the HDMI reliability, i.e.
   ability to run on more displays by using PBLOCKs? What triggered this idea

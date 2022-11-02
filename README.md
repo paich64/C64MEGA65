@@ -176,6 +176,29 @@ Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
 syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
 into the FPGA of the MEGA65 and automatically started.
 
+### Config file
+
+If you want the core to remember the settings you made in the on-screen-menu,
+then make sure that you copy the
+[config file](https://github.com/MJoergen/C64MEGA65/raw/V4/bin/Version%204/R3/c64mega65)
+into a folder called `/c64`. This `/c64` folder needs to be located in the
+root folder of the SD card that is active when you boot the core. The config
+file is called `c64mega65` and is located in the ZIP file that you downloaded
+from the
+[MEGA 65 filehost](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
+
+The very first time you start the core after you copied the `c64mega65` config
+file into the `/c64` folder, it will detect the new config file and present
+you with factory default settings when you press <kbd>Help</kbd> to open the
+on-screen-menu. After that, the core will always save the settings when you
+close the on-screen-menu and remember them when you restart the core at a
+later time.
+
+Important: If you change the SD card, for example by using <kbd>F1</kbd> or
+<kbd>F3</kbd> in the file browser or by physically changing or removing the
+card that contains your `/c64/c64mega65` config file, then the core will not
+remember your newest on-screen-menu settings upon next start.
+
 HDMI compatibility
 ------------------
 
@@ -196,7 +219,7 @@ then try this (while the display is black):
 ### Explanation: DVI mode
 
 The recipe above first activates the "DVI mode" as you are choosing the
-menu item "HDMI: DVI (no sound)" in the On-Screen-Menu when you press the
+menu item "HDMI: DVI (no sound)" in the on-screen-menu when you press the
 <kbd>Return</kbd> key for the first time.
 
 In DVI mode, the HDMI data stream sent by the core to your display has a
@@ -382,3 +405,29 @@ options menu:
 
 * Hard-reset: The whole system is reset. All settings in the options menu
   are back to factory defaults and the file browsing starts over.
+
+Debug mode
+----------
+
+If you just want to enjoy the C64 core for the MEGA65 or if you do not have a
+[JTAG adapter](https://files.mega65.org?ar=3c388c8c-bc3f-461b-84bb-e12dfd479ae2),
+then you can stop reading here.
+
+The C64 core like all MEGA65 cores powered by the
+[MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
+framework has a debug mode that consists of a real-time log of various system
+states and an interactive debug console.
+
+To access the log and the console, connect a serial terminal to the MEGA65
+using the JTAG adater while making sure that the serial terminal's parameters
+are set to 115,200 baud 8-N-1, no flow control such as XON/XOFF, RTS/CTS,
+DTR/DSR. Set any terminal emulation to "None" and if you can configure it,
+set the send mode to "Interactive" (instead of things like "Line buffered").
+
+To switch from the real-time log to the interactive mode, press
+<kbd>Run/Stop</kbd> + <kbd>Cursor Up</kbd> and then while holding these press
+<kbd>Help</kbd>.
+
+Learn more about the debug mode in the MiSTer2MEGA65 Wiki in the "Hello World"
+chapter, section
+[Understanding the QNICE debug console](https://github.com/sy2002/MiSTer2MEGA65/wiki/3.-%22Hello-World%22-Tutorial#understanding-the-qnice-debug-console).
