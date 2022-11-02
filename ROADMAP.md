@@ -45,7 +45,7 @@ particular order:
   from SD card.
 * Refactor asynchronous resets and other things around clk.vhd to reduce
   warnings upon `report_cdc` and to make sure the whole clock architecture
-  is more clean.
+  is cleaner. (Also need to double-check M2M itself.)
 * Offer option to configure CIA version (6526 or 8521): There is at least one
   demo known - XXX from Lethargy - where the demo only runs flawlessly if the
   CIA is a 8521.

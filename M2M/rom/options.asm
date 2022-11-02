@@ -572,6 +572,58 @@ ROSM_INTEGRITY  SYSCALL(enter, 1)
 _ROSMI_RET      SYSCALL(leave, 1)
                 RET
 
+; Detect if the user made any changes to the configuration
+; Returns C=1 (Carry flag), if there are changes C=0 otherwise
+ROSM_CHANGES    SYSCALL(enter, 1)
+
+                XOR     R0, R0                  ; R1 is only 4-bits (0..15)
+                MOVE    M2M$CFM_ADDR, R1
+                MOVE    M2M$CFM_DATA, R2
+                MOVE    OLD_SETTINGS, R3
+                XOR     R4, R4                  ; R4: currently active bit
+                MOVE    OPTM_ICOUNT, R5         ; R5: amount of bits to write
+                MOVE    @R5, R5                
+
+_ROSMC_LOOP     MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
+                MOVE    1, R7                   ; R7: "pointer" to curr. bit 0
+
+_ROSMC_NEXTBIT  MOVE    M2M$RAMROM_DEV, R6      ; do we need to ignore the..
+                MOVE    M2M$CONFIG, @R6         ; current bit?
+                MOVE    M2M$RAMROM_4KWIN, R6
+                MOVE    M2M$CFG_OPTM_MOUNT, @R6 ; yes we need to ignore, if..
+                MOVE    M2M$RAMROM_DATA, R6     ; ..the menu item is about..
+                ADD     R4, R6                  ; ..mounting a drive
+                CMP     1, @R6
+                RBRA    _ROSMC_INCBIT, Z        ; ignore
+
+                MOVE    @R2, R8
+                AND     R7, R8
+                MOVE    @R3, R9
+                AND     R7, R9
+                CMP     R8, R9                  ; OLD_SETTINGS=current setngs?
+                RBRA    _ROSMC_C1, !Z           ; no: set Carry
+
+_ROSMC_INCBIT   ADD     1, R4                   
+                CMP     R4, R5                  ; all bits checked?
+                RBRA    _ROSMC_C0, Z            ; yes: clear Carry
+
+                AND     0xFFFD, SR              ; clear X flag
+                SHL     1, R7                   ; move bit pointer to next bit
+                RBRA    _ROSMC_NEXTBIT, !Z      ; next bit
+
+                ADD     1, R0                   ; next M2M$CFM_DATA "window"
+                ADD     1, R3                   ; next OLD_SETTINGS "window"
+                CMP     16, R0
+                RBRA    _ROSMC_LOOP, !Z
+
+_ROSMC_C0       AND     0xFFFB, SR              ; no changes: clear Carry
+                RBRA    _ROSMC_RET, 1
+
+_ROSMC_C1       OR      0x0004, SR              ; changes: set Carry
+
+_ROSMC_RET      SYSCALL(leave, 1)
+                RET
+
 ; Save the current state of M2M$CFG_DATA to the SD card
 ; Byte 0 in the file represents bit 0 in the register, byte 1 = bit1, ...
 ROSM_SAVE       SYSCALL(enter, 1)
@@ -583,20 +635,11 @@ ROSM_SAVE       SYSCALL(enter, 1)
 
                 ; Iterate through the 16 windows of M2M$CFM_DATA to detect
                 ; changes because we only save if there are changes
-                XOR     R0, R0                  ; R1 is only 4-bits (0..15)
-                MOVE    M2M$CFM_ADDR, R1
-                MOVE    M2M$CFM_DATA, R2
-                MOVE    OLD_SETTINGS, R3
-_ROSMS_1        MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
-                CMP     @R2, @R3++              ; OLD_SETTINGS=current setngs?
-                RBRA    _ROSMS_SAVE, !Z         ; no: we need to save settings
-                ADD     1, R0
-                CMP     16, R0
-                RBRA    _ROSMS_1, !Z
-                RBRA    _ROSMS_RET, 1           ; no changes, nothing to save
+                RSUB    ROSM_CHANGES, 1
+                RBRA    _ROSMS_RET, !C
 
                 ; Start at the beginning of the config file (R8: file handle)
-_ROSMS_SAVE     XOR     R9, R9                  ; restart reading from byte 0
+                XOR     R9, R9                  ; restart reading from byte 0
                 XOR     R10, R10
                 SYSCALL(f32_fseek, 1)
                 CMP     0, R9                   ; seek error?
@@ -608,13 +651,35 @@ _ROSMS_SAVE     XOR     R9, R9                  ; restart reading from byte 0
                 ; M2M$CFM_DATA (accessed by R1 & R2; R8: file handle) and then
                 ; going from the lowest bit to the highest and saving each
                 ; set-bit as a "1" and each deleted-bit as a "0".
-_ROSMS_2        XOR     R0, R0                  ; R0: M2M$CFM_ADDR 
+                ;
+                ; It might be that we need to ignore certain settings for
+                ; example the disk mount status because because these kind of
+                ; settings are not intended to be saved. Even though
+                ; ROSM_CHANGES checks if nothing than these kind of settings
+                ; have been changed: It might be that the user for example
+                ; mounted a disk and in parallel changed a setting so that
+                ; ROSM_CHANGES would still return C=1.
+_ROSMS_2        XOR     R0, R0                  ; R0: M2M$CFM_ADDR
+                MOVE    M2M$CFM_ADDR, R1
+                MOVE    M2M$CFM_DATA, R2
+                XOR     R3, R3                  ; no. of currently active bit
                 MOVE    OPTM_ICOUNT, R5         ; R5: amount of bits to write
                 MOVE    @R5, R5
 _ROSMS_3        MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
-                MOVE    1, R7                   ; "pointer" to current bit 0
+                MOVE    1, R7                   ; R7: "pointer" to curr. bit 0
 
-_ROSMS_4        XOR     R9, R9
+_ROSMS_4A       MOVE    M2M$RAMROM_DEV, R4      ; do we need to ignore the..
+                MOVE    M2M$CONFIG, @R4         ; current bit?
+                MOVE    M2M$RAMROM_4KWIN, R4
+                MOVE    M2M$CFG_OPTM_MOUNT, @R4 ; yes we need to ignore, if..
+                MOVE    M2M$RAMROM_DATA, R4     ; ..the menu item is about..
+                ADD     R3, R4                  ; ..mounting a drive
+                CMP     1, @R4
+                RBRA    _ROSMS_4B, !Z           ; it is not: do not ignore
+                XOR     R9, R9                  ; ignoring means writing a 0
+                RBRA    _ROSMS_5, 1
+
+_ROSMS_4B       XOR     R9, R9
                 MOVE    R7, R6
                 AND     @R2, R6                 ; current bit set?
                 RBRA    _ROSMS_5, Z             ; no: write R9, which is 0
@@ -626,19 +691,21 @@ _ROSMS_5        SYSCALL(f32_fwrite, 1)          ; write byte to config file
                 MOVE    ERR_FATAL_ROSMW, R8     ; yes: fatal; R9: error code
                 RBRA    FATAL, 1
 
-_ROSMS_6        SUB     1, R5                   ; all menu items written?
+_ROSMS_6        ADD     1, R3                   ; all menu items written?
+                CMP     R3, R5
                 RBRA    _ROSMS_7, Z             ; yes
 
                 AND     0xFFFD, SR              ; clear X flag
                 SHL     1, R7                   ; move bit pointer to next bit
-                RBRA    _ROSMS_4, !Z            ; next bit
+                RBRA    _ROSMS_4A, !Z           ; next bit
 
                 ADD     1, R0                   ; next M2M$CFM_DATA "window"
                 CMP     16, R0
                 RBRA    _ROSMS_3, !Z
 
-                ; Flush SD card write buffer (R8: file handle)
-_ROSMS_7        SYSCALL(f32_fflush, 1)
+                ; Flush SD card write buffer (R8: file handle) to write
+                ; the file to the actual hardware.
+_ROSMS_7        SYSCALL(f32_fflush, 1)          ; flush SD write buffer
                 CMP     0, R9                   ; error?
                 RBRA    _ROSMS_8, Z             ; no: proceed
                 MOVE    ERR_FATAL_ROSMF, R8     ; yes: fatal; R9: error code

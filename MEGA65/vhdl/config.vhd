@@ -325,6 +325,8 @@ constant OPTM_G_HEADLINE   : integer := 16#1000#;         -- like OPTM_G_TEXT bu
 constant OPTM_G_MOUNT_DRV  : integer := 16#8800#;         -- line item means: mount drive; first occurance = drive 0, second = drive 1, ...
 constant OPTM_G_HELP       : integer := 16#A000#;         -- line item means: help screen; first occurance = WHS(1), second = WHS(2), ...
 constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
+-- @TODO/REMINDER: As soon as we extend the OSM system so that we support loading ROMs and other things that need to be ignored
+-- when saving settings: Make sure to extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly
 
 -- START YOUR CONFIGURATION BELOW THIS LINE:
 
