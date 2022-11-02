@@ -1219,7 +1219,6 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         main_clk_i               => main_clk,
          video_clk_i              => video_clk,
          video_rst_i              => main_rst,
          video_ce_i               => main_ce,

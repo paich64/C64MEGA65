@@ -21,7 +21,6 @@ entity analog_pipeline is
    );
    port (
       -- Input from Core (video and audio)
-      main_clk_i             : in  std_logic;
       video_clk_i            : in  std_logic;
       video_rst_i            : in  std_logic;
       video_ce_i             : in  std_logic;
@@ -161,7 +160,7 @@ begin
    end process p_div;
    ce_pix <= '1' when div = 0 else '0';
 
-   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ clk_video_i).
+   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ 63.056 MHz).
    -- According to the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
    -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
    -- a horizontal period of 32.00 us. The difference here is 0.1 %.
