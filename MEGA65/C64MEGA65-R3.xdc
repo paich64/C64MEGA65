@@ -1,12 +1,10 @@
 ## Commodore 64 for MEGA65 (C64MEGA65)
 ##
+## Signal mapping für MEGA65-R3
+##
 ## This machine is based on C64_MiSTer
 ## Powered by MiSTer2MEGA65
 ## MEGA65 port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
-
-################################
-## TIMING CONSTRAINTS
-################################
 
 ## External clock signal (100 MHz)
 set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVCMOS33} [get_ports CLK]
@@ -28,10 +26,6 @@ create_generated_clock -name main_clk_1    [get_pins */clk_gen/i_clk_c64/CLKOUT0
 create_generated_clock -name video_clk_0   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks CLK]
 create_generated_clock -name video_clk_1   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks sys_clk_9975_mmcm]
 
-## The pcm_clk runs at 12.288 MHz and is derived from the audio_clk running at 30 MHz. Here the divider is set to 2, so the pcm_clk is
-## required to satisfy a 15 Mhz clock speed.
-create_generated_clock -name pcm_clk -source [get_pins */clk_gen/i_clk_qnice/CLKOUT4] -divide_by 2 [get_pins */i_digital_pipeline/i_clk_synthetic/dest_clk_reg/Q]
-
 ## Clock divider sdcardclk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins */clk_gen/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins MEGA65/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
 
@@ -42,6 +36,26 @@ set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -setup 3
 set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]}}] \
    -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]}] -hold 2
+
+# Place HyperRAM close to I/O pins
+create_pblock pblock_i_hyperram
+add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_hyperram]]
+resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
+
+# Place MAX10 close to I/O pins
+create_pblock pblock_MAX10
+add_cells_to_pblock pblock_MAX10 [get_cells [list MAX10]]
+resize_pblock pblock_MAX10 -add {SLICE_X0Y150:SLICE_X7Y174}
+
+# Place Keyboard close to I/O pins
+create_pblock pblock_m65driver
+add_cells_to_pblock pblock_m65driver [get_cells [list MEGA65/i_m2m_keyb/m65driver]]
+resize_pblock pblock_m65driver -add {SLICE_X0Y225:SLICE_X7Y243}
+
+# Place SD card controller in the middle between the left and right FPGA boundary because the output ports are at the opposide edges
+create_pblock pblock_sdcard
+add_cells_to_pblock pblock_sdcard [get_cells [list MEGA65/QNICE_SOC/sd_card]]
+resize_pblock pblock_sdcard -add {SLICE_X67Y178:SLICE_X98Y193}
 
 # Timing between ascal.vhd and HyperRAM is asynchronous.
 set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks hdmi_clk]
@@ -85,31 +99,6 @@ set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
 
 ## The high level reset signal is slow enough so that we can afford a false path
 set_false_path -from [get_pins reset_m2m_n_reg/C]
-
-
-################################
-## PLACEMENT CONSTRAINTS
-################################
-
-# Place HyperRAM close to I/O pins
-create_pblock pblock_i_hyperram
-add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_hyperram]]
-resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
-
-# Place MAX10 close to I/O pins
-create_pblock pblock_MAX10
-add_cells_to_pblock pblock_MAX10 [get_cells [list MAX10]]
-resize_pblock pblock_MAX10 -add {SLICE_X0Y150:SLICE_X7Y174}
-
-# Place Keyboard close to I/O pins
-create_pblock pblock_m65driver
-add_cells_to_pblock pblock_m65driver [get_cells [list MEGA65/i_m2m_keyb/m65driver]]
-resize_pblock pblock_m65driver -add {SLICE_X0Y225:SLICE_X7Y243}
-
-# Place SD card controller in the middle between the left and right FPGA boundary because the output ports are at the opposide edges
-create_pblock pblock_sdcard
-add_cells_to_pblock pblock_sdcard [get_cells [list MEGA65/QNICE_SOC/sd_card]]
-resize_pblock pblock_sdcard -add {SLICE_X67Y178:SLICE_X98Y193}
 
 ##Interface to MAX10
 set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports max10_tx]

@@ -3,7 +3,7 @@ Version 4 - MONTH, DD, YYYY
 
 RELEASE CURRENTLY PLANNED "BEFORE CHRISTMAS" or "OVER THE NEW YEAR".
 
-BETA 2 RELEASED ON November 19 2022
+BETA 2 RELEASED ON OCTOBER 19 2022
 
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
 Expansion Unit (1750 REU) are the main features: Save your high-scores and
@@ -34,8 +34,8 @@ WIP Choice between 16:9 or 4:3 HDMI output resolutions: By default the core
   which is a native 4:3 resolution (@TODO resolution). This is feature is 
   essential if you want to connect to a 4:3 monitor over HDMI.
 
-WIP Ability to save the configuration settings of the core. You need to copy
-  the file .c64mega65 to the folder /c64 to activate this feature.
+* Ability to save the configuration settings of the core. You need to copy
+  the file c64mega65 to the folder /c64 to activate this feature.
 
 * Mouse: Support for C64 mice and MouSTer
 
