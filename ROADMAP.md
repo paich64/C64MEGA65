@@ -43,6 +43,9 @@ particular order:
   exclusively uses GCR internally (c1541_direct_gcr.sv instead of
   c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
   from SD card.
+* Refactor asynchronous resets and other things around clk.vhd to reduce
+  warnings upon `report_cdc` and to make sure the whole clock architecture
+  is more clean.
 * Offer option to configure CIA version (6526 or 8521): There is at least one
   demo known - XXX from Lethargy - where the demo only runs flawlessly if the
   CIA is a 8521.
