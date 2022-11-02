@@ -405,3 +405,29 @@ options menu:
 
 * Hard-reset: The whole system is reset. All settings in the options menu
   are back to factory defaults and the file browsing starts over.
+
+Debug mode
+----------
+
+If you just want to enjoy the C64 core for the MEGA65 or if you do not have a
+[JTAG adapter](https://files.mega65.org?ar=3c388c8c-bc3f-461b-84bb-e12dfd479ae2),
+then you can stop reading here.
+
+The C64 core like all MEGA65 cores powered by the
+[MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
+framework has a debug mode that consists of a real-time log of various system
+states and an interactive debug console.
+
+To access the log and the console, connect a serial terminal to the MEGA65
+using the JTAG adator while making sure that the serial terminal's parameters
+are set to 115,200 baud 8-N-1, no flow control such as XON/XOFF, RTS/CTS,
+DTR/DSR. Set any terminal emulation to "None" and if you can configure it,
+set the send mode to "Interactive" (instead of things like "Line buffered").
+
+To switch from the real-time log to the interactive mode, press
+<kbd>Run/Stop</kbd> + <kbd>&#8593;</kbd> and then while holding these press
+<kbd>Help</kbd>.
+
+Learn more about the debug mode in the MiSTer2MEGA65 Wiki in the "Hello World"
+chapter, section
+[Understanding the QNICE debug console](https://github.com/sy2002/MiSTer2MEGA65/wiki/3.-%22Hello-World%22-Tutorial#understanding-the-qnice-debug-console).
