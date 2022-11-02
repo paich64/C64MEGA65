@@ -55,6 +55,9 @@ WIP Choice between 16:9 or 4:3 HDMI output resolutions: By default the core
   [this](https://github.com/MiSTer-devel/C64_MiSTer/commit/711dffbddf0b591fadfe81e4e3ed4dd3af6be143)
   an upstream fix from MiSTer.
 
+* Fixed file browsing bug that lead to directories not aways being sorted
+  in proper alphabetical order and ascending numbers.
+
 WIP Fixed file browsing bug that occured while browsing directories with a
   large amount of subdirectories (e.g. large game libraries): When you entered
   a subdirectory located on a page other than page one (e.g. by scrolling down
