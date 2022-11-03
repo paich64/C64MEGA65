@@ -39,7 +39,7 @@ recognizing this core as genuine C64 hardware.
 ### Video and Audio
 
 Our philosophy on the MEGA65's outputs is that VGA is the "pure" retro-output
-(and you can also switch it to 15 kHZ for a true retro feeling) while HDMI is
+(and you can also switch it to 15 kHz for a true retro feeling) while HDMI is
 the "processed" modern output. So there is be no "processing" such as CRT
 emulation and other things on the VGA output, while on the HDMI output several
 algorithms are working for a very nice looking authentic image.
@@ -116,7 +116,7 @@ some of the very nice hardware offerings that the MEGA65 makes, such as:
 
 * Expansion port: Support hardware cartridges
 * IEC port: Support real drives, printers, ...
-* Use the MEGA65's drive as a C1581
+* Use the MEGA65's physical drive as a C1581
 
 Also, some things that folks would consider as "basic stuff" are not
 supported yet, such as:
@@ -413,9 +413,9 @@ If you just want to enjoy the C64 core for the MEGA65 or if you do not have a
 [JTAG adapter](https://files.mega65.org?ar=3c388c8c-bc3f-461b-84bb-e12dfd479ae2),
 then you can stop reading here.
 
-The C64 core like all MEGA65 cores powered by the
+The C64 core - like all MEGA65 cores powered by the
 [MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
-framework has a debug mode that consists of a real-time log of various system
+framework - has a debug mode that consists of a real-time log of various system
 states and an interactive debug console.
 
 To access the log and the console, connect a serial terminal to the MEGA65
