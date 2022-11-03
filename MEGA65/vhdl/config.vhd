@@ -444,14 +444,14 @@ addr_decode : process(clk_i, address_i)
    variable whs_page_index : integer;
 
    -- return ASCII value of given string at the position defined by address_i(11 downto 0)
-   function str2data(str : string) return std_logic_vector is
+   impure function str2data(str : string) return std_logic_vector is
    variable strpos : integer;
    begin
       strpos := to_integer(unsigned(address_i(11 downto 0))) + 1;
       if strpos <= str'length then
          return std_logic_vector(to_unsigned(character'pos(str(strpos)), 16));
       else
-         return (others => '0'); -- zero terminated strings
+         return std_logic_vector(to_unsigned(0, 16)); -- zero terminated strings
       end if;
    end;
 
@@ -461,7 +461,7 @@ addr_decode : process(clk_i, address_i)
       case index is
          when 0 => return std_logic_vector(to_unsigned(dx + 2, 16));
          when 1 => return std_logic_vector(to_unsigned(dy + 2, 16));
-         when others => return (others => '0');
+         when others => return std_logic_vector(to_unsigned(0, 16));
       end case;
    end;
 
