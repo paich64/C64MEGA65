@@ -18,8 +18,8 @@ create_generated_clock -name hr_clk_x1     [get_pins */clk_gen/i_clk_qnice/CLKOU
 create_generated_clock -name hr_clk_x2     [get_pins */clk_gen/i_clk_qnice/CLKOUT2]
 create_generated_clock -name hr_clk_x2_del [get_pins */clk_gen/i_clk_qnice/CLKOUT3]
 create_generated_clock -name audio_clk     [get_pins */clk_gen/i_clk_qnice/CLKOUT4]
-create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT0]
-create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi/CLKOUT1]
+create_generated_clock -name tmds_clk      [get_pins */clk_gen/i_clk_hdmi_720p/CLKOUT0]
+create_generated_clock -name hdmi_clk      [get_pins */clk_gen/i_clk_hdmi_720p/CLKOUT1]
 create_generated_clock -name main_clk_0    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks CLK]
 create_generated_clock -name main_clk_1    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks sys_clk_9975_mmcm]
 create_generated_clock -name video_clk_0   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks CLK]
@@ -43,26 +43,6 @@ set_multicycle_path -from [get_cells -include_replicated {{*/QNICE_SOC/eae_inst/
 set_multicycle_path -from [get_cells -include_replicated {{*/QNICE_SOC/eae_inst/op0_reg[*]} \
                                                           {*/QNICE_SOC/eae_inst/op1_reg[*]}}] \
                        -to [get_cells -include_replicated {*/QNICE_SOC/eae_inst/res_reg[*]}] -hold 2
-
-# Place HyperRAM close to I/O pins
-create_pblock pblock_i_hyperram
-add_cells_to_pblock pblock_i_hyperram [get_cells [list MEGA65/i_hyperram]]
-resize_pblock pblock_i_hyperram -add {SLICE_X0Y200:SLICE_X7Y224}
-
-# Place MAX10 close to I/O pins
-create_pblock pblock_MAX10
-add_cells_to_pblock pblock_MAX10 [get_cells [list MAX10]]
-resize_pblock pblock_MAX10 -add {SLICE_X0Y150:SLICE_X7Y174}
-
-# Place Keyboard close to I/O pins
-create_pblock pblock_m65driver
-add_cells_to_pblock pblock_m65driver [get_cells [list MEGA65/i_m2m_keyb/m65driver]]
-resize_pblock pblock_m65driver -add {SLICE_X0Y225:SLICE_X7Y243}
-
-# Place SD card controller in the middle between the left and right FPGA boundary because the output ports are at the opposide edges
-create_pblock pblock_sdcard
-add_cells_to_pblock pblock_sdcard [get_cells [list MEGA65/QNICE_SOC/sd_card]]
-resize_pblock pblock_sdcard -add {SLICE_X67Y178:SLICE_X98Y193}
 
 # Timing between ascal.vhd and HyperRAM is asynchronous.
 set_false_path -from [get_clocks hr_clk_x1]     -to [get_clocks hdmi_clk]
@@ -107,6 +87,8 @@ set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
 ## The high level reset signal is slow enough so that we can afford a false path
 set_false_path -from [get_pins reset_m2m_n_reg/C]
 
+set_false_path -from [get_clocks main_clk_0] -to [get_clocks pcm_clk]
+set_false_path -from [get_clocks main_clk_1] -to [get_clocks pcm_clk]
 
 ################################
 ## PLACEMENT CONSTRAINTS
