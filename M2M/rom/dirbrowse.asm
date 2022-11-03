@@ -265,22 +265,30 @@ _DIRBR_CMP      MOVE    R0, R8                  ; copy string to stack
 
                 ; replace the brackets in directory names like <this> by
                 ; low ASCII characters to ensure they have sorting priority
-                MOVE    _DIRBR_DS, R8
+                CMP     _DIRBR_DS, @R0          ; performance optimization
+                RBRA    _DIRBR_NXTDS, !Z
+                MOVE    _DIRBR_DS, R8           ; replace < by 1 in R0
                 MOVE    1, R9
                 MOVE    R0, R10
                 SYSCALL(strrplchr, 1)
-                MOVE    R1, R10
-                SYSCALL(strrplchr, 1)
-                MOVE    _DIRBR_DE, R8
+                MOVE    _DIRBR_DE, R8           ; replace > by 2 in R0
                 MOVE    2, R9
                 SYSCALL(strrplchr, 1)
-                MOVE    R0, R10
+
+_DIRBR_NXTDS    CMP     _DIRBR_DS, @R1
+                RBRA    _DIRBR_DOISANUM, !Z
+                MOVE    _DIRBR_DS, R8
+                MOVE    1, R9                   ; replace < by 1 in R1
+                MOVE    R1, R10
+                SYSCALL(strrplchr, 1)
+                MOVE    _DIRBR_DE, R8           ; replace > by 2 in R1
+                MOVE    2, R9
                 SYSCALL(strrplchr, 1)
 
                 ; special treatment for names that are numbers so that
                 ; folders like 1, 2, 3, ..., 10, 11, 12, ..., 100, 101, 102
                 ; are sorted in ascending order
-                MOVE    R0, R8                  ; if R0 is NaN: norm. strcmp
+_DIRBR_DOISANUM MOVE    R0, R8                  ; if R0 is NaN: norm. strcmp
                 RSUB    _DIRBR_ISANUM, 1
                 RBRA    _DIRBR_DOCMP, !C
                 MOVE    R1, R8                  ; if R1 is NaN: norm. strcmp
