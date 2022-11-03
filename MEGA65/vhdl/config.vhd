@@ -339,8 +339,8 @@ constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write c
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 29;  -- amount of items including empty lines:
-                                             -- needs to be equal to the number of lines in OPTM_ITEM and amount of items in OPTM_GROUPS
+constant OPTM_SIZE         : natural := 30;  -- amount of items including empty lines:
+                                             -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
 
@@ -373,6 +373,7 @@ constant OPTM_ITEMS        : string :=
    " CIA: Use 8521 (C64C)\n"  &
    " VGA: Retro 15KHz RGB\n"  &
    " HDMI: Force 60Hz\n"      &
+   " HDMI: 4:3 mode\n"        &
    " HDMI: DVI (no sound)\n"  &
    " HDMI: Flicker-free\n"    &
    " REU: 1750 with 512KB\n"  &
@@ -391,10 +392,11 @@ constant OPTM_G_IMPROVE_AUDIO : integer := 7;
 constant OPTM_G_CIA_8521      : integer := 8;
 constant OPTM_G_VGA_RETRO     : integer := 9;
 constant OPTM_G_HDMI_60HZ     : integer := 10;
-constant OPTM_G_HDMI_DVI      : integer := 11;
-constant OPTM_G_HDMI_FF       : integer := 12;
-constant OPTM_G_ABOUT_HELP    : integer := 13;
-constant OPTM_G_REU           : integer := 14;
+constant OPTM_G_HDMI_43       : integer := 11;
+constant OPTM_G_HDMI_DVI      : integer := 12;
+constant OPTM_G_HDMI_FF       : integer := 13;
+constant OPTM_G_ABOUT_HELP    : integer := 14;
+constant OPTM_G_REU           : integer := 15;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -419,6 +421,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
                                              OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
+                                             OPTM_G_HDMI_43       + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_REU           + OPTM_G_SINGLESEL,

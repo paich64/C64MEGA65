@@ -20,14 +20,13 @@ use xpm.vcomponents.all;
 
 entity digital_pipeline is
    generic (
-      G_HDMI_CLK_SPEED       : natural;              -- HDMI clock speed in Hz
       G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
       G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
       G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural;
       G_FONT_FILE            : string;
       G_FONT_DX              : natural;
-      G_FONT_DY              : natural      
+      G_FONT_DY              : natural
    );
    port (
       -- Input from Core (video and audio)
@@ -56,8 +55,9 @@ entity digital_pipeline is
       tmds_clk_n_o             : out std_logic;
 
       -- Connect to QNICE and Video RAM
+      hdmi_clk_speed_i         : in  natural;              -- HDMI clock speed in Hz
       hdmi_dvi_i               : in  std_logic;
-      hdmi_video_mode_i        : in  std_logic;
+      hdmi_video_mode_i        : in  natural range 0 to 2;
       hdmi_crop_mode_i         : in  std_logic;
       hdmi_osm_cfg_enable_i    : in  std_logic;
       hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
@@ -65,10 +65,10 @@ entity digital_pipeline is
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
       sys_info_hdmi_o          : out std_logic_vector(47 downto 0);
-    
+
       -- QNICE connection to ascal's mode register
       qnice_ascal_mode_i       : in unsigned(4 downto 0);
-    
+
       -- QNICE device for interacting with the Polyphase filter coefficients
       qnice_poly_clk_i         : in std_logic;
       qnice_poly_dw_i          : in unsigned(9 downto 0);
@@ -192,7 +192,7 @@ begin
    sys_info_hdmi_o(47 downto 32) <=
       std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
 
-   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(0) when hdmi_video_mode_i = '1' else G_VIDEO_MODE_VECTOR(1);
+   hdmi_video_mode <= G_VIDEO_MODE_VECTOR(hdmi_video_mode_i);
    hdmi_htotal     <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE + hdmi_video_mode.H_BP;
    hdmi_hsstart    <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP;
    hdmi_hsend      <= hdmi_video_mode.H_PIXELS + hdmi_video_mode.H_FP + hdmi_video_mode.H_PULSE;
@@ -201,10 +201,24 @@ begin
    hdmi_vsstart    <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP;
    hdmi_vsend      <= hdmi_video_mode.V_PIXELS + hdmi_video_mode.V_FP + hdmi_video_mode.V_PULSE;
    hdmi_vdisp      <= hdmi_video_mode.V_PIXELS;
-   hdmi_hmin       <= (hdmi_video_mode.H_PIXELS-hdmi_video_mode.V_PIXELS*4/3)/2 when hdmi_crop_mode_i = '0' else 0;
-   hdmi_hmax       <= (hdmi_video_mode.H_PIXELS+hdmi_video_mode.V_PIXELS*4/3)/2-1 when hdmi_crop_mode_i = '0' else hdmi_video_mode.H_PIXELS-1;
    hdmi_vmin       <= 0;
    hdmi_vmax       <= hdmi_video_mode.V_PIXELS-1;
+
+   assert G_VIDEO_MODE_VECTOR(0).H_PIXELS >= G_VIDEO_MODE_VECTOR(0).V_PIXELS*4/3;
+   assert G_VIDEO_MODE_VECTOR(1).H_PIXELS >= G_VIDEO_MODE_VECTOR(1).V_PIXELS*4/3;
+   -- assert G_VIDEO_MODE_VECTOR(2).H_PIXELS >= G_VIDEO_MODE_VECTOR(2).V_PIXELS*4/3; -- Not true in this mode
+
+   -- In HDMI 4:3 mode, ignore crop (zoom-in).
+   hdmi_hmin <= 0 when hdmi_crop_mode_i = '1' else
+                (G_VIDEO_MODE_VECTOR(0).H_PIXELS-G_VIDEO_MODE_VECTOR(0).V_PIXELS*4/3)/2 when hdmi_video_mode_i = 0 else
+                (G_VIDEO_MODE_VECTOR(1).H_PIXELS-G_VIDEO_MODE_VECTOR(1).V_PIXELS*4/3)/2 when hdmi_video_mode_i = 1 else
+                0                                                                       when hdmi_video_mode_i = 2 else
+                0;
+   hdmi_hmax <= hdmi_video_mode.H_PIXELS-1 when hdmi_crop_mode_i = '1' else
+                (G_VIDEO_MODE_VECTOR(0).H_PIXELS+G_VIDEO_MODE_VECTOR(0).V_PIXELS*4/3)/2-1 when hdmi_video_mode_i = 0 else
+                (G_VIDEO_MODE_VECTOR(1).H_PIXELS+G_VIDEO_MODE_VECTOR(1).V_PIXELS*4/3)/2-1 when hdmi_video_mode_i = 1 else
+                hdmi_video_mode.H_PIXELS-1                                                when hdmi_video_mode_i = 2 else
+                0;
 
 
    ---------------------------------------------------------------------------------------------
@@ -245,7 +259,7 @@ begin
    -- N and CTS values for HDMI Audio Clock Regeneration.
    -- depends on pixel clock and audio sample rate
    pcm_n   <= std_logic_vector(to_unsigned((HDMI_PCM_SAMPLING * 128) / 1000, pcm_n'length)); -- 6144 is correct according to HDMI spec.
-   pcm_cts <= std_logic_vector(to_unsigned(G_HDMI_CLK_SPEED / 1000, pcm_cts'length));
+   pcm_cts <= std_logic_vector(to_unsigned(hdmi_clk_speed_i / 1000, pcm_cts'length));
 
    -- ACR packet rate should be 128fs/N = 1kHz
    -- pcm_clk is at 12.288 MHz
