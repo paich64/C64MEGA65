@@ -56,7 +56,7 @@ entity analog_pipeline is
       video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
       video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
       video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
-      scandoubler_i          : in std_logic;
+      scandoubler_i          : in  std_logic;
       sys_info_vga_o         : out std_logic_vector(47 downto 0)
    );
 end entity analog_pipeline;
@@ -231,6 +231,7 @@ begin
          vga_hs_i         => vga_hs,
          vga_vs_i         => vga_vs,
          vga_de_i         => mix_vga_de,
+         vga_cfg_shift_i  => 0,
          vga_cfg_enable_i => video_osm_cfg_enable_i,
          vga_cfg_double_i => scandoubler_i,
          vga_cfg_xy_i     => video_osm_cfg_xy_i,

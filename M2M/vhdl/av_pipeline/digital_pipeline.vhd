@@ -20,7 +20,6 @@ use xpm.vcomponents.all;
 
 entity digital_pipeline is
    generic (
-      G_SHIFT_HDMI           : integer;              -- Deprecated. Will be removed in future release
       G_VIDEO_MODE_VECTOR    : video_modes_vector;   -- Desired video format of HDMI output.
       G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural;
@@ -55,7 +54,6 @@ entity digital_pipeline is
       tmds_clk_n_o             : out std_logic;
 
       -- Connect to QNICE and Video RAM
-      hdmi_clk_speed_i         : in  natural;              -- HDMI clock speed in Hz
       hdmi_dvi_i               : in  std_logic;
       hdmi_video_mode_i        : in  natural range 0 to 2;
       hdmi_crop_mode_i         : in  std_logic;
@@ -94,6 +92,8 @@ architecture synthesis of digital_pipeline is
 
    constant C_FONT_DX            : natural := 16;
    constant C_FONT_DY            : natural := 16;
+
+   signal hdmi_shift             : integer;
 
    ---------------------------------------------------------------------------------------------
    -- pcm_clk
@@ -255,11 +255,15 @@ begin
       end if;
    end process p_clken;
 
+   hdmi_shift <= hdmi_video_mode.H_PIXELS - integer(G_VGA_DX);    -- Deprecated. Will be removed in future release
+                                                                  -- The purpose is to right-shift the position of the OSM
+                                                                  -- on the HDMI output. This will be removed when the
+                                                                  -- M2M framework supports two different OSM VRAMs.
 
    -- N and CTS values for HDMI Audio Clock Regeneration.
    -- depends on pixel clock and audio sample rate
    pcm_n   <= std_logic_vector(to_unsigned((HDMI_PCM_SAMPLING * 128) / 1000, pcm_n'length)); -- 6144 is correct according to HDMI spec.
-   pcm_cts <= std_logic_vector(to_unsigned(hdmi_clk_speed_i / 1000, pcm_cts'length));
+   pcm_cts <= std_logic_vector(to_unsigned(hdmi_video_mode.CLK_KHZ, pcm_cts'length));
 
    -- ACR packet rate should be 128fs/N = 1kHz
    -- pcm_clk is at 12.288 MHz
@@ -462,7 +466,6 @@ begin
 
    i_video_overlay : entity work.video_overlay
       generic  map (
-         G_SHIFT          => G_SHIFT_HDMI,   -- Deprecated. Will be removed in future release
          G_VGA_DX         => G_VGA_DX,  -- TBD
          G_VGA_DY         => G_VGA_DY,  -- TBD
          G_FONT_FILE      => G_FONT_FILE,
@@ -478,6 +481,7 @@ begin
          vga_hs_i         => hdmi_hs,
          vga_vs_i         => hdmi_vs,
          vga_de_i         => hdmi_de,
+         vga_cfg_shift_i  => hdmi_shift,
          vga_cfg_enable_i => hdmi_osm_cfg_enable_i,
          vga_cfg_double_i => '1',
          vga_cfg_xy_i     => hdmi_osm_cfg_xy_i,

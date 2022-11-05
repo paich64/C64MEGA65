@@ -1290,10 +1290,6 @@ begin
 
    i_digital_pipeline : entity work.digital_pipeline
       generic map (
-         G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
-                                                                           -- The purpose is to right-shift the position of the OSM
-                                                                           -- on the HDMI output. This will be removed when the
-                                                                           -- M2M framework supports two different OSM VRAMs.
          G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY,
@@ -1328,7 +1324,6 @@ begin
          tmds_clk_n_o             => tmds_clk_n,
 
          -- Connect to QNICE and Video RAM
-         hdmi_clk_speed_i         => VIDEO_MODE_VECTOR(hdmi_video_mode).CLK_KHZ*1000,
          hdmi_dvi_i               => hdmi_osm_control_m(C_MENU_HDMI_DVI),
          hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_crop_mode_i         => main_osm_control_m(C_MENU_HDMI_ZOOM),

@@ -4,7 +4,6 @@ use ieee.numeric_std.all;
 
 entity video_overlay is
    generic  (
-      G_SHIFT          : integer := 0;    -- Deprecated. Will be removed in future release
       G_VGA_DX         : natural;
       G_VGA_DY         : natural;
       G_FONT_FILE      : string;
@@ -24,6 +23,7 @@ entity video_overlay is
       vga_de_i         : in  std_logic;
 
       -- QNICE
+      vga_cfg_shift_i  : in  natural;
       vga_cfg_enable_i : in  std_logic;
       vga_cfg_double_i : in  std_logic;
       vga_cfg_xy_i     : in  std_logic_vector(15 downto 0);
@@ -95,7 +95,7 @@ begin
          vga_de_o    => vga_de_d
       ); -- i_vga_recover_counters
 
-   vga_col_d <= to_integer(unsigned(vga_pix_x_d)) - G_SHIFT;
+   vga_col_d <= to_integer(unsigned(vga_pix_x_d)) - vga_cfg_shift_i;
    vga_row_d <= to_integer(unsigned(vga_pix_y_d)) when vga_cfg_double_i = '1' else to_integer(unsigned(vga_pix_y_d))*2;
 
 
