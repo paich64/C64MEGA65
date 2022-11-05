@@ -157,14 +157,12 @@ signal tmds_clk               : std_logic;               -- HDMI pixel clock at 
 signal hdmi_clk               : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 
 signal main_clk               : std_logic;
-signal video_clk              : std_logic;
 
 signal qnice_rst              : std_logic;
 signal hr_rst                 : std_logic;
 signal audio_rst              : std_logic;
 signal hdmi_rst               : std_logic;
 signal main_rst               : std_logic;
-signal video_rst              : std_logic;
 
 signal core_only_rst          : std_logic;               -- reset only the core, not the framework
 
@@ -516,10 +514,7 @@ begin
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-fix, 2=NTSC
 
          main_clk_o        => main_clk,
-         main_rst_o        => main_rst,
-
-         video_clk_o       => video_clk,
-         video_rst_o       => video_rst
+         main_rst_o        => main_rst
       ); -- clk_gen
 
    ---------------------------------------------------------------------------------------------
@@ -1062,7 +1057,7 @@ begin
          src_in(15 downto 0)     => qnice_osm_cfg_xy,
          src_in(31 downto 16)    => qnice_osm_cfg_dxdy,
          src_in(32)              => qnice_osm_cfg_enable,
-         dest_clk                => video_clk,
+         dest_clk                => main_clk,
          dest_out(15 downto 0)   => video_osm_cfg_xy,
          dest_out(31 downto 16)  => video_osm_cfg_dxdy,
          dest_out(32)            => video_osm_cfg_enable
@@ -1146,7 +1141,7 @@ begin
          a_byteenable_i => qnice_vram_attr_we & qnice_vram_we,
          a_q_o          => qnice_vram_data,
 
-         b_clk_i        => video_clk,
+         b_clk_i        => main_clk,
          b_address_i    => video_osm_vram_addr(VRAM_ADDR_WIDTH-1 downto 0),
          b_q_o          => video_osm_vram_data
       ); -- i_osm_vram_vga
@@ -1222,7 +1217,7 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         video_clk_i              => video_clk,
+         video_clk_i              => main_clk,
          video_rst_i              => main_rst,
          video_ce_i               => main_ce,
          video_red_i              => main_red,

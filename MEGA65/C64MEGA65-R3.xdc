@@ -24,8 +24,6 @@ create_generated_clock -name tmds_576p_clk [get_pins */clk_gen/i_clk_hdmi_576p/C
 create_generated_clock -name hdmi_576p_clk [get_pins */clk_gen/i_clk_hdmi_576p/CLKOUT1]
 create_generated_clock -name main_clk_0    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks CLK]
 create_generated_clock -name main_clk_1    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks sys_clk_9975_mmcm]
-create_generated_clock -name video_clk_0   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks CLK]
-create_generated_clock -name video_clk_1   [get_pins */clk_gen/i_clk_c64/CLKOUT1] -master_clock [get_clocks sys_clk_9975_mmcm]
 
 ## The pcm_clk runs at 12.288 MHz and is derived from the audio_clk running at 30 MHz. Here the divider is set to 2, so the pcm_clk is
 ## required to satisfy a 15 Mhz clock speed.
@@ -80,12 +78,6 @@ set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks tmds_576p_clk]
 
 set_false_path -from [get_clocks main_clk_0]      -to [get_clocks main_clk_1]
 set_false_path -to   [get_clocks main_clk_0]    -from [get_clocks main_clk_1]
-set_false_path -from [get_clocks main_clk_0]      -to [get_clocks video_clk_1]
-set_false_path -to   [get_clocks main_clk_0]    -from [get_clocks video_clk_1]
-set_false_path -from [get_clocks main_clk_1]      -to [get_clocks video_clk_0]
-set_false_path -to   [get_clocks main_clk_1]    -from [get_clocks video_clk_0]
-set_false_path -from [get_clocks video_clk_0]     -to [get_clocks video_clk_1]
-set_false_path -to   [get_clocks video_clk_0]   -from [get_clocks video_clk_1]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
