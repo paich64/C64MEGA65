@@ -285,9 +285,12 @@ _DIRBR_NXTDS    CMP     _DIRBR_DS, @R1
                 MOVE    2, R9
                 SYSCALL(strrplchr, 1)
 
-                ; special treatment for names that are numbers so that
-                ; folders like 1, 2, 3, ..., 10, 11, 12, ..., 100, 101, 102
-                ; are sorted in ascending order
+                ; special treatment for names that are numbers so that files
+                ; and folders like 1, 2, 3, ..., 10, 11, ..., 100, 101, ...
+                ; are sorted in ascending order: If a string that represents
+                ; a number is shorter than another string that represents a
+                ; number then the first string is "smaller" than the second
+                ; in the context of being a number
 _DIRBR_DOISANUM MOVE    R0, R8                  ; if R0 is NaN: norm. strcmp
                 RSUB    _DIRBR_ISANUM, 1
                 RBRA    _DIRBR_DOCMP, !C
@@ -297,50 +300,24 @@ _DIRBR_DOISANUM MOVE    R0, R8                  ; if R0 is NaN: norm. strcmp
 
                 MOVE    R0, R8
                 SYSCALL(strlen, 1)
-                MOVE    R9, R5                  ; R5: strlen of R0
+                MOVE    R9, R7                  ; R7: strlen of R0
                 MOVE    R1, R8
-                SYSCALL(strlen, 1)
-                MOVE    R9, R6                  ; R6: strlen of R1
-                CMP     R5, R6
+                SYSCALL(strlen, 1)              ; R9: strlen of R1
+                CMP     R7, R9
                 RBRA    _DIRBR_DOCMP, Z         ; R5=R6: normal strcmp works
-                RBRA    _DIRBR_NUMCHK, !N
-                MOVE    R1, R7
-                MOVE    R0, R1
-                MOVE    R7, R0
-                MOVE    R6, R2
-                MOVE    R5, R6
-                MOVE    R2, R5
+                RBRA    _DIRBR_R1, N            ; strlen(R0)>strlen(R1)
+                MOVE    -1, R10                 ; R0 < R1
+                RBRA    _DIRBR_RET, 1
+_DIRBR_R1       MOVE    1, R10                  ; R0 > R1
+                RBRA    _DIRBR_RET, 1
 
-                ; at this point, R0 contains the shorter of both strings and
-                ; R1 the longer one; R5 contains the length of the shorter and
-                ; R6 the length of the longer string
-
-                ; make the strings equal in length and pad the shorter string
-                ; at the frontend with spaces (ASCII 32) which will lead to
-                ; the desired sorting effect
-_DIRBR_NUMCHK   MOVE    R6, R3                  ; R3: target string length
-                MOVE    R6, R2                  ; R2: needed stack memory
-                ADD     1, R2                   ; zero terminator
-                SUB     R2, SP
-                ADD     R2, R4                  ; R4: update stack rest. amnt.
-                MOVE    SP, R2                  ; R2: target addr padded str.
-                SUB     R5, R6                  ; R6: amount of padding
-                MOVE    R2, R5                  ; R5: start of shorter string
-
-_DIRBR_PADLOOP  MOVE    32, @R2++               ; pad with spaces
-                SUB     1, R6                   ; one less padding
-                RBRA    _DIRBR_PADLOOP, !Z
-                MOVE    R0, R8
-                MOVE    R2, R9
-                SYSCALL(strcpy, 1)
-                MOVE    R5, R0
-
-                ; case-insensitive comparison
+                ; case-insensitive comparison (because we are comparing
+                ; upper case versions of the names)
 _DIRBR_DOCMP    MOVE    R0, R8
                 MOVE    R1, R9
                 SYSCALL(strcmp, 1)
 
-                ADD     R4, SP                  ; restore stack pointer
+_DIRBR_RET      ADD     R4, SP                  ; restore stack pointer
 
                 DECRB                
                 MOVE    R0, R8
