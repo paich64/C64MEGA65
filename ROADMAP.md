@@ -46,6 +46,10 @@ particular order:
 * Refactor asynchronous resets and other things around clk.vhd to reduce
   warnings upon `report_cdc` and to make sure the whole clock architecture
   is cleaner. (Also need to double-check M2M itself.)
+* HDMI compatibility: MJoergen research project to fix the HDMI sound on his
+  monitor which might lead to more HDMI compatibility in general. Research
+  path: Use an FPGA board with HDMI input, to capture the data from both the
+  MEGA65 (has no sound) and the laptop (has sound), to compare them.
 * Put major/minor version in the first two bytes of the config file so that
   in case of a mismatch a warning can be issued (e.g. by directly printing
   it into the C64's screen RAM). Needs new version of make_config.sh.

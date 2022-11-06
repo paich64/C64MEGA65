@@ -45,13 +45,17 @@ emulation and other things on the VGA output, while on the HDMI output several
 algorithms are working for a very nice looking authentic image.
 
 * HDMI: The core outputs 1280×720 pixels (720p) at 50 Hz and HDMI audio at
-  a sampling rate of 48 kHz. This is supported by a vast majority of monitors
-  and TVs. In case of compatibility problems, you can switch the HDMI video
-  out to 60 Hz (without affecting the PAL core's internal 50 Hz), but this
-  would lead to a slightly jerky experience when it comes to scrolling and
-  other fast movements on the screen. The 4:3 aspect ratio of
-  the C64's output is preserved during upscaling, so that even though 720p
-  is a 16:9 picture, the C64 looks pixel perfect and authentic on HDMI.
+  a sampling rate of 48 kHz by default. This is supported by a vast majority
+  of monitors and TVs. The 4:3 aspect ratio of the C64's output is preserved
+  during upscaling, so that even though 720p is a 16:9 picture, the C64 looks
+  pixel perfect and authentic on HDMI.
+
+  If you use a 4:3 or 5:4 display via HDMI then use the option "HDMI: 4:3
+  mode" to activate "PAL over HDMI"; the core will output 720x576 pixels at
+  50 Hz.
+
+  In case of compatibility problems, please try the different solutions in the
+  section [HDMI compatibility](#hdmi-compatibility) below.
 
 * VGA: For a true retro feeling, we are providing a 4:3 image via the
   MEGA65's VGA port, so that you can connect real CRT monitors or older
@@ -70,8 +74,9 @@ algorithms are working for a very nice looking authentic image.
 * On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
   and to configure the core
 * Realtime switching between a 6581 SID and a 8580 SID
-* CRT filter: Optional visual scan lines via HDMI so that the output looks more
-  like an old monitor or TV
+* Realtime switching between 6526 CIA and 8521 CIA
+* CRT filter: Optional visual scan lines via HDMI so that the output looks
+  more like an old monitor or TV including authentic anti-aliasing
 * Crop/Zoom: On HDMI, you can optionally crop the top and bottom border of
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
@@ -228,7 +233,8 @@ the 3.5mm audio-out in this case.
 
 When you press <kbd>Return</kbd> for the second time, the 60Hz mode is
 activated, independent of the C64's output, which is still 50Hz in PAL mode.
-This works fine in general, but leads to some flickering here and there.
+This works fine in general, but leads to some flickering and jerky scrolling
+here and there.
 
 Working with disk images
 ------------------------
@@ -405,6 +411,24 @@ options menu:
 
 * Hard-reset: The whole system is reset. All settings in the options menu
   are back to factory defaults and the file browsing starts over.
+
+Tips for watching demos
+-----------------------
+
+The core has been tested rigorously with
+[a lot of very demanding demos](doc/demos.md)
+and the result is that it almost always "just works". So there are not a lot
+of tips for you when it comes to watching demos but two:
+
+1. Demos newer than the year 2000 tend to use the 8580 SID: You might want
+   to switch to 8580 by default when watching these kind of demos.
+
+2. Some demos rely on the 8521 CIA instead of the 6526 CIA which is active
+   by default. Currently we know for sure of one demo where this is the case:
+   ["XXX" by Lethargy](doc/demos.md#lethargy)
+   
+   All other [demos that we tested](doc/demos.md) were tested work fine with
+   the 6526 CIA.
 
 Debug mode
 ----------

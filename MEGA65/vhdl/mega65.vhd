@@ -108,8 +108,8 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
--- HDMI 1280x720 @ 60 Hz resolution = mode 0, 1280x720 @ 50 Hz resolution = mode 1
-constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 1) := (C_HDMI_720p_60, C_HDMI_720p_50);
+-- HDMI 1280x720 @ 50 Hz resolution = mode 0, 1280x720 @ 60 Hz resolution = mode 1
+constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 2) := (C_HDMI_720p_50, C_HDMI_720p_60, C_HDMI_576p_50);
 
 -- C64 core clock speeds
 -- Make sure that you specify very exact values here, because these values will be used in counters
@@ -301,6 +301,8 @@ signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
 -- QNICE On Screen Menu selections
 signal hdmi_osm_control_m     : std_logic_vector(255 downto 0);
 
+signal hdmi_video_mode        : natural range 0 to 2;
+
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -392,9 +394,10 @@ constant C_MENU_IMPROVE_AUDIO : natural := 15;
 constant C_MENU_8521          : natural := 19;
 constant C_MENU_VGA_RETRO     : natural := 20;
 constant C_MENU_HDMI_60HZ     : natural := 21;
-constant C_MENU_HDMI_DVI      : natural := 22;
-constant C_MENU_HDMI_FF       : natural := 23;
-constant C_MENU_REU           : natural := 24;
+constant C_MENU_HDMI_43       : natural := 22;
+constant C_MENU_HDMI_DVI      : natural := 23;
+constant C_MENU_HDMI_FF       : natural := 24;
+constant C_MENU_REU           : natural := 25;
 
 -- HyperRAM
 signal hr_dig_write         : std_logic;
@@ -505,8 +508,9 @@ begin
          audio_clk_o       => audio_clk,       -- Audio's 30 MHz
          audio_rst_o       => audio_rst,       -- Audio's reset, synchronized
 
-         tmds_clk_o        => tmds_clk,        -- HDMI's 371.25 MHz pixelclock (74.25 MHz x 5) for TMDS
-         hdmi_clk_o        => hdmi_clk,        -- HDMI's 74.25 MHz pixelclock for 720p @ 50 Hz
+         hdmi_clk_sel_i    => hdmi_osm_control_m(C_MENU_HDMI_43), -- 0: 720p (74.25 MHz), 1: 576p (27.00 MHz)
+         tmds_clk_o        => tmds_clk,        -- TMDS's pixelclock (5 * HDMI)
+         hdmi_clk_o        => hdmi_clk,        -- HDMI's pixelclock
          hdmi_rst_o        => hdmi_rst,        -- HDMI's reset, synchronized
 
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-fix, 2=NTSC
@@ -720,7 +724,7 @@ begin
    shell_cfg : entity work.config
       port map (
          clk_i                   => qnice_clk,
-      
+
          -- bits 27 .. 12:    select configuration data block; called "Selector" hereafter
          -- bits 11 downto 0: address the up to 4k the configuration data
          address_i               => qnice_ramrom_addr,
@@ -1218,7 +1222,6 @@ begin
       )
       port map (
          -- Input from Core (video and audio)
-         main_clk_i               => main_clk,
          video_clk_i              => video_clk,
          video_rst_i              => main_rst,
          video_ce_i               => main_ce,
@@ -1281,13 +1284,12 @@ begin
          video_vblank_o    => main_crop_vblank
       ); -- i_crop
 
+   hdmi_video_mode <= 2 when hdmi_osm_control_m(C_MENU_HDMI_43) = '1' else
+                      1 when hdmi_osm_control_m(C_MENU_HDMI_60HZ) = '1' else
+                      0;
+
    i_digital_pipeline : entity work.digital_pipeline
       generic map (
-         G_HDMI_CLK_SPEED    => HDMI_CLK_SPEED,
-         G_SHIFT_HDMI        => VIDEO_MODE_VECTOR(0).H_PIXELS - VGA_DX,    -- Deprecated. Will be removed in future release
-                                                                           -- The purpose is to right-shift the position of the OSM
-                                                                           -- on the HDMI output. This will be removed when the
-                                                                           -- M2M framework supports two different OSM VRAMs.
          G_VIDEO_MODE_VECTOR => VIDEO_MODE_VECTOR,
          G_VGA_DX            => VGA_DX,
          G_VGA_DY            => VGA_DY,
@@ -1323,7 +1325,7 @@ begin
 
          -- Connect to QNICE and Video RAM
          hdmi_dvi_i               => hdmi_osm_control_m(C_MENU_HDMI_DVI),
-         hdmi_video_mode_i        => hdmi_osm_control_m(C_MENU_HDMI_60HZ),
+         hdmi_video_mode_i        => hdmi_video_mode,
          hdmi_crop_mode_i         => main_osm_control_m(C_MENU_HDMI_ZOOM),
          hdmi_osm_cfg_enable_i    => hdmi_osm_cfg_enable,
          hdmi_osm_cfg_xy_i        => hdmi_osm_cfg_xy,
