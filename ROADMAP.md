@@ -21,7 +21,7 @@ Feature Roadmap
 * Support the creation of empty disk images
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
-* Suport the following MEGA65 hardware ports:
+* Support the following MEGA65 hardware ports:
   * Cartridges via the MEGA65's hardware Expansion Port
   * IEC port (for example to plug in a real C1541)
   * C1581 via MEGA65's disk drive
