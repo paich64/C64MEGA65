@@ -152,7 +152,7 @@ signal qnice_clk              : std_logic;               -- QNICE main clock @ 5
 signal hr_clk_x1              : std_logic;               -- HyperRAM @ 100 MHz
 signal hr_clk_x2              : std_logic;               -- HyperRAM @ 200 MHz
 signal hr_clk_x2_del          : std_logic;               -- HyperRAM @ 200 MHz phase delayed
-signal audio_clk              : std_logic;               -- Audio clock @ 60 MHz
+signal audio_clk              : std_logic;               -- Audio clock @ 30 MHz
 signal tmds_clk               : std_logic;               -- HDMI pixel clock at 5x speed for TMDS @ 371.25 MHz
 signal hdmi_clk               : std_logic;               -- HDMI pixel clock at normal speed @ 74.25 MHz
 
@@ -446,6 +446,9 @@ constant audio_cy1      : std_logic_vector(23 downto 0) := std_logic_vector(to_s
 constant audio_cy2      : std_logic_vector(23 downto 0) := std_logic_vector(to_signed(-2023767, 24));
 constant audio_att      : std_logic_vector( 4 downto 0) := "00000";
 constant audio_mix      : std_logic_vector( 1 downto 0) := "00"; -- 0 - no mix, 1 - 25%, 2 - 50%, 3 - 100% (mono)
+
+signal audio_sid_left  : signed(15 downto 0);
+signal audio_sid_right : signed(15 downto 0);
 
 component audio_out
    generic (
@@ -1171,6 +1174,21 @@ begin
    -- Audio and Video processing pipeline
    --------------------------------------------------------
 
+   -- Sample audio data in AUDIO clock domain
+   i_audio_cdc : entity work.audio_cdc
+      generic map (
+         G_REGISTER_SRC => false
+      )
+      port map (
+         src_clk_i   => main_clk,   -- Not used
+         src_left_i  => main_sid_l,
+         src_right_i => main_sid_r,
+         dst_clk_i   => audio_clk,
+         dst_left_o  => audio_sid_left,
+         dst_right_o => audio_sid_right
+      ); -- i_audio_cdc
+
+
    i_audio_out : audio_out
       generic map (
          CLK_RATE => 30_000_000
@@ -1193,8 +1211,8 @@ begin
          mix         => audio_mix,
 
          is_signed   => '1',
-         core_l      => std_logic_vector(main_sid_l),
-         core_r      => std_logic_vector(main_sid_r),
+         core_l      => std_logic_vector(audio_sid_left),
+         core_r      => std_logic_vector(audio_sid_right),
 
          alsa_l      => (others => '0'),
          alsa_r      => (others => '0'),
@@ -1204,8 +1222,8 @@ begin
          ar          => filt_audio_r
       ); -- i_audio_out
 
-   audio_l <= filt_audio_l when qnice_osm_control_m(C_MENU_IMPROVE_AUDIO) = '1' else std_logic_vector(main_sid_l);
-   audio_r <= filt_audio_r when qnice_osm_control_m(C_MENU_IMPROVE_AUDIO) = '1' else std_logic_vector(main_sid_r);
+   audio_l <= filt_audio_l when qnice_osm_control_m(C_MENU_IMPROVE_AUDIO) = '1' else std_logic_vector(audio_sid_left);
+   audio_r <= filt_audio_r when qnice_osm_control_m(C_MENU_IMPROVE_AUDIO) = '1' else std_logic_vector(audio_sid_right);
 
    i_analog_pipeline : entity work.analog_pipeline
       generic map (
