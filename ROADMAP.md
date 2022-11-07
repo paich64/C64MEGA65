@@ -58,6 +58,8 @@ particular order:
 * Put major/minor version in the first two bytes of the config file so that
   in case of a mismatch a warning can be issued (e.g. by directly printing
   it into the C64's screen RAM). Needs new version of make_config.sh.
+* Eliminate HDMI Flicker-free "~20min period artefact" by manual clock
+  frequency tuning
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,

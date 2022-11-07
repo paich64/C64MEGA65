@@ -3,7 +3,7 @@ Version 4 - MONTH, DD, YYYY
 
 RELEASE CURRENTLY PLANNED "BEFORE CHRISTMAS" or "OVER THE NEW YEAR".
 
-BETA 2 RELEASED ON OCTOBER 19 2022
+RELEASE CANDIDATE 1 RELEASED ON NOVEMBER 8, 2022
 
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
 Expansion Unit (1750 REU) are the main features: Save your high-scores and
@@ -27,12 +27,13 @@ And the demo fans can now enjoy all the awesome REU releases on CSDB.
   that is supposed to only run on real hardware. The REU also works perfectly
   with GEOS. You can switch the REU on/off using the options menu.
 
-WIP Choice between 16:9 or 4:3 HDMI output resolutions: By default the core
+* Choice between 16:9 or 4:3 HDMI output resolutions: By default the core
   outputs 720p on HDMI which is a 16:9 resolution (even though the actual
   C64's output is pixel-perfect 4:3 as we are adding black bars left and
-  right). With this new feature you can switch from 720p to PAL over HDMI
-  which is a native 4:3 resolution (@TODO resolution). This is feature is 
-  essential if you want to connect to a 4:3 monitor over HDMI.
+  right). With this new feature you can switch from 720p to 576p aka
+  PAL over HDMI (720x576 pixels). Even though this is a 5:4 resolution, the
+  core displays a pixel-perfect 4:3 by adding thin black bars at the top
+  and bottom.
 
 * Ability to save the configuration settings of the core. You need to copy
   the file c64mega65 to the folder /c64 to activate this feature.
@@ -67,14 +68,6 @@ WIP Fixed file browsing bug that occured while browsing directories with a
 ## Known problems
 
 * Formatting disks does not work.
-
-TODO: @MH discuss with @MJoergen: Can we improve the HDMI reliability, i.e.
-  ability to run on more displays by using PBLOCKs? What triggered this idea
-  is this post on Discord:
-  https://discord.com/channels/719326990221574164/794775503818588200/991106092539068476
-  We did not change anything in the core when it comes to HDMI, so the only
-  thing that changed in this respect was the random placement of the HDMI
-  component in another run of Vivado.
 
 Version 3 - June, 27 2022
 =========================
