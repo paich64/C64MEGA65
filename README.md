@@ -427,8 +427,7 @@ of tips for you when it comes to watching demos but two:
    by default. Currently we know for sure of one demo where this is the case:
    ["XXX" by Lethargy](doc/demos.md#lethargy)
    
-   All other [demos that we tested](doc/demos.md) were tested work fine with
-   the 6526 CIA.
+   All other [demos that we tested](doc/demos.md) work fine with the 6526 CIA.
 
 Debug mode
 ----------

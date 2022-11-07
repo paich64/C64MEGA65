@@ -11,7 +11,6 @@ Feature Roadmap
 * NTSC
 * Support two drives: 8 and 9
 * Dual SID
-* More sophisticated scalers and scandoublers
 * Tape mounting via SD card (`*.TAP`)
 * Directly load program files (`*.PRG`)
 * Cartridge mounting via SD card (`*.CRT`)
@@ -19,6 +18,8 @@ Feature Roadmap
 * C1581 virtual drive support via SD card (`*.D81`)
 * Support `*.D64` images with error maps (filesizes 175,531 and 197,376)
 * Support the creation of empty disk images
+* Supoprt the creation of empty config files and the migration of the config
+  file from an older version to a newer version
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * Support the following MEGA65 hardware ports:
@@ -28,6 +29,7 @@ Feature Roadmap
   * REU via expansion port
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
+* More sophisticated scalers and scandoublers 
 * Simulate the blending of colours when ALM and DCM are used
   as described here: https://github.com/MiSTer-devel/C64_MiSTer/issues/104
 
@@ -39,6 +41,8 @@ robustness, performance, and stability of the whole system, we will need
 to implement certain technical improvements in the "backend", again in no
 particular order:
 
+* Merge these MiSTer upstream fixes (needs thorough regression testing):
+  - CIA: fix timer reset values (Arctic Shipwreck) (gyurco) commit 7eca7e3
 * Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode which
   exclusively uses GCR internally (c1541_direct_gcr.sv instead of
   c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
@@ -49,7 +53,8 @@ particular order:
 * HDMI compatibility: MJoergen research project to fix the HDMI sound on his
   monitor which might lead to more HDMI compatibility in general. Research
   path: Use an FPGA board with HDMI input, to capture the data from both the
-  MEGA65 (has no sound) and the laptop (has sound), to compare them.
+  MEGA65 (has no sound) and the laptop (has sound), to compare them. Might
+  very well help to fix https://github.com/MJoergen/C64MEGA65/issues/4
 * Put major/minor version in the first two bytes of the config file so that
   in case of a mismatch a warning can be issued (e.g. by directly printing
   it into the C64's screen RAM). Needs new version of make_config.sh.
