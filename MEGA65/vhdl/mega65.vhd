@@ -108,8 +108,8 @@ architecture beh of MEGA65_Core is
 --constant QNICE_FIRMWARE       : string  := "../../QNICE/monitor/monitor.rom";  -- debug/development
 constant QNICE_FIRMWARE       : string  := "../../MEGA65/m2m-rom/m2m-rom.rom";   -- release
 
--- HDMI 1280x720 @ 50 Hz resolution = mode 0, 1280x720 @ 60 Hz resolution = mode 1
-constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 2) := (C_HDMI_720p_50, C_HDMI_720p_60, C_HDMI_576p_50);
+-- HDMI 1280x720 @ 50 Hz resolution = mode 0, 1280x720 @ 60 Hz resolution = mode 1, PAL 576p in 4:3 and 5:4 are modes 2 and 3
+constant VIDEO_MODE_VECTOR    : video_modes_vector(0 to 3) := (C_HDMI_720p_50, C_HDMI_720p_60, C_HDMI_576p_50, C_HDMI_576p_50);
 
 -- C64 core clock speeds
 -- Make sure that you specify very exact values here, because these values will be used in counters
@@ -301,7 +301,7 @@ signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
 -- QNICE On Screen Menu selections
 signal hdmi_osm_control_m     : std_logic_vector(255 downto 0);
 
-signal hdmi_video_mode        : natural range 0 to 2;
+signal hdmi_video_mode        : natural range 0 to 3;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -388,16 +388,18 @@ signal qnice_osm_control_m    : std_logic_vector(255 downto 0);
 
 constant C_MENU_FLIP_JOYS     : natural := 4;
 constant C_MENU_8580          : natural := 9;
-constant C_MENU_CRT_EMULATION : natural := 13;
-constant C_MENU_HDMI_ZOOM     : natural := 14;
-constant C_MENU_IMPROVE_AUDIO : natural := 15;
-constant C_MENU_8521          : natural := 19;
-constant C_MENU_VGA_RETRO     : natural := 20;
-constant C_MENU_HDMI_60HZ     : natural := 21;
-constant C_MENU_HDMI_43       : natural := 22;
-constant C_MENU_HDMI_DVI      : natural := 23;
-constant C_MENU_HDMI_FF       : natural := 24;
-constant C_MENU_REU           : natural := 25;
+constant C_MENU_REU           : natural := 13;
+constant C_MENU_CRT_EMULATION : natural := 14;
+constant C_MENU_HDMI_ZOOM     : natural := 15;
+constant C_MENU_HDMI_16_9_50  : natural := 16;
+constant C_MENU_HDMI_16_9_60  : natural := 17;
+constant C_MENU_HDMI_4_3_50   : natural := 18;  -- Caution: This naming convention is not self-explanatory,
+constant C_MENU_HDMI_5_4_50   : natural := 19;  --          scroll down and search for "hdmi_video_mode <= " to learn more 
+constant C_MENU_HDMI_FF       : natural := 20;
+constant C_MENU_HDMI_DVI      : natural := 21;
+constant C_MENU_VGA_RETRO     : natural := 22;
+constant C_MENU_8521          : natural := 23;
+constant C_MENU_IMPROVE_AUDIO : natural := 24;
 
 -- HyperRAM
 signal hr_dig_write         : std_logic;
@@ -508,7 +510,8 @@ begin
          audio_clk_o       => audio_clk,       -- Audio's 30 MHz
          audio_rst_o       => audio_rst,       -- Audio's reset, synchronized
 
-         hdmi_clk_sel_i    => hdmi_osm_control_m(C_MENU_HDMI_43), -- 0: 720p (74.25 MHz), 1: 576p (27.00 MHz)
+         hdmi_clk_sel_i    => hdmi_osm_control_m(C_MENU_HDMI_4_3_50) or -- 0: 720p (74.25 MHz), 1: 576p (27.00 MHz)
+                              hdmi_osm_control_m(C_MENU_HDMI_5_4_50),
          tmds_clk_o        => tmds_clk,        -- TMDS's pixelclock (5 * HDMI)
          hdmi_clk_o        => hdmi_clk,        -- HDMI's pixelclock
          hdmi_rst_o        => hdmi_rst,        -- HDMI's reset, synchronized
@@ -1284,8 +1287,18 @@ begin
          video_vblank_o    => main_crop_vblank
       ); -- i_crop
 
-   hdmi_video_mode <= 2 when hdmi_osm_control_m(C_MENU_HDMI_43) = '1' else
-                      1 when hdmi_osm_control_m(C_MENU_HDMI_60HZ) = '1' else
+
+   -- As of Version 4 of the core:
+   -- Due to a discussion on the MEGA65 discord (https://discord.com/channels/719326990221574164/794775503818588200/1039457688020586507)
+   -- we decided to choose a naming convention for the PAL modes that might be more intuitive for the end users than it is
+   -- for the programmers: "4:3" means "meant to be run on a 4:3 monitor", "5:4 on a 5:4 monitor".
+   -- The technical reality is though, that in our "5:4" mode we are actually doing a 4/3 aspect ratio adjustment
+   -- while in the 4:3 mode we are outputting a 5:4 image. This is kind of odd, but it seemed that our 4/3 aspect ratio
+   -- adjusted image looks best on a 5:4 monitor and the other way round.
+   -- Not sure if this will stay forever or if we will come up with a better naming convention.
+   hdmi_video_mode <= 3 when hdmi_osm_control_m(C_MENU_HDMI_5_4_50)  = '1' else
+                      2 when hdmi_osm_control_m(C_MENU_HDMI_4_3_50)  = '1' else
+                      1 when hdmi_osm_control_m(C_MENU_HDMI_16_9_60) = '1' else
                       0;
 
    i_digital_pipeline : entity work.digital_pipeline

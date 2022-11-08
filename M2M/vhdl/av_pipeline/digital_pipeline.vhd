@@ -55,7 +55,7 @@ entity digital_pipeline is
 
       -- Connect to QNICE and Video RAM
       hdmi_dvi_i               : in  std_logic;
-      hdmi_video_mode_i        : in  natural range 0 to 2;
+      hdmi_video_mode_i        : in  natural range 0 to 3;
       hdmi_crop_mode_i         : in  std_logic;
       hdmi_osm_cfg_enable_i    : in  std_logic;
       hdmi_osm_cfg_xy_i        : in  std_logic_vector(15 downto 0);
@@ -205,28 +205,36 @@ begin
    assert G_VIDEO_MODE_VECTOR(0).H_PIXELS >= G_VIDEO_MODE_VECTOR(0).V_PIXELS*4/3;
    assert G_VIDEO_MODE_VECTOR(1).H_PIXELS >= G_VIDEO_MODE_VECTOR(1).V_PIXELS*4/3;
    assert G_VIDEO_MODE_VECTOR(2).H_PIXELS <= G_VIDEO_MODE_VECTOR(2).V_PIXELS*4/3;
+   assert G_VIDEO_MODE_VECTOR(3).H_PIXELS <= G_VIDEO_MODE_VECTOR(3).V_PIXELS*4/3;
 
    -- In HDMI 4:3 mode, ignore crop (zoom-in).
+   -- We are using constants here to avoid that large networks are synthesized.
    hdmi_hmin <= 0                                                                         when hdmi_crop_mode_i = '1' else
                 (G_VIDEO_MODE_VECTOR(0).H_PIXELS-G_VIDEO_MODE_VECTOR(0).V_PIXELS*4/3)/2   when hdmi_video_mode_i = 0 else
                 (G_VIDEO_MODE_VECTOR(1).H_PIXELS-G_VIDEO_MODE_VECTOR(1).V_PIXELS*4/3)/2   when hdmi_video_mode_i = 1 else
                 0                                                                         when hdmi_video_mode_i = 2 else
+                0                                                                         when hdmi_video_mode_i = 3 else
                 0;
+
    hdmi_hmax <= hdmi_video_mode.H_PIXELS-1                                                when hdmi_crop_mode_i = '1' else
                 (G_VIDEO_MODE_VECTOR(0).H_PIXELS+G_VIDEO_MODE_VECTOR(0).V_PIXELS*4/3)/2-1 when hdmi_video_mode_i = 0 else
                 (G_VIDEO_MODE_VECTOR(1).H_PIXELS+G_VIDEO_MODE_VECTOR(1).V_PIXELS*4/3)/2-1 when hdmi_video_mode_i = 1 else
                 hdmi_video_mode.H_PIXELS-1                                                when hdmi_video_mode_i = 2 else
+                hdmi_video_mode.H_PIXELS-1                                                when hdmi_video_mode_i = 3 else
                 0;
 
    hdmi_vmin <= 0                                                                         when hdmi_crop_mode_i = '1' else
                 0                                                                         when hdmi_video_mode_i = 0 else
                 0                                                                         when hdmi_video_mode_i = 1 else
-                (G_VIDEO_MODE_VECTOR(2).V_PIXELS-G_VIDEO_MODE_VECTOR(2).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 2 else
+                0                                                                         when hdmi_video_mode_i = 1 else                
+                (G_VIDEO_MODE_VECTOR(2).V_PIXELS-G_VIDEO_MODE_VECTOR(2).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 3 else
                 0;
+
    hdmi_vmax <= hdmi_video_mode.V_PIXELS-1                                                when hdmi_crop_mode_i = '1' else
                 hdmi_video_mode.V_PIXELS-1                                                when hdmi_video_mode_i = 0 else
                 hdmi_video_mode.V_PIXELS-1                                                when hdmi_video_mode_i = 1 else
-                (G_VIDEO_MODE_VECTOR(2).V_PIXELS+G_VIDEO_MODE_VECTOR(2).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 2 else
+                hdmi_video_mode.V_PIXELS-1                                                when hdmi_video_mode_i = 2 else
+                (G_VIDEO_MODE_VECTOR(2).V_PIXELS+G_VIDEO_MODE_VECTOR(2).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 3 else
                 hdmi_video_mode.V_PIXELS-1;
 
    ---------------------------------------------------------------------------------------------

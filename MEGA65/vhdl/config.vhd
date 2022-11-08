@@ -76,16 +76,16 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-RC2]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
      
-   " While the C64 is running: Press the HELP key\n" &
-   " to mount drives and to configure the core.\n\n" &
+   " While the C64 is running: Press HELP\n" &
+   " to mount drives & to configure the core.\n\n" &
    
-   " Both SD card slots are supported: The card\n" &
-   " in the back has higher precedence than the\n" &
+   " Both SD card slots work: The card in the\n" &
+   " back has higher precedence than the\n" &
    " card at the bottom of the MEGA65.\n\n" &
    
    " While you are in the file browser:\n" &
@@ -96,17 +96,17 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-RC2]\n\n" &
    
    " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
    
-   " This core turns your MEGA65 into a PAL C64\n" &
-   " with a C1541 drive and a pair of joysticks.\n" &
+   " Turn your MEGA65 into a PAL C64 with a\n" &
+   " C1541 drive and a pair of joysticks.\n" &
    " No frills. The C64/C1541 run the original\n" &
    " Commodore Kernal and DOS.\n\n" & 
         
-   " When browsing disk images to mount a drive:\n\n" &
+   " When browsing disk images:\n\n" &
    
    " Cursor up/down:     File up/down\n" &
    " Cursor left/right:  Page up/down\n" &
@@ -121,12 +121,12 @@ constant HELP_1 : string :=
    " SD card, then by default the file browser\n" &
    " will start there.\n\n" &
    
-   " Cursor right to learn more.       (1 of 3)\n" &
+   " Cursor right to learn more.      (1 of 3)\n" &
    " Press Space to close the help screen.";
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-RC2]\n\n" &
    
    " Post-processing:\n\n" &
 
@@ -134,15 +134,15 @@ constant HELP_2 : string :=
    " HDMI output. On the VGA output, the core\n" &
    " outputs a pure C64 4:3 PAL signal.\n\n" &
    
-   " We recommend to always use the\n" &
-   " CRT emulation. The way the upscaling is done\n" &
-   " there leads to a much better picture with\n" &
+   " We recommend to always use the CRT\n" &
+   " emulation. The way the CRT upscaling is\n" &
+   " done leads to a much better picture with\n" &
    " little to no Moire effects. And it just\n" &
    " looks awesome.\n\n" &
 
    " The Audio improvements work on the analog\n" &
    " 3.5mm audio out as well as via HDMI audio.\n" &
-   " They fix the DC offset of the SID and reduce\n" &
+   " They fix the DC offset of the SID & reduce\n" &
    " treble for a more authentic listening\n" &
    " experience. Recommended.\n\n" &
    
@@ -150,29 +150,29 @@ constant HELP_2 : string :=
    " playing games that do not use the C64's\n" &
    " border. It looks best on a 16:9 screen.\n\n" &
    
-   " Crsr left: Prev  Crsr right: Next (2 of 3)\n" &
+   " Crsr left: Prev Crsr right: Next (2 of 3)\n" &
    " Press Space to close the help screen.";
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIPv4-b3]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIPv4-RC2]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
-   " 1. Make sure your HDMI display supports:\n" &
-   "    1280x720 pixels 50Hz (16:9 aspect ratio)\n\n" &   
-   "    There are displays out there that display\n" &
-   "    50Hz as 60Hz. This leads to non-optimal\n" &
-   "    and jerky movements (e.g. scrolling).\n\n" &
+   " 1. Make sure your HDMI display supports\n" &
+   "    a 50Hz mode: 720p or 576p\n\n" &   
+   "    Some displays out there that display\n" &
+   "    50Hz as 60Hz. This leads to jerky\n" &
+   "    movements (e.g. while scrolling).\n\n" &
    
-   " 2. ""HDMI: Flicker-free"" needs to be active.\n\n" &
+   " 2. Switch on ""HDMI: Flicker-free""\n\n" &
 
-   " The ""HDMI: Flicker-free"" option reduces the\n" &
-   " speed of the whole C64/C1541 system by a\n" &
-   " tiny amount: 0.25%. You probably will never\n" &
-   " notice. In case you encounter extremely rare\n" &
-   " compatibility issues: Turn off the option\n" &
-   " and try again.\n\n" &
+   " The ""HDMI: Flicker-free"" mode reduces\n" &
+   " the speed of the whole system by a tiny\n" &
+   " amount: 0.25%. You probably will never\n" &
+   " notice. In case you encounter extremely\n" &
+   " rary compatibility issues: Turn off the\n" &
+   " option and try again.\n\n" &
    
    " System reset:\n\n" &
    
@@ -180,7 +180,7 @@ constant HELP_3 : string :=
    " just reset the C64 core and press the button\n" &
    " longer than 1.5s to reset the whole system.\n\n" &
    
-   " Cursor left to go back.           (3 of 3)\n" &
+   " Cursor left to go back.          (3 of 3)\n" &
    " Press Space to close the help screen.";
 
 -- Concatenate all your Welcome and Help screens into one large string, so that during synthesis one large string ROM can be build.
@@ -339,7 +339,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write c
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 30;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 29;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -362,21 +362,20 @@ constant OPTM_ITEMS        : string :=
    " 6581\n"                  &
    " 8580\n"                  &
    "\n"                       &
-   " Post-processing\n"       &
-   "\n"                       &
-   " HDMI: CRT emulation\n"   &
-   " HDMI: Zoom-in\n"         &
-   " Audio improvements\n"    &
-   "\n"                       &
    " Advanced\n"              &
    "\n"                       &
-   " CIA: Use 8521 (C64C)\n"  &
-   " VGA: Retro 15KHz RGB\n"  &
-   " HDMI: Force 60Hz\n"      &
-   " HDMI: 4:3 mode\n"        &
-   " HDMI: DVI (no sound)\n"  &
-   " HDMI: Flicker-free\n"    &
    " REU: 1750 with 512KB\n"  &
+   " HDMI: CRT emulation\n"   &
+   " HDMI: Zoom-in\n"         &
+   " HDMI: 16:9 50Hz\n"       &
+   " HDMI: 16:9 60Hz\n"       & 
+   " HDMI: 4:3  50Hz\n"       &
+   " HDMI: 5:4  50Hz\n"       &
+   " HDMI: Flicker-free\n"    &
+   " HDMI: DVI (no sound)\n"  &
+   " VGA: Retro 15KHz RGB\n"  &             
+   " CIA: Use 8521 (C64C)\n"  &   
+   " Audio improvements\n"    &
    "\n"                       &
    " About & Help\n"          &
    "\n"                       &
@@ -386,17 +385,16 @@ constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
 constant OPTM_G_FLIP_JOYS     : integer := 3;
 constant OPTM_G_SID           : integer := 4;
-constant OPTM_G_CRT_EMULATION : integer := 5;
-constant OPTM_G_HDMI_ZOOM     : integer := 6;
-constant OPTM_G_IMPROVE_AUDIO : integer := 7;
-constant OPTM_G_CIA_8521      : integer := 8;
-constant OPTM_G_VGA_RETRO     : integer := 9;
-constant OPTM_G_HDMI_60HZ     : integer := 10;
-constant OPTM_G_HDMI_43       : integer := 11;
-constant OPTM_G_HDMI_DVI      : integer := 12;
-constant OPTM_G_HDMI_FF       : integer := 13;
+constant OPTM_G_REU           : integer := 5;
+constant OPTM_G_CRT_EMULATION : integer := 6;
+constant OPTM_G_HDMI_ZOOM     : integer := 7;
+constant OPTM_G_HDMI_MODES    : integer := 8;
+constant OPTM_G_HDMI_FF       : integer := 9;
+constant OPTM_G_HDMI_DVI      : integer := 10;
+constant OPTM_G_VGA_RETRO     : integer := 11;
+constant OPTM_G_CIA_8521      : integer := 12;
+constant OPTM_G_IMPROVE_AUDIO : integer := 13;
 constant OPTM_G_ABOUT_HELP    : integer := 14;
-constant OPTM_G_REU           : integer := 15;
 
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -412,19 +410,18 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
-                                             OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
-                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
-                                             OPTM_G_LINE,
-                                             OPTM_G_HEADLINE,
-                                             OPTM_G_LINE,
-                                             OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
-                                             OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_60HZ     + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_43       + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_REU           + OPTM_G_SINGLESEL,
+                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
+                                             OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
+                                             OPTM_G_HDMI_MODES    + OPTM_G_STDSEL,
+                                             OPTM_G_HDMI_MODES,
+                                             OPTM_G_HDMI_MODES,
+                                             OPTM_G_HDMI_MODES,
+                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
+                                             OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
+                                             OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
+                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,
                                              OPTM_G_LINE,
