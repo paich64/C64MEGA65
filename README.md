@@ -51,8 +51,8 @@ algorithms are working for a very nice looking authentic image.
   pixel perfect and authentic on HDMI.
 
   If you use a 4:3 or 5:4 display via HDMI then use the option "HDMI: 4:3
-  mode" to activate "PAL over HDMI"; the core will output 720x576 pixels at
-  50 Hz.
+  50 Hz" or "HDMI: 5:4 50 Hz" respectively to activate "PAL over HDMI";
+  the core will output 720x576 pixels at 50 Hz.
 
   In case of compatibility problems, please try the different solutions in the
   section [HDMI compatibility](#hdmi-compatibility) below.
@@ -63,7 +63,7 @@ algorithms are working for a very nice looking authentic image.
   is 50.125 Hz in PAL mode. If your monitor supports this, you will
   experience silky smooth scrolling without any flickering and tearing.
 
-* Retro 15 KHz RGB over VGA: This is for the ultimate retro experience:
+* Retro 15 kHz RGB over VGA: This is for the ultimate retro experience:
   Connect an old Scart TV (for example using
   [this](https://ultimatemister.com/product/rgb-scart-cable/)
   cable) or an old RGB-capable monitor (by soldering your own cable)
@@ -213,13 +213,16 @@ then try this (while the display is black):
 
 1. Boot the C64 core and wait a few seconds.
 2. Press the <kbd>Help</kbd> key.
-3. Press five times (5x) the <kbd>Up</kbd> cursor key.
+3. Press six times (6x) the <kbd>Up</kbd> cursor key.
 4. Press <kbd>Return</kbd>.
 5. Wait a few seconds.
 6. If this does not solve the issue, continue:
-7. Press one more time (1x) the <kbd>Up</kbd> cursor key.
+7. Press four more times (4x) the <kbd>Up</kbd> cursor key.
 8. Press <kbd>Return</kbd>.
 9. Wait a few seconds.
+10. If this does not solve the issue, continue:
+11. Press one time (1x) the <kbd>Down</kbd> cursor key.
+12. Press <kbd>Return</kbd>.
 
 ### Explanation: DVI mode
 
@@ -231,10 +234,12 @@ In DVI mode, the HDMI data stream sent by the core to your display has a
 slightly different format and it does not contain any sound. You need to use
 the 3.5mm audio-out in this case.
 
-When you press <kbd>Return</kbd> for the second time, the 60Hz mode is
-activated, independent of the C64's output, which is still 50Hz in PAL mode.
+When you press <kbd>Return</kbd> for the second time, the 60 Hz mode is
+activated, independent of the C64's output, which is still 50 Hz in PAL mode.
 This works fine in general, but leads to some flickering and jerky scrolling
 here and there.
+
+The third press of <kbd>Return</kbd> switches from 720p to 576p.
 
 Working with disk images
 ------------------------
@@ -326,7 +331,7 @@ scroller / intro. You will see a pretty stuttering scroller.
 Not so when using a FPGA based recreation on the MEGA65 using the right
 display and settings. We have your back! :-)
 
-When using VGA or Retro 15 KHz RGB, you are safe by definition, if your
+When using VGA or Retro 15 kHz RGB, you are safe by definition, if your
 monitor plays along.
 
 We are slowing down the whole system (not only the C64, but also the SID,

@@ -3,13 +3,14 @@ Version 4 - MONTH, DD, YYYY
 
 RELEASE CURRENTLY PLANNED "BEFORE CHRISTMAS" or "OVER THE NEW YEAR".
 
-RELEASE CANDIDATE 1 RELEASED ON NOVEMBER 8, 2022
+RELEASE CANDIDATE 2 RELEASED ON NOVEMBER 8, 2022
 
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
 Expansion Unit (1750 REU) are the main features: Save your high-scores and
 your gaming progress to disk (D64) and work productively with GEOS by speeding
 up 10x using the REU and by saving your work persistently to disk.
-And the demo fans can now enjoy all the awesome REU releases on CSDB.
+Demo fans can now enjoy all the awesome REU releases on CSDB and gamers can
+play the fantastic Sonic the Hedgehog for REU.
 
 ## New Features
 
@@ -31,9 +32,8 @@ And the demo fans can now enjoy all the awesome REU releases on CSDB.
   outputs 720p on HDMI which is a 16:9 resolution (even though the actual
   C64's output is pixel-perfect 4:3 as we are adding black bars left and
   right). With this new feature you can switch from 720p to 576p aka
-  PAL over HDMI (720x576 pixels). Even though this is a 5:4 resolution, the
-  core displays a pixel-perfect 4:3 by adding thin black bars at the top
-  and bottom.
+  PAL over HDMI (720x576 pixels) and then select if you have a 4:3 monitor
+  or a 5:4 monitor and then enjoy the best possible image.
 
 * Ability to save the configuration settings of the core. You need to copy
   the file c64mega65 to the folder /c64 to activate this feature.
