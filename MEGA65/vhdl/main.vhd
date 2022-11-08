@@ -223,6 +223,13 @@ architecture synthesis of main is
       );
    end component reu;
 
+attribute mark_debug : boolean;
+attribute mark_debug of c64_ram_addr_o : signal is true;
+attribute mark_debug of c64_ram_data   : signal is true;
+attribute mark_debug of c64_ram_data_o : signal is true;
+attribute mark_debug of c64_ram_ce     : signal is true;
+attribute mark_debug of c64_ram_we     : signal is true;
+
 begin
 
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
