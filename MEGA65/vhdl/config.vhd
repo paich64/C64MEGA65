@@ -141,8 +141,8 @@ constant HELP_2 : string :=
    " looks awesome.\n\n" &
 
    " The Audio improvements work on the analog\n" &
-   " 3.5mm audio out as well as via HDMI audio.\n" &
-   " They fix the DC offset of the SID & reduce\n" &
+   " 3.5mm audio as well as via HDMI audio.\n" &
+   " They fix the SID DC offset and reduce\n" &
    " treble for a more authentic listening\n" &
    " experience. Recommended.\n\n" &
    
@@ -171,14 +171,14 @@ constant HELP_3 : string :=
    " the speed of the whole system by a tiny\n" &
    " amount: 0.25%. You probably will never\n" &
    " notice. In case you encounter extremely\n" &
-   " rary compatibility issues: Turn off the\n" &
+   " rare compatibility issues: Turn off the\n" &
    " option and try again.\n\n" &
    
    " System reset:\n\n" &
    
-   " Press the MEGA65's reset button shortly to\n" &         
-   " just reset the C64 core and press the button\n" &
-   " longer than 1.5s to reset the whole system.\n\n" &
+   " Press the reset button shortly to just\n" &         
+   " reset the C64 core and press the button\n" &
+   " longer than 1.5s to reset the MEGA65.\n\n" &
    
    " Cursor left to go back.          (3 of 3)\n" &
    " Press Space to close the help screen.";

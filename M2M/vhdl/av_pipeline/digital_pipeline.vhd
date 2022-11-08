@@ -226,15 +226,15 @@ begin
    hdmi_vmin <= 0                                                                         when hdmi_crop_mode_i = '1' else
                 0                                                                         when hdmi_video_mode_i = 0 else
                 0                                                                         when hdmi_video_mode_i = 1 else
-                0                                                                         when hdmi_video_mode_i = 1 else                
-                (G_VIDEO_MODE_VECTOR(2).V_PIXELS-G_VIDEO_MODE_VECTOR(2).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 3 else
+                0                                                                         when hdmi_video_mode_i = 2 else                
+                (G_VIDEO_MODE_VECTOR(3).V_PIXELS-G_VIDEO_MODE_VECTOR(3).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 3 else
                 0;
 
    hdmi_vmax <= hdmi_video_mode.V_PIXELS-1                                                when hdmi_crop_mode_i = '1' else
                 hdmi_video_mode.V_PIXELS-1                                                when hdmi_video_mode_i = 0 else
                 hdmi_video_mode.V_PIXELS-1                                                when hdmi_video_mode_i = 1 else
                 hdmi_video_mode.V_PIXELS-1                                                when hdmi_video_mode_i = 2 else
-                (G_VIDEO_MODE_VECTOR(2).V_PIXELS+G_VIDEO_MODE_VECTOR(2).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 3 else
+                (G_VIDEO_MODE_VECTOR(3).V_PIXELS+G_VIDEO_MODE_VECTOR(3).H_PIXELS*3/4)/2   when hdmi_video_mode_i = 3 else
                 hdmi_video_mode.V_PIXELS-1;
 
    ---------------------------------------------------------------------------------------------
