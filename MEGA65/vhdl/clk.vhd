@@ -93,7 +93,6 @@ signal main_clk_mmcm      : std_logic;
 signal video_clk_mmcm     : std_logic;
 signal sys_clk_9975_mmcm  : std_logic;
 
-signal sys_clk_bg         : std_logic;
 signal sys_clk_9975_bg    : std_logic;
 
 signal qnice_locked       : std_logic;
@@ -379,7 +378,7 @@ begin
          CLKOUT1             => video_clk_mmcm,
          -- Input clock control
          CLKFBIN             => main_fb,
-         CLKIN1              => sys_clk_bg,
+         CLKIN1              => sys_clk_i,
          CLKIN2              => sys_clk_9975_bg,
          CLKINSEL            => not core_speed_i(0),
          -- Ports for dynamic reconfiguration
@@ -424,12 +423,6 @@ begin
    -- Output buffering
    -------------------------------------------------------------------------------------
 
-   sys_1_bufg : BUFG
-      port map (
-         I => sys_clk_i,
-         O => sys_clk_bg
-      );
-      
    sys_2_bufg : BUFG
       port map (
          I => sys_clk_9975_mmcm,
