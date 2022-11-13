@@ -134,7 +134,7 @@ constant HDMI_CLK_SPEED          : natural := 74_250_000;
 --    FONT_*  size of one OSM character
 constant VGA_DX               : natural := 720;
 constant VGA_DY               : natural := 540;
-constant FONT_FILE            : string  := "../font/Anikki-16x16.rom";
+constant FONT_FILE            : string  := "../font/Anikki-16x16-m2m.rom";
 constant FONT_DX              : natural := 16;
 constant FONT_DY              : natural := 16;
 
