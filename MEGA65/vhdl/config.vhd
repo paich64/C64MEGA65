@@ -148,7 +148,7 @@ constant HELP_2 : string :=
    
    " The Zoom-in feature is mainly meant for\n" &
    " playing games that do not use the C64's\n" &
-   " border. It looks best on a 16:9 screen.\n\n" &
+   " border. It looks best on a 16:9 screen.\n\n\n\n" &
    
    " Crsr left: Prev Crsr right: Next (2 of 3)\n" &
    " Press Space to close the help screen.";
@@ -367,13 +367,13 @@ constant OPTM_ITEMS        : string :=
    " REU: 1750 with 512KB\n"  &
    " HDMI: CRT emulation\n"   &
    " HDMI: Zoom-in\n"         &
-   " HDMI: 16:9 50Hz\n"       &
-   " HDMI: 16:9 60Hz\n"       & 
-   " HDMI: 4:3  50Hz\n"       &
-   " HDMI: 5:4  50Hz\n"       &
+   " HDMI: 16:9 50 Hz\n"      &
+   " HDMI: 16:9 60 Hz\n"      & 
+   " HDMI: 4:3  50 Hz\n"      &
+   " HDMI: 5:4  50 Hz\n"      &
    " HDMI: Flicker-free\n"    &
    " HDMI: DVI (no sound)\n"  &
-   " VGA: Retro 15KHz RGB\n"  &             
+   " VGA: Retro 15 kHz RGB\n" &             
    " CIA: Use 8521 (C64C)\n"  &   
    " Audio improvements\n"    &
    "\n"                       &

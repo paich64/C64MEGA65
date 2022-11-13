@@ -60,7 +60,7 @@ WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
 
 * Fixed several bugs in the file browser that you use for mounting D64 files:
 
-  - WIP The file browser was not able to display the "+" sign due to a bug
+  - The file browser was not able to display the "+" sign due to a bug
     in the font. Instead, a space (empty character, " ") was printed, for
     example the file name "C64+" was shown as "C64 ".
 

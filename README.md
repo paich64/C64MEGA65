@@ -52,7 +52,7 @@ algorithms are working for a very nice looking authentic image.
 
   If you use a 4:3 or 5:4 display via HDMI then use the option "HDMI: 4:3
   50 Hz" or "HDMI: 5:4 50 Hz" respectively to activate "PAL over HDMI";
-  the core will output 720x576 pixels at 50 Hz.
+  the core will output 720x576 pixels (576p) at 50 Hz.
 
   In case of compatibility problems, please try the different solutions in the
   section [HDMI compatibility](#hdmi-compatibility) below.
@@ -224,7 +224,7 @@ then try this (while the display is black):
 11. Press one time (1x) the <kbd>Down</kbd> cursor key.
 12. Press <kbd>Return</kbd>.
 
-### Explanation: DVI mode
+### Explanation: DVI mode, 60 Hz mode, 576p
 
 The recipe above first activates the "DVI mode" as you are choosing the
 menu item "HDMI: DVI (no sound)" in the on-screen-menu when you press the
