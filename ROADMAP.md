@@ -41,8 +41,10 @@ robustness, performance, and stability of the whole system, we will need
 to implement certain technical improvements in the "backend", again in no
 particular order:
 
+* Merge T65 upstream fix (fixes All Hallows' Eve) from our branch dev-irqdisp
 * Merge these MiSTer upstream fixes (needs thorough regression testing):
   - CIA: fix timer reset values (Arctic Shipwreck) (gyurco) commit 7eca7e3
+  - VIC: change xscroll and turbo latch time (sorgelig) commit f3a137b
 * Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode which
   exclusively uses GCR internally (c1541_direct_gcr.sv instead of
   c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
