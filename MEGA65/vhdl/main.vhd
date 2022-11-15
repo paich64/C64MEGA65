@@ -614,6 +614,14 @@ begin
 
    -- 16 MHz chip enable for the IEC drives, so that ph2_r and ph2_f can be 1 MHz (C1541's CPU runs with 1 MHz)
    -- Uses a counter to compensate for clock drift, because the input clock is not exactly at 32 MHz
+   --
+   -- It is important that also in the HDMI-Flicker-Free-mode we are using the vanilla clock speed given by
+   -- CORE_CLK_SPEED_PAL (or CORE_CLK_SPEED_NTSC) and not a speed-adjusted version of this speed. Reason:
+   -- Otherwise the drift-compensation in generate_drive_ce will compensate for the slower clock speed and
+   -- ensure an exact 32 MHz frequency even though the system has been slowed down by the HDMI-Flicker-Free.
+   -- This leads to a different frequency ratio C64 vs 1541 and therefore to incompatibilities such as the
+   -- one described in this GitHub issue:
+   -- https://github.com/MJoergen/C64MEGA65/issues/2  
    generate_drive_ce : process(all)
       variable msum, nextsum: integer;
    begin
