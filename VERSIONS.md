@@ -78,9 +78,21 @@ WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
     open. (The bug did not occur when you changed the SD card while the file
     *was* open.)
 
-## Known problems
+## Known problems that we plan to fix in Version 5
 
-* Formatting disks does not work.
+* Formatting disks does not work. We know how to fix it but this will need a
+  larger refactoring (see "Technical Roadmap" in `ROADMAP.md`).
+
+* The demo "All Hallows' Eve" (https://demozoo.org/productions/314618/) is
+  crashing towards the end of disk 2. We fixed the issue in an experimental
+  core that you can download here on GitHub:
+  https://github.com/MJoergen/C64MEGA65/issues/9
+
+* There is a compatibility issue due to the "HDMI: Flicker-free" mode. We only
+  saw it occur at one very specific program and nowhere else (not even at the
+  most demanding demos): The German disk magazine "Input 64". We fixed the
+  issue in an experimental core that you can download here on GitHub:
+  https://github.com/MJoergen/C64MEGA65/issues/2
 
 Version 3 - June, 27 2022
 =========================
