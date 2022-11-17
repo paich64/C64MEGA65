@@ -89,9 +89,9 @@ WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
   https://github.com/MJoergen/C64MEGA65/issues/9
 
 * There is a compatibility issue due to the "HDMI: Flicker-free" mode. We only
-  saw it occur at one very specific program and nowhere else (not even at the
-  most demanding demos): The German disk magazine "Input 64". We fixed the
-  issue in an experimental core that you can download here on GitHub:
+  saw it occur at the German disk magazine "Input 64 Issue 1/85" and at the
+  1991 demo Unbounded by Demotion (https://csdb.dk/release/?id=2464). We fixed
+  the issue in an experimental core that you can download here on GitHub:
   https://github.com/MJoergen/C64MEGA65/issues/2
 
 Version 3 - June, 27 2022

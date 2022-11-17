@@ -43,6 +43,8 @@ particular order:
 
 * Merge T65 upstream fix (fixes All Hallows' Eve) from branch `dev-irqdisp`
 * Merge these MiSTer upstream fixes (needs thorough regression testing):
+  - CIA: Disk parport: ignore inputs on pins configured as output (sorgelig)
+    commit 4da804c
   - CIA: fix timer reset values (Arctic Shipwreck) (gyurco) commit 7eca7e3
   - VIC: change xscroll and turbo latch time (sorgelig) commit f3a137b
 * Merge branch `fix-issue-2` that fixes the frequency-ratio bug in
