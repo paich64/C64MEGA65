@@ -132,8 +132,8 @@ Fatzone
 2022 - Partypopper                                                     => OK
 ```                                                                    
                                                                                                                           
-Finish Gold                                                           
------------                                                           
+Finnish Gold                                                           
+------------                                                           
                                                                                                                           
 ```                                                                    
 2021 - Lost in Transmission                                            => OK
