@@ -199,9 +199,10 @@ _S_BROWSE_START MOVE    R10, R3                 ; R3: currently visible head
                 ADD     R4, R6                  ; R6: updated absolute index
 
                 ; DEBUG
+                MOVE    0x1111, R8
+                SYSCALL(puthex, 1)                
                 MOVE    R5, R8
                 SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
                 MOVE    R6, R8
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
@@ -217,6 +218,8 @@ _S_BROWSE_START MOVE    R10, R3                 ; R3: currently visible head
                 RBRA    FATAL, 1
 
 _S_BROWSE_S2    MOVE    R11, R3                 ; R3: use new head
+                MOVE    FB_ITEMS_SHOWN, R8
+                MOVE    R5, @R8
 
 _S_BROWSE_LOG   MOVE    LOG_STR_ITM_AMT, R8     ; log amount of items in ..
                 SYSCALL(puts, 1)                ; .. current directory to UART
@@ -235,7 +238,19 @@ _S_BROWSE_STP2  MOVE    FB_ITEMS_SHOWN, R8      ; exist. pers. # shown items?
                 MOVE    @R8, R5                 ; yes: store
 
                 ; list (maximum one screen of) directory entries
-_S_DRAW_DIRLIST RSUB    SCR$CLRINNER, 1
+_S_DRAW_DIRLIST 
+
+                ; DEBUG
+                MOVE    0x2222, R8
+                SYSCALL(puthex, 1)                
+                MOVE    R5, R8
+                SYSCALL(puthex, 1)
+                MOVE    R6, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+
+                RSUB    SCR$CLRINNER, 1
                 MOVE    R3, R8                  ; R8: pos in LL to show list
                 MOVE    R2, R9                  ; R9: amount if lines to show
                 RSUB    SHOW_DIR, 1             ; print directory listing         
@@ -251,6 +266,15 @@ _S_ADDSHOWN_ITM ADD     R10, R5                 ; R5: overall # of files shown
 _S_SELECT_LOOP  MOVE    R4, R8                  ; invert currently sel. line
                 MOVE    M2M$SA_COL_STD_INV, R9
                 RSUB    SELECT_LINE, 1
+
+                ; DEBUG
+                MOVE    0x3333, R8
+                SYSCALL(puthex, 1)
+                MOVE    R5, R8
+                SYSCALL(puthex, 1)
+                MOVE    R6, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)                
 
                 ; non-blocking mechanism to read keys from the MEGA65 keyboard
 _S_INPUT_LOOP   RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
@@ -396,7 +420,7 @@ _SCROLL_DO      ADD     R12, R6                 ; R6: abs. index; R12 signed
 _SCROLL_DO2     MOVE    R11, R3                 ; new visible head
                 ADD     R10, R5                 ; R10 more/less visible files
                 SUB     R2, R5                  ; compensate for SHOW_DIR
-                RBRA    _S_DRAW_DIRLIST, 1         ; redraw directory list
+                RBRA    _S_DRAW_DIRLIST, 1      ; redraw directory list
 
                 ; browsing interrupted by Run/Stop:
                 ; remember where we are and exit
