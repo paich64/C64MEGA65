@@ -35,6 +35,8 @@
 
 SELECT_FILE     SYSCALL(enter, 1)
 
+                XOR     R7, R7                  ; R7: flag to indicate "cd .."
+
                 ; stack handling
                 MOVE    FB_MAINSTACK, R0        ; remember the original stack
                 MOVE    SP, @R0
@@ -136,17 +138,19 @@ _S_WRN_WAIT     RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 ; DIRECTORY BROWSER
                 ; ------------------------------------------------------------
 
-_S_BROWSE_START MOVE    R10, R0                 ; R0: dir. linked list head
+_S_BROWSE_START MOVE    R10, R3                 ; R3: currently visible head
 
                 ; how much items are there in the current directory?
-                MOVE    R0, R8
+                MOVE    R3, R8
                 RSUB    SLL$LASTNCOUNT, 1
                 MOVE    R10, R1                 ; R1: amount of items in dir.
                 RBRA    _S_NOTHING, Z           ; no items in directory
                 MOVE    SCR$OSM_M_DY, R2        ; R2: max rows on screen
                 MOVE    @R2, R2
                 SUB     2, R2                   ; (frame is 2 rows high)
-                MOVE    R0, R3                  ; R3: currently visible head
+
+                MOVE    @SP++, R4               ; R4: currently selected ..
+                                                ; .. line inside window
 
                 XOR     R5, R5                  ; R5: counts the amount of ..
                                                 ; ..files that have been shown
@@ -154,32 +158,65 @@ _S_BROWSE_START MOVE    R10, R0                 ; R0: dir. linked list head
                 XOR     R6, R6                  ; R6: absolute index of curr..
                                                 ; selected file/dir
 
-                ; @TODO: Continue here
-                ; We only need this logic in case of climbing up the tree.
-                ; We need a flag for this.
-                ; When we are not climbing up the tree, then we need to
-                ; extract the original R4 by modulus and let the existing
-                ; code including the FB_ variables do the job.
-                ; Only in case of climbing upwards, lets iterate at put
-                ; the iteration result as new FB_HEAD and cursor at 0
-                ; and we will also need to setup the other FB_ variables
-                ; properly so that the code works
-
                 ; Find currently selected window and line in case we are
                 ; climbing the directory tree upwards (via "..")
                 ;
                 ; Case 1: If the max rows on screen (R2) are larger than the
                 ; absolute index of the last selected cursor pos (which starts
-                ; at 0) then we have nothing special to do.
-                ; Case 2: Otherwise, we need to iterate the linked-list to
-                ; the 
-                MOVE    @SP++, R8               ; R8: abs. cursor index
-                CMP     R2, R8                  ; R2 > R8
-                RBRA    _S_BROWSE_LOG, N        ; yes means no special TODOs
-                SYSCALL(divu, 1)
-                MOVE    R11, R4                 ; R4: currently selected ..
-                                                ; .. line inside window (mod)
+                ; at 0 and is stored in R4) then we have nothing special to
+                ; do. In Case 1 we can interpret the value of R4 as written
+                ; above: Currently selected line inside the first window.
+                ;
+                ; Case 2: Otherwise, we will need to iterate through the
+                ; linked list. For avoiding other complexities, we want to
+                ; show the selected item at the position denoted by an
+                ; integer division (aka window/screen) and modulo (aka
+                ; position within the screen):
+                ; R4 (abs. index) div R2 (window size) = window
+                ; R4 mod R2 = position within the window
+                ; R5 (amt. of shown files) = (R4 div R2) + R2
+                CMP     1, R7                   ; climbing up the tree?
+                RBRA    _S_BROWSE_LOG, !Z       ; no: ignore the special logic
+                XOR     R7, R7                  ; R7: reset "cd .." flag
 
+                ; Case 1
+                CMP     R2, R4                  ; R2 > R4
+                RBRA    _S_BROWSE_LOG, N        ; yes means no special TODOs
+
+                ; Case 2
+                MOVE    R4, R8                  ; R4: absolute index
+                MOVE    R2, R9                  ; R2: max rows on screen
+                SYSCALL(divu, 1)                ; R10=R4 div R2
+                MOVE    R11, R4                 ; R4 =R4 mod R2: cursor pos
+
+                MOVE    R10, R8                 ; R8: window to be shown
+                                                ; R9: max rows on screen
+                SYSCALL(mulu, 1)                ; R10=R8*R9: items to iterate
+
+                MOVE    R10, R5
+                ADD     R2, R5                  ; R5 =(R4 div R2) + R2
+                MOVE    R10, R6
+                ADD     R4, R6                  ; R6: updated absolute index
+
+                ; DEBUG
+                MOVE    R5, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    R6, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                MOVE    R3, R8                  ; R8: linked-list head
+                MOVE    1, R9                   ; R9=1 means iterate forward
+                                                ; R10: items to iterate
+                RSUB    SLL$ITERATE, 1          ; iterate to element
+                CMP     0, R11                  ; error?
+                RBRA    _S_BROWSE_S2, !Z        ; no: proceed            
+                MOVE    ERR_FATAL_ITER, R8      ; yes: fatal error and halt
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+_S_BROWSE_S2    MOVE    R11, R3                 ; R3: use new head
 
 _S_BROWSE_LOG   MOVE    LOG_STR_ITM_AMT, R8     ; log amount of items in ..
                 SYSCALL(puts, 1)                ; .. current directory to UART
@@ -363,7 +400,7 @@ _SCROLL_DO2     MOVE    R11, R3                 ; new visible head
 
                 ; browsing interrupted by Run/Stop:
                 ; remember where we are and exit
-_IL_KEY_RUNSTOP MOVE    R6, @--SP               ; remember cursor position
+_IL_KEY_RUNSTOP MOVE    R4, @--SP               ; remember cursor position
                 MOVE    FB_HEAD, R8             ; remember currently vis. head
                 MOVE    R3, @R8
                 MOVE    FB_ITEMS_COUNT, R8      ; remember # of items in dir.
@@ -410,7 +447,7 @@ _IL_KEY_RETURN  MOVE    R3, R8                  ; R8: currently visible head
                 RBRA    FATAL, 1
 
                 ; depending on if a directory of a file was selected:
-                ; change directory or load cartridge; we therefore need to
+                ; change directory or load data; we therefore need to
                 ; find the flag that contains the info "directory" or "file"
 _ELEMENT_FOUND  MOVE    R11, R8                 ; R11: selected SLL element
                 ADD     SLL$DATA_SIZE, R8
@@ -442,19 +479,22 @@ _ELEMENT_FOUND  MOVE    R11, R8                 ; R11: selected SLL element
                 MOVE    FB_HEAD, R9             ; reset head for browsing
                 MOVE    0, @R9
 
+                MOVE    1, R7                   ; R7: we assume one dir up
                 MOVE    FN_UPDIR, R9            ; are we going one dir. up?
                 SYSCALL(strcmp, 1)
                 CMP     0, R10
                 RBRA    _CHANGEDIR, Z           ; yes: get crsr pos from stack
+                XOR     R7, R7                  ; no: R7: assumption was wrong
 
                 MOVE    R6, @--SP               ; no: remember cursor pos..
+                                                ; (R6 vs R4: absolute index)
                 MOVE    0, @--SP                ; ..and new dir. starts at 0
 
 _CHANGEDIR      MOVE    R8, R9                  ; use this directory
                 MOVE    HANDLE_DEV, R8
                 RBRA    _S_CD_AND_READ, 1       ; create new linked-list
 
-_RETNAME        MOVE    R6, @--SP               ; remember cursor position
+_RETNAME        MOVE    R4, @--SP               ; remember cursor position
                 MOVE    FB_HEAD, R8             ; remember currently vis. head
                 MOVE    R3, @R8
                 MOVE    FB_ITEMS_COUNT, R8      ; remember # of items in dir.
