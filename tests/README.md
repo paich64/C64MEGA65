@@ -8,12 +8,10 @@ serious effort, it might be that we are not always doing it.
 Version 4 - MONTH, DD, YYYY
 ---------------------------
 
-:question: C64 Emulator Test Suite V2.15 not done yet
-
-:white_check_mark: [Demos](demos.md) done by AmokPhaze101
-
-:question: Disk Write Test not done yet
-
-:question: Dedicated REU test?
-
-:question: GEOS REU + disk write test
+| Status             | Test                                        | Done by                | Date              
+|:-------------------|---------------------------------------------|:-----------------------|:--------------------------
+| :question:         | C64 Emulator Test Suite V2.15               |                        | 
+| :white_check_mark: | [Demos](demos.md)                           | AmokPhaze101           | October & November 2022
+| :question:         | Disk write test                             |                        |
+| :question:         | Dedicated REU test                          |                        |
+| :question:         | GEOS REU + disk write test                  |                        |
