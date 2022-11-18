@@ -193,21 +193,23 @@ _S_BROWSE_START MOVE    R10, R3                 ; R3: currently visible head
                                                 ; R9: max rows on screen
                 SYSCALL(mulu, 1)                ; R10=R8*R9: items to iterate
 
-                MOVE    R10, R5
-                ADD     R2, R5                  ; R5 =(R4 div R2) + R2
                 MOVE    R10, R6
                 ADD     R4, R6                  ; R6: updated absolute index
 
-                ; DEBUG
-                MOVE    0x1111, R8
-                SYSCALL(puthex, 1)                
-                MOVE    R5, R8
-                SYSCALL(puthex, 1)
-                MOVE    R6, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
+                MOVE    R10, R5
+                ADD     R2, R5                  ; R5 =(R4 div R2) + R2
+                CMP     R5, R1                  ; is R5 larger than total num?
+                RBRA    _S_BROWSE_S1, !N        ; no: proceed
 
-                MOVE    R3, R8                  ; R8: linked-list head
+                ; correct R10 so that the last page does not underflow, R5
+                ; so that is has the correct amount of displayed items and
+                ; R4 so that the correct line is selected
+                SUB     R1, R5                  ; R5 is now the underflow amt
+                SUB     R5, R10                 ; reduce linked-list start
+                ADD     R5, R4                  ; correct cursor position
+                MOVE    R1, R5                  ; tuck R5 to total # of items
+
+_S_BROWSE_S1    MOVE    R3, R8                  ; R8: linked-list head
                 MOVE    1, R9                   ; R9=1 means iterate forward
                                                 ; R10: items to iterate
                 RSUB    SLL$ITERATE, 1          ; iterate to element
@@ -238,19 +240,7 @@ _S_BROWSE_STP2  MOVE    FB_ITEMS_SHOWN, R8      ; exist. pers. # shown items?
                 MOVE    @R8, R5                 ; yes: store
 
                 ; list (maximum one screen of) directory entries
-_S_DRAW_DIRLIST 
-
-                ; DEBUG
-                MOVE    0x2222, R8
-                SYSCALL(puthex, 1)                
-                MOVE    R5, R8
-                SYSCALL(puthex, 1)
-                MOVE    R6, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-
-
-                RSUB    SCR$CLRINNER, 1
+_S_DRAW_DIRLIST RSUB    SCR$CLRINNER, 1
                 MOVE    R3, R8                  ; R8: pos in LL to show list
                 MOVE    R2, R9                  ; R9: amount if lines to show
                 RSUB    SHOW_DIR, 1             ; print directory listing         
@@ -266,15 +256,6 @@ _S_ADDSHOWN_ITM ADD     R10, R5                 ; R5: overall # of files shown
 _S_SELECT_LOOP  MOVE    R4, R8                  ; invert currently sel. line
                 MOVE    M2M$SA_COL_STD_INV, R9
                 RSUB    SELECT_LINE, 1
-
-                ; DEBUG
-                MOVE    0x3333, R8
-                SYSCALL(puthex, 1)
-                MOVE    R5, R8
-                SYSCALL(puthex, 1)
-                MOVE    R6, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)                
 
                 ; non-blocking mechanism to read keys from the MEGA65 keyboard
 _S_INPUT_LOOP   RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
