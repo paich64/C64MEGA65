@@ -69,6 +69,7 @@ OLD_SETTINGS    .BLOCK  16
 INITIAL_SD      .BLOCK  1
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
+SD_CHANGED      .BLOCK 1                        ; SD card (briefly) changed?
 
 ; SD card "stability" workaround
 SD_WAIT         .EQU   0x05F6                   ; 2 seconds @ 50 MHz
@@ -82,8 +83,6 @@ FB_STACK        .BLOCK 1                        ; local stack used by  browser
 FB_STACK_INIT   .BLOCK 1                        ; initial local browser stack
 FB_MAINSTACK    .BLOCK 1                        ; stack of main program
 FB_HEAD         .BLOCK 1                        ; lnkd list: curr. disp. head
-FB_ITEMS_COUNT  .BLOCK 1                        ; overall amount of items
-FB_ITEMS_SHOWN  .BLOCK 1                        ; # of dir. items shown so far
 
 ; context variables (see CTX_* constants in sysdef.asm)
 SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE

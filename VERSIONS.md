@@ -56,8 +56,6 @@ play the fantastic Sonic the Hedgehog for REU.
   [this](https://github.com/MiSTer-devel/C64_MiSTer/commit/711dffbddf0b591fadfe81e4e3ed4dd3af6be143)
   an upstream fix from MiSTer.
 
-WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
-
 * Fixed several bugs in the file browser that you use for mounting D64 files:
 
   - The file browser was not able to display the "+" sign due to a bug
@@ -67,13 +65,13 @@ WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
   - Directories where not aways being sorted in proper alphabetical order and
     ascending numbers.
 
-  - WIP While browsing directories with a large amount of subdirectories (e.g.
+  - While browsing directories with a large amount of subdirectories (e.g.
     large game libraries): When you entered a subdirectory located on a page
     other than page one (e.g. by scrolling down quite a bit) and then left
     this very subdirectory (one level up), then the selection cursor jumped
     back to page one.
 
-  - WIP Fixed file browsing bug that still displayed the old SD card's
+  - Fixed file browsing bug that still displayed the old SD card's
     directory when you changed the SD card while the file browser was *not*
     open. (The bug did not occur when you changed the SD card while the file
     *was* open.)
