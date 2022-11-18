@@ -69,6 +69,7 @@ OLD_SETTINGS    .BLOCK  16
 INITIAL_SD      .BLOCK  1
 
 SD_ACTIVE       .BLOCK 1                        ; currently active SD card
+SD_CHANGED      .BLOCK 1                        ; SD card (briefly) changed?
 
 ; SD card "stability" workaround
 SD_WAIT         .EQU   0x05F6                   ; 2 seconds @ 50 MHz

@@ -69,6 +69,8 @@ _SS_INITFH_L    MOVE    @R8++, R0
                 AND     M2M$CSR_SD_ACTIVE, R8
                 MOVE    SD_ACTIVE, R9
                 MOVE    R8, @R9
+                MOVE    SD_CHANGED, R9
+                MOVE    0, @R9
                 MOVE    INITIAL_SD, R9
                 MOVE    R8, @R9
                 RSUB    FB_INIT, 1              ; init persistence variables
@@ -243,13 +245,9 @@ _HM_KEYLOOP     MOVE    M2M$KEYBOARD, R8
                 RBRA    _HM_RETRY_MOUNT, 1
 
                 ; SD card already mounted, but is it still the same card slot?
-_HM_SDMOUNTED1  MOVE    SD_ACTIVE, R0
-                MOVE    M2M$CSR, R1             ; extract currently active SD
-                MOVE    @R1, R1
-                AND     M2M$CSR_SD_ACTIVE, R1
-                CMP     @R0, R1                 ; did the card change?
-                RBRA    _HM_SDMOUNTED2, Z       ; no, continue with browser
-                RBRA    _HM_SDCHANGED, 1        ; yes, re-init and re-mount
+_HM_SDMOUNTED1  MOVE    SD_CHANGED, R0
+                CMP     1, @R0                  ; did the card change?
+                RBRA    _HM_SDCHANGED, Z        ; yes, re-init and re-mount
 
                 ; SD card freshly mounted or already mounted and still
                 ; the same card slot:
@@ -284,13 +282,7 @@ _HM_SDCHANGED   MOVE    LOG_STR_SD, R8
                 MOVE    HANDLE_DEV, R8          ; reset device handle
                 MOVE    0, @R8
                 RSUB    FB_RE_INIT, 1           ; reset file browser
-
-                MOVE    SD_ACTIVE, R0
-                MOVE    M2M$CSR, R1             ; extract currently active SD
-                MOVE    @R1, R1
-                AND     M2M$CSR_SD_ACTIVE, R1
-                MOVE    R1, @R0                 ; remember new SD card
-
+                MOVE    0, @R0                  ; reset SD_CHANGED
                 RBRA    _HM_SDUNMOUNTED, 1      ; re-mount, re-browse files
 
                 ; Cancelled via Run/Stop
@@ -639,8 +631,22 @@ HANDLE_IO       SYSCALL(enter, 1)
                 ; SD cards when remembering on-screen-menu settings
                 RSUB    ROSM_INTEGRITY, 1
 
+                ; Detect SD card changes to be handled in drive mounting
+                ; mechanisms and in the filebrowser
+                MOVE    SD_CHANGED, R2
+                CMP     1, @R2                  ; "changed" flag alread true?
+                RBRA    _HANDLE_IO_0, Z         ; yes: do not allow reset here
+                MOVE    SD_ACTIVE, R0           ; no: check status
+                MOVE    M2M$CSR, R1             ; extract currently active SD
+                MOVE    @R1, R1
+                AND     M2M$CSR_SD_ACTIVE, R1
+                CMP     @R0, R1                 ; did the card change?
+                RBRA    _HANDLE_IO_0, Z         ; no: proceed
+                MOVE    R1, @R0                 ; remember new status
+                MOVE    1, @R2                  ; set "changed" flag
+
                 ; Loop through all VDRIVES and check for requests
-                XOR     R0, R0                  ; R0: number of virtual drive
+_HANDLE_IO_0    XOR     R0, R0                  ; R0: number of virtual drive
                 MOVE    VDRIVES_NUM, R1
                 MOVE    @R1, R1                 ; R1: amount of vdrives
 

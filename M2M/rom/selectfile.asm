@@ -259,16 +259,12 @@ _S_INPUT_LOOP   RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 RBRA    _IL_KEYPRESSED, !Z      ; yes: handle key press
 
                 ; check, if the SD card changed in the meantime
-                MOVE    M2M$CSR, R8
-                MOVE    @R8, R8
-                AND     M2M$CSR_SD_ACTIVE, R8
-                MOVE    SD_ACTIVE, R9
-                CMP     R8, @R9
-                RBRA    _S_INPUT_LOOP, Z        ; SD card did not change
+                MOVE    SD_CHANGED, R8
+                CMP     1, @R8
+                RBRA    _S_INPUT_LOOP, !Z       ; SD card did not change
+                MOVE    0, @R8                  ; reset change-flag            
 
                 ; SD card changed
-                MOVE    R8, @R9                 ; remember new active card
-
 _S_SD_CHANGED   RSUB    WAIT1SEC, 1             ; debounce SD insert process
                 XOR     R8, R8                  ; do not return any filename
                 MOVE    1, R9                   ; R9=1: SD card changed
@@ -413,6 +409,9 @@ _IL_SD_INT      MOVE    SD_ACTIVE, R10          ; curr. active equ. keypress?
                 CMP     @R10, R9
                 RBRA    _S_INPUT_LOOP, Z        ; yes: ignore keypress
 
+                MOVE    SD_CHANGED, R11         ; SD card change flag
+                MOVE    0, @R11                 ; reset SD card changed flag
+
                 MOVE    M2M$CSR, R9             ; switch sd mode to manual
                 OR      M2M$CSR_SD_MODE, @R9
                 CMP     M2M$KEY_F3, R8          ; F3: switch to external
@@ -422,7 +421,7 @@ _IL_SD_INT      MOVE    SD_ACTIVE, R10          ; curr. active equ. keypress?
                 RBRA    _S_SD_CHANGED, 1
 
 _IL_SD_INT2     AND     M2M$CSR_UN_SD_FORCE, @R9 ; F1: switch to internal
-                MOVE    0, @R10                 ; remember new active: int.
+                MOVE    0, @R10                 ; remember new active: int
                 RBRA    _S_SD_CHANGED, 1
 
                 ; "Return" has been pressed: change directory or return
