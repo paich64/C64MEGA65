@@ -421,7 +421,7 @@ Tips for watching demos
 -----------------------
 
 The core has been tested rigorously with
-[a lot of very demanding demos](doc/demos.md)
+[a lot of very demanding demos](tests/demos.md)
 and the result is that it almost always "just works". So there are not a lot
 of tips for you when it comes to watching demos but two:
 
@@ -430,9 +430,9 @@ of tips for you when it comes to watching demos but two:
 
 2. Some demos rely on the 8521 CIA instead of the 6526 CIA which is active
    by default. Currently we know for sure of one demo where this is the case:
-   ["XXX" by Lethargy](doc/demos.md#lethargy)
+   "XXX" by Lethargy.
    
-   All other [demos that we tested](doc/demos.md) work fine with the 6526 CIA.
+   All other [demos that we tested](tests/demos.md) work fine with the 6526 CIA.
 
 Debug mode
 ----------
