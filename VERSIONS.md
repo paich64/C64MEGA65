@@ -67,7 +67,7 @@ WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP WIP
   - Directories where not aways being sorted in proper alphabetical order and
     ascending numbers.
 
-  - WIP While browsing directories with a large amount of subdirectories (e.g.
+  - While browsing directories with a large amount of subdirectories (e.g.
     large game libraries): When you entered a subdirectory located on a page
     other than page one (e.g. by scrolling down quite a bit) and then left
     this very subdirectory (one level up), then the selection cursor jumped
