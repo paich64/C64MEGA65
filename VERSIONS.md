@@ -1,9 +1,9 @@
 Version 4 - MONTH, DD, YYYY
 ===========================
 
-RELEASE CURRENTLY PLANNED "BEFORE CHRISTMAS" or "OVER THE NEW YEAR".
+RELEASE CURRENTLY PLANNED "BEFORE CHRISTMAS".
 
-RELEASE CANDIDATE 2 RELEASED ON NOVEMBER 8, 2022
+RELEASE CANDIDATE 3 RELEASED ON NOVEMBER 18, 2022
 
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
 Expansion Unit (1750 REU) are the main features: Save your high-scores and
