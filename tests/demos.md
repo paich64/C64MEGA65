@@ -3,23 +3,6 @@ Version 4 regression tests using demos TEST
 
 done by AmokPhaze101 in October to December 2022
 
-Suggestion/Idea for AmokPhaze101
---------------------------------
-
-If we use a table instead of the below mentioned headlines, the whole thing
-might be easier to understand for people.
-
-|Group            |Year       |Demo                         |Status              |Comment                                                                                                                                      |Image
-|:----------------|-----------|:----------------------------|:-------------------|:--------------------------------------------------------------------------------------------------------------------------------------------|:---------------------
-| Arise           | 2008      | ES1RA                       | :white_check_mark: | Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat     |<img src="https://github.com/MJoergen/C64MEGA65/blob/develop/tests/demos_img/test1.jpg" width="200">
-| Arsenic         | 1998      | Farbraus                    | :x:                | D öalk ak d öqlwödkqlökfpov pjkc adsclkas jqlwkjd lajkd                                                                                     |
-| XYZ             | 2016      | ABC                         | :white_check_mark: |                                                                                                                                             |
-| XYZ             | 2017      | ABC                         | :white_check_mark: |                                                                                                                                             |
-| XYZ             | 2018      | ABC                         | :white_check_mark: |                                                                                                                                             |
-| Atlantis        | 1982      | Beezarro                    | :bangbang:         | Kind of OK but not perfect, look at the glitch and the fix at [here](https://github.com/MJoergen/C64MEGA65/issues/9#issuecomment-1315137015)|<img src="https://github.com/MJoergen/C64MEGA65/blob/develop/tests/demos_img/test2.jpg" width="200">
-| Atlantis        | 1994      | Scene of the living Dead    | :white_check_mark: |                                                                                                                                             |
-| Atlantis        | 2022      | Royal Arte                  | :white_check_mark: |                                                                                                                                             |![my image](demos_img/1668698647259.jpg)
-| Amok's Crew     | 1111      | AmokPhaze                   | :white_check_mark: | My comment for this small test                                                                                                              |![my image](demos_img/1668698647259.jpg)
 Arise
 -----
 
