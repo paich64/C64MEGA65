@@ -10,11 +10,15 @@ Version 4 - MONTH, DD, YYYY
 
 | Status             | Test                                        | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------
-| :bangbang:         | C64 Emulator Test Suite V2.15               | sy2002                 | 11/19/22
+| :white_check_mark: | C64 Emulator Test Suite V2.15               | sy2002                 | 11/19/22
 | :white_check_mark: | [Demos](demos.md)                           | AmokPhaze101           | October & November 2022
-| :question:         | Disk write test                             |                        |
-| :question:         | Dedicated REU test                          |                        |
-| :question:         | GEOS REU + disk write test                  |                        |
+| :white_check_mark: | Disk-Write-Test.d64                         | sy2002                 | 11/19/22
+| :question:         | Dedicated REU tests                         | sy2002                 |
+| :white_check_mark: | GEOS: REU + disk write test                 | sy2002                 | 11/19/22
+| :question:         | Screen resolution tests                     |                        | 
+
+We consider the pattern of success and failure in the [Demos](demos.md) and the C64 Emulator Test suite (see pattern of success
+and failure below) as the baseline for Version 4 and therefore as "success". Future versions must deliver the same - or better.
 
 ### C64 Emulator Test Suite V2.15
 
