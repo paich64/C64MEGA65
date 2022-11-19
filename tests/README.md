@@ -18,7 +18,7 @@ Version 4 - MONTH, DD, YYYY
 | :question:         | Screen resolution tests                     |                        | 
 
 We consider the pattern of success and failure in the [Demos](demos.md), the C64 Emulator Test suite and the dedicated
-REU tests (see pattern of success) as the baseline for Version 4 and therefore as "success". Future versions must deliver
+REU tests (scroll down, see below) as the baseline for Version 4 and therefore as "success". Future versions must deliver
 the same - or better.
 
 ### C64 Emulator Test Suite V2.15
@@ -38,3 +38,31 @@ Tested with 6526 CIA
 | :x:                | Disc 2: "CIA2TA"                            | sy2002                 | 11/19/22
 | :x:                | Disc 2: "CIA2TA"                            | sy2002                 | 11/19/22
 | :x:                | Disc 2: "CIA2TB"                            | sy2002                 | 11/19/22
+
+### Dedicated REU tests
+
+All done by AmokPhaze101 on 11/19/22
+
+#### Demos
+
+| Status             | Demo                                        | Comment
+|:-------------------|---------------------------------------------|:---------------------------------------------------
+| :white_check_mark: | Dark Mights - Movie 32                      | 
+| :white_check_mark: | Expand by Bonzai                            | 
+| :x:                | fREUd                                       | In the part with boucing balls all the backgrounds are screwed up. Same Issue on Mister C64_20221117.rbf. Perfectly runs on true Commodore C64 with Ultimate Cartridge.
+| :white_check_mark: | globe2016                                   | Wait 7minutes before rendering starts
+| :white_check_mark: | Life will never be the same Digidemo 286K_1 | Press SPACE after having swapped disk
+| :white_check_mark: | Qi                                          | 
+| :white_check_mark: | REU demo Zelda                              | Just scroll the map with joystick in port2
+| :white_check_mark: | Treu Love                                   | OK but no 100%: In the main first scroller Sprites have horizontal white pixel lines when on left and right borders, while they should not. Same issue on Mister C64_20221117.rbf. Perfectly run on true Commodore C64 with Ultimate Cartridge.
+
+#### Games
+
+| Status             | Game                                        | Comment
+|:-------------------|---------------------------------------------|:---------------------------------------------------
+| :white_check_mark: | Sonic The Hedgehog v1.2+5                   | Joystick in port 2, choose options with ARROWS and RETURN, accept to load Full game in REU when asked
+| :x:                | Creatures II +9Hi - Mystic                  | Impossible to load the game until the end. Same issues on Mister C64_20221117.rbf and real C64+Ultimate Cartridge.
+| :white_check_mark: | Exterminator_1991_Audiogenic_(REU)          | 
+| :white_check_mark: | from_the_west[r]                            | All is happening in REU (not disk access) but interraction is quite slow
+| :white_check_mark: | Ski_or_Die_1990_Electronic_Arts_REU         | Joystick in port 2. Takes ages to load from disk to the REU on our core as well as on MiSTer and a real C64.
+| :white_check_mark: | Walkerz +3                                  | Joystick in port 2
