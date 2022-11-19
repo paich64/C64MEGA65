@@ -10,16 +10,40 @@ Version 4 - MONTH, DD, YYYY
 
 | Status             | Test                                        | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------
+| :question:         | Basic regression tests                      |                        |
 | :white_check_mark: | C64 Emulator Test Suite V2.15               | sy2002                 | 11/19/22
 | :white_check_mark: | [Demos](demos.md)                           | AmokPhaze101           | October & November 2022
 | :white_check_mark: | Disk-Write-Test.d64                         | sy2002                 | 11/19/22
 | :white_check_mark: | Dedicated REU tests                         | AmokPhaze101           | 11/19/22
 | :white_check_mark: | GEOS: REU + disk write test                 | sy2002                 | 11/19/22
-| :question:         | Screen resolution tests                     |                        | 
 
 We consider the pattern of success and failure in the [Demos](demos.md), the C64 Emulator Test suite and the dedicated
 REU tests (scroll down, see below) as the baseline for Version 4 and therefore as "success". Future versions must deliver
 the same - or better.
+
+### Basic regression tests
+
+```
+Mount disk
+Filebrowser
+Save configuration, switch off/switch, check configuration
+Flip joystick ports
+SID: 6581 and 8580
+REU: 1750 with 512KB
+HDMI : CRT emulation
+HDMI : Zoom-in
+HDMI : 16:9 50 Hz
+HDMI : 16:9 60 Hz
+HDMI :  4:3 50 Hz
+HDMI :  5:4 50 Hz
+HDMI : Flicker-free
+HDMI : DVI (no sound)
+VGA  : Retro 15Khz RGB
+CIA  : Use 8521 (C64C)
+Audio Improvements
+About and Hel
+Close Menu
+```
 
 ### C64 Emulator Test Suite V2.15
 
