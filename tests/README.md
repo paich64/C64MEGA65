@@ -17,7 +17,9 @@ Version 4 - MONTH, DD, YYYY
 | :white_check_mark: | Dedicated REU tests                         | AmokPhaze101           | 11/19/22
 | :white_check_mark: | GEOS: REU + disk write test                 | sy2002                 | 11/19/22
 
-We consider the pattern of success and failure in the [Demos](demos.md), the C64 Emulator Test suite and the dedicated
+### How to interpret the test results
+
+We consider the pattern of success (:white_check_mark:) and failure (:x:) in the [Demos](demos.md), the C64 Emulator Test suite and the dedicated
 REU tests (scroll down, see below) as the baseline for Version 4 and therefore as "success". Future versions must deliver
 the same - or better.
 
