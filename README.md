@@ -5,8 +5,6 @@ Experience the [Commodore 64](https://en.wikipedia.org/wiki/Commodore_64) with
 great accuracy and sublime compatibility on your
 [MEGA65](https://mega65.org/)!
 
-Learn more about where to [download and how to get started](#Installation).
-
 ![Commodore64](doc/c64.jpg)
 
 This core is based on the

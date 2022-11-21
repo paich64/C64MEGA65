@@ -5,8 +5,8 @@ Before releasing a new version we strive to run all regression tests from
 this folder. Since running through all the [demos](demos.md) takes some
 serious effort, it might be that we are not always doing it.
 
-Version 4 - MONTH, DD, YYYY
----------------------------
+Version 4 - November, 25, 2022
+------------------------------
 
 | Status             | Test                                        | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------

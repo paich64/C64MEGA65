@@ -13,7 +13,7 @@ valuable support (in alphabetical order): adtbm, deft & lydon
 
 Very special thanks to AmzokPhase101 for very patiently and with great thoroughness performing
 a lot of tests plus the most intense "demo marathon" series regression tests.
-The results of the "demo marathon" tests are documented in doc/demos.md.
+The results of the "demo marathon" tests are documented in tests/demos.md.
 
 C64MEGA65:
 ----------
