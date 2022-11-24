@@ -1,55 +1,75 @@
 C64 for MEGA65 Regression Testing
 =================================
 
-Before releasing a new version we strive to run all regression tests from
-this folder. Since running through all the [demos](demos.md) takes some
-serious effort, it might be that we are not always doing it.
+Before releasing a new version we strive to run all regression tests described
+here. Since running through all the [demos](demos.md) takes some serious
+effort, it might be that we are not always doing it.
 
 Version 4 - November, 25, 2022
 ------------------------------
 
 | Status             | Test                                        | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------
-| :question:         | Basic regression tests                      |                        |
+| :white_check_mark: | Basic regression tests                      | sy2002                 | 11/24/22
 | :white_check_mark: | C64 Emulator Test Suite V2.15               | sy2002                 | 11/19/22
 | :white_check_mark: | [Demos](demos.md)                           | AmokPhaze101           | October & November 2022
-| :white_check_mark: | Disk-Write-Test.d64                         | sy2002                 | 11/19/22
+| :white_check_mark: | Disk-Write-Test.d64                         | sy2002                 | 11/24/22
 | :white_check_mark: | Dedicated REU tests                         | AmokPhaze101           | 11/19/22
-| :white_check_mark: | GEOS: REU + disk write test                 | sy2002                 | 11/19/22
+| :white_check_mark: | GEOS: REU, mouse, disk write test           | sy2002                 | 11/24/22
 
 ### How to interpret the test results
 
-We consider the pattern of success (:white_check_mark:) and failure (:x:) in the [Demos](demos.md), the C64 Emulator Test suite and the dedicated
-REU tests (scroll down, see below) as the baseline for Version 4 and therefore as "success". Future versions must deliver
-the same - or better.
+We consider the pattern of success (:white_check_mark:) and failure (:x:) in
+the [Demos](demos.md), the C64 Emulator Test suite and the dedicated REU tests
+(scroll down, see below) as the baseline for Version 4 and therefore as
+"success". Future versions must deliver the same - or better.
 
 ### Basic regression tests
 
-```
-Mount disk
-Filebrowser
-Save configuration, switch off/switch, check configuration
-Flip joystick ports
-SID: 6581 and 8580
-REU: 1750 with 512KB
-HDMI : CRT emulation
-HDMI : Zoom-in
-HDMI : 16:9 50 Hz
-HDMI : 16:9 60 Hz
-HDMI :  4:3 50 Hz
-HDMI :  5:4 50 Hz
-HDMI : Flicker-free
-HDMI : DVI (no sound)
-VGA  : Retro 15Khz RGB
-CIA  : Use 8521 (C64C)
-Audio Improvements
-About and Hel
-Close Menu
-```
+#### Main menu
+
+Work with the main menu and run software that allows to test the following:
+
+* Mount disk
+* Filebrowser
+* Save configuration, switch off/switch, check configuration
+* Flip joystick ports
+* SID: 6581 and 8580
+* REU: 1750 with 512KB
+* HDMI : CRT emulation
+* HDMI : Zoom-in
+* HDMI : 16:9 50 Hz
+* HDMI : 16:9 60 Hz
+* HDMI :  4:3 50 Hz
+* HDMI :  5:4 50 Hz
+* HDMI : Flicker-free
+* HDMI : DVI (no sound)
+* VGA  : Retro 15Khz RGB
+* CIA  : Use 8521 (C64C)
+* Audio Improvements
+* About and Help
+* Close Menu
+
+#### Additional Smoke Tests
+
+* Try to mount disk while SD card is empty
+* Work with both SD cards (and switch back and forth in file-browser)
+* Remove external SD card while menu and file browser are not open;
+  reinsert while file browser is open
+* Work with large directory trees / game libraries
+* Eagle's Nest: Reset-tests: Short reset leads to main screen. Long reset
+  resets the whole core (not only the C64).
+* Giana Sisters: Scrolling while flicker-free is ON/OFF, joystick, latency
+* Katakis: High score saving/loading
+* Smile to the Sky (demo): SID 8580 filters
+* Sonic the Hedgehog: REU
+* Space Lords: Support for 4 paddles
 
 ### C64 Emulator Test Suite V2.15
 
-Tested with 6526 CIA
+Tested with 6526 CIA. We consider the following test pattern, i.e. "Disc 1
+Complete" and Disc 2 "everything works but the below-mentioned exceptions" as
+"success" and our baseline for Release 4.
 
 | Status             | Detail                                      | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------
