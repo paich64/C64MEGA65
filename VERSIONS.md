@@ -1,3 +1,109 @@
+Version 5 - XXXXXXXX, XX, 2023
+==============================
+
+Hardware compatibility release: Use the MEGA65's hardware ports for more retro
+fun! Stick cartridges into the expansion port, work with real floppy drives
+and printers using the IEC port and use the MEGA65's built-in disk drive as
+a C1581. Furthermore, use a vast array of simulated hardware with full support
+for `*.crt` modules, `*.d81` C1581 disk images, `*.g64` GCR encoded disk
+images and `*.t64` tape images.
+
+## New Features
+
+WIP Hardware modules via expansion port: @TODO we might not support
+all module types, add constraints here: Game cartriges, real REUs, GEO RAMs,
+EasyFlash, etc. ... we need to test quite some amount of real hardware
+
+WIP Simulated modules using `*.crt` files:  @TODO we might not support
+all module types, add constraints here
+
+WIP Hardware IEC port: Work with real floppy drives, printers and other serial
+devices.
+
+WIP Use the MEGA65's built-in disk drive as a C1581.
+
+WIP Simulated C1581 via `*.d81` disk images. @TODO: Clarify: Line 65 in
+fdc1772.v: back to 2 or work with generic?
+
+WIP GCR encoded disk images (`*.g64`)
+
+WIP Existing C1541 disk images (`*.d64`) can now be formatted
+
+WIP Support `*.d64` images with error maps (filesizes 175,531 and 197,376)
+
+WIP Simulated tape drive using `*.t64` tape images
+
+WIP Directly load program files (`*.prg`)
+
+## Improved C64 and C1541 Accuracy & Compatibility
+
+WIP ??? research MiSTer's SID improvements ???
+
+WIP Improved C1541 compatibility due to real internal GCR handling of `*.d64`
+images instead of simulated handling leads to games like "Seven Cities of
+Gold" being able to format/create their non-standard game disks. Also highly
+sophisticated bit nibblers (@TODO example!) are working now.
+
+WIP Improved the 6510 CPU's interrupt dispatching which results in more demos
+working flawlessly (for example "All Hallows' Eve")
+
+WIP Improved accuracy of the frequency ratio between the C64's CPU and the
+C1541 floppy's CPU which results in more demos working flawlessly (for example
+"Unbounded" by Demotion and "Ice Cream Castle" by Crest). It also fixes an
+issue with the diskmag "Input 64". @TODO: Redo README.md because after this
+fix we will have no known issue due to HDMI: Flicker-free any more.
+
+WIP merge MiSTer upstream fixes: @TODO better description for VERSIONS.md;
+right now this is the @TODO reminder:
+  - CIA: Disk parport: ignore inputs on pins configured as output (sorgelig)
+    commit 4da804c
+  - CIA: fix timer reset values (Arctic Shipwreck) (gyurco) commit 7eca7e3
+  - VIC: change xscroll and turbo latch time (sorgelig) commit f3a137b
+
+## Improved HDMI and VGA Compatibility
+
+WIP HDMI compatibility: MJoergen research project to fix the HDMI sound on his
+monitor which might lead to more HDMI compatibility in general. Research path:
+Use an FPGA board with HDMI input, to capture the data from both the MEGA65
+(has no sound) and the laptop (has sound), to compare them. Might very well
+help to fix https://github.com/MJoergen/C64MEGA65/issues/4
+
+WIP VGA compatibility: Fixed a "wavy" "underwater" artefact on that was
+introduced by Version 4 and that occured only on some analog VGA screens.
+
+WIP Eliminate HDMI Flicker-free "~20min period artefact" by manual clock
+frequency tuning. Investigate dynamic PLL adjustment/autotune in conjunction
+with ascal to improve flicker-free HDMI further (maybe there is a possibility
+to achieve flicker-free without the need of slowing down by 0.25%)
+
+## Bugfixes
+
+WIP @TODO: Identify bugs and add them here
+
+## Under the Hood
+
+WIP Updated to Vivado 2022.2 which will result in higher quality bitstreams.
+
+WIP Migrated to the newest version of the MiSTer2MEGA65 framework. The C64
+core will benefit from an easier and faster workflow when it comes to
+migrating new framework features to the core.
+
+WIP Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode
+which exclusively uses GCR internally (c1541_direct_gcr.sv instead of
+c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
+from SD card.
+
+WIP HyperRAM device support to QNICE: @TODO Describe where this is used;
+for example for the `*.crt` support as these files can become very large
+
+WIP Refactor asynchronous resets and other things around clk.vhd to reduce
+warnings upon `report_cdc` and to make sure the whole clock architecture is
+cleaner. (Also need to double-check M2M itself.)
+
+WIP Put major/minor version in the first two bytes of the config file so that
+in case of a mismatch a warning can be issued (e.g. by directly printing it
+into the C64's screen RAM). Needs new version of make_config.sh.
+
 Version 4 - November, 25, 2022
 ==============================
 
@@ -95,7 +201,7 @@ This version is mainly a bugfix & compatibility release that is meant to
 heavily increase the C64 compatibility of the core. It also adds support
 for Paddles.
 
-## New feature
+## New Feature
 
 * Support for Paddles added: Connect compatible paddles to the joystick ports.
 
