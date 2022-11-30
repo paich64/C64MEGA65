@@ -210,7 +210,7 @@ begin
 
    -- Clock enable for Overlay video streams
 
-   video_ce_overlay <= '1' when scandoubler_i = '1' else video_ce(1) and video_ce(0);
+   video_ce_overlay <= '1' when scandoubler_i = '1' else video_ce(0);
 
    i_video_overlay : entity work.video_overlay
       generic  map (
