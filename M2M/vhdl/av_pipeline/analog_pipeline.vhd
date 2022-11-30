@@ -83,6 +83,13 @@ architecture synthesis of analog_pipeline is
    signal vga_blue           : std_logic_vector(7 downto 0);
    signal vga_hs             : std_logic;
    signal vga_vs             : std_logic;
+   
+   -- registers used to implement the phase-shifting of the VGA output signals
+   signal vga_red_ps         : std_logic_vector(7 downto 0);
+   signal vga_green_ps       : std_logic_vector(7 downto 0);
+   signal vga_blue_ps        : std_logic_vector(7 downto 0);
+   signal vga_hs_ps          : std_logic;
+   signal vga_vs_ps          : std_logic;      
 
    component video_mixer is
       port (
@@ -230,18 +237,38 @@ begin
          vga_vram_addr_o  => video_osm_vram_addr_o,
          vga_vram_data_i  => video_osm_vram_data_i,
          vga_ce_o         => open,
-         vga_red_o        => vga_red_o,
-         vga_green_o      => vga_green_o,
-         vga_blue_o       => vga_blue_o,
-         vga_hs_o         => vga_hs_o,
-         vga_vs_o         => vga_vs_o,
+         vga_red_o        => vga_red_ps,
+         vga_green_o      => vga_green_ps,
+         vga_blue_o       => vga_blue_ps,
+         vga_hs_o         => vga_hs_ps,
+         vga_vs_o         => vga_vs_ps,
          vga_de_o         => open
       ); -- i_video_overlay_video
+
+   -- We need to phase-shift the output signal so that the VDAC can sample a nice and steady signal.
+   -- We also need to make sure that not only the RGB signals are phase-shifted, but also the
+   -- HS and VS signals, otherwise on real analog VGA screens there might be undesired effects.
+   -- Last but not least for guaranteeing a minimum of routing delays, we are putting these registers
+   -- in a VHDL block so that we can use a PBLOCK in the XDC file to tack the registers near to the
+   -- FPGAs VGA output pins.
+   VGA_OUT_PHASE_SHIFTED : block
+   begin  
+      phase_shift_vga_signals : process(video_clk_i)
+      begin
+         if falling_edge(video_clk_i) then -- phase shifting by using the negative edge of the video clock
+            vga_red_o   <= vga_red_ps;
+            vga_green_o <= vga_green_ps;
+            vga_blue_o  <= vga_blue_ps;
+            vga_hs_o    <= vga_hs_ps;
+            vga_vs_o    <= vga_vs_ps;            
+         end if;
+      end process;
+   end block VGA_OUT_PHASE_SHIFTED;
 
    -- Make the VDAC output the image
    vdac_syncn_o  <= '0';
    vdac_blankn_o <= '1';
-   vdac_clk_o    <= not video_clk_i;
+   vdac_clk_o    <= video_clk_i;
 
 end architecture synthesis;
 

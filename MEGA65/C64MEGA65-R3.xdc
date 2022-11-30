@@ -122,6 +122,11 @@ create_pblock pblock_sdcard
 add_cells_to_pblock pblock_sdcard [get_cells [list MEGA65/QNICE_SOC/sd_card]]
 resize_pblock pblock_sdcard -add {SLICE_X67Y178:SLICE_X98Y193}
 
+# Place phase-shifted VGA output registers near the actual output buffers
+create_pblock pblock_vga
+add_cells_to_pblock pblock_vga [get_cells [list MEGA65/i_analog_pipeline/VGA_OUT_PHASE_SHIFTED.*]]
+resize_pblock pblock_vga -add SLICE_X0Y75:SLICE_X5Y99
+
 ## System board clock
 set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVCMOS33} [get_ports CLK]
 
