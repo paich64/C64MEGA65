@@ -6,7 +6,6 @@
 --   MiSTer's Commodore 64 expects:
 --      PAL:  31,527,778 MHz, this divided by 32 = 0,98525 MHz (C64 clock speed)
 --      NTSC: @TODO
---     And it expects 2x the C64 clock frequency as video_clk: 63.056 MHz clock (PAL) and @TODO (NTSC)
 --   QNICE expects 50 MHz
 --   HDMI 720p 60 Hz expects 74.25 MHz (HDMI) and 371.25 MHz (TMDS)
 -- 
@@ -58,10 +57,7 @@ entity clk is
       core_speed_i      : unsigned(1 downto 0); -- must be in qnice clock domain
 
       main_clk_o        : out std_logic;
-      main_rst_o        : out std_logic;
-
-      video_clk_o       : out std_logic;
-      video_rst_o       : out std_logic 
+      main_rst_o        : out std_logic
    );
 end entity clk;
 
@@ -90,7 +86,6 @@ signal hdmi_720p_clk_mmcm : std_logic;
 signal tmds_576p_clk_mmcm : std_logic;
 signal hdmi_576p_clk_mmcm : std_logic;
 signal main_clk_mmcm      : std_logic;
-signal video_clk_mmcm     : std_logic;
 signal sys_clk_9975_mmcm  : std_logic;
 
 signal sys_clk_9975_bg    : std_logic;
@@ -375,7 +370,6 @@ begin
          -- Output clocks
          CLKFBOUT            => main_fb_mmcm,
          CLKOUT0             => main_clk_mmcm,
-         CLKOUT1             => video_clk_mmcm,
          -- Input clock control
          CLKFBIN             => main_fb,
          CLKIN1              => sys_clk_i,
@@ -511,12 +505,6 @@ begin
          O => main_clk_o
       );
 
-   video_clk_bufg : BUFG
-      port map (
-         I => video_clk_mmcm,
-         O => video_clk_o
-      );
-
    -------------------------------------
    -- Reset generation
    -------------------------------------
@@ -582,18 +570,6 @@ begin
          dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
          dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
-      );
-
-   i_xpm_cdc_async_rst_video : xpm_cdc_async_rst
-      generic map (
-         RST_ACTIVE_HIGH => 1,
-         DEST_SYNC_FF    => 10
-      )
-      port map (
-         src_arst  => not (c64_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
-         dest_clk  => video_clk_o,      -- 1-bit input: Destination clock.
-         dest_arst => video_rst_o       -- 1-bit output: src_rst synchronized to the destination clock dovideo.
-                                        -- This output is registered.
       );
 
 end architecture rtl;

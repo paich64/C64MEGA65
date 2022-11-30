@@ -10,6 +10,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 entity analog_pipeline is
    generic (
@@ -63,12 +64,14 @@ end entity analog_pipeline;
 
 architecture synthesis of analog_pipeline is
 
+   signal video_ce           : std_logic_vector(1 downto 0);
+   signal video_ce_overlay   : std_logic;
+
    -- MiSTer video pipeline signals
    signal vs_hsync           : std_logic;
    signal vs_vsync           : std_logic;
    signal vs_hblank          : std_logic;
    signal vs_vblank          : std_logic;
-   signal div                : integer range 0 to 7;
    signal mix_r              : std_logic_vector(7 downto 0);
    signal mix_g              : std_logic_vector(7 downto 0);
    signal mix_b              : std_logic_vector(7 downto 0);
@@ -80,9 +83,6 @@ architecture synthesis of analog_pipeline is
    signal vga_blue           : std_logic_vector(7 downto 0);
    signal vga_hs             : std_logic;
    signal vga_vs             : std_logic;
-
-   signal video_ce_overlay   : std_logic_vector(1 downto 0) := "00";
-   signal video_ce_overlay_bit : std_logic;
 
    component video_mixer is
       port (
@@ -147,28 +147,25 @@ begin
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer video signal processing pipeline
-   --
-   -- We configured it (hardcoded) to perform a scan-doubling, but there are many more things
-   -- we could do here, including to make sure that we output an old composite signal instead of VGA
    --------------------------------------------------------------------------------------------------
 
    p_div : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
-         div <= div + 1;
+         video_ce <= video_ce + 1;
       end if;
    end process p_div;
-   ce_pix <= '1' when div = 0 else '0';
+   ce_pix <= '1' when video_ce = 0 else '0';
 
-   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 2016 clock cycles @ 63.056 MHz).
+   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 1008 clock cycles @ 31.528 MHz).
    -- According to the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
    -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
    -- a horizontal period of 32.00 us. The difference here is 0.1 %.
-   -- The ratio between clk_video_i and the pixel frequency is 7/3.
+   -- The ratio between clk_video_i and the pixel frequency is 7/6.
 
    i_video_mixer : video_mixer
       port map (
-         CLK_VIDEO   => video_clk_i,      -- 63.056 MHz
+         CLK_VIDEO   => video_clk_i,      -- 31.528 MHz
          CE_PIXEL    => open,
          ce_pix      => ce_pix,
          scandoubler => scandoubler_i,
@@ -205,14 +202,8 @@ begin
    end process vga_data_enable;
 
    -- Clock enable for Overlay video streams
-   p_video_ce : process (video_clk_i)
-   begin
-      if rising_edge(video_clk_i) then
-         video_ce_overlay <= std_logic_vector(unsigned(video_ce_overlay) + 1);
-      end if;
-   end process p_video_ce;
 
-   video_ce_overlay_bit <= video_ce_overlay(0) when scandoubler_i = '1' else video_ce_overlay(1) and video_ce_overlay(0);
+   video_ce_overlay <= '1' when scandoubler_i = '1' else video_ce(1) and video_ce(0);
 
    i_video_overlay : entity work.video_overlay
       generic  map (
@@ -224,7 +215,7 @@ begin
       )
       port map (
          vga_clk_i        => video_clk_i,
-         vga_ce_i         => video_ce_overlay_bit,
+         vga_ce_i         => video_ce_overlay,
          vga_red_i        => mix_r,
          vga_green_i      => mix_g,
          vga_blue_i       => mix_b,
