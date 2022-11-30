@@ -66,15 +66,10 @@ architecture rtl of clk is
 signal old_core_speed     : unsigned(1 downto 0);
 signal reset_c64_mmcm     : std_logic;
 
-signal qnice_fb           : std_logic;
 signal qnice_fb_mmcm      : std_logic;
-signal hdmi_720p_fb       : std_logic;
 signal hdmi_720p_fb_mmcm  : std_logic;
-signal hdmi_576p_fb       : std_logic;
 signal hdmi_576p_fb_mmcm  : std_logic;
-signal sys_9975_fb        : std_logic;
 signal sys_9975_fb_mmcm   : std_logic;
-signal main_fb            : std_logic;
 signal main_fb_mmcm       : std_logic;
 signal qnice_clk_mmcm     : std_logic;
 signal hr_clk_x1_mmcm     : std_logic;
@@ -149,7 +144,7 @@ begin
          CLKOUT3             => hr_clk_x2_del_mmcm,
          CLKOUT4             => audio_clk_mmcm,
          -- Input clock control
-         CLKFBIN             => qnice_fb,
+         CLKFBIN             => qnice_fb_mmcm,
          CLKIN1              => sys_clk_i,
          CLKIN2              => '0',
          -- Tied to always select the primary input clock
@@ -206,7 +201,7 @@ begin
          CLKOUT0             => tmds_720p_clk_mmcm,
          CLKOUT1             => hdmi_720p_clk_mmcm,
          -- Input clock control
-         CLKFBIN             => hdmi_720p_fb,
+         CLKFBIN             => hdmi_720p_fb_mmcm,
          CLKIN1              => sys_clk_i,
          CLKIN2              => '0',
          -- Tied to always select the primary input clock
@@ -263,7 +258,7 @@ begin
          CLKOUT0             => tmds_576p_clk_mmcm,
          CLKOUT1             => hdmi_576p_clk_mmcm,
          -- Input clock control
-         CLKFBIN             => hdmi_576p_fb,
+         CLKFBIN             => hdmi_576p_fb_mmcm,
          CLKIN1              => sys_clk_i,
          CLKIN2              => '0',
          -- Tied to always select the primary input clock
@@ -315,7 +310,7 @@ begin
          CLKFBOUT            => sys_9975_fb_mmcm,
          CLKOUT0             => sys_clk_9975_mmcm,
          -- Input clock control
-         CLKFBIN             => sys_9975_fb,
+         CLKFBIN             => sys_9975_fb_mmcm,
          CLKIN1              => sys_clk_i,
          CLKIN2              => '0',
          -- Tied to always select the primary input clock
@@ -371,7 +366,7 @@ begin
          CLKFBOUT            => main_fb_mmcm,
          CLKOUT0             => main_clk_mmcm,
          -- Input clock control
-         CLKFBIN             => main_fb,
+         CLKFBIN             => main_fb_mmcm,
          CLKIN1              => sys_clk_i,
          CLKIN2              => sys_clk_9975_bg,
          CLKINSEL            => not core_speed_i(0),
@@ -421,36 +416,6 @@ begin
       port map (
          I => sys_clk_9975_mmcm,
          O => sys_clk_9975_bg
-      );
-
-   qnice_fb_bufg : BUFG
-      port map (
-         I => qnice_fb_mmcm,
-         O => qnice_fb
-      );
-
-   hdmi_720p_fb_bufg : BUFG
-      port map (
-         I => hdmi_720p_fb_mmcm,
-         O => hdmi_720p_fb
-      );
-
-   hdmi_576p_fb_bufg : BUFG
-      port map (
-         I => hdmi_576p_fb_mmcm,
-         O => hdmi_576p_fb
-      );
-
-   sys_9975_fb_bufg : BUFG
-      port map (
-         I => sys_9975_fb_mmcm,
-         O => sys_9975_fb
-      );
-
-   main_fb_bufg : BUFG
-      port map (
-         I => main_fb_mmcm,
-         O => main_fb
       );
 
    qnice_clk_bufg : BUFG
