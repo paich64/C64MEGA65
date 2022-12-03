@@ -44,21 +44,23 @@ images instead of simulated handling leads to games like "Seven Cities of
 Gold" being able to format/create their non-standard game disks. Also highly
 sophisticated bit nibblers (@TODO example!) are working now.
 
-WIP Improved the 6510 CPU's interrupt dispatching which results in more demos
-working flawlessly (for example "All Hallows' Eve")
+* Improved the 6510 CPU's interrupt dispatching which results in more demos
+  working flawlessly (for example "All Hallows' Eve")
 
-WIP Improved accuracy of the frequency ratio between the C64's CPU and the
-C1541 floppy's CPU which results in more demos working flawlessly (for example
-"Unbounded" by Demotion and "Ice Cream Castle" by Crest). It also fixes an
-issue with the diskmag "Input 64". @TODO: Redo README.md because after this
-fix we will have no known issue due to HDMI: Flicker-free any more.
+* Improved accuracy of the frequency ratio between the C64's CPU and the C1541
+  floppy's CPU which results in more demos working flawlessly (for example
+  "Unbounded" by Demotion and "Ice Cream Castle" by Crest). It also fixes an
+  issue with the diskmag "Input 64". @TODO: Redo README.md because after this
+  fix we will have no known issue due to HDMI: Flicker-free any more.
 
-WIP merge MiSTer upstream fixes: @TODO better description for VERSIONS.md;
-right now this is the @TODO reminder:
+* Merge MiSTer upstream fixes to improve simulation accuracy and compatibility
+  with real hardware:
   - CIA: Disk parport: ignore inputs on pins configured as output (sorgelig)
-    commit 4da804c
-  - CIA: fix timer reset values (Arctic Shipwreck) (gyurco) commit 7eca7e3
-  - VIC: change xscroll and turbo latch time (sorgelig) commit f3a137b
+    (MiSTer commit 4da804c)
+  - CIA: fix timer reset values (Arctic Shipwreck) (gyurco) 
+    (MiSTer commit 7eca7e3)
+  - VIC: change xscroll and turbo latch time (sorgelig)
+    (MiSTer commit f3a137b)
 
 ## Improved HDMI and VGA Compatibility
 
@@ -96,7 +98,8 @@ from SD card.
 WIP HyperRAM device support to QNICE: @TODO Describe where this is used;
 for example for the `*.crt` support as these files can become very large
 
-WIP Refactor asynchronous resets and other things around clk.vhd to reduce
+WIP Refactor audio clock, video clock, (<=== already done | @TODO ==>)
+asynchronous resets and other things around clk.vhd to reduce
 warnings upon `report_cdc` and to make sure the whole clock architecture is
 cleaner. (Also need to double-check M2M itself.)
 
