@@ -1,10 +1,12 @@
 ## Commodore 64 for MEGA65 (C64MEGA65)
 ##
-## Signal mapping für MEGA65-R3
-##
 ## This machine is based on C64_MiSTer
 ## Powered by MiSTer2MEGA65
 ## MEGA65 port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
+
+################################
+## TIMING CONSTRAINTS
+################################
 
 ## External clock signal (100 MHz)
 create_clock -period 10.000 -name CLK [get_ports CLK]
@@ -25,14 +27,12 @@ create_generated_clock -name hdmi_576p_clk [get_pins */clk_gen/i_clk_hdmi_576p/C
 create_generated_clock -name main_clk_0    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks CLK]
 create_generated_clock -name main_clk_1    [get_pins */clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks sys_clk_9975_mmcm]
 
-## The pcm_clk runs at 12.288 MHz and is derived from the audio_clk running at 30 MHz. Here the divider is set to 2, so the pcm_clk is
-## required to satisfy a 15 Mhz clock speed.
-create_generated_clock -name pcm_clk -source [get_pins */i_digital_pipeline/i_clk_synthetic/dest_clk_reg/C] \
-                                -divide_by 2 [get_pins */i_digital_pipeline/i_clk_synthetic/dest_clk_reg/Q]
-
 ## Clock divider sdcardclk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins */QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/C] \
                                    -divide_by 2 [get_pins */QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
+
+## Handle CDC of audio data
+set_max_delay 8 -datapath_only -from [get_clocks] -to [get_pins -hierarchical "*audio_cdc_gen.dst_*_d_reg[*]/D"]
 
 ## QNICE's EAE combinatorial division networks take longer than
 ## the regular clock period, so we specify a multicycle path
@@ -66,9 +66,6 @@ set_false_path -from [get_clocks qnice_clk]       -to [get_clocks main_clk_1]
 set_false_path -from [get_clocks qnice_clk]       -to [get_clocks hdmi_720p_clk]
 set_false_path -from [get_clocks qnice_clk]       -to [get_clocks hdmi_576p_clk]
 
-set_false_path -from [get_clocks main_clk_0]      -to [get_clocks audio_clk]
-set_false_path -from [get_clocks main_clk_1]      -to [get_clocks audio_clk]
-
 set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks hdmi_576p_clk]
 set_false_path   -to [get_clocks hdmi_720p_clk] -from [get_clocks hdmi_576p_clk]
 set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks tmds_720p_clk]
@@ -94,9 +91,6 @@ set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
 
 ## The high level reset signal is slow enough so that we can afford a false path
 set_false_path -from [get_pins reset_m2m_n_reg/C]
-
-set_false_path -from [get_clocks main_clk_0] -to [get_clocks pcm_clk]
-set_false_path -from [get_clocks main_clk_1] -to [get_clocks pcm_clk]
 
 ################################
 ## PLACEMENT CONSTRAINTS
