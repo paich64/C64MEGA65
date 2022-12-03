@@ -45,13 +45,14 @@ Gold" being able to format/create their non-standard game disks. Also highly
 sophisticated bit nibblers (@TODO example!) are working now.
 
 * Improved the 6510 CPU's interrupt dispatching which results in more demos
-  working flawlessly (for example "All Hallows' Eve")
+  working flawlessly (for example "All Hallows' Eve", this fixes
+  https://github.com/MJoergen/C64MEGA65/issues/9)
 
 * Improved accuracy of the frequency ratio between the C64's CPU and the C1541
   floppy's CPU which results in more demos working flawlessly (for example
   "Unbounded" by Demotion and "Ice Cream Castle" by Crest). It also fixes an
-  issue with the diskmag "Input 64". @TODO: Redo README.md because after this
-  fix we will have no known issue due to HDMI: Flicker-free any more.
+  issue with the diskmag "Input 64"
+  (https://github.com/MJoergen/C64MEGA65/issues/2)
 
 * Merge MiSTer upstream fixes to improve simulation accuracy and compatibility
   with real hardware:
