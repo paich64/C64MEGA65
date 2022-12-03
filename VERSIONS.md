@@ -55,13 +55,13 @@ sophisticated bit nibblers (@TODO example!) are working now.
 
 * Merge MiSTer upstream fixes to improve simulation accuracy and compatibility
   with real hardware:
-  - CIA: Disk parport: ignore inputs on pins configured as output
+  - CIA: Disk parport: Ignore inputs on pins configured as output
     (MiSTer commit 4da804c, fix by sorgelig)
   - CIA: Fix timer reset values: Game "Arctic Shipwreck" works now and
     therefore this fixes https://github.com/MiSTer-devel/C64_MiSTer/issues/107
     (MiSTer commit 7eca7e3, fix by gyurco)
-  - VIC: change xscroll and turbo latch time (sorgelig)
-    (MiSTer commit f3a137b)
+  - VIC: Change xscroll and turbo latch time
+    (MiSTer commit f3a137b, fix by sorgelig)
 
 ## Improved HDMI and VGA Compatibility
 
