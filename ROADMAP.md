@@ -11,6 +11,7 @@ Feature Roadmap
 * NTSC
 * Support two drives: 8 and 9
 * Dual SID
+* Support autoswap via `*.lst` files
 * Support the creation of empty disk images
 * Supoprt the creation of empty config files and the migration of the config
   file from an older version to a newer version
