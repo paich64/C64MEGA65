@@ -35,6 +35,8 @@ WIP Simulated tape drive using `*.t64` tape images
 
 WIP Directly load program files (`*.prg`)
 
+WIP You can use the Amiga mouse as a C64 mouse (@TODO describe exact models)
+
 ## Improved C64 and C1541 Accuracy & Compatibility
 
 WIP ??? research MiSTer's SID improvements ???
