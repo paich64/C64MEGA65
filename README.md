@@ -66,6 +66,10 @@ algorithms are working for a very nice looking authentic image.
   [this](https://ultimatemister.com/product/rgb-scart-cable/)
   cable) or an old RGB-capable monitor (by soldering your own cable)
   to MEGA65's VGA port.
+  
+Important: If you use analog retro monitors, please switch off
+"HDMI: Flicker-free" as described
+[here](#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
 
 ### Convenience
 
@@ -170,15 +174,11 @@ machines from Trenz are R3A.
    for the C1541 at drive 8.
 5. If you put your disk images into a folder called `/c64`, then the core will
    display this folder on startup. Otherwise the root folder will be shown.
+   If you want the core to remember the settings, make sure you read the
+   section **Config file** below.
 6. Press the <kbd>Help</kbd> key on your MEGA65 keyboard as soon as the core
    is running to mount disks and to configure the core.
-
-If you are a developer and/or have a JTAG adaptor connected to your MEGA65,
-then you can use the `.bit` file from the ZIP instead of the `.cor` file:
-Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
-syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
-into the FPGA of the MEGA65 and automatically started.
-
+   
 ### Config file
 
 If you want the core to remember the settings you made in the on-screen-menu,
@@ -201,6 +201,30 @@ Important: If you change the SD card, for example by using <kbd>F1</kbd> or
 <kbd>F3</kbd> in the file browser or by physically changing or removing the
 card that contains your `/c64/c64mega65` config file, then the core will not
 remember your newest on-screen-menu settings upon next start.
+
+### Important advice for users of analog VGA and retro 15 kHz RGB over VGA
+
+It is highly recommended to switch off "HDMI: Flicker-free" when using
+analog VGA monitors or monitors that work with the "retro 15 kHZ RGB
+over VGA" signal.
+
+Otherwise you might encounter strange visual effects that range from
+a blurry image to an "underwater" blurry movement of your screen.
+
+[Learn more](#flicker-free-hdmi) about "HDMI: Flicker-free" to understand
+why this is happens.
+
+### Using `.bit` files instead of `.cor` files
+
+If you are a developer and/or have a JTAG adaptor connected to your MEGA65,
+then you can use the `.bit` file from the ZIP instead of the `.cor` file:
+Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
+syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
+into the FPGA of the MEGA65 and automatically started.
+
+Using `.bit` files is very useful, in case you want to try out multiple cores
+or core versions quickly without going through the lengthy process of
+flashing `.cor` files.
 
 HDMI compatibility
 ------------------
@@ -326,7 +350,7 @@ start the legendary game
 on your favorite emulator on your computer and then watch the title
 scroller / intro. You will see a pretty stuttering scroller.
 
-Not so when using a FPGA based recreation on the MEGA65 using the right
+Not so when using an FPGA based recreation on the MEGA65 using the right
 display and settings. We have your back! :-)
 
 When using VGA or Retro 15 kHz RGB, you are safe by definition, if your
@@ -334,25 +358,52 @@ monitor plays along.
 
 We are slowing down the whole system (not only the C64, but also the SID,
 VIC, C1541, ...), so that it runs at only 99.75% of the original clock
-speed of the C64. This does not decrease the compatibility of the core and you
-probably will never notice.
+speed of the C64. This does not decrease the compatibility of the core in
+most cases and you probably will never notice.
 
 But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
 HDMI display. We believe that this is the most compatible way of providing
-a flicker-free experience on HDMI. And this is why this feature is enabled
-by default.
+a flicker-free experience on HDMI.
+
+While this works great on digital HDMI displays, there is a disadvantage on
+some analog VGA monitors: The 0.25% slowdown leads to a slightly off VGA
+signal timing which might lead to
+[strange effects](#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
+This is why you should disable "HDMI: Flicker-free" when working with an
+analog monitor.
 
 ### Compatibility
 
-There are no known issues other than the fact that everything runs only at
-99.75% of the original speed. If you for some reason need 100% speed, for
-example because you want to do a frame-by-frame comparison of the video
-output with real hardware or a waveform-level sound comparison then you can
-disable the menu item called "HDMI: Flicker-free".
+If you experience issues, then you can switch the core back to 100% system
+speed. The menu item for doing so is called "HDMI: Flicker-free".
 
 Please note that the C64 core will reset each time you toggle the
 "HDMI: Flicker-free" switch, the system clock speed is switched between
 99.75% and 100% back and forth.
+
+Here is a small test-case for you to experience the difference by yourself:
+
+1. Switch OFF "HDMI: Flicker-free" and load The Great Giana Sisters and
+   watch the title scroller: Every ~8 seconds, you will see a jerky movement
+   and tearing. The same will happen when you play the game. And this
+   effect is not only there at Giana Sisters but at everything that
+   scrolls and/or moves a lot of things on the screen.
+
+2. Switch ON "HDMI: Flicker-free" and load the disk and tape magazine
+   [Input 64 Issue 1/1985](https://c64-online.com/?ddownload=4459).
+   You will not see the intro which consists of flying letters
+   building up the word "Input 64". So here we see an example of a
+   compatibility issue.
+
+3. Switch OFF "HDMI: Flicker-free" and load Input 64 again. It now works.
+   You can watch the intro.
+
+So you have the choice: Flicker-free on HDMI or more compatibility.
+
+Our tests have shown, that the vast majority of software works like a charm
+and the value of having a completely smooth and flicker free experience on
+HDMI seems therefore larger than slight compatibility issues. This is why
+this feature is activated by default.
 
 Hard-reset vs soft-reset
 ------------------------
