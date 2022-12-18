@@ -66,6 +66,10 @@ algorithms are working for a very nice looking authentic image.
   [this](https://ultimatemister.com/product/rgb-scart-cable/)
   cable) or an old RGB-capable monitor (by soldering your own cable)
   to MEGA65's VGA port.
+  
+Important: If you use analog retro monitors, please switch off
+"HDMI: Flicker-free" as described
+[here](#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
 
 ### Convenience
 
@@ -170,15 +174,11 @@ machines from Trenz are R3A.
    for the C1541 at drive 8.
 5. If you put your disk images into a folder called `/c64`, then the core will
    display this folder on startup. Otherwise the root folder will be shown.
+   If you want the core to remember the settings, make sure you read the
+   section **Config file** below.
 6. Press the <kbd>Help</kbd> key on your MEGA65 keyboard as soon as the core
    is running to mount disks and to configure the core.
-
-If you are a developer and/or have a JTAG adaptor connected to your MEGA65,
-then you can use the `.bit` file from the ZIP instead of the `.cor` file:
-Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
-syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
-into the FPGA of the MEGA65 and automatically started.
-
+   
 ### Config file
 
 If you want the core to remember the settings you made in the on-screen-menu,
@@ -201,6 +201,30 @@ Important: If you change the SD card, for example by using <kbd>F1</kbd> or
 <kbd>F3</kbd> in the file browser or by physically changing or removing the
 card that contains your `/c64/c64mega65` config file, then the core will not
 remember your newest on-screen-menu settings upon next start.
+
+### Important advice for users of analog VGA and retro 15 kHz RGB over VGA
+
+It is highly recommended to switch off "HDMI: Flicker-free" when using
+analog VGA monitors or monitors that work with the "retro 15 kHZ RGB
+over VGA" signal.
+
+Otherwise you might encounter strange visual effects that range from
+a blurry image to an "underwater" blurry movement of your screen.
+
+[Learn more](#flicker-free-hdmi) about "HDMI: Flicker-free" to understand
+why this is happens.
+
+### Using `.bit` files instead of `.cor` files
+
+If you are a developer and/or have a JTAG adaptor connected to your MEGA65,
+then you can use the `.bit` file from the ZIP instead of the `.cor` file:
+Run the [M65 tool](https://github.com/MEGA65/mega65-tools) using this
+syntax `m65 -q yourbitstream.bit` and the core will be immediately loaded
+into the FPGA of the MEGA65 and automatically started.
+
+Using `.bit` files is very useful, in case you want to try out multiple cores
+or core versions quickly without going through the lengthy process of
+flashing `.cor` files.
 
 HDMI compatibility
 ------------------
@@ -326,7 +350,7 @@ start the legendary game
 on your favorite emulator on your computer and then watch the title
 scroller / intro. You will see a pretty stuttering scroller.
 
-Not so when using a FPGA based recreation on the MEGA65 using the right
+Not so when using an FPGA based recreation on the MEGA65 using the right
 display and settings. We have your back! :-)
 
 When using VGA or Retro 15 kHz RGB, you are safe by definition, if your
@@ -340,6 +364,13 @@ most cases and you probably will never notice.
 But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
 HDMI display. We believe that this is the most compatible way of providing
 a flicker-free experience on HDMI.
+
+While this works great on digital HDMI displays, there is a disadvantage on
+some analog VGA monitors: The 0.25% slowdown leads to a slightly off VGA
+signal timing which might lead to
+[strange effects](#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
+This is why you should disable "HDMI: Flicker-free" when working with an
+analog monitor.
 
 ### Compatibility
 
