@@ -31,6 +31,14 @@ robustness, performance, and stability of the whole system, we will need
 to implement certain technical improvements in the "backend", again in no
 particular order:
 
+* Implement a remote-control mechanism via Serial/JTAG (similar to what
+  already works on the MEGA65 core) that allows us to remote-control the
+  C64 core so that we can for example run whole test suites remotely.
+  If possible we should think about implementing this feature on the
+  MiSTer2MEGA65 framework level so that all cores can benefit.
+* Add the Vice test suite to our repertoire of tests and use the
+  above-mentioned mechanism to execute on it:
+  https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/testbench/ 
 * Support for R2 version of MEGA65
 * VGA retro CSync generation
 * Enhance QNICE's FAT32 stack so that it is able to create new files
