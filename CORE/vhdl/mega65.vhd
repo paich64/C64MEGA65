@@ -267,27 +267,21 @@ signal hdmi_video_mode        : natural range 0 to 3;
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
 
--- QNICE MMIO 4k-segmented access to RAMs, ROMs and similarily behaving devices
--- ramrom_addr is 28-bit because we have a 16-bit window selector and a 4k window: 65536*4096 = 268.435.456 = 2^28
-signal qnice_ramrom_dev       : std_logic_vector(15 downto 0);
-signal qnice_ramrom_addr      : std_logic_vector(27 downto 0);
-signal qnice_ramrom_data_o    : std_logic_vector(15 downto 0);
-signal qnice_ramrom_data_i    : std_logic_vector(15 downto 0);
-signal qnice_ramrom_ce        : std_logic;
-signal qnice_ramrom_we        : std_logic;
-
--- Devices: MiSTer2MEGA framework
-constant C_DEV_VRAM_DATA      : std_logic_vector(15 downto 0) := x"0000";
-constant C_DEV_VRAM_ATTR      : std_logic_vector(15 downto 0) := x"0001";
-constant C_DEV_OSM_CONFIG     : std_logic_vector(15 downto 0) := x"0002";
-constant C_DEV_ASCAL_PPHASE   : std_logic_vector(15 downto 0) := x"0003";
-constant C_DEV_SYS_INFO       : std_logic_vector(15 downto 0) := x"00FF";
-constant C_SYS_VGA            : std_logic_vector(15 downto 0) := x"0010";
-constant C_SYS_HDMI           : std_logic_vector(15 downto 0) := x"0011";
-
--- Commodore 64 specific devices
-constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";     -- C64's main RAM
-constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
+-- OSM selections within qnice_osm_control_i
+constant C_MENU_FLIP_JOYS     : natural := 4;
+constant C_MENU_8580          : natural := 9;
+constant C_MENU_REU           : natural := 13;
+constant C_MENU_CRT_EMULATION : natural := 14;
+constant C_MENU_HDMI_ZOOM     : natural := 15;
+constant C_MENU_HDMI_16_9_50  : natural := 16;
+constant C_MENU_HDMI_16_9_60  : natural := 17;
+constant C_MENU_HDMI_4_3_50   : natural := 18;  -- Caution: This naming convention is not self-explanatory,
+constant C_MENU_HDMI_5_4_50   : natural := 19;  --          scroll down and search for "hdmi_video_mode <= " to learn more 
+constant C_MENU_HDMI_FF       : natural := 20;
+constant C_MENU_HDMI_DVI      : natural := 21;
+constant C_MENU_VGA_RETRO     : natural := 22;
+constant C_MENU_8521          : natural := 23;
+constant C_MENU_IMPROVE_AUDIO : natural := 24;
 
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
@@ -309,6 +303,7 @@ begin
       port map (
          sys_clk_i         => CLK,             -- expects 100 MHz
          sys_rstn_i        => RESET_M2M_N,     -- Asynchronous, asserted low
+         qnice_clk_i       => qnice_clk_i,
          
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-free, 2=NTSC
          
@@ -326,7 +321,7 @@ begin
    core_speed        <= "01" when qnice_osm_control_i(C_MENU_HDMI_FF) else "00";
 
    -- needs to be in main clock domain
-   c64_clock_speed   <= CORE_CLK_SPEED_PAL;
+   c64_clock_speed   <= CORE_CLK_SPEED;
 
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
@@ -400,13 +395,14 @@ begin
          c64_ram_data_i       => unsigned(main_ram_data_to_c64),
 
          -- C64 IEC handled by QNICE
-         c64_clk_sd_i         => qnice_clk,           -- "sd card write clock" for floppy drive internal dual clock RAM buffer
-         c64_qnice_addr_i     => qnice_ramrom_addr,
-         c64_qnice_data_i     => qnice_ramrom_data_o,
+         c64_clk_sd_i         => qnice_clk_i,   -- "sd card write clock" for floppy drive internal dual clock RAM buffer
+         c64_qnice_addr_i     => qnice_dev_addr_i,
+         c64_qnice_data_i     => qnice_dev_data_i,
          c64_qnice_data_o     => qnice_c64_qnice_data,
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
          c64_qnice_we_i       => qnice_c64_qnice_we,
 
+         -- RAM Expansion Unit (REU)
          reu_cfg_i            => main_osm_control_m(C_MENU_REU),
          ext_cycle_o          => main_ext_cycle,
          reu_cycle_i          => main_reu_cycle,
@@ -435,13 +431,13 @@ begin
 
    -- Use On-Screen-Menu selections to configure several audio and video settings
    -- Video and audio mode control
-   qnice_dvi_o                <= '0';                                         -- 0=HDMI (with sound), 1=DVI (no sound)
-   qnice_scandoubler_o        <= '0';                                         -- no scandoubler
+   qnice_dvi_o                <= qnice_osm_control_i(C_MENU_HDMI_DVI);        -- 0=HDMI (with sound), 1=DVI (no sound)
+   qnice_scandoubler_o        <= not qnice_osm_control_i(C_MENU_VGA_RETRO);   -- no scandoubler when using the retro 15 kHz RGB mode
    qnice_audio_mute_o         <= '0';                                         -- audio is not muted
    qnice_audio_filter_o       <= qnice_osm_control_i(C_MENU_IMPROVE_AUDIO);   -- 0 = raw audio, 1 = use filters from globals.vhd
    qnice_zoom_crop_o          <= qnice_osm_control_i(C_MENU_HDMI_ZOOM);       -- 0 = no zoom/crop
 
-   -- ascal filters that are applied while zooming the input to 720p
+   -- ascal filters that are applied while processing the input
    -- 00 : Nearest Neighbour
    -- 01 : Bilinear
    -- 10 : Sharp Bilinear
@@ -457,33 +453,39 @@ begin
    qnice_ascal_triplebuf_o    <= '0';
 
    -- Flip joystick ports (i.e. the joystick in port 2 is used as joystick 1 and vice versa)
-   qnice_flip_joyports_o      <= '0';
+   qnice_flip_joyports_o      <= qnice_osm_control_i(C_MENU_FLIP_JOYS);
 
    ---------------------------------------------------------------------------------------------
-   -- Core specific device handling (QNICE clock domain)
+   -- Core specific device handling (QNICE clock domain, device IDs in globals.vhd)
    ---------------------------------------------------------------------------------------------
 
    core_specific_devices : process(all)
    begin
-      -- make sure that this is x"EEEE" by default and avoid a register here by having this default value
+      -- avoid latches
       qnice_dev_data_o     <= x"EEEE";
-
-      -- Demo core specific: Delete before starting to port your core
-      qnice_demo_vd_ce     <= '0';
-      qnice_demo_vd_we     <= '0';
-
+      qnice_c64_ram_we           <= '0';
+      qnice_c64_qnice_ce         <= '0';
+      qnice_c64_qnice_we         <= '0';
+      qnice_c64_mount_buf_ram_we <= '0'; 
+      
       case qnice_dev_id_i is
+         -- C64 RAM
+         when C_DEV_C64_RAM =>
+            qnice_c64_ram_we           <= qnice_dev_we_i;
+            qnice_dev_data_o           <= x"00" & qnice_c64_ram_data;
 
-         -- Demo core specific stuff: delete before porting your own core
-         when C_DEV_DEMO_VD =>
-            qnice_demo_vd_ce     <= qnice_dev_ce_i;
-            qnice_demo_vd_we     <= qnice_dev_we_i;
-            qnice_dev_data_o     <= qnice_demo_vd_data_o;
+         -- C64 IEC drives
+         when C_VD_DEVICE =>
+            qnice_c64_qnice_ce         <= qnice_dev_ce_i;
+            qnice_c64_qnice_we         <= qnice_dev_we_i;
+            qnice_dev_data_o           <= qnice_c64_qnice_data;
 
-         -- @TODO YOUR RAMs or ROMs (e.g. for cartridges) or other devices here
-         -- Device numbers need to be >= 0x0100
+         -- Disk mount buffer RAM
+         when C_DEV_C64_MOUNT =>
+            qnice_c64_mount_buf_ram_we <= qnice_dev_we_i;
+            qnice_dev_data_o           <= x"00" & qnice_c64_mount_buf_ram_data;
 
-         when others => null;
+           when others => null;
       end case;
    end process core_specific_devices;
 
@@ -509,13 +511,13 @@ begin
          q_a               => main_ram_data_to_c64,
 
          -- QNICE
-         clock_b           => qnice_clk,
-         address_b         => qnice_ramrom_addr(15 downto 0),
-         data_b            => qnice_ramrom_data_o(7 downto 0),
+         clock_b           => qnice_clk_i,
+         address_b         => qnice_dev_addr_i(15 downto 0),
+         data_b            => qnice_dev_data_i(7 downto 0),
          wren_b            => qnice_c64_ram_we,
          q_b               => qnice_c64_ram_data
       ); -- c64_ram
-
+      
    -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
    -- the disks that we are mounting. This will work for D64 only.
    -- @TODO: Switch to HyperRAM at a later stage
@@ -528,9 +530,9 @@ begin
       )
       port map (
          -- QNICE only
-         clock_a           => qnice_clk,
-         address_a         => qnice_ramrom_addr(17 downto 0),
-         data_a            => qnice_ramrom_data_o(7 downto 0),
+         clock_a           => qnice_clk_i,
+         address_a         => qnice_dev_addr_i(17 downto 0),
+         data_a            => qnice_dev_data_i(7 downto 0),
          wren_a            => qnice_c64_mount_buf_ram_we,
          q_a               => qnice_c64_mount_buf_ram_data
       ); -- mount_buf_ram

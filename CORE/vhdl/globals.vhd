@@ -1,11 +1,11 @@
 ----------------------------------------------------------------------------------
 -- MiSTer2MEGA65 Framework
 --
--- Global constants
+-- C64 for MEGA65
+-- Global Constants
 --
 -- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -40,8 +40,13 @@ constant QNICE_FIRMWARE           : string  := QNICE_FIRMWARE_M2M;
 -- then add all the clocks speeds here by adding more constants.
 ----------------------------------------------------------------------------------------------------------
 
--- @TODO: Your core's clock speed
-constant CORE_CLK_SPEED       : natural := 54_000_000;   -- @TODO YOURCORE expects 54 MHz
+-- C64 core clock speeds
+-- Make sure that you specify very exact values here, because these values will be used in counters
+-- in main.vhd and in fpga64_sid_iec.vhd to avoid clock drift at derived clocks
+constant CORE_CLK_SPEED_PAL   : natural := 31_527_778;   -- Will lead to a C64 clock of 985,243 Hz
+constant CORE_CLK_SPEED_NTSC  : natural := 32_727_264;   -- @TODO: This is MiSTer's value; we will need to adjust it to ours
+
+constant CORE_CLK_SPEED       : natural := CORE_CLK_SPEED_PAL;
 
 -- System clock speed (crystal that is driving the FPGA) and QNICE clock speed
 -- !!! Do not touch !!!
@@ -68,13 +73,16 @@ constant CHAR_MEM_SIZE        : natural := CHARS_DX * CHARS_DY;
 constant VRAM_ADDR_WIDTH      : natural := f_log2(CHAR_MEM_SIZE);
 
 ----------------------------------------------------------------------------------------------------------
--- Virtual Drive Management System
+-- Commodore 64 specific devices
 ----------------------------------------------------------------------------------------------------------
 
--- example virtual drive handler, which is connected to nothing and only here to demo
--- the file- and directory browsing capabilities of the firmware
-constant C_DEV_DEMO_VD        : std_logic_vector(15 downto 0) := x"0101";
-constant C_DEV_DEMO_NOBUFFER  : std_logic_vector(15 downto 0) := x"AAAA";
+constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";     -- C64's main RAM
+constant C_DEV_C64_VDRIVES    : std_logic_vector(15 downto 0) := x"0101";     -- Virtual Device Management System
+constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
+
+----------------------------------------------------------------------------------------------------------
+-- Virtual Drive Management System
+----------------------------------------------------------------------------------------------------------
 
 -- Virtual drive management system (handled by vdrives.vhd and the firmware)
 -- If you are not using virtual drives, make sure that:
@@ -84,13 +92,11 @@ constant C_DEV_DEMO_NOBUFFER  : std_logic_vector(15 downto 0) := x"AAAA";
 -- Otherwise make sure that you wire C_VD_DEVICE in the qnice_ramrom_devices process and that you
 -- have as many appropriately sized RAM buffers for disk images as you have drives
 type vd_buf_array is array(natural range <>) of std_logic_vector;
-constant C_VDNUM              : natural := 3;                                          -- amount of virtual drives; if more than 5: also adjust VDRIVES_MAX in M2M/rom/shell_vars.asm, maximum is 15
-constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := C_DEV_DEMO_VD;        -- device number of vdrives.vhd device
-constant C_VD_BUFFER          : vd_buf_array := (  C_DEV_DEMO_NOBUFFER,
-                                                   C_DEV_DEMO_NOBUFFER,
-                                                   C_DEV_DEMO_NOBUFFER,
+constant C_VDNUM              : natural := 1;                                          -- amount of virtual drives; if more than 5: also adjust VDRIVES_MAX in M2M/rom/shell_vars.asm, maximum is 15
+constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := C_DEV_C64_VDRIVES;    -- device number of vdrives.vhd device
+constant C_VD_BUFFER          : vd_buf_array := (  C_DEV_C64_MOUNT,
                                                    x"EEEE");                           -- Always finish the array using x"EEEE"
-                                                   
+
 ----------------------------------------------------------------------------------------------------------
 -- Audio filters
 --

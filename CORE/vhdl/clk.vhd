@@ -26,6 +26,7 @@ entity clk is
    port (
       sys_clk_i       : in  std_logic;   -- expects 100 MHz
       sys_rstn_i      : in  std_logic;   -- Asynchronous, asserted low
+      qnice_clk_i     : in  std_logic;   -- QNICE clock is needed for p_resetman 
 
       -- switchable clock for the C64 core
       -- 00 = PAL, as close as possuble to the C64's original clock:
@@ -45,21 +46,21 @@ end entity clk;
 
 architecture rtl of clk is
 
+-- reset management (p_resetman)
 signal old_core_speed     : unsigned(1 downto 0);
 signal reset_c64_mmcm     : std_logic;
+signal qnice_rst          : std_logic;
 
+-- MMCM signals
 signal sys_9975_fb_mmcm   : std_logic;
 signal main_fb_mmcm       : std_logic;
 signal main_clk_mmcm      : std_logic;
-signal sys_clk_9975_mmcm  : std_logic;
 
+signal sys_clk_9975_mmcm  : std_logic;
 signal sys_clk_9975_bg    : std_logic;
 
 signal main_locked        : std_logic;
 signal sys_9975_locked    : std_logic;
-
-signal c64_clock_select   : std_logic;
-
 
 begin
 
@@ -170,10 +171,10 @@ begin
          RST                 => reset_c64_mmcm or (not sys_9975_locked)
       ); -- i_clk_c64_org  
 
-   p_resetman : process(qnice_clk_o)
+   p_resetman : process(qnice_clk_i)
    begin
-      if rising_edge(qnice_clk_o) then
-         if qnice_rst_o then
+      if rising_edge(qnice_clk_i) then
+         if qnice_rst then
             old_core_speed <= core_speed_i;
             reset_c64_mmcm <= '1';
          else

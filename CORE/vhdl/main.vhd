@@ -161,11 +161,15 @@ architecture synthesis of main is
    signal iec_rom_data_i      : std_logic_vector(7 downto 0);
    signal iec_rom_wr_i        : std_logic;
 
+   -- unprocessed video output of the C64 core
    signal vga_hs              : std_logic;
    signal vga_vs              : std_logic;
    signal vga_red             : unsigned(7 downto 0);
    signal vga_green           : unsigned(7 downto 0);
    signal vga_blue            : unsigned(7 downto 0);
+   
+   -- vga_ce: clock enable which is used to generate the C64's pixel clock from the core's main clock
+   -- vga_ce_2x: needs to be 2x faster than vga_ce
    signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock
    signal vga_ce_2x           : std_logic_vector(3 downto 0) := "10";   -- 2x needs to be 1/2 of the main clock
 
@@ -176,12 +180,7 @@ architecture synthesis of main is
    signal hard_rst_counter    : natural := 0;
    signal c64_ram_data        : unsigned(7 downto 0);
    
-   -- Paddles
-   signal pot1                : std_logic_vector(7 downto 0);  -- port 1, x
-   signal pot2                : std_logic_vector(7 downto 0);  -- port 1, y
-   signal pot3                : std_logic_vector(7 downto 0);  -- port 2, x
-   signal pot4                : std_logic_vector(7 downto 0);  -- port 2, y
-
+   -- RAM Expansion Unit (REU)
    signal dma_req             : std_logic;
    signal dma_cycle           : std_logic;
    signal dma_addr            : std_logic_vector(15 downto 0);
@@ -336,10 +335,10 @@ begin
          irq_ext_n   => not reu_irq,
 
          -- paddle interface
-         pot1        => pot1,
-         pot2        => pot2,
-         pot3        => pot3,
-         pot4        => pot4,
+         pot1        => paddle_1_x,
+         pot2        => paddle_1_y,
+         pot3        => paddle_2_x,
+         pot4        => paddle_2_y,
 
          -- SID
          audio_l     => c64_sid_l,
