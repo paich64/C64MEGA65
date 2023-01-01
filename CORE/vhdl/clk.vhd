@@ -14,6 +14,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -47,7 +48,7 @@ architecture rtl of clk is
 signal old_core_speed     : unsigned(1 downto 0);
 signal reset_c64_mmcm     : std_logic;
 
-signal sys_clk_9975_mmcm  : std_logic;
+signal sys_9975_fb_mmcm   : std_logic;
 signal main_fb_mmcm       : std_logic;
 signal main_clk_mmcm      : std_logic;
 signal sys_clk_9975_mmcm  : std_logic;
@@ -162,7 +163,7 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => c64_locked,
+         LOCKED              => main_locked,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',

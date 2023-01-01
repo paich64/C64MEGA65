@@ -101,13 +101,8 @@ end entity main;
 
 architecture synthesis of main is
 
-   -- MiSTer C64 signals
+   -- Generic MiSTer C64 signals
    signal c64_pause           : std_logic;
-   signal c64_hsync           : std_logic;
-   signal c64_vsync           : std_logic;
-   signal c64_r               : unsigned(7 downto 0);
-   signal c64_g               : unsigned(7 downto 0);
-   signal c64_b               : unsigned(7 downto 0);
    signal c64_drive_led       : std_logic;
 
    -- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
@@ -171,10 +166,11 @@ architecture synthesis of main is
    signal vga_red             : unsigned(7 downto 0);
    signal vga_green           : unsigned(7 downto 0);
    signal vga_blue            : unsigned(7 downto 0);
-   signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock.
+   signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock
+   signal vga_ce_2x           : std_logic_vector(3 downto 0) := "10";   -- 2x needs to be 1/2 of the main clock
 
    -- Hard reset handling
-   constant hard_rst_delay   : natural := 100000; -- roundabout 1/10th of a second
+   constant hard_rst_delay    : natural := 100_000; -- roundabout 1/3 of a second
    signal reset_core_n        : std_logic;
    signal hard_reset_n        : std_logic;
    signal hard_rst_counter    : natural := 0;
@@ -224,10 +220,6 @@ architecture synthesis of main is
    end component reu;
 
 begin
-   -- @TODO: video_ce_2x_o needs to be twice as fast as video_ce_o; the demo core's vga_ce_o halfs
-   -- the speed of clk_main_i, so to achieve factor 2x we just need to set video_ce_2x_o to '1'.
-   video_ce_2x_o <= '1';
-
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
    
@@ -283,7 +275,7 @@ begin
          bios        => "01",          -- standard C64, internal ROM
 
          pause       => pause_i,
-         pause_out   => c64_pause,
+         pause_out   => c64_pause,     -- unused
 
          -- keyboard interface: directly connect the CIA1
          cia1_pa_i   => cia1_pa_i,
@@ -396,7 +388,6 @@ begin
          cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
-
    i_reu : reu
       port map (
          clk       => clk_main_i,
@@ -424,11 +415,6 @@ begin
 
    reu_oe <= iof;
 
-   pot1 <= paddle_2_x when flip_joys_i else paddle_1_x;
-   pot2 <= paddle_2_y when flip_joys_i else paddle_1_y;
-   pot3 <= paddle_1_x when flip_joys_i else paddle_2_x;
-   pot4 <= paddle_1_y when flip_joys_i else paddle_2_y;
-
    -- The M2M framework needs the signals vga_hblank_o, vga_vblank_o, and vga_ce_o.
    -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
    -- This also crops the signal to 384x270 via the vs_hblank and vs_vblank signals.
@@ -440,24 +426,27 @@ begin
          vsync     => vga_vs,
          ntsc      => '0',
          wide      => '0',
-         hsync_out => vga_hs_o,
-         vsync_out => vga_vs_o,
-         hblank    => vga_hblank_o,
-         vblank    => vga_vblank_o
+         hsync_out => video_hs_o,
+         vsync_out => video_vs_o,
+         hblank    => video_hblank_o,
+         vblank    => video_vblank_o
       ); -- i_video_sync
 
-   vga_red_o   <= std_logic_vector(vga_red);
-   vga_green_o <= std_logic_vector(vga_green);
-   vga_blue_o  <= std_logic_vector(vga_blue);
-   vga_ce_o    <= vga_ce(0);
-
+   video_red_o   <= std_logic_vector(vga_red);
+   video_green_o <= std_logic_vector(vga_green);
+   video_blue_o  <= std_logic_vector(vga_blue);
+   video_ce_o    <= vga_ce(0);
+   video_ce_2x_o <= vga_ce_2x(0);
+   
+   -- Pixel clock is 1/4 of the main clock and 2x is twice as fast
    p_vga_ce : process (clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         vga_ce <= vga_ce(0) & vga_ce(vga_ce'left downto 1);
+         vga_ce    <= vga_ce(0) & vga_ce(vga_ce'left downto 1);
+         vga_ce_2x <= vga_ce_2x(0) & vga_ce_2x(vga_ce_2x'left downto 1);
       end if;
    end process p_vga_ce;
-
+   
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
@@ -466,7 +455,6 @@ begin
    i_m65_to_c64 : entity work.keyboard
       port map (
          clk_main_i           => clk_main_i,
-         flip_joys_i          => flip_joys_i,
 
          -- Interface to the MEGA65 keyboard
          key_num_i            => kb_key_num_i,
@@ -533,8 +521,8 @@ begin
       end if;
    end process;
 
-   sid_l <= signed(alo);
-   sid_r <= signed(aro);
+   audio_left_o  <= signed(alo);
+   audio_right_o <= signed(aro);
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer IEC drives
@@ -697,4 +685,3 @@ begin
       ); -- i_vdrives
 
 end architecture synthesis;
-
