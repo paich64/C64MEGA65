@@ -41,7 +41,7 @@ entity m2m_keyb is
       key_num_o            : out integer range 0 to 79;        -- cycles through all keys with SCAN_FREQUENCY
       key_pressed_n_o      : out std_logic;                    -- low active: debounced feedback: is kb_key_num_o pressed right now?
 
-      -- control the drive led on the MEGA65 keyboard    
+      -- control the drive led on the MEGA65 keyboard      
       drive_led_i          : in std_logic;
       drive_led_col_i      : in std_logic_vector(23 downto 0); -- RGB color of drive led
             
@@ -69,8 +69,9 @@ begin
    m65driver : entity work.mega65kbd_to_matrix
    port map
    (
-       ioclock             => clk_main_i,
-
+       ioclock          => clk_main_i,
+       clock_frequency  => clk_main_speed_i,
+      
        -- _steady means that the led stays on steadily
        -- _blinking means that the led is blinking
        -- The colors are specified as BGR (reverse RGB)
@@ -85,7 +86,9 @@ begin
        kio10            => kio10_i,
       
        matrix_col       => matrix_col,
-       matrix_col_idx   => matrix_col_idx
+       matrix_col_idx   => matrix_col_idx,
+       
+       capslock_out     => open  
    );
    
    m65matrix_to_keynum : entity work.matrix_to_keynum

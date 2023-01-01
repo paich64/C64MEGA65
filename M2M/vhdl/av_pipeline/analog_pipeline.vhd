@@ -1,20 +1,18 @@
 ----------------------------------------------------------------------------------
--- Commodore 64 for MEGA65
+-- MiSTer2MEGA65 Framework
 --
 -- Complete pipeline processing of analog audio and video output (VGA and 3.5 mm)
 --
--- based on C64_MiSTer by the MiSTer development team
--- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
+-- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.numeric_std_unsigned.all;
 
 entity analog_pipeline is
    generic (
-      G_VGA_DX               : natural;              -- Actual format of video from Core (in pixels).
+      G_VGA_DX               : natural;                 -- Actual format of video from Core (in pixels).
       G_VGA_DY               : natural;
       G_FONT_FILE            : string;
       G_FONT_DX              : natural;
@@ -25,6 +23,7 @@ entity analog_pipeline is
       video_clk_i            : in  std_logic;
       video_rst_i            : in  std_logic;
       video_ce_i             : in  std_logic;
+      video_ce_2x_i          : in  std_logic;           -- 2x the speed of video_ce_i
       video_red_i            : in  std_logic_vector(7 downto 0);
       video_green_i          : in  std_logic_vector(7 downto 0);
       video_blue_i           : in  std_logic_vector(7 downto 0);
@@ -36,6 +35,10 @@ entity analog_pipeline is
       audio_rst_i            : in  std_logic;
       audio_left_i           : in  signed(15 downto 0); -- Signed PCM format
       audio_right_i          : in  signed(15 downto 0); -- Signed PCM format
+      
+      -- Configure the scandoubler: 0=off/1=on
+      -- Make sure the signal is in the video_clk clock domain
+      video_scandoubler_i    : in  std_logic;      
 
       -- Video output (VGA)
       vga_red_o              : out std_logic_vector(7 downto 0);
@@ -56,16 +59,11 @@ entity analog_pipeline is
       video_osm_cfg_xy_i     : in  std_logic_vector(15 downto 0);
       video_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
       video_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
-      video_osm_vram_data_i  : in  std_logic_vector(15 downto 0);
-      scandoubler_i          : in  std_logic;
-      sys_info_vga_o         : out std_logic_vector(47 downto 0)
+      video_osm_vram_data_i  : in  std_logic_vector(15 downto 0)
    );
 end entity analog_pipeline;
 
 architecture synthesis of analog_pipeline is
-
-   signal video_ce           : std_logic_vector(1 downto 0);
-   signal video_ce_overlay   : std_logic;
 
    -- MiSTer video pipeline signals
    signal vs_hsync           : std_logic;
@@ -76,7 +74,6 @@ architecture synthesis of analog_pipeline is
    signal mix_g              : std_logic_vector(7 downto 0);
    signal mix_b              : std_logic_vector(7 downto 0);
    signal mix_vga_de         : std_logic;
-   signal ce_pix             : std_logic;
 
    signal vga_red            : std_logic_vector(7 downto 0);
    signal vga_green          : std_logic_vector(7 downto 0);
@@ -89,7 +86,10 @@ architecture synthesis of analog_pipeline is
    signal vga_green_ps       : std_logic_vector(7 downto 0);
    signal vga_blue_ps        : std_logic_vector(7 downto 0);
    signal vga_hs_ps          : std_logic;
-   signal vga_vs_ps          : std_logic;      
+   signal vga_vs_ps          : std_logic;
+
+   -- depends on scandoubler: needs to be 2x faster, if scandoubler is active
+   signal video_ce_overlay   : std_logic;
 
    component video_mixer is
       port (
@@ -119,18 +119,6 @@ architecture synthesis of analog_pipeline is
 
 begin
 
-   -- SYS_DXDY
-   sys_info_vga_o(15 downto 0) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
-
-   -- SHELL_M_XY
-   sys_info_vga_o(31 downto  16) <=
-      X"0000";
-
-   -- SHELL_M_DXDY
-   sys_info_vga_o(47 downto 32) <=
-      std_logic_vector(to_unsigned((G_VGA_DX/G_FONT_DX) * 256 + (G_VGA_DY/G_FONT_DY), 16));
-
    ---------------------------------------------------------------------------------------------
    -- Audio output (3.5 mm jack)
    ---------------------------------------------------------------------------------------------
@@ -154,28 +142,16 @@ begin
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer video signal processing pipeline
+   --
+   -- @TODO: Evaluate the capabilities, including outputting an old composite signal instead of VGA
    --------------------------------------------------------------------------------------------------
-
-   p_div : process (video_clk_i)
-   begin
-      if rising_edge(video_clk_i) then
-         video_ce <= video_ce + 1;
-      end if;
-   end process p_div;
-   ce_pix <= '1' when video_ce = 0 else '0';
-
-   -- This halves the hsync pulse width to 2.41 us, and the period to 31.97 us (= 1008 clock cycles @ 31.528 MHz).
-   -- According to the document CEA-861-D, PAL 720x576 @ 50 Hz runs with a pixel
-   -- clock frequency of 27.00 MHz and with 864 pixels per scan line, therefore
-   -- a horizontal period of 32.00 us. The difference here is 0.1 %.
-   -- The ratio between clk_video_i and the pixel frequency is 7/6.
 
    i_video_mixer : video_mixer
       port map (
-         CLK_VIDEO   => video_clk_i,      -- 31.528 MHz
+         CLK_VIDEO   => video_clk_i,
          CE_PIXEL    => open,
-         ce_pix      => ce_pix,
-         scandoubler => scandoubler_i,
+         ce_pix      => video_ce_i,
+         scandoubler => video_scandoubler_i,
          hq2x        => '0',
          gamma_bus   => open,
          R           => unsigned(video_red_i),
@@ -193,8 +169,10 @@ begin
          VGA_VS      => vga_vs,
          VGA_HS      => vga_hs,
          VGA_DE      => mix_vga_de
-      );
+      ); -- i_video_mixer
 
+   -- The MEGA65 VDAC (ADV7125BCPZ170) does not like non-zero color values outside the visible window.
+   -- This is why we explicitly set R, G, B to zero outside of "data enable".
    vga_data_enable : process(mix_r, mix_g, mix_b, mix_vga_de)
    begin
       if mix_vga_de = '1' then
@@ -208,10 +186,8 @@ begin
       end if;
    end process vga_data_enable;
 
-   -- Clock enable for Overlay video streams
-
-   video_ce_overlay <= '1' when scandoubler_i = '1' else video_ce(0);
-
+   video_ce_overlay <= video_ce_2x_i when video_scandoubler_i = '1' else video_ce_i;
+   
    i_video_overlay : entity work.video_overlay
       generic  map (
          G_VGA_DX         => G_VGA_DX,
@@ -231,7 +207,7 @@ begin
          vga_de_i         => mix_vga_de,
          vga_cfg_shift_i  => 0,
          vga_cfg_enable_i => video_osm_cfg_enable_i,
-         vga_cfg_double_i => scandoubler_i,
+         vga_cfg_double_i => video_scandoubler_i,
          vga_cfg_xy_i     => video_osm_cfg_xy_i,
          vga_cfg_dxdy_i   => video_osm_cfg_dxdy_i,
          vga_vram_addr_o  => video_osm_vram_addr_o,
@@ -265,7 +241,13 @@ begin
       end process;
    end block VGA_OUT_PHASE_SHIFTED;
 
-   -- Make the VDAC output the image
+   -- Make the MEGA65 VDAC (ADV7125BCPZ170) output the image:
+   --
+   -- Excerpts taken from the data sheet Rev D, page 8, table 6:
+   --    "sync":  If sync information is not required on the green channel, the SYNC input should be tied to Logic 0.
+   --    "blank": A Logic 0 on this control input drives the analog outputs [...] to the blanking level.
+   -- So as we do not do any "sync on green", we set sync to 0 and since we do not want to use the VDAC to
+   -- blank the screen (i.e. set the analog R, G and B to 0), we hard-wire blank to 1.
    vdac_syncn_o  <= '0';
    vdac_blankn_o <= '1';
    vdac_clk_o    <= video_clk_i;

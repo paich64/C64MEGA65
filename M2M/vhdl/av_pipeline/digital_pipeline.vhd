@@ -1,10 +1,9 @@
 ----------------------------------------------------------------------------------
--- Commodore 64 for MEGA65
+-- MiSTer2MEGA65 Framework
 --
 -- Complete pipeline processing of digital audio and video output
 --
--- based on C64_MiSTer by the MiSTer development team
--- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
+-- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -14,6 +13,7 @@ use ieee.numeric_std.all;
 library work;
 use work.types_pkg.all;
 use work.video_modes_pkg.all;
+use work.qnice_tools.all;
 
 library xpm;
 use xpm.vcomponents.all;
@@ -25,7 +25,7 @@ entity digital_pipeline is
       G_VGA_DY               : natural;
       G_FONT_FILE            : string;
       G_FONT_DX              : natural;
-      G_FONT_DY              : natural
+      G_FONT_DY              : natural      
    );
    port (
       -- Input from Core (video and audio)
@@ -63,10 +63,10 @@ entity digital_pipeline is
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
       sys_info_hdmi_o          : out std_logic_vector(47 downto 0);
-
+    
       -- QNICE connection to ascal's mode register
       qnice_ascal_mode_i       : in unsigned(4 downto 0);
-
+    
       -- QNICE device for interacting with the Polyphase filter coefficients
       qnice_poly_clk_i         : in std_logic;
       qnice_poly_dw_i          : in unsigned(9 downto 0);
@@ -90,11 +90,6 @@ end entity digital_pipeline;
 
 architecture synthesis of digital_pipeline is
 
-   constant C_FONT_DX            : natural := 16;
-   constant C_FONT_DY            : natural := 16;
-
-   signal hdmi_shift             : integer;
-
    -- HDMI PCM sampling rate hardcoded to 48 kHz (should be the most compatible mode)
    -- If this should ever be switchable, don't forget that the signal "select_44100" in
    -- i_vga_to_hdmi would need to be adjusted, too
@@ -103,7 +98,6 @@ architecture synthesis of digital_pipeline is
    constant pcm_acr_cnt_range    : integer := HDMI_PCM_SAMPLING / 1000;
 
    signal pcm_clken              : std_logic;                     -- 48 kHz (via clock divider)
-
    signal pcm_acr                : std_logic;                     -- HDMI ACR packet strobe (frequency = 128fs/N e.g. 1kHz)
    signal pcm_n                  : std_logic_vector(19 downto 0); -- HDMI ACR N value
    signal pcm_cts                : std_logic_vector(19 downto 0); -- HDMI ACR CTS value
@@ -134,6 +128,7 @@ architecture synthesis of digital_pipeline is
    signal hdmi_vsstart           : integer;
    signal hdmi_vsend             : integer;
    signal hdmi_vdisp             : integer;
+   signal hdmi_shift             : integer;
 
    -- Auto-calculate display dimensions based on an 4:3 aspect ratio
    signal hdmi_hmin              : integer;
@@ -271,14 +266,14 @@ begin
       if rising_edge(hdmi_clk_i) then
          if pcm_clken = '1' then
             -- Generate 1KHz ACR pulse train from 48 kHz
-            if pcm_acr_counter /= (pcm_acr_cnt_range - 1) then
-               pcm_acr_counter <= pcm_acr_counter + 1;
-               pcm_acr <= '0';
-            else
-               pcm_acr <= '1';
-               pcm_acr_counter <= 0;
-            end if;
+         if pcm_acr_counter /= (pcm_acr_cnt_range - 1) then
+            pcm_acr_counter <= pcm_acr_counter + 1;
+            pcm_acr <= '0';
+         else
+            pcm_acr <= '1';
+            pcm_acr_counter <= 0;
          end if;
+      end if;
       end if;
    end process p_pcm_acr;
 
@@ -292,7 +287,11 @@ begin
       generic map (
          MASK      => x"ff",
          RAMBASE   => (others => '0'),
-         RAMSIZE   => x"0008_0000", -- = 500 kB for input buffer : dx * dy * 3 byte (RGB) per pixel and then a power of two
+         
+         -- ascal needs an input buffer according to this formula: dx * dy * 3 bytes (RGB) per pixel and then rounded up
+         -- to the next power of two
+         RAMSIZE   => to_unsigned(2**f_log2(G_VGA_DX * G_VGA_DY * 3), 32),
+         
          INTER     => false,        -- Not needed: Progressive input only
          HEADER    => false,        -- Not needed: Used on MiSTer to read the sampled image back from the ARM side to do screenshots. The header provides informations such as image size.
          DOWNSCALE => false,        -- Not needed: We use ascal only to upscale
@@ -466,7 +465,7 @@ begin
          vga_de_i         => hdmi_de,
          vga_cfg_shift_i  => hdmi_shift,
          vga_cfg_enable_i => hdmi_osm_cfg_enable_i,
-         vga_cfg_double_i => '1',
+         vga_cfg_double_i => '0',
          vga_cfg_xy_i     => hdmi_osm_cfg_xy_i,
          vga_cfg_dxdy_i   => hdmi_osm_cfg_dxdy_i,
          vga_vram_addr_o  => hdmi_osm_vram_addr_o,

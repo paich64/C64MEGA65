@@ -1,6 +1,6 @@
 ## Commodore 64 for MEGA65 (C64MEGA65)
 ##
-## Signal mapping für MEGA65-R2
+## Signal mapping for CORE-R2
 ##
 ## This machine is based on C64_MiSTer
 ## Powered by MiSTer2MEGA65
@@ -21,15 +21,15 @@ create_generated_clock -name pixelclk  [get_pins */clk_gen/i_clk_pal_hdmi/CLKOUT
 create_generated_clock -name pixelclk5 [get_pins */clk_gen/i_clk_pal_hdmi/CLKOUT1]
 
 ## Clock divider sdcardclk that creates the 25 MHz used by sd_spi.vhd
-create_generated_clock -name sdcardclk -source [get_pins */clk_gen/i_clk_main_qnice/CLKOUT1] -divide_by 2 [get_pins MEGA65/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
+create_generated_clock -name sdcardclk -source [get_pins */clk_gen/i_clk_main_qnice/CLKOUT1] -divide_by 2 [get_pins CORE/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
 
 ## QNICE's EAE combinatorial division networks take longer than
 ## the regular clock period, so we specify a multicycle path
 ## see also the comments in EAE.vhd and explanations in UG903/chapter 5/Multicycle Paths as well as ug911/page 25
-set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
-   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -setup 3
-set_multicycle_path -from [get_cells -include_replicated {{MEGA65/QNICE_SOC/eae_inst/op0_reg[*]*} {MEGA65/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
-   -to [get_cells -include_replicated {MEGA65/QNICE_SOC/eae_inst/res_reg[*]*}] -hold 2
+set_multicycle_path -from [get_cells -include_replicated {{CORE/QNICE_SOC/eae_inst/op0_reg[*]*} {CORE/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
+   -to [get_cells -include_replicated {CORE/QNICE_SOC/eae_inst/res_reg[*]*}] -setup 3
+set_multicycle_path -from [get_cells -include_replicated {{CORE/QNICE_SOC/eae_inst/op0_reg[*]*} {CORE/QNICE_SOC/eae_inst/op1_reg[*]*}}] \
+   -to [get_cells -include_replicated {CORE/QNICE_SOC/eae_inst/res_reg[*]*}] -hold 2
      
 ## Reset button
 set_property -dict {PACKAGE_PIN M13 IOSTANDARD LVCMOS33} [get_ports RESET_N]

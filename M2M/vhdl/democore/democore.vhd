@@ -23,7 +23,15 @@ entity democore is
       clk_main_i           : in  std_logic;
       reset_i              : in  std_logic;
       pause_i              : in  std_logic;
-      keyboard_n_i         : in  std_logic_vector(2 downto 0);
+      keyboard_n_i         : in  std_logic_vector(79 downto 0);
+      joy_up_n_i           : in  std_logic;
+      joy_down_n_i         : in  std_logic;
+      joy_left_n_i         : in  std_logic;
+      joy_right_n_i        : in  std_logic;
+      joy_fire_n_i         : in  std_logic;
+
+      ball_col_rgb_i       : in  std_logic_vector(23 downto 0);
+      paddle_speed_i       : in  std_logic_vector(3 downto 0);
 
       -- Video output
       vga_ce_o             : out std_logic;
@@ -32,7 +40,8 @@ entity democore is
       vga_blue_o           : out std_logic_vector(7 downto 0);
       vga_vs_o             : out std_logic;
       vga_hs_o             : out std_logic;
-      vga_de_o             : out std_logic;
+      vga_hblank_o         : out std_logic;
+      vga_vblank_o         : out std_logic;
 
       -- Audio output (Signed PCM)
       audio_left_o         : out signed(15 downto 0);
@@ -42,87 +51,87 @@ end entity democore;
 
 architecture synthesis of democore is
 
-   signal video_pixel_x : integer := 0;
-   signal video_pixel_y : integer := 0;
+   constant m65_space     : integer := 60;
+   constant m65_horz_crsr : integer := 2;   -- means cursor right in C64 terminology
+   constant m65_left_crsr : integer := 74;  -- cursor left
 
-   alias video_clk_i : std_logic is clk_main_i;
+   signal ball_pos_x   : std_logic_vector(15 downto 0);
+   signal ball_pos_y   : std_logic_vector(15 downto 0);
+   signal paddle_pos_x : std_logic_vector(15 downto 0);
+   signal paddle_pos_y : std_logic_vector(15 downto 0);
+   signal update       : std_logic;
+   signal score        : std_logic_vector(15 downto 0);
+   signal lives        : std_logic_vector( 3 downto 0);
 
-   signal video_red   : std_logic_vector(7 downto 0);
-   signal video_green : std_logic_vector(7 downto 0);
-   signal video_blue  : std_logic_vector(7 downto 0);
-   signal video_vs    : std_logic;
-   signal video_hs    : std_logic;
-   signal video_de    : std_logic;
-   signal video_ce    : std_logic;
+   signal audio_freq      : std_logic_vector(15 downto 0);
+   signal audio_vol_left  : std_logic_vector(15 downto 0);
+   signal audio_vol_right : std_logic_vector(15 downto 0);
 
 begin
 
-   i_vga_controller : entity work.vga_controller
-      port map (
-         h_pulse   => G_VIDEO_MODE.H_PULSE,
-         h_bp      => G_VIDEO_MODE.H_BP,
-         h_pixels  => G_VIDEO_MODE.H_PIXELS,
-         h_fp      => G_VIDEO_MODE.H_FP,
-         h_pol     => '1',
-         v_pulse   => G_VIDEO_MODE.V_PULSE,
-         v_bp      => G_VIDEO_MODE.V_BP,
-         v_pixels  => G_VIDEO_MODE.V_PIXELS,
-         v_fp      => G_VIDEO_MODE.V_FP,
-         v_pol     => '1',
-         clk_i     => video_clk_i,
-         ce_i      => video_ce,
-         reset_n   => '1',
-         h_sync    => video_hs,
-         v_sync    => video_vs,
-         disp_ena  => video_de,
-         column    => video_pixel_x,
-         row       => video_pixel_y,
-         n_blank   => open,
-         n_sync    => open
-      ); -- i_vga_controller
-
-   i_democore_pixel : entity work.democore_pixel
+   i_democore_game : entity work.democore_game
       generic  map (
          G_VGA_DX => G_VIDEO_MODE.H_PIXELS,
          G_VGA_DY => G_VIDEO_MODE.V_PIXELS
       )
       port map (
-         vga_clk_i => video_clk_i,
-         vga_col_i => video_pixel_x,
-         vga_row_i => video_pixel_y,
-         vga_core_rgb_o(23 downto 16) => video_red,
-         vga_core_rgb_o(15 downto  8) => video_green,
-         vga_core_rgb_o( 7 downto  0) => video_blue
-      );
+         clk_i          => clk_main_i,
+         rst_i          => reset_i,
+         paddle_speed_i => paddle_speed_i, 
+         update_i       => update,
+         player_start_i => not (keyboard_n_i(m65_space)     and joy_fire_n_i),
+         player_left_i  => not (keyboard_n_i(m65_left_crsr) and joy_left_n_i),
+         player_right_i => not (keyboard_n_i(m65_horz_crsr) and joy_right_n_i),
+         ball_pos_x_o   => ball_pos_x,
+         ball_pos_y_o   => ball_pos_y,
+         paddle_pos_x_o => paddle_pos_x,
+         paddle_pos_y_o => paddle_pos_y,
+         score_o        => score,
+         lives_o        => lives
+      ); -- i_democore_game
 
-   p_rgb : process (video_clk_i)
-   begin
-      if rising_edge(video_clk_i) then
-         video_ce <= not video_ce;
-         if video_de then
-            vga_red_o   <= video_red;
-            vga_green_o <= video_green;
-            vga_blue_o  <= video_blue;
-         else
-            vga_red_o   <= X"00";
-            vga_green_o <= X"00";
-            vga_blue_o  <= X"00";
-         end if;
-         vga_hs_o <= video_hs;
-         vga_vs_o <= video_vs;
-         vga_de_o <= video_de;
-      end if;
-   end process p_rgb;
+   i_democore_video : entity work.democore_video
+      generic map (
+         G_VIDEO_MODE => G_VIDEO_MODE
+      )
+      port map (
+         clk_main_i     => clk_main_i,
+         reset_i        => reset_i,
+         ball_col_rgb_i => ball_col_rgb_i,     
+         ball_pos_x_i   => ball_pos_x,
+         ball_pos_y_i   => ball_pos_y,
+         paddle_pos_x_i => paddle_pos_x,
+         paddle_pos_y_i => paddle_pos_y,
+         score_i        => score,
+         lives_i        => lives,
+         update_o       => update,
+         vga_ce_o       => vga_ce_o,
+         vga_red_o      => vga_red_o,
+         vga_green_o    => vga_green_o,
+         vga_blue_o     => vga_blue_o,
+         vga_vs_o       => vga_vs_o,
+         vga_hs_o       => vga_hs_o,
+         vga_hblank_o   => vga_hblank_o,
+         vga_vblank_o   => vga_vblank_o
+      ); -- i_democore_video
 
-   vga_ce_o <= video_ce;
+   audio_freq      <= std_logic_vector(unsigned(ball_pos_y) + G_VIDEO_MODE.V_PIXELS);
+   audio_vol_left  <= std_logic_vector(G_VIDEO_MODE.H_PIXELS - unsigned(ball_pos_x));
+   audio_vol_right <= std_logic_vector(unsigned(ball_pos_x));
 
-   p_audio : process (clk_main_i)
-   begin
-      if rising_edge(clk_main_i) then
-         audio_left_o  <= audio_left_o + 2;  -- Left is one octave higher.
-         audio_right_o <= audio_right_o - 1;
-      end if;
-   end process p_audio;
+   i_democore_audio : entity work.democore_audio
+      generic map (
+         G_CLOCK_FREQ_HZ => G_VIDEO_MODE.CLK_KHZ * 1000
+      )
+      port map (
+         clk_i         => clk_main_i,
+         rst_i         => reset_i,
+         freq_i        => audio_freq,
+         vol_left_i    => audio_vol_left,
+         vol_right_i   => audio_vol_right,
+         audio_left_o  => audio_left_o,
+         audio_right_o => audio_right_o
+      ); -- i_democore_audio
 
 end architecture synthesis;
 
