@@ -4,7 +4,7 @@
 -- MEGA65 R3 main file that contains the whole machine
 --
 -- based on C64_MiSTer by the MiSTer development team
--- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
+-- port done by MJoergen and sy2002 in 2021, 2022, 2023 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
