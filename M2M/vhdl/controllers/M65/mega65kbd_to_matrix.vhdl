@@ -4,10 +4,7 @@
 -- Modified for gbc4mega65 by sy2002 in January 2021
 -- Added to MiSTer2MEGA65 based on the modified gbc4mega65 form by sy2002 in July 2021
 -- Renamed signals, added documentation and made led color configurable by sy2002 in October 2022
-<<<<<<<< HEAD:M2M/vhdl/drivers/M65/mega65kbd_to_matrix.vhdl
-========
 -- Added a "for now good enough" solution for arbitrary ioclock frequencies (sy2002, December 2022)
->>>>>>>> fc0a2cc38fee8a82d590feaf64eed6b166e0fe6f:M2M/vhdl/controllers/M65/mega65kbd_to_matrix.vhdl
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -28,11 +25,7 @@ entity mega65kbd_to_matrix is
     driveled_steady        : in std_logic;
     driveled_blinking      : in std_logic;   
     driveled_col           : in std_logic_vector(23 downto 0);
-<<<<<<<< HEAD:M2M/vhdl/drivers/M65/mega65kbd_to_matrix.vhdl
-    
-========
 
->>>>>>>> fc0a2cc38fee8a82d590feaf64eed6b166e0fe6f:M2M/vhdl/controllers/M65/mega65kbd_to_matrix.vhdl
     matrix_col : out std_logic_vector(7 downto 0) := (others => '1');
     matrix_col_idx : in integer range 0 to 9;
 
@@ -47,11 +40,7 @@ entity mega65kbd_to_matrix is
     -- LEFT and UP cursor keys are active HIGH
     leftkey : out std_logic := '0';
     upkey : out std_logic := '0';
-<<<<<<<< HEAD:M2M/vhdl/drivers/M65/mega65kbd_to_matrix.vhdl
-
-========
     
->>>>>>>> fc0a2cc38fee8a82d590feaf64eed6b166e0fe6f:M2M/vhdl/controllers/M65/mega65kbd_to_matrix.vhdl
     -- interface to Lattice FPGA
     kio8 : out std_logic; -- clock to keyboard
     kio9 : out std_logic; -- data output to keyboard
