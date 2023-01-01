@@ -1,6 +1,7 @@
 ----------------------------------------------------------------------------------
 -- MiSTer2MEGA65 Framework
 --
+-- C64 for MEGA65
 -- Configuration data for the Shell
 --
 -- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
@@ -76,78 +77,109 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "Name of the Demo Core Version 1.0\n" &
-   "MiSTer port done by Demo Author in 2022\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A5]\n\n" &
 
-   -- We are not insisting. But it would be nice if you gave us credit for MiSTer2MEGA65 by leaving these lines in
-   "Powered by MiSTer2MEGA65 Version [WIP],\n" &
-   "done by sy2002 and MJoergen in 2022\n" &
+   " MiSTer port 2022 by MJoergen & sy2002\n" &   
+   " Powered by MiSTer2MEGA65\n\n\n" &
+     
+   " While the C64 is running: Press HELP\n" &
+   " to mount drives & to configure the core.\n\n" &
 
-   "\n\nEdit config.vhd to modify welcome screen.\n\n" &
-   "You can for example show the keyboard map.\n" &
-   "Look at this example for the Demo core:\n\n\n" &
+   " Both SD card slots work: The card in the\n" &
+   " back has higher precedence than the\n" &
+   " card at the bottom of the MEGA65.\n\n" &
 
-   "    Key                Demo core\n" & 
-   "    " & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_10 & CHR_LINE_1 & CHR_LINE_1 & "\n" &
-   "    Left Cursor        Paddle left\n" &
-   "    Right Cursor       Paddle right\n" &
-   "    Space              Start game\n" &
-   "    Help               Options menu\n\n\n" &
+   " While you are in the file browser:\n" &
+   "   F1: Switch to internal SD card\n" &
+   "   F3: Switch to external SD card\n" & 
 
-   "\n\n    Press Space to continue.\n\n\n";
+   "\n\n Press Space to continue.";
    
 constant HELP_1 : string :=
 
-   "\n Demo Core for MEGA65 Version 1\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A5]\n\n" &
    
-   " MiSTer port 2022 by YOU\n" &   
+   " MiSTer port 2022 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
       
-   " Lorem ipsum dolor sit amet, consetetur\n" &
-   " sadipscing elitr, sed diam nonumy eirmod\n" &
-   " Mpor invidunt ut labore et dolore magna\n" &
-   " aliquyam erat, sed diam voluptua. At vero\n" &
-   " eos et accusam et justo duo.\n\n" &
+   " Turn your MEGA65 into a PAL C64 with a\n" &
+   " C1541 drive and a pair of joysticks.\n" &
+   " No frills. The C64/C1541 run the original\n" &
+   " Commodore Kernal and DOS.\n\n" & 
    
-   " Dolores et ea rebum. Stet clita kasd gube\n" &
-   " gren, no sea takimata sanctus est Lorem ip\n" &
-   " Sed diam nonumy eirmod tempor invidunt ut\n" &
-   " labore et dolore magna aliquyam era\n\n" &
+   " When browsing disk images:\n\n" &
+   
+   " Cursor up/down:     File up/down\n" &
+   " Cursor left/right:  Page up/down\n" &
+   " Run/Stop:           Cancel browsing\n" &
+   " F1:                 Internal SD card\n" &
+   " F3:                 External SD card\n" &
+   " Enter:              Mount drive\n" &
+   " Space:              Unmount drive\n" &
+   " Help:               Close menu\n\n" &
+
+   " If you create a ""/c64"" folder on your\n" &
+   " SD card, then by default the file browser\n" &
+   " will start there.\n\n" &
    
    " Cursor right to learn more.       (1 of 3)\n" &
    " Press Space to close the help screen.";
 
 constant HELP_2 : string :=
 
-   "\n Demo Core for MEGA65 Version 1\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A5]\n\n" &
    
-   " XYZ ABCDEFGH:\n\n" &
-
-   " 1. ABCD EFGH\n" &
-   " 2. IJK LM NOPQ RSTUVWXYZ\n" &
-   " 3. 10 20 30 40 50\n\n" &
+   " Post-processing:\n\n" &
    
-   " a) Dolores et ea rebum\n" &
-   " b) Takimata sanctus est\n" &
-   " c) Tempor Invidunt ut\n" &
-   " d) Sed Diam Nonumy eirmod te\n" &
-   " e) Awesome\n\n" &
+   " Visual post-processing only works on the\n" &
+   " HDMI output. On the VGA output, the core\n" &
+   " outputs a pure C64 4:3 PAL signal.\n\n" &
 
-   " Ut wisi enim ad minim veniam, quis nostru\n" &
-   " exerci tation ullamcorper suscipit lobor\n" &
-   " tis nisl ut aliquip ex ea commodo.\n\n" &
+   " We recommend to always use the CRT\n" &
+   " emulation. The way the CRT upscaling is\n" &
+   " done leads to a much better picture with\n" &
+   " little to no Moire effects. And it just\n" &
+   " looks awesome.\n\n" &
+   
+   " The Audio improvements work on the analog\n" &
+   " 3.5mm audio as well as via HDMI audio.\n" &
+   " They fix the SID DC offset and reduce\n" &
+   " treble for a more authentic listening\n" &
+   " experience. Recommended.\n\n" &
+
+   " The Zoom-in feature is mainly meant for\n" &
+   " playing games that do not use the C64's\n" &
+   " border. It looks best on a 16:9 screen.\n\n\n\n" &
    
    " Crsr left: Prev  Crsr right: Next (2 of 3)\n" &
    " Press Space to close the help screen.";
 
 constant HELP_3 : string :=
 
-   "\n Help Screens\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A5]\n\n" &
    
-   " You can have 255 screens per help topic.\n\n" &
+   " Flicker-free experience on HDMI:\n\n" &
      
-   " 15 topics overall.\n" &
-   " 1 menu item per topic.\n\n\n\n" &   
+   " 1. Make sure your HDMI display supports\n" &
+   "    a 50Hz mode: 720p or 576p\n\n" &   
+   "    Some displays out there that display\n" &
+   "    50Hz as 60Hz. This leads to jerky\n" &
+   "    movements (e.g. while scrolling).\n\n" &
+   
+   " 2. Switch on ""HDMI: Flicker-free""\n\n" &
+   
+   " The ""HDMI: Flicker-free"" mode reduces\n" &
+   " the speed of the whole system by a tiny\n" &
+   " amount: 0.25%. You probably will never\n" &
+   " notice. In case you encounter extremely\n" &
+   " rare compatibility issues: Turn off the\n" &
+   " option and try again.\n\n" &
+     
+   " System reset:\n\n" &
+   
+   " Press the reset button shortly to just\n" &         
+   " reset the C64 core and press the button\n" &
+   " longer than 1.5s to reset the MEGA65.\n\n" &
    
    " Cursor left to go back.           (3 of 3)\n" &
    " Press Space to close the help screen.";
@@ -188,8 +220,8 @@ constant SEL_CFG_FILE      : std_logic_vector(15 downto 0) := x"0101";
 
 -- START YOUR CONFIGURATION BELOW THIS LINE
 
-constant DIR_START         : string := "/m2m";
-constant CFG_FILE          : string := "/m2m/m2mcfg";
+constant DIR_START         : string := "/c64";
+constant CFG_FILE          : string := "/c64/c64mega65";
 
 --------------------------------------------------------------------------------------------------------------------
 -- General configuration settings: Reset, Pause, OSD behavior, Ascal, etc. (Selector 0x0110)
@@ -210,11 +242,11 @@ constant RESET_COUNTER     : natural := 100;
 constant OPTM_PAUSE        : boolean := false;
 
 -- show the welcome screen in general
-constant WELCOME_ACTIVE    : boolean := true;
+constant WELCOME_ACTIVE    : boolean := false;
 
 -- shall the welcome screen also be shown after the core is reset?
 -- (only relevant if WELCOME_ACTIVE is true)
-constant WELCOME_AT_RESET  : boolean := true;
+constant WELCOME_AT_RESET  : boolean := false;
 
 -- keyboard and joystick connection during reset and OSD
 constant KEYBOARD_AT_RESET : boolean := false;
@@ -300,7 +332,7 @@ constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
 -- START YOUR CONFIGURATION BELOW THIS LINE:
 
 -- Strings with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
-constant OPTM_S_MOUNT      : string := "<Mount>";        -- no disk image mounted, yet
+constant OPTM_S_MOUNT      : string := "<Mount Drive>";  -- no disk image mounted, yet
 constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write cache is dirty and not yet written back to the SD card
 
 -- Size of menu and menu items
@@ -308,7 +340,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write c
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 27;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 29;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -320,79 +352,81 @@ constant OPTM_DY           : natural := OPTM_SIZE;
                                              
 constant OPTM_ITEMS        : string :=
 
-   " Demo Headline A\n"     &
+   " C64 for MEGA65\n"        &
    "\n"                     & 
-   " Item A.1\n"            &
-   " Item A.2\n"            &
-   " Item A.3\n"            &
-   " Item A.4\n"            &
+   " 8:%s\n"                  &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
    "\n"                     &
-   " HDMI Mode\n"           &
+   " Flip joystick ports\n"   &
    "\n"                     &
-   " 720p 50 Hz 16:9\n"     &
-   " 720p 60 Hz 16:9\n"     &
-   " 576p 50 Hz 4:3\n"      &
-   " 576p 50 Hz 5:4\n"      &
+   " SID\n"                   &
    "\n"                     &
-   " Drives\n"              &
+   " 6581\n"                  &
+   " 8580\n"                  &
    "\n"                     &
-   " Drive X:%s\n"          &
-   " Drive Y:%s\n"          &
-   " Drive Z:%s\n"          &
+   " Advanced\n"              &
    "\n"                     &
-   " Another Headline\n"    &
-   "\n"                     &
+   " REU: 1750 with 512KB\n"  &
    " HDMI: CRT emulation\n" &
    " HDMI: Zoom-in\n"       &
+   " HDMI: 16:9 50 Hz\n"      &
+   " HDMI: 16:9 60 Hz\n"      & 
+   " HDMI: 4:3  50 Hz\n"      &
+   " HDMI: 5:4  50 Hz\n"      &
+   " HDMI: Flicker-free\n"    &
+   " HDMI: DVI (no sound)\n"  &
+   " VGA: Retro 15 kHz RGB\n" &             
+   " CIA: Use 8521 (C64C)\n"  &   
    " Audio improvements\n"  &
    "\n"                     &
+   " About & Help\n"          &
+   "\n"                       &
    " Close Menu\n";
         
--- define your own constants here and choose meaningful names
--- make sure that your first group uses the value 1 (0 means "no menu item", such as text and line),
--- and be aware that you can only have a maximum of 254 groups (255 means "Close Menu");
--- also make sure that your group numbers are monotonic increasing (e.g. 1, 2, 3, 4, ...)
--- single-select items and therefore also drive mount items need to have unique identifiers
-constant OPTM_G_Demo_A     : integer := 1;
-constant OPTM_G_HDMI       : integer := 2;
-constant OPTM_G_Drive_X    : integer := 3;
-constant OPTM_G_Drive_Y    : integer := 4;
-constant OPTM_G_Drive_Z    : integer := 5;
-constant OPTM_G_CRT        : integer := 6;
-constant OPTM_G_Zoom       : integer := 7;
-constant OPTM_G_Audio      : integer := 8;
+constant OPTM_G_MOUNT_8       : integer := 1;
+constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
+constant OPTM_G_FLIP_JOYS     : integer := 3;
+constant OPTM_G_SID           : integer := 4;
+constant OPTM_G_REU           : integer := 5;
+constant OPTM_G_CRT_EMULATION : integer := 6;
+constant OPTM_G_HDMI_ZOOM     : integer := 7;
+constant OPTM_G_HDMI_MODES    : integer := 8;
+constant OPTM_G_HDMI_FF       : integer := 9;
+constant OPTM_G_HDMI_DVI      : integer := 10;
+constant OPTM_G_VGA_RETRO     : integer := 11;
+constant OPTM_G_CIA_8521      : integer := 12;
+constant OPTM_G_IMPROVE_AUDIO : integer := 13;
+constant OPTM_G_ABOUT_HELP    : integer := 14;
 
--- define your menu groups: which menu items are belonging together to form a group?
--- where are separator lines? which items should be selected by default?
--- make sure that you have exactly the same amount of entries here than in OPTM_ITEMS and defined by OPTM_SIZE
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
-constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_TEXT + OPTM_G_HEADLINE,            -- Headline "Demo Headline"
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_Demo_A + OPTM_G_START,             -- Item A.1, cursor start position
-                                             OPTM_G_Demo_A + OPTM_G_STDSEL,            -- Item A.2, selected by default
-                                             OPTM_G_Demo_A,                            -- Item A.3
-                                             OPTM_G_Demo_A,                            -- Item A.4
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_TEXT,                              -- Headline "HDMI Mode"
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_HDMI + OPTM_G_STDSEL,              -- 720p 50 Hz 16:9, selected by default
-                                             OPTM_G_HDMI,                              -- 720p 60 Hz 16:9
-                                             OPTM_G_HDMI,                              -- 576p 50 Hz 4:3
-                                             OPTM_G_HDMI,                              -- 576p 50 Hz 5:4
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_TEXT,                              -- Headline "Drives"
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_Drive_X + OPTM_G_MOUNT_DRV,        -- Drive X
-                                             OPTM_G_Drive_Y + OPTM_G_MOUNT_DRV,        -- Drive Y
-                                             OPTM_G_Drive_Z + OPTM_G_MOUNT_DRV,        -- Drive Z
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_TEXT,                              -- Headline "Another Headline"
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_CRT     + OPTM_G_SINGLESEL,        -- On/Off toggle ("Single Select")
-                                             OPTM_G_Zoom    + OPTM_G_SINGLESEL,        -- On/Off toggle ("Single Select")
-                                             OPTM_G_Audio   + OPTM_G_SINGLESEL,        -- On/Off toggle ("Single Select")
-                                             OPTM_G_LINE,                              -- Line
-                                             OPTM_G_CLOSE                              -- Close Menu
+constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_MOUNT_8       + OPTM_G_MOUNT_DRV   + OPTM_G_START,
+                                             OPTM_G_LINE,
+                                             OPTM_G_FLIP_JOYS     + OPTM_G_SINGLESEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_SID           + OPTM_G_STDSEL,
+                                             OPTM_G_SID,
+                                             OPTM_G_LINE,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_REU           + OPTM_G_SINGLESEL,
+                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
+                                             OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
+                                             OPTM_G_HDMI_MODES    + OPTM_G_STDSEL,
+                                             OPTM_G_HDMI_MODES,
+                                             OPTM_G_HDMI_MODES,
+                                             OPTM_G_HDMI_MODES,
+                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
+                                             OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
+                                             OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
+                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_ABOUT_HELP    + OPTM_G_HELP,
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE
                                            );
 
 --------------------------------------------------------------------------------------------------------------------
