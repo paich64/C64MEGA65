@@ -348,8 +348,8 @@ begin
          clk_main_speed_i     => c64_clock_speed,
 
          -- SID and CIA versions
-         c64_sid_ver_i        => main_osm_control_m(C_MENU_8580) & main_osm_control_m(C_MENU_8580),
-         c64_cia_ver_i        => main_osm_control_m(C_MENU_8521),
+         c64_sid_ver_i        => main_osm_control_i(C_MENU_8580) & main_osm_control_m(C_MENU_8580),
+         c64_cia_ver_i        => main_osm_control_i(C_MENU_8521),
 
          -- M2M Keyboard interface
          kb_key_num_i         => main_kb_key_num_i,
@@ -366,7 +366,7 @@ begin
          joy_2_down_n_i       => main_joy_2_down_n_i,
          joy_2_left_n_i       => main_joy_2_left_n_i,
          joy_2_right_n_i      => main_joy_2_right_n_i,
-         joy_2_fire_n_i       => main_joy_2_fire_n_i
+         joy_2_fire_n_i       => main_joy_2_fire_n_i,
          
          paddle_1_x           => main_pot1_x,
          paddle_1_y           => main_pot1_y,
