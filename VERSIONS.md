@@ -74,9 +74,6 @@ Use an FPGA board with HDMI input, to capture the data from both the MEGA65
 (has no sound) and the laptop (has sound), to compare them. Might very well
 help to fix https://github.com/MJoergen/C64MEGA65/issues/4
 
-WIP VGA compatibility: Fixed a "wavy" "underwater" artefact on that was
-introduced by Version 4 and that occured only on some analog VGA screens.
-
 WIP Eliminate HDMI Flicker-free "~20min period artefact" by manual clock
 frequency tuning. Investigate dynamic PLL adjustment/autotune in conjunction
 with ascal to improve flicker-free HDMI further (maybe there is a possibility
@@ -88,11 +85,11 @@ WIP @TODO: Identify bugs and add them here
 
 ## Under the Hood
 
-WIP Updated to Vivado 2022.2 which will result in higher quality bitstreams.
+* Updated to Vivado 2022.2 which will result in higher quality bitstreams.
 
-WIP Migrated to the newest version of the MiSTer2MEGA65 framework. The C64
-core will benefit from an easier and faster workflow when it comes to
-migrating new framework features to the core.
+* Migrated to the newest version of the MiSTer2MEGA65 framework. The C64
+  core will benefit from an easier and faster workflow when it comes to
+  migrating new framework features to the core.
 
 WIP Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode
 which exclusively uses GCR internally (c1541_direct_gcr.sv instead of
