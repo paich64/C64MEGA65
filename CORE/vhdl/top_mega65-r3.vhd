@@ -1,9 +1,10 @@
 ----------------------------------------------------------------------------------
--- YOUR-PROJECT-NAME (GITHUB-REPO-SHORTNAME)
+-- Commodore 64 for MEGA65 (C64MEGA65)
 --
 -- MEGA65 R3 main file that contains the whole machine
 --
--- done by YOURNAME in YEAR and licensed under GPL v3
+-- based on C64_MiSTer by the MiSTer development team
+-- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
