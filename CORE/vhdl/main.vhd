@@ -171,7 +171,7 @@ architecture synthesis of main is
    -- vga_ce: clock enable which is used to generate the C64's pixel clock from the core's main clock
    -- vga_ce_2x: needs to be 2x faster than vga_ce
    signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock
-   signal vga_ce_2x           : std_logic_vector(3 downto 0) := "10";   -- 2x needs to be 1/2 of the main clock
+   signal vga_ce_2x           : std_logic_vector(1 downto 0) := "10";   -- 2x needs to be 1/2 of the main clock
 
    -- Hard reset handling
    constant hard_rst_delay    : natural := 100_000; -- roundabout 1/3 of a second
