@@ -77,14 +77,14 @@ set_false_path -to   [get_clocks main_clk_1]    -from [get_clocks audio_clk]
 set_false_path -from [get_pins -hier id1_reg[*]/C]
 set_false_path -from [get_pins -hier id2_reg[*]/C]
 set_false_path -from [get_pins -hier busy_reg/C]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/reset_sync/s1_reg[*]/D]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/change_sync/s1_reg[*]/D]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/save_sync/s1_reg[*]/D]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/track_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins M2M/CORE/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/reset_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins M2M/CORE/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/change_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins M2M/CORE/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/save_sync/s1_reg[*]/D]
+set_false_path -to   [get_pins M2M/CORE/i_main/i_iec_drive/c1541/drives[*].c1541_drv/c1541_track/track_sync/s1_reg[*]/D]
 
 ## Disk type register that moves very slow (on each (re-)mount) and that is initialized with very stable signals 
-set_false_path -from [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/C]
-set_false_path -to   [get_pins MEGA65/i_main/i_iec_drive/dtype_reg[*][*]/D]
+set_false_path -from [get_pins M2M/CORE/i_main/i_iec_drive/dtype_reg[*][*]/C]
+set_false_path -to   [get_pins M2M/CORE/i_main/i_iec_drive/dtype_reg[*][*]/D]
 
 ## The high level reset signals are slow enough so that we can afford a false path
 set_false_path -from [get_pins M2M/i_framework/i_reset_manager/reset_m2m_n_o_reg/C]

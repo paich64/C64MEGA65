@@ -11,12 +11,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.qnice_tools.all;
 
 library work;
 use work.globals.all;
 use work.types_pkg.all;
-
+use work.qnice_tools.all;
 
 library xpm;
 use xpm.vcomponents.all;
@@ -368,11 +367,11 @@ begin
          joy_2_right_n_i      => main_joy_2_right_n_i,
          joy_2_fire_n_i       => main_joy_2_fire_n_i,
          
-         paddle_1_x           => main_pot1_x,
-         paddle_1_y           => main_pot1_y,
-         paddle_2_x           => main_pot2_x,
-         paddle_2_y           => main_pot2_y,             
-         
+         pot1_x_i             => main_pot1_x_i,
+         pot1_y_i             => main_pot1_y_i,
+         pot2_x_i             => main_pot2_x_i,
+         pot2_y_i             => main_pot2_y_i,
+            
          -- Video output
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
          video_ce_o           => main_video_ce_o,

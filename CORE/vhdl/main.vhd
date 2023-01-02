@@ -12,7 +12,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.video_modes_pkg.all;
+use work.vdrives_pkg.all;
 
 entity main is
    generic (
@@ -51,10 +51,10 @@ entity main is
       joy_2_right_n_i         : in  std_logic;
       joy_2_fire_n_i          : in  std_logic;
 
-      paddle_1_x              : in std_logic_vector(7 downto 0);
-      paddle_1_y              : in std_logic_vector(7 downto 0);
-      paddle_2_x              : in std_logic_vector(7 downto 0);
-      paddle_2_y              : in std_logic_vector(7 downto 0);
+      pot1_x_i                : in std_logic_vector(7 downto 0);
+      pot1_y_i                : in std_logic_vector(7 downto 0);
+      pot2_x_i                : in std_logic_vector(7 downto 0);
+      pot2_y_i                : in std_logic_vector(7 downto 0);
 
       -- Video output
       video_ce_o              : out std_logic;
@@ -337,10 +337,10 @@ begin
          irq_ext_n   => not reu_irq,
 
          -- paddle interface
-         pot1        => paddle_1_x,
-         pot2        => paddle_1_y,
-         pot3        => paddle_2_x,
-         pot4        => paddle_2_y,
+         pot1        => pot1_x_i,
+         pot2        => pot1_y_i,
+         pot3        => pot2_x_i,
+         pot4        => pot2_y_i,
 
          -- SID
          audio_l     => c64_sid_l,
