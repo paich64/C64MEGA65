@@ -110,6 +110,11 @@ port (
    main_joy_2_left_n_i     : in std_logic;
    main_joy_2_right_n_i    : in std_logic;
    main_joy_2_fire_n_i     : in std_logic;
+   
+   main_pot1_x_i           : in std_logic_vector(7 downto 0);
+   main_pot1_y_i           : in std_logic_vector(7 downto 0);
+   main_pot2_x_i           : in std_logic_vector(7 downto 0);
+   main_pot2_y_i           : in std_logic_vector(7 downto 0);   
 
    -- On-Screen-Menu selections
    main_osm_control_i     : in std_logic_vector(255 downto 0);
