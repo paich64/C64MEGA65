@@ -151,8 +151,6 @@ signal main_csr_joy2_on       : std_logic;
 signal main_key_num           : integer range 0 to 79;
 signal main_key_pressed_n     : std_logic;
 signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
-signal main_drive_led         : std_logic;
-signal main_drive_led_col     : std_logic_vector(23 downto 0);
 
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
@@ -311,9 +309,13 @@ begin
          
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-free, 2=NTSC
          
-         main_clk_o        => main_clk,        -- CORE's 54 MHz clock
-         main_rst_o        => main_rst         -- CORE's reset, synchronized
+         main_clk_o        => main_clk,        -- core's clock
+         main_rst_o        => main_rst         -- core's reset, synchronized
       ); -- clk_gen
+      
+   -- share core's clock with the framework
+   main_clk_o <= main_clk;
+   main_rst_o <= main_rst;      
 
    ---------------------------------------------------------------------------------------------
    -- Global switches for core speed and for switching between PAL and NTSC
@@ -389,8 +391,8 @@ begin
          audio_right_o        => main_audio_right_o,
          
         -- C64 drive led
-         drive_led_o          => main_drive_led,
-         drive_led_col_o      => main_drive_led_col,
+         drive_led_o          => main_drive_led_o,
+         drive_led_col_o      => main_drive_led_col_o,
 
          -- C64 RAM
          c64_ram_addr_o       => main_ram_addr,
