@@ -305,7 +305,8 @@ begin
          -- Video output
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
          video_ce_o           => main_video_ce_o,
-         video_ce_2x_o        => main_video_ce_2x_o,
+         video_ce_ovl_o       => main_video_ce_ovl_o,
+         video_retro15kHz_o   => open,          -- scroll down: is done in mega65.vhd
          video_red_o          => main_video_red_o,
          video_green_o        => main_video_green_o,
          video_blue_o         => main_video_blue_o,
@@ -346,6 +347,8 @@ begin
          reu_we_o             => main_reu_we,
          reu_cs_o             => main_reu_cs                           
       ); -- i_main
+      
+   main_video_retro15kHz_o    <= main_osm_control_i(C_MENU_VGA_RETRO);      
 
    ---------------------------------------------------------------------------------------------
    -- Audio and video settings (QNICE clock domain)

@@ -33,23 +33,7 @@ entity main is
       -- SID and CIA versions
       c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
       c64_cia_ver_i           : in std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"      
-
-      -- Video output
-      video_ce_o              : out std_logic;
-      video_ce_ovl_o          : out std_logic;
-      video_retro15kHz_o      : out std_logic;
-      video_red_o             : out std_logic_vector(7 downto 0);
-      video_green_o           : out std_logic_vector(7 downto 0);
-      video_blue_o            : out std_logic_vector(7 downto 0);
-      video_vs_o              : out std_logic;
-      video_hs_o              : out std_logic;
-      video_hblank_o          : out std_logic;
-      video_vblank_o          : out std_logic;
-
-      -- Audio output (Signed PCM)
-      audio_left_o            : out signed(15 downto 0);
-      audio_right_o           : out signed(15 downto 0);
-      
+    
       -- M2M Keyboard interface
       kb_key_num_i            : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
@@ -74,7 +58,8 @@ entity main is
 
       -- Video output
       video_ce_o              : out std_logic;
-      video_ce_2x_o           : out std_logic;
+      video_ce_ovl_o          : out std_logic;
+      video_retro15kHz_o      : out std_logic := '0';
       video_red_o             : out std_logic_vector(7 downto 0);
       video_green_o           : out std_logic_vector(7 downto 0);
       video_blue_o            : out std_logic_vector(7 downto 0);
@@ -449,11 +434,11 @@ begin
          vblank    => video_vblank_o
       ); -- i_video_sync
 
-   video_red_o   <= std_logic_vector(vga_red);
-   video_green_o <= std_logic_vector(vga_green);
-   video_blue_o  <= std_logic_vector(vga_blue);
-   video_ce_o    <= vga_ce(0);
-   video_ce_2x_o <= vga_ce_2x(0);
+   video_red_o    <= std_logic_vector(vga_red);
+   video_green_o  <= std_logic_vector(vga_green);
+   video_blue_o   <= std_logic_vector(vga_blue);
+   video_ce_o     <= vga_ce(0);
+   video_ce_ovl_o <= '1';
    
    -- Pixel clock is 1/4 of the main clock and 2x is twice as fast
    p_vga_ce : process (clk_main_i)
