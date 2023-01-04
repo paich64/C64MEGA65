@@ -353,21 +353,21 @@ constant OPTM_DY           : natural := OPTM_SIZE;
 constant OPTM_ITEMS        : string :=
 
    " C64 for MEGA65\n"        &
-   "\n"                     & 
+   "\n"                       & 
    " 8:%s\n"                  &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
-   "\n"                     &
+   "\n"                       &
    " Flip joystick ports\n"   &
-   "\n"                     &
+   "\n"                       &
    " SID\n"                   &
-   "\n"                     &
+   "\n"                       &
    " 6581\n"                  &
    " 8580\n"                  &
-   "\n"                     &
+   "\n"                       &
    " Advanced\n"              &
-   "\n"                     &
+   "\n"                       &
    " REU: 1750 with 512KB\n"  &
-   " HDMI: CRT emulation\n" &
-   " HDMI: Zoom-in\n"       &
+   " HDMI: CRT emulation\n"   &
+   " HDMI: Zoom-in\n"         &
    " HDMI: 16:9 50 Hz\n"      &
    " HDMI: 16:9 60 Hz\n"      & 
    " HDMI: 4:3  50 Hz\n"      &
@@ -376,8 +376,8 @@ constant OPTM_ITEMS        : string :=
    " HDMI: DVI (no sound)\n"  &
    " VGA: Retro 15 kHz RGB\n" &             
    " CIA: Use 8521 (C64C)\n"  &   
-   " Audio improvements\n"  &
-   "\n"                     &
+   " Audio improvements\n"    &
+   "\n"                       &
    " About & Help\n"          &
    "\n"                       &
    " Close Menu\n";

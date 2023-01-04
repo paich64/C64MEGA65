@@ -96,7 +96,7 @@ All done by AmokPhaze101 on 11/19/22
 | :white_check_mark: | Dark Mights - Movie 32                      | 
 | :white_check_mark: | Expand by Bonzai                            | 
 | :x:                | fREUd                                       | In the part with boucing balls all the backgrounds are screwed up. Same issue on MiSTer C64_20221117.rbf. Perfectly runs on real Commodore C64 with Ultimate Cartridge.
-| :white_check_mark: | globe2016                                   | Wait 7 minutes before rendering starts
+| :white_check_mark: | Globe 2016                                  | Wait 7 minutes before rendering starts
 | :white_check_mark: | Life will never be the same Digidemo 286K_1 | Press SPACE after having swapped disk
 | :white_check_mark: | Qi                                          | 
 | :white_check_mark: | REU demo Zelda                              | Just scroll the map with joystick in port 2

@@ -152,21 +152,10 @@ signal main_rst               : std_logic;
 -- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
+-- C64 specific signals for PAL/NTSC and core speed switching 
 signal core_speed             : unsigned(1 downto 0);    -- see clock.vhd for details
 signal c64_ntsc               : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
 signal c64_clock_speed        : natural;                 -- clock speed depending on PAL/NTSC
-
--- QNICE control and status register
-signal main_qnice_reset       : std_logic;
-signal main_qnice_pause       : std_logic;
-signal main_csr_keyboard_on   : std_logic;
-signal main_csr_joy1_on       : std_logic;
-signal main_csr_joy2_on       : std_logic;
-
--- keyboard handling
-signal main_key_num           : integer range 0 to 79;
-signal main_key_pressed_n     : std_logic;
-signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
 
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
@@ -203,84 +192,6 @@ signal main_cache_readdata      : std_logic_vector(15 downto 0);
 signal main_cache_readdatavalid : std_logic;
 signal main_cache_waitrequest   : std_logic;
 
--- QNICE On Screen Menu selections
-signal main_osm_control_m     : std_logic_vector(255 downto 0);
-
--- SID Audio
-signal main_sid_l             : signed(15 downto 0);
-signal main_sid_r             : signed(15 downto 0);
-signal filt_audio_l           : std_logic_vector(15 downto 0);
-signal filt_audio_r           : std_logic_vector(15 downto 0);
-signal audio_l                : std_logic_vector(15 downto 0);
-signal audio_r                : std_logic_vector(15 downto 0);
-
--- C64 Video output
-signal main_red               : std_logic_vector(7 downto 0);
-signal main_green             : std_logic_vector(7 downto 0);
-signal main_blue              : std_logic_vector(7 downto 0);
-signal main_hs                : std_logic;
-signal main_vs                : std_logic;
-signal main_hblank            : std_logic;
-signal main_vblank            : std_logic;
-signal main_ce                : std_logic;
-
-signal main_crop_ce           : std_logic;
-signal main_crop_red          : std_logic_vector(7 downto 0);
-signal main_crop_green        : std_logic_vector(7 downto 0);
-signal main_crop_blue         : std_logic_vector(7 downto 0);
-signal main_crop_hs           : std_logic;
-signal main_crop_vs           : std_logic;
-signal main_crop_hblank       : std_logic;
-signal main_crop_vblank       : std_logic;
-
--- Joysticks
-signal j1_up_n                : std_logic;
-signal j1_down_n              : std_logic;
-signal j1_left_n              : std_logic;
-signal j1_right_n             : std_logic;
-signal j1_fire_n              : std_logic;
-signal j2_up_n                : std_logic;
-signal j2_down_n              : std_logic;
-signal j2_left_n              : std_logic;
-signal j2_right_n             : std_logic;
-signal j2_fire_n              : std_logic;
-
--- Paddles in 50 MHz clock domain which happens to be QNICE's
-signal qnice_pot1_x           : unsigned(7 downto 0);
-signal qnice_pot1_y           : unsigned(7 downto 0);
-signal qnice_pot2_x           : unsigned(7 downto 0);
-signal qnice_pot2_y           : unsigned(7 downto 0);
-
-signal qnice_pot1_x_n         : unsigned(7 downto 0);
-signal qnice_pot1_y_n         : unsigned(7 downto 0);
-signal qnice_pot2_x_n         : unsigned(7 downto 0);
-signal qnice_pot2_y_n         : unsigned(7 downto 0);
-
--- Paddles after CDC to C64's clock domain
-signal main_pot1_x            : std_logic_vector(7 downto 0);
-signal main_pot1_y            : std_logic_vector(7 downto 0);
-signal main_pot2_x            : std_logic_vector(7 downto 0);
-signal main_pot2_y            : std_logic_vector(7 downto 0);
-
--- On-Screen-Menu (OSM) for VGA
-signal video_osm_cfg_enable   : std_logic;
-signal video_osm_cfg_xy       : std_logic_vector(15 downto 0);
-signal video_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
-signal video_osm_vram_addr    : std_logic_vector(15 downto 0);
-signal video_osm_vram_data    : std_logic_vector(15 downto 0);
-
--- On-Screen-Menu (OSM) for HDMI
-signal hdmi_osm_cfg_enable    : std_logic;
-signal hdmi_osm_cfg_xy        : std_logic_vector(15 downto 0);
-signal hdmi_osm_cfg_dxdy      : std_logic_vector(15 downto 0);
-signal hdmi_osm_vram_addr     : std_logic_vector(15 downto 0);
-signal hdmi_osm_vram_data     : std_logic_vector(15 downto 0);
-
--- QNICE On Screen Menu selections
-signal hdmi_osm_control_m     : std_logic_vector(255 downto 0);
-
-signal hdmi_video_mode        : natural range 0 to 3;
-
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -293,8 +204,8 @@ constant C_MENU_CRT_EMULATION : natural := 14;
 constant C_MENU_HDMI_ZOOM     : natural := 15;
 constant C_MENU_HDMI_16_9_50  : natural := 16;
 constant C_MENU_HDMI_16_9_60  : natural := 17;
-constant C_MENU_HDMI_4_3_50   : natural := 18;  -- Caution: This naming convention is not self-explanatory,
-constant C_MENU_HDMI_5_4_50   : natural := 19;  --          scroll down and search for "hdmi_video_mode <= " to learn more 
+constant C_MENU_HDMI_4_3_50   : natural := 18;
+constant C_MENU_HDMI_5_4_50   : natural := 19;          
 constant C_MENU_HDMI_FF       : natural := 20;
 constant C_MENU_HDMI_DVI      : natural := 21;
 constant C_MENU_VGA_RETRO     : natural := 22;
@@ -365,7 +276,7 @@ begin
          clk_main_speed_i     => c64_clock_speed,
 
          -- SID and CIA versions
-         c64_sid_ver_i        => main_osm_control_i(C_MENU_8580) & main_osm_control_m(C_MENU_8580),
+         c64_sid_ver_i        => main_osm_control_i(C_MENU_8580) & main_osm_control_i(C_MENU_8580),
          c64_cia_ver_i        => main_osm_control_i(C_MENU_8521),
 
          -- M2M Keyboard interface
@@ -425,7 +336,7 @@ begin
          c64_qnice_we_i       => qnice_c64_qnice_we,
 
          -- RAM Expansion Unit (REU)
-         reu_cfg_i            => main_osm_control_m(C_MENU_REU),
+         reu_cfg_i            => main_osm_control_i(C_MENU_REU),
          ext_cycle_o          => main_ext_cycle,
          reu_cycle_i          => main_reu_cycle,
          reu_addr_o           => main_reu_addr,
@@ -559,6 +470,99 @@ begin
          q_a               => qnice_c64_mount_buf_ram_data
       ); -- mount_buf_ram
 
+   -- RAM used by the REU inside i_main:
+   -- Consists of a three-stage pipeline:
+   -- 1) i_avm_fifo does the CDC using a FIFO (as the name suggests) by utilizing Xilinx the specific "xpm_fifo_axis":
+   --    It connects to the raw HyperRAM Avalon Memory Mapped interface that M2M's arbiter offers and converts the
+   --    signals into the core's clock domain
+   -- 2) i_avm_cache optimizes latency, particularly for longer, subsequent RAM accesses
+   -- 3) i_reu_mapper: Converts the Avalon interface into the interface that the REU expects PLUS
+   --    it includes an optimization ("hack") that ensures that the REU is cycle accurate
+   -- The result of stage (3) is then passed to i_main which uses these signals directly with MiSTer's i_reu
+   i_reu_mapper : entity work.reu_mapper
+      generic map (
+         G_BASE_ADDRESS => X"0020_0000"  -- 2MW
+      )
+      port map (
+         clk_i               => main_clk,
+         rst_i               => main_rst,
+         reu_ext_cycle_i     => main_ext_cycle,
+         reu_ext_cycle_o     => main_reu_cycle,
+         reu_addr_i          => main_reu_addr,
+         reu_dout_i          => main_reu_dout,
+         reu_din_o           => main_reu_din,
+         reu_we_i            => main_reu_we,
+         reu_cs_i            => main_reu_cs,
+         avm_write_o         => main_avm_write,
+         avm_read_o          => main_avm_read,
+         avm_address_o       => main_avm_address,
+         avm_writedata_o     => main_avm_writedata,
+         avm_byteenable_o    => main_avm_byteenable,
+         avm_burstcount_o    => main_avm_burstcount,
+         avm_readdata_i      => main_avm_readdata,
+         avm_readdatavalid_i => main_avm_readdatavalid,
+         avm_waitrequest_i   => main_avm_waitrequest
+      ); -- i_reu_mapper
 
+   i_avm_cache : entity work.avm_cache
+      generic map (
+         G_CACHE_SIZE   => 8,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         clk_i                 => main_clk,
+         rst_i                 => main_rst,
+         s_avm_waitrequest_o   => main_avm_waitrequest,
+         s_avm_write_i         => main_avm_write,
+         s_avm_read_i          => main_avm_read,
+         s_avm_address_i       => main_avm_address,
+         s_avm_writedata_i     => main_avm_writedata,
+         s_avm_byteenable_i    => main_avm_byteenable,
+         s_avm_burstcount_i    => main_avm_burstcount,
+         s_avm_readdata_o      => main_avm_readdata,
+         s_avm_readdatavalid_o => main_avm_readdatavalid,
+         m_avm_waitrequest_i   => main_cache_waitrequest,
+         m_avm_write_o         => main_cache_write,
+         m_avm_read_o          => main_cache_read,
+         m_avm_address_o       => main_cache_address,
+         m_avm_writedata_o     => main_cache_writedata,
+         m_avm_byteenable_o    => main_cache_byteenable,
+         m_avm_burstcount_o    => main_cache_burstcount,
+         m_avm_readdata_i      => main_cache_readdata,
+         m_avm_readdatavalid_i => main_cache_readdatavalid
+      ); -- i_avm_cache
+
+   i_avm_fifo : entity work.avm_fifo
+      generic map (
+         G_DEPTH        => 16,
+         G_FILL_SIZE    => 1,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         s_clk_i               => main_clk,
+         s_rst_i               => main_rst,
+         s_avm_waitrequest_o   => main_cache_waitrequest,
+         s_avm_write_i         => main_cache_write,
+         s_avm_read_i          => main_cache_read,
+         s_avm_address_i       => main_cache_address,
+         s_avm_writedata_i     => main_cache_writedata,
+         s_avm_byteenable_i    => main_cache_byteenable,
+         s_avm_burstcount_i    => main_cache_burstcount,
+         s_avm_readdata_o      => main_cache_readdata,
+         s_avm_readdatavalid_o => main_cache_readdatavalid,
+         m_clk_i               => hr_clk_i,
+         m_rst_i               => hr_rst_i,
+         m_avm_waitrequest_i   => hr_waitrequest_i,
+         m_avm_write_o         => hr_write_o,
+         m_avm_read_o          => hr_read_o,
+         m_avm_address_o       => hr_address_o,
+         m_avm_writedata_o     => hr_writedata_o,
+         m_avm_byteenable_o    => hr_byteenable_o,
+         m_avm_burstcount_o    => hr_burstcount_o,
+         m_avm_readdata_i      => hr_readdata_i,
+         m_avm_readdatavalid_i => hr_readdatavalid_i
+      ); -- i_avm_fifo
 
 end architecture synthesis;

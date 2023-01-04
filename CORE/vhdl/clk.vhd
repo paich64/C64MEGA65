@@ -217,7 +217,7 @@ begin
          src_arst  => not (main_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
          dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
          dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
-                                       -- This output is registered.
+                                        -- This output is registered.
       );
 
 end architecture rtl;
