@@ -78,7 +78,8 @@ port (
 
    -- Video output
    main_video_ce_o         : out std_logic;
-   main_video_ce_2x_o      : out std_logic;
+   main_video_ce_ovl_o     : out std_logic;
+   main_video_retro15kHz_o : out std_logic;
    main_video_red_o        : out std_logic_vector(7 downto 0);
    main_video_green_o      : out std_logic_vector(7 downto 0);
    main_video_blue_o       : out std_logic_vector(7 downto 0);
