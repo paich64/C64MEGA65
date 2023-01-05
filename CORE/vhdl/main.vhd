@@ -10,6 +10,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 library work;
 use work.vdrives_pkg.all;
@@ -171,10 +172,8 @@ architecture synthesis of main is
    signal vga_green           : unsigned(7 downto 0);
    signal vga_blue            : unsigned(7 downto 0);
    
-   -- vga_ce: clock enable which is used to generate the C64's pixel clock from the core's main clock
-   -- vga_ce_2x: needs to be 2x faster than vga_ce
-   signal vga_ce              : std_logic_vector(3 downto 0) := "1000"; -- Pixel clock is 1/4 of the main clock
-   signal vga_ce_2x           : std_logic_vector(1 downto 0) := "10";   -- 2x needs to be 1/2 of the main clock
+   -- clock enable to derive the C64's pixel clock from the core's main clock: divide by 4
+   signal video_ce           : std_logic_vector(1 downto 0);
 
    -- Hard reset handling
    constant hard_rst_delay    : natural := 100_000; -- roundabout 1/3 of a second
@@ -437,17 +436,16 @@ begin
    video_red_o    <= std_logic_vector(vga_red);
    video_green_o  <= std_logic_vector(vga_green);
    video_blue_o   <= std_logic_vector(vga_blue);
-   video_ce_o     <= vga_ce(0);
+   video_ce_o     <= '1' when video_ce = 0 else '0';
    video_ce_ovl_o <= '1';
    
-   -- Pixel clock is 1/4 of the main clock and 2x is twice as fast
-   p_vga_ce : process (clk_main_i)
+   -- Pixel clock is 1/4 of the main clock
+   p_div : process (clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         vga_ce    <= vga_ce(0) & vga_ce(vga_ce'left downto 1);
-         vga_ce_2x <= vga_ce_2x(0) & vga_ce_2x(vga_ce_2x'left downto 1);
+         video_ce <= video_ce + 1;
       end if;
-   end process p_vga_ce;
+   end process p_div;
    
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
