@@ -272,9 +272,13 @@ begin
          reset_hard_i         => main_reset_m2m_i,
          pause_i              => main_pause_core_i,
 
-         -- global PAL/NTSC switch; c64_clock_speed depends on mode and needs to be very exact for avoiding clock drift
+         -- Video mode selection:
+         -- c64_ntsc_i: PAL/NTSC switch
+         -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
+         -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
          c64_ntsc_i           => c64_ntsc,
          clk_main_speed_i     => c64_clock_speed,
+         video_retro15kHz_i   => main_osm_control_i(C_MENU_VGA_RETRO),
 
          -- SID and CIA versions
          c64_sid_ver_i        => main_osm_control_i(C_MENU_8580) & main_osm_control_i(C_MENU_8580),
@@ -306,7 +310,7 @@ begin
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
          video_ce_o           => main_video_ce_o,
          video_ce_ovl_o       => main_video_ce_ovl_o,
-         video_retro15kHz_o   => open,          -- scroll down: is done in mega65.vhd
+         video_retro15kHz_o   => main_video_retro15kHz_o,
          video_red_o          => main_video_red_o,
          video_green_o        => main_video_green_o,
          video_blue_o         => main_video_blue_o,
@@ -347,8 +351,6 @@ begin
          reu_we_o             => main_reu_we,
          reu_cs_o             => main_reu_cs                           
       ); -- i_main
-      
-   main_video_retro15kHz_o    <= main_osm_control_i(C_MENU_VGA_RETRO);      
 
    ---------------------------------------------------------------------------------------------
    -- Audio and video settings (QNICE clock domain)

@@ -25,11 +25,13 @@ entity main is
       reset_hard_i            : in  std_logic;
       pause_i                 : in  std_logic;
 
+   -- Video mode selection:
+   -- c64_ntsc_i: PAL/NTSC switch
+   -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
+   -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
-
-      -- MiSTer core main clock speed:
-      -- Make sure you pass very exact numbers here, because they are used for avoiding clock drift at derived clocks
-      clk_main_speed_i        : in natural;
+      clk_main_speed_i        : in natural;     
+      video_retro15kHz_i      : in std_logic;
       
       -- SID and CIA versions
       c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
@@ -60,7 +62,7 @@ entity main is
       -- Video output
       video_ce_o              : out std_logic;
       video_ce_ovl_o          : out std_logic;
-      video_retro15kHz_o      : out std_logic := '0';
+      video_retro15kHz_o      : out std_logic;
       video_red_o             : out std_logic_vector(7 downto 0);
       video_green_o           : out std_logic_vector(7 downto 0);
       video_blue_o            : out std_logic_vector(7 downto 0);
@@ -235,7 +237,7 @@ begin
    --------------------------------------------------------------------------------------------------
    -- Hard reset
    --------------------------------------------------------------------------------------------------
-
+   
    hard_reset : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
@@ -433,13 +435,14 @@ begin
          vblank    => video_vblank_o
       ); -- i_video_sync
 
-   video_red_o    <= std_logic_vector(vga_red);
-   video_green_o  <= std_logic_vector(vga_green);
-   video_blue_o   <= std_logic_vector(vga_blue);
-   video_ce_o     <= '1' when video_ce = 0 else '0';
-   video_ce_ovl_o <= '1';
+   video_red_o        <= std_logic_vector(vga_red);
+   video_green_o      <= std_logic_vector(vga_green);
+   video_blue_o       <= std_logic_vector(vga_blue);
+   video_retro15kHz_o <= video_retro15kHz_i;
+   video_ce_o         <= '1' when video_ce = 0 else '0';
+   video_ce_ovl_o     <= '1' when video_retro15kHz_i = '0' else not video_ce(0);
    
-   -- Pixel clock is 1/4 of the main clock
+   -- Clock divider: The core's pixel clock is 1/4 of the main clock
    p_div : process (clk_main_i)
    begin
       if rising_edge(clk_main_i) then
