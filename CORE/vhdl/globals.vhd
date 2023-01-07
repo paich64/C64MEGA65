@@ -64,7 +64,8 @@ constant QNICE_CLK_SPEED      : natural := 50_000_000;   -- a change here has de
 -- can be found here: https://github.com/MJoergen/C64MEGA65/blob/V4/doc/graphics.md
 -- If you read from the top to the bottom, then you will learn that after MiSTer crops the output,
 -- we receive 384x270 pixels. Multiply by two and we have 768x540.
-constant VGA_DX               : natural := 768;
+-- But we need to go for 720x540 so that in the 5:4 and 4:3 modes everything looks correctly.
+constant VGA_DX               : natural := 720;
 constant VGA_DY               : natural := 540;
 constant FONT_FILE            : string  := "../font/Anikki-16x16-m2m.rom";
 constant FONT_DX              : natural := 16;
