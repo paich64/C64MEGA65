@@ -92,7 +92,10 @@ is not perfect, but 99.9% perfect: It even runs the very picky
 [TreuLove_ForReal1750Reu.d64](http://csdb.dk/getinternalfile.php/144854/TreuLove_ForReal1750Reu.d64)
 version of Booze Design's Treu Love demo
 ([see CSDB page](https://csdb.dk/release/?id=144105))
-that is supposed to only run on real hardware.
+that is supposed to only run on real hardware and also the absolutely
+awesome game
+[Sonic the Hedgehog](https://csdb.dk/release/?id=212523)
+runs like a charme on the MEGA65.
 
 Please feel free to browse
 [CSDB's REU Releases](https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6)
@@ -109,6 +112,17 @@ below).
 
 The REU is switched off by default. You can switch it on using the options
 menu.
+
+Compatibility advise: **Only turn on the REU for software that is
+explicitly supporting the REU.** Otherwise you might experience random
+crashes of otherwise very stable software. Explanation: The REU itself is
+99.9% compatible so you can count on it. But the majority of C64 software
+does not support the REU. Some of the software even gets unstable, if you
+have the REU activated. The reason for this effect is, that when the REU
+is activated, certain addresses in the C64 memory space that are normally
+free to be used for the software are not usable any more. If it happens
+that this software needs to work with these addresses and a REU is
+installed/activated, then the software crashes.
 
 ### Constraints and Roadmap
 
