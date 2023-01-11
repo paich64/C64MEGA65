@@ -15,6 +15,8 @@ Feature Roadmap
 * Support the creation of empty disk images
 * Supoprt the creation of empty config files and the migration of the config
   file from an older version to a newer version
+* Ability to "enter" image files (`*.d64`, etc.), browse them and select
+  files for direct loading
 * Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * Utilize full 16:9 screen real estate for file- and directory browsing and
