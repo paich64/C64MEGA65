@@ -5,17 +5,17 @@ Hardware compatibility release: Use the MEGA65's hardware ports for more retro
 fun! Stick cartridges into the expansion port, work with real floppy drives
 and printers using the IEC port and use the MEGA65's built-in disk drive as
 a C1581. Furthermore, use a vast array of simulated hardware with full support
-for `*.crt` modules, `*.d81` C1581 disk images, `*.g64` GCR encoded disk
+for `*.crt` cartridges, `*.d81` C1581 disk images, `*.g64` GCR encoded disk
 images and `*.t64` tape images.
 
 ## New Features
 
-WIP Hardware modules via expansion port: @TODO we might not support
-all module types, add constraints here: Game cartriges, real REUs, GEO RAMs,
-EasyFlash, etc. ... we need to test quite some amount of real hardware
+WIP Hardware cartridges via expansion port: @TODO we might not support
+all cartridge types, add constraints here: Game cartriges, real REUs, GEO
+RAMs, EasyFlash, etc. ... we need to test quite some amount of real hardware
 
-WIP Simulated modules using `*.crt` files:  @TODO we might not support
-all module types, add constraints here
+WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
+all cartridge types, add constraints here
 
 WIP Hardware IEC port: Work with real floppy drives, printers and other serial
 devices.
