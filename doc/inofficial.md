@@ -13,4 +13,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A4   | 12/17/22 | f712c84 | Removed i_clk_hdmi_576p which generates 27.00 MHz for 576p @ 50 Hz and 5x27.00 MHz = 135.0 MHz for TMDS in the hope that this MMCM is the root cause of the "signal noise" that apparently disturbs the VGA signal. 5:4 and 4:3 HDMI modes, as well as the 60 Hz mode of 16:9 and DVI are not working any more with this experimental core. 50 Hz 720p HDMI does work.
 | WIP-V5-A5   | 01/06/23 | caffa9c | First working version after the big refactoring to align the C64 core and the M2M framework
 | WIP-V5-A6   | 01/07/23 | 6150985 | Identical with A5, but with a fixed regression introduced by the refactoring: In 5:4 and 4:3 modes, the file browser did not fit on the screen
-| WIP-V5-A7   | 01/16/23 |         | HDMI output works with more monitors, frame grabbers, switches, etc. than before: Asserting the +5V power signal according to 4.2.7 of the HDMI specification version 1.4b
+| WIP-V5-A7   | 01/16/23 | cdfe960 | HDMI output works with more monitors, frame grabbers, switches, etc. than before: Asserting the +5V power signal according to 4.2.7 of the HDMI specification version 1.4b
