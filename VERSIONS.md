@@ -66,7 +66,12 @@ sophisticated bit nibblers (@TODO example!) are working now.
   - VIC: Change xscroll and turbo latch time
     (MiSTer commit f3a137b, fix by sorgelig)
 
-## Improved HDMI and VGA Compatibility
+## Improved HDMI Compatibility
+
+* Works with more HDMI monitors, frame grabbers, HDMI switches, etc.
+  The core was not compliant to section 4.2.7 of the HDMI specification
+  version 1.4b: It did not assert the +5V power signal. Now it does
+  assert the +5 power signal via the FPGA pin `ct_hpd`.
 
 WIP HDMI compatibility: MJoergen research project to fix the HDMI sound on his
 monitor which might lead to more HDMI compatibility in general. Research path:
