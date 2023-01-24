@@ -146,7 +146,7 @@ Make sure that you use either a real C64 mouse or
 [mouSTer](https://retrohax.net/shop/modulesandparts/mouster/).
 
 The
-C64 mouse "1351"(https://www.c64-wiki.com/wiki/Mouse_1351)
+[C64 mouse "1351"](https://www.c64-wiki.com/wiki/Mouse_1351)
 is clearly superior to the C64 mouse "1350" as the latter one does not feature
 proportional movements and therefore does not feel right, for example when you
 use GEOS.
