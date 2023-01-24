@@ -61,7 +61,7 @@ Most SD card problems can be resolved by trying these three things:
 
 * If you prefer a visual/GUI tool, then use the formatting tool that the
   official SD card organization provides:
-  [Download it here](https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-mac-download/)
+  [Download it here](https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-mac-download/).
 
 ## How compatible is the C64 core?
 
