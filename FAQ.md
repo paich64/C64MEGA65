@@ -2,7 +2,7 @@
 
 ## 1) My MEGA65 or the C64 core is behaving somehow weirdly
 
-**The "HDMI backpowering problem" is the root of all evil!**
+**The "HDMI back powering problem" is the root of all evil!**
 
 The evil things that can happen range from display problems over SD card
 problems to issues around the system's overall stability.
@@ -10,10 +10,10 @@ problems to issues around the system's overall stability.
 If your MEGA65 is connected to any HDMI device: Never switch-on this device
 before you have successfully switched-on your MEGA65. Or to put it the other
 way round: **Always switch-on your MEGA65 first** and **THEN** switch-on your
-HDMI device (monitor, framegrabber, etc.).
+HDMI device (monitor, frame grabber, etc.).
 
 For the C64 core this means: While your MEGA65 and your HDMI device are
-switched off: Hold the <kbd>No Scroll</kbd> key while you switch on the MEGA65 
+switched off: Hold the <kbd>No Scroll</kbd> key while you switch on the MEGA65
 and while the HDMI device is still off. Now, you can switch on your HDMI
 device and use the MEGA65's core selection menu to select the C64 core. You
 can also use the key combination <kbd>No Scroll</kbd> + &lt;number of the
@@ -29,20 +29,20 @@ known to work
 
 ## 2) SD card errors
 
-Most SD card problems can be resolved by trying these three things:
+Most SD card problems can be resolved by considering these possible causes:
 
-1. Are you having an [HDMI backpowering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
+1. Are you having an [HDMI back powering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
-2. Is your card formatted as `FAT32`?
-   
+2. Is your card formatted as something other than `FAT32`?
+
    Stick to `FAT32`. Don't use any improved or more modern version of
    file-system. On Windows and Linux it is normally quite
    straightforward to format an SD card as `FAT32`. If you are on a
-   Mac, scroll down and read "Formatting SD cards on a Mac". 
+   Mac, scroll down and read "Formatting SD cards on a Mac".
 
 3. Is your card larger than 32GB?
 
-4. Are you using a cheap noname card?
+4. Are you using a cheap no-name card?
 
 5. Please try to re-format your card and then copy everything on the card from scratch
 
@@ -52,7 +52,7 @@ Most SD card problems can be resolved by trying these three things:
 
 * Mac OS' GUI tools try to be "smart". Do not use them, as you cannot
   control, if the tool creates FAT16 or FAT32. Use the command line
-  version of diskutil instead:
+  version of `diskutil` instead:
 
   `sudo diskutil eraseDisk FAT32 <name> MBRFormat /dev/<devicename>`
 
@@ -76,21 +76,21 @@ that you can save your game states or your work in GEOS.
 
 ## My game or demo crashes
 
-* Are you having an [HDMI backpowering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
+* Are you having an [HDMI back powering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
 * Make sure you are using the newest version of the core. Right now this is
   [Version 4](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
   The only officially supported place to get cores is the
   [MEGA65 FileHost](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241),
   so make sure you downloaded your copy there.
-  Also double-check by pressing <kbd>Help</kbd> and then chosing the menu
+  Also double-check by pressing <kbd>Help</kbd> and then choosing the menu
   item "About & Help" that you are really running Version 4.
-  
+
 * If the game or demo is not designed for the REU, you absolutely need to
   switch-off the REU before running the game or demo. Learn more about this
   important fact
   [here](https://github.com/MJoergen/C64MEGA65#512-kb-ram-expansion-unit-1750-reu).
-  
+
 * Many modern games and demos are mainly tested on the C64C, so try to run the
   game or demo using the setting "CIA: Use 8521 (C64C)".
 
@@ -98,7 +98,7 @@ that you can save your game states or your work in GEOS.
   reactivate this afterwards, because your experience is 10x better with
   Flicker-free ON (at least when you're on HDMI). Learn more
   [here](https://github.com/MJoergen/C64MEGA65#compatibility).
-  
+
 * Use an experimental core. The version
   [Alpha 7 for Version 5](https://discord.com/channels/719326990221574164/794775503818588200/1064498334515068958)
   is supposed to run more demos and more games than the Version 4. But since
@@ -107,9 +107,9 @@ that you can save your game states or your work in GEOS.
   to access the download link for Alpha 7. If you don't have one yet: Get one.
   It is free and it enables you to enjoy the friendly and welcoming MEGA65
   community.
-  
+
 * [Create an issue](https://github.com/MJoergen/C64MEGA65/issues/new/choose)
-  on the official MEGA65 GitHub repository or post your problem in the
+  here on the official C64MEGA65 GitHub repository or post your problem in the
   [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
   channel on Discord.
 
@@ -123,27 +123,27 @@ that you can save your game states or your work in GEOS.
    You need a Discord login for being able to access the download link for
    Alpha 7. If you don't have one yet: Get one. It is free and it enables you
    to enjoy the friendly and welcoming MEGA65 community.
-   
+
 3. [Create an issue](https://github.com/MJoergen/C64MEGA65/issues/new/choose)
-   on the official MEGA65 GitHub repository or post your problem in the
+   here on the official C64MEGA65 GitHub repository or post your problem in the
    [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
    channel on Discord.
 
 ## The core's VGA output looks strange
 
-1. Always try the "auto-adjust" (or similarily named feature) of your screen
+1. Always try the "auto-adjust" (or similarly named feature) of your screen
    first. This resolves 90% of all issues.
-   
+
 2. Switch-off "HDMI: Flicker-free" and learn more about the issue
    that the flicker-free mode sometimes creates on VGA systems
    [here](https://github.com/MJoergen/C64MEGA65#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
-   
+
 3. If your monitor supports it, try to use the retro "15 kHz RGB" mode
 
 ## My mouse does not work
 
 Make sure that you use either a real C64 mouse or
-[mouSTer](https://retrohax.net/shop/modulesandparts/mouster/).
+[MouSTer](https://retrohax.net/shop/modulesandparts/mouster/).
 
 The
 [C64 mouse "1351"](https://www.c64-wiki.com/wiki/Mouse_1351)
@@ -173,5 +173,6 @@ is the roadmap for "later than Version 5".
 
 The
 [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
-channel on the MEGA65 discord is the right place to do post and
+channel on the MEGA65 discord is the right place to post and
 discuss feature requests.
+
