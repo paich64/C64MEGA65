@@ -3,8 +3,8 @@ Commodore 64 for MEGA65
 
 Experience the [Commodore 64](https://en.wikipedia.org/wiki/Commodore_64) with
 great accuracy and sublime compatibility on your
-[MEGA65](https://mega65.org/)! If you are in a hurry or have issues, head on
-to the
+[MEGA65](https://mega65.org/)! If you are in a hurry or have issues,
+go to the
 [FAQ - Frequently Asked Questions](FAQ.md). Otherwise, scroll down and read
 the user's manual.
 
