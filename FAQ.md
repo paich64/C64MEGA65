@@ -31,7 +31,7 @@ known to work
 
 Most SD card problems can be resolved by trying these three things:
 
-1. Are you having an [HDMI backpowering problem](https://github.com/MJoergen/C64MEGA65/new/master#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
+1. Are you having an [HDMI backpowering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
 2. Is your card formatted as `FAT32`?
    
@@ -75,6 +75,8 @@ and the core offers disk writing abilities for the simulated 1541, so
 that you can save your game states or your work in GEOS.
 
 ## My game or demo crashes
+
+* Are you having an [HDMI backpowering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
 * Make sure you are using the newest version of the core. Right now this is
   [Version 4](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
