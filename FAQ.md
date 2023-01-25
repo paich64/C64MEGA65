@@ -183,7 +183,7 @@ will be constantly updated:
 
 https://sy2002.github.io/m65cores/
 
-If you are interested in making your own core or porting cores from other
-projects such as MiSTer, the website will share some information and tutorial
-links regarding the
+If you are interested in making your own core or in porting cores from other
+projects such as MiSTer: The website is also sharing additional information
+about how to get started with doing this and about the
 [MiSTer2MEGA65 framework](https://github.com/sy2002/MiSTer2MEGA65).
