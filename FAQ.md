@@ -63,7 +63,7 @@ Most SD card problems can be resolved by considering these possible causes:
   official SD card organization provides:
   [Download it here](https://www.sdcard.org/downloads/formatter/sd-memory-card-formatter-for-mac-download/).
 
-## How compatible is the C64 core?
+## 3) How compatible is the C64 core?
 
 It is very compatible. Not yet as good as Vice but from Version 4 on, the
 core runs hundreds of
@@ -74,7 +74,7 @@ a REU such as
 and the core offers disk writing abilities for the simulated 1541, so
 that you can save your game states or your work in GEOS.
 
-## My game or demo crashes
+## 4) My game or demo crashes
 
 * Are you having an [HDMI back powering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
@@ -113,7 +113,7 @@ that you can save your game states or your work in GEOS.
   [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
   channel on Discord.
 
-## No image or no sound via HDMI
+## 5) No image or no sound via HDMI
 
 1. Try everything that is described
    [here](https://github.com/MJoergen/C64MEGA65#hdmi-compatibility).
@@ -129,7 +129,7 @@ that you can save your game states or your work in GEOS.
    [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
    channel on Discord.
 
-## The core's VGA output looks strange
+## 6) The core's VGA output looks strange
 
 1. Always try the "auto-adjust" (or similarly named feature) of your screen
    first. This resolves 90% of all issues.
@@ -140,7 +140,7 @@ that you can save your game states or your work in GEOS.
 
 3. If your monitor supports it, try to use the retro "15 kHz RGB" mode
 
-## My mouse does not work
+## 7) My mouse does not work
 
 Make sure that you use either a real C64 mouse or
 [MouSTer](https://retrohax.net/shop/modulesandparts/mouster/).
@@ -155,12 +155,12 @@ Caution: AMIGA mice look pretty much like C64 mice but the C64 core does not
 support AMIGA mice, yet. The MEGA65 core does support AMIGA mice and this
 feature is on our roadmap.
 
-## Can I use cartridges or real IEC devices?
+## 8) Can I use cartridges or real IEC devices?
 
 Not yet, but we are working to support this. Look at the
 [roadmap for the upcoming Version 5](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md).
 
-## Which features are on the roadmap?
+## 9) Which features are on the roadmap?
 
 [Here](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md) is the
 roadmap for the upcoming Version 5.
@@ -169,14 +169,14 @@ And
 [here](https://github.com/MJoergen/C64MEGA65/blob/develop/ROADMAP.md)
 is the roadmap for "later than Version 5".
 
-## Where can I post and discuss my feature request?
+## 10) Where can I post and discuss my feature request?
 
 The
 [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
 channel on the MEGA65 discord is the right place to post and
 discuss feature requests.
 
-## Are there cores other than the C64 available or in development?
+## 11) Are there cores other than the C64 available or in development?
 
 Yes. Please visit this website, it contains a list of MEGA65 cores that
 will be constantly updated:
