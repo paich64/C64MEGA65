@@ -120,6 +120,7 @@ that you can save your game states or your work in GEOS.
 
 2. If (1) does not work, try the experimental core
    [Alpha 7 for Version 5](https://discord.com/channels/719326990221574164/794775503818588200/1064498334515068958).
+   This experimental core fixes some commom HDMI issues.
    You need a Discord login for being able to access the download link for
    Alpha 7. If you don't have one yet: Get one. It is free and it enables you
    to enjoy the friendly and welcoming MEGA65 community.
@@ -140,7 +141,44 @@ that you can save your game states or your work in GEOS.
 
 3. If your monitor supports it, try to use the retro "15 kHz RGB" mode
 
-## 7) My mouse does not work
+## 7) My retro monitor does not work with the core
+
+Right now, the core only supports three different video outputs:
+
+* HDMI connector: 1280×720 pixels (720p) at 50 Hz
+* VGA connector: 720x576 pixels (576p) at 50.125 Hz (PAL): 31 kHz horizontal sync frequency
+* VGA connector: 720x288 pixels at 50.125 Hz (PAL): 15 kHz horizontal sync frequency
+
+If you are using any of the VGA modes, switch off "HDMI: Flicker-free" as described
+above in question (6).
+
+Please be aware that even if you switch on the retro "15 kHz RGB" mode, the pinout
+of the VGA connector does not change: Pin 13 still delivers HSYNC and pin 14
+still delivers VSYNC. See this
+[Wikipedia article on VGA](https://en.wikipedia.org/wiki/VGA_connector)
+for details. If you are using simple adaptors from the MEGA65's VGA out to your
+retro monitor then you might experience strange effects on the retro monitor.
+The reason is that the C64 core is currently not yet able to generate a
+[CSYNC signal](https://en.wikipedia.org/wiki/Component_video_sync),
+which is what many retro monitors need (instead of HSYNC and VSYNC).
+
+Maybe there are some active converters (other than "just adaptor cables") that
+are able to deliver the correct signals for certain retro monitors. Right now
+this is unkown terrain for me, so please contact me and share your findings
+and I will publish them.
+
+Generating a CSYNC signal is on the roadmap, you will find it under the headline
+"VGA retro CSync generation" under
+["Technical Roadmap"](https://github.com/MJoergen/C64MEGA65/blob/master/ROADMAP.md#technical-roadmap).
+
+Additionally, Paul Gardner-Stephen is working on an expansion board that (when done)
+you will be able to stick into your MEGA65 and then you will have native composite output.
+Learn more about the progress on Paul's blog, foe example 
+[here](https://c65gs.blogspot.com/2023/01/working-on-composite-video-output-for.html)
+and
+[here](https://c65gs.blogspot.com/2023/01/adding-colour-to-mega65s-composite.html).
+
+## 8) My mouse does not work
 
 Make sure that you use either a real C64 mouse or
 [MouSTer](https://retrohax.net/shop/modulesandparts/mouster/).
@@ -155,12 +193,12 @@ Caution: AMIGA mice look pretty much like C64 mice but the C64 core does not
 support AMIGA mice, yet. The MEGA65 core does support AMIGA mice and this
 feature is on our roadmap.
 
-## 8) Can I use cartridges or real IEC devices?
+## 9) Can I use cartridges or real IEC devices?
 
 Not yet, but we are working to support this. Look at the
 [roadmap for the upcoming Version 5](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md).
 
-## 9) Which features are on the roadmap?
+## 10) Which features are on the roadmap?
 
 [Here](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md) is the
 roadmap for the upcoming Version 5.
@@ -169,14 +207,14 @@ And
 [here](https://github.com/MJoergen/C64MEGA65/blob/develop/ROADMAP.md)
 is the roadmap for "later than Version 5".
 
-## 10) Where can I post and discuss my feature request?
+## 11) Where can I post and discuss my feature request?
 
 The
 [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
 channel on the MEGA65 discord is the right place to post and
 discuss feature requests.
 
-## 11) Are there cores other than the C64 available or in development?
+## 12) Are there cores other than the C64 available or in development?
 
 Yes. Please visit this website, it contains a list of MEGA65 cores that
 will be constantly updated:
