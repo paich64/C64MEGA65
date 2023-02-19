@@ -5,8 +5,21 @@ Before releasing a new version we strive to run all regression tests described
 here. Since running through all the [demos](demos.md) takes some serious
 effort, it might be that we are not always doing it.
 
-Version 4 - November, 25, 2022
-------------------------------
+Version 5 - Month Day, 2023
+---------------------------
+
+@TODO @TODO @TODO @TODO @TODO
+
+Add "Reset and unmount prevention while writing to disk" to "Additional Smoke Tests"
+
+Add tests around the migration of the saved settings and tests that are stressing the new menu system
+
+Add tests for Cartridges (real ones and simulated ones) and other tests regarding new features/changes
+
+Copy/Paste everything from below and re-do all tests
+
+Version 4 - November 25, 2022
+-----------------------------
 
 | Status             | Test                                        | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------
@@ -57,7 +70,6 @@ Work with the main menu and run software that allows to test the following:
 * Remove external SD card while menu and file browser are not open;
   reinsert while file browser is open
 * Work with large directory trees / game libraries
-* Reset and unmount prevention while writing to disk
 * Eagle's Nest: Reset-tests: Short reset leads to main screen. Long reset
   resets the whole core (not only the C64).
 * Giana Sisters: Scrolling while flicker-free is ON/OFF, joystick, latency
