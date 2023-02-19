@@ -1,5 +1,5 @@
-Version 5 - XXXXXXXX, XX, 2023
-==============================
+Version 5 - XXXXXXXX XX, 2023
+=============================
 
 Hardware compatibility release: Use the MEGA65's hardware ports for more retro
 fun! Stick cartridges into the expansion port, work with real floppy drives
@@ -113,8 +113,8 @@ WIP Put major/minor version in the first two bytes of the config file so that
 in case of a mismatch a warning can be issued (e.g. by directly printing it
 into the C64's screen RAM). Needs new version of make_config.sh.
 
-Version 4 - November, 25, 2022
-==============================
+Version 4 - November 25, 2022
+=============================
 
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
 Expansion Unit (1750 REU) are the main features: Save your high-scores and
@@ -203,7 +203,7 @@ play the fantastic Sonic the Hedgehog for REU.
   the issue in an experimental core that you can download here on GitHub:
   https://github.com/MJoergen/C64MEGA65/issues/2
 
-Version 3 - June, 27 2022
+Version 3 - June 27, 2022
 =========================
 
 This version is mainly a bugfix & compatibility release that is meant to
@@ -233,7 +233,7 @@ for Paddles.
   (a) The Cassette Port's s SENSE and READ input are low active.
   (b) The wrapper code that turns the 6502 into a 6510 contained a bug.
 
-Version 2 - June, 18 2022
+Version 2 - June 18, 2022
 =========================
 
 This version is mainly a bugfix & stability release: The focus was not to add
@@ -257,7 +257,7 @@ with more MEGA65 machines than version 1 did. We also added a DVI option
   Choosing "HDMI: DVI (no sound)" in the On-Screen-Menu will activate it and
   thus stop sending sound packages within the HDMI data stream.
 
-Version 1 - April, 26 2022
+Version 1 - April 26, 2022
 ==========================
 
 Experience the Commodore 64 with great accuracy and sublime compatibility
