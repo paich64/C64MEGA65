@@ -57,6 +57,7 @@ Work with the main menu and run software that allows to test the following:
 * Remove external SD card while menu and file browser are not open;
   reinsert while file browser is open
 * Work with large directory trees / game libraries
+* Reset and unmount prevention while writing to disk
 * Eagle's Nest: Reset-tests: Short reset leads to main screen. Long reset
   resets the whole core (not only the C64).
 * Giana Sisters: Scrolling while flicker-free is ON/OFF, joystick, latency
