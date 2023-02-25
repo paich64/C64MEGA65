@@ -3,7 +3,9 @@
 ;
 ; Hardcoded Shell strings that cannot be changed by config.vhd
 ;
-; done by sy2002 in 2022 and licensed under GPL v3
+; Hint: There are more hardcoded strings in menu.asm.
+;
+; done by sy2002 in 2023 and licensed under GPL v3
 ; ****************************************************************************
 
 NEWLINE         .ASCII_W "\n"
@@ -104,6 +106,17 @@ ERR_F_MENUSIZE  .ASCII_P "config.vhd: Illegal menu size (OPTM_SIZE):\n"
                 .ASCII_W "Must be between 1 and 254\n"
 ERR_F_MENUSTART .ASCII_P "config.vhd: No start menu item tag\n"
                 .ASCII_W "(OPTM_G_START) found in OPTM_GROUPS\n"
+ERR_F_MENUSUB   .ASCII_P "config.vhd: One or more submenu is not\n"
+                .ASCII_W "having an ending OPTM_G_SUBMENU.\n"
+ERR_F_MENUNGRP  .ASCII_P "config.vhd: No selected menu group item\n"
+                .ASCII_W "found within submenu.\n"
+ERR_F_NEWLINE   .ASCII_P "config.vhd: Each line in OPTM_ITEMS needs\n"
+                .ASCII_W "to be terminated by a newline character.\n"
+ERR_F_NO_S      .ASCII_W "M2M$RPL_S: No %s found in source string.\n"
+
+; ------------------------------------------------------------------|
+; @TODO: Adjust strings so that every string ends at the |
+; Only this guarantees that everything fits correctly on the screen
 
 ERR_MOUNT       .ASCII_W "Error: Cannot mount SD card!\nError code: "
 ERR_MOUNT_RET   .ASCII_W "\n\nPress Return to retry"
@@ -131,8 +144,7 @@ ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 
 ; Error codes for ERR_FATAL_INST: They will help to debug the situation,
 ; because we will at least know, where the instable system state occured
-ERR_FATAL_INST1 .EQU 1 ; options.asm:   _OPTM_CBS_REPL
+ERR_FATAL_INST1 .EQU 1 ; options.asm:   OPTM_CB_SHOW
 ERR_FATAL_INST2 .EQU 2 ; shell.asm:     _HM_MOUNTED
 ERR_FATAL_INST3 .EQU 3 ; shell.asm:     _HM_SDMOUNTED2A
 ERR_FATAL_INST4 .EQU 4 ; options.asm:   _OPTM_GK_MNT
-

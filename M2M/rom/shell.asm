@@ -457,6 +457,7 @@ _HM_MOUNTED_C   CMP     OPTM_KEY_SELALT, R6
 
                 ; Unmount the whole drive by stobing the image mount signal
                 ; while setting the image size to zero
+                MOVE    R7, R8                  ; virtual drive number
                 XOR     R9, R9                  ; low word of image size
                 XOR     R10, R10                ; high word of image size
                 XOR     R11, R11                ; 0=read/write disk
@@ -1122,7 +1123,7 @@ _START_MON_GO   DECRB
 ; QNICE Monitor. This is invisible to end users but might be helpful for
 ; debugging purposes, if you are able to connect a JTAG interface.
 ;
-; R8: Pointer to error message from strings.asm
+; R8: Pointer to error message
 ; R9: if not zero: contains an error code for additional debugging info
 ; ----------------------------------------------------------------------------
 
@@ -1155,11 +1156,12 @@ FATAL           MOVE    R8, R0
                 MOVE    R9, R8
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(puts, 1)
-                MOVE    NEWLINE, R8
+
+_FATAL_END      MOVE    NEWLINE, R8
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(crlf, 1)
 
-_FATAL_END      MOVE    ERR_FATAL_STOP, R8
+                MOVE    ERR_FATAL_STOP, R8
                 RSUB    SCR$PRINTSTR, 1
                 SYSCALL(puts, 1)
 

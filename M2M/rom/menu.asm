@@ -3,15 +3,21 @@
 ;
 ; Options Menu
 ;
-; done by sy2002 in 2022 and licensed under GPL v3
+; The Options menu is a reusable and self-contained component that consists of
+; this file and the file menu_vars.asm. It can be used independently from the
+; Shell either in other M2M projects such as an alternative to the Shell or
+; completely independent from M2M.
+;
+; done by sy2002 in 2023 and licensed under GPL v3
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
 ; Special values for OPTM_IR_GROUPS
 ; ----------------------------------------------------------------------------
 
-OPTM_CLOSE      .EQU 0x00FF                     ; menu item that closes menu
+OPTM_CLOSE      .EQU 0x00FF                     ; menu item: close (sub)menu
 OPTM_HEADLINE   .EQU 0x1000                     ; AND mask: headline/title itm
+OPTM_SUBMENU    .EQU 0x4000                     ; AND mask: submenu start/stop
 OPTM_SINGLESEL  .EQU 0x8000                     ; AND mask: single select item
 
 ; ----------------------------------------------------------------------------
@@ -34,6 +40,20 @@ OPTM_SEL_TLL    .EQU 2
 OPTM_SEL_TLLSEL .EQU 3
 
 ; ----------------------------------------------------------------------------
+; Hardcoded error messages for OPTM_CLBK_HALT
+; ----------------------------------------------------------------------------
+
+OPTM_F_MENUSUB  .ASCII_P "menu.asm: One or more submenu is not\n"
+                .ASCII_P "specified correctly:\n"
+                .ASCII_W "Missing submenu-end-flag.\n"
+OPTM_F_F2M      .ASCII_P "menu.asm: _OPTM_R_F2M:\n"
+                .ASCII_P "Corrupt memory layout: Flat coordinate is\n"
+                .ASCII_W "larger than menu size.\n"
+OPTM_F_NOSEL    .ASCII_P "menu.asm: _OPTM_RUN_SM:\n"
+                .ASCII_P "Corrupt memory layout: No selectable menu\n"
+                .ASCII_W "item found.\n"
+
+; ----------------------------------------------------------------------------
 ; Initialization record that is filled using OPTM_INIT
 ; ----------------------------------------------------------------------------
 
@@ -46,9 +66,13 @@ OPTM_FP_FRAME   .EQU 1
 
 ; Print function that handles everything incl. cursor pos and \n by itself
 ; R8 contains the string that shall be printed
+; R9 contains a pointer to a mask array: the first word is the size of the
+;    array (and therefore the amount of menu items) and then we have one entry
+;    (word) per menu line: If the highest bit is one, then OPTM_FP_PRINT will
+;    print the line otherwise it will skip the line
 OPTM_FP_PRINT   .EQU 2
 
-; Like print but contains target x|y coords in R9|R10
+; Like OPTM_FP_PRINT but contains target x|y coords in R9|R10; R11: mask ptr
 OPTM_FP_PRINTXY .EQU 3
 
 ; Draws a horizontal line/menu separator at the y-pos given in R8
@@ -89,48 +113,60 @@ OPTM_CLBK_SEL   .EQU 7
 ;       just return R8 unchanged.
 OPTM_CLBK_SHOW  .EQU 8
 
+; Callback function: OPTM_FATAL will output an error message and then halt
+; the system.
+; Input:
+;   R8: pointer to a string (error message)
+;   R9: zero or optional additional error number
+OPTM_CLBK_FATAL .EQU 9
+
 ; multi-selection character + zero-terminator, after that:
 ; single-selection character + zero-terminator, total: 4 words in length!
-OPTM_IR_SEL     .EQU 9
+OPTM_IR_SEL     .EQU 10
 
 ; amount of menu items: the length of the arrays to which OPTM_IR_GROUPS,
 ; OPTM_IR_DEFAULT and OPTM_IR_LINES point needs to be equal to this amount
-OPTM_IR_SIZE    .EQU 13
+OPTM_IR_SIZE    .EQU 14
 
 ; pointer to string containing the menu items and separating them with \n
-OPTM_IR_ITEMS   .EQU 14
+OPTM_IR_ITEMS   .EQU 15
 
-; array of digits that define and group menu items,
-; 0xEEEE automatically closes the menu when selected by the user
-; 0x8xxx denotes single-select menu items
-OPTM_IR_GROUPS  .EQU 15
+; pointer to array of digits that define and group menu items
+OPTM_IR_GROUPS  .EQU 16
 
-; array of 0s and 1s to define menu items that are activated by default
-; in case this array is located in RAM, these are the advantages (but it
-; can without problems also be located in ROM): the menu remembers the
+; pointer to array of 0s and 1s to define menu items that are activated by
+; default in case this array is located in RAM, these are the advantages (but
+; it can without problems also be located in ROM): the menu remembers the
 ; various multi- and single selections, if any and the menu prevents calling
 ; the callback function for already selected items
-OPTM_IR_STDSEL  .EQU 16
+OPTM_IR_STDSEL  .EQU 17
 
 ; array of 0s and 1s to define horizontal separator lines
-OPTM_IR_LINES   .EQU 17
+OPTM_IR_LINES   .EQU 18
 
 ; size of initialization record in words
-OPTM_STRUCTSIZE .EQU 18
+OPTM_STRUCTSIZE .EQU 19
 
 OPTM_NL         .DW  0x005C, 0x006E, 0x0000     ; \n
 
 ; ----------------------------------------------------------------------------
-; Options Menu functions
-; ----------------------------------------------------------------------------
-
-; Initialize data structures needed for the menu
-; R8: pointer to initialization record
-; R9:  x-coord
+; OPTM_INIT: Initialize data structures needed for the menu
+;
+; Input:
+;  R8: pointer to initialization record
+;  R9: x-coord
 ; R10: y-coord
 ; R11: width
 ; R12: height
+;
+; The coordinates are relative to the screen and not to the "window" within
+; the menu is being drawn.
+;
+; Output: None, no registers are changed
+; ----------------------------------------------------------------------------
+
 OPTM_INIT       INCRB
+
                 MOVE    OPTM_DATA, R0
                 MOVE    R8, @R0
                 MOVE    OPTM_X, R0
@@ -145,10 +181,18 @@ OPTM_INIT       INCRB
                 MOVE    0, @R0
                 MOVE    OPTM_SSMS, R0
                 MOVE    0, @R0
+                MOVE    OPTM_MENULEVEL, R0
+                MOVE    0, @R0
+
                 DECRB
                 RET
 
+; ----------------------------------------------------------------------------
 ; Show menu: Draw frame and fill it with the menu items
+;
+; Input/Output: None, no registers are changed
+; ----------------------------------------------------------------------------
+
 OPTM_SHOW       SYSCALL(enter, 1)
 
                 MOVE    OPTM_DATA, R0           ; R0: string to be printed
@@ -167,13 +211,24 @@ OPTM_SHOW       SYSCALL(enter, 1)
                 MOVE    @R3, R3
                 ADD     OPTM_IR_LINES, R3
                 MOVE    @R3, R3
-                MOVE    OPTM_DATA, R4           ; R4: groups (single-select)
+                MOVE    OPTM_DATA, R4           ; R4: menu groups
                 MOVE    @R4, R4
                 ADD     OPTM_IR_GROUPS, R4
                 MOVE    @R4, R4
 
                 MOVE    OPTM_FP_CLEAR, R7       ; clear VRAM
                 RSUB    _OPTM_CALL, 1
+
+                ; ------------------------------------------------------------
+                ; Create the menu/submenu structure (array) on the stack
+                ; ------------------------------------------------------------
+
+                SUB     R1, SP                  ; reserve memory on the stack
+                SUB     1, SP                   ; 1st word in array = size
+                MOVE    SP, R8
+                MOVE    R8, R5                  ; remember address of array
+                MOVE    R1, R9
+                RSUB    _OPTM_STRUCT, 1
 
                 ; ------------------------------------------------------------
                 ; Draw the first iteration of the menu
@@ -193,7 +248,8 @@ OPTM_SHOW       SYSCALL(enter, 1)
                 MOVE    @R11, R11
                 MOVE    OPTM_FP_FRAME, R7       ; draw frame
                 RSUB    _OPTM_CALL, 1
-                MOVE    R0, R8
+                MOVE    R0, R8                  ; R8: strint to be printed
+                MOVE    R5, R9                  ; R9: (sub)menu mask array
                 MOVE    OPTM_FP_PRINT, R7       ; print menu
                 RSUB    _OPTM_CALL, 1
 
@@ -201,34 +257,49 @@ OPTM_SHOW       SYSCALL(enter, 1)
                 ; Highlight Headlines/Titles
                 ; ------------------------------------------------------------
 
+                ; use INCRB to protect R0..R7
+                ; bring R4 and R5 over the INCRB hump
+                MOVE    R4, @--SP
+                MOVE    R5, @--SP
                 INCRB                           ; protect R0..R7
+                MOVE    @SP++, R5               ; R5: (sub)menu structure
+                MOVE    @SP++, R0               ; R0: menu groups
+                MOVE    @R5++, R2               ; R2: amount of menu items
 
-                MOVE    OPTM_DATA, R0
-                MOVE    @R0, R0
-                ADD     OPTM_IR_GROUPS, R0
-                MOVE    @R0, R0                 ; bit flag: #12 in menu group
-                XOR     R1, R1
-                MOVE    OPTM_DATA, R2           ; amount of menu items
-                MOVE    @R2, R2
-                ADD     OPTM_IR_SIZE, R2
-                MOVE    @R2, R2
+                XOR     R1, R1                  ; R1: hilight itm; count frm 0
+                XOR     R4, R4                  ; R4: skip counter
+
 _OPTM_TT_0      MOVE    @R0++, R3
 
+                CMP     @R5++, 0x7FFF           ; menu item visible as per..
+                RBRA    _OPTM_TT_1A, !N         ; .. (sub)menu structure?
+
                 AND     OPTM_HEADLINE, R3
-                RBRA    _OPTM_TT_1, Z           ; flag not set: continue
+                RBRA    _OPTM_TT_1B, Z          ; flag not set: continue
 
                 ; flag is set, so print the menu item in highlighted mode
                 MOVE    OPTM_FP_SELECT, R7
-                MOVE    R1, R8
+                MOVE    R1, R8                  ; itm to highlight, cnt frm 0
+                SUB     R4, R8                  ; deduct skip counter
                 MOVE    OPTM_SEL_TLL, R9
                 RSUB    _OPTM_CALL, 1
+                RBRA    _OPTM_TT_1B, 1
+
+                ; for each entry that we skip because of an invisible flag in
+                ; the (sub)menu structure, we need to increase a skip counter
+                ; so that the position of the highlight is still correct
+_OPTM_TT_1A     ADD     1, R4
 
                 ; iterate
-_OPTM_TT_1      ADD     1, R1
-                CMP     R1, R2                  ; end of menu structure?
+_OPTM_TT_1B     ADD     1, R1                   ; next item to highlight
+                SUB     1, R2                   ; next item; are we done?
                 RBRA    _OPTM_TT_0, !Z          ; no: continue
 
                 DECRB                           ; restore R0..R7
+
+                MOVE    R5, @--SP               ; save R5
+                MOVE    R5, R1                  ; R1: (sub)menu structure
+                ADD     1, R1                   ; skip size info
 
                 ; ------------------------------------------------------------
                 ; Handle "%s" in menu items
@@ -240,7 +311,9 @@ _OPTM_TT_1      ADD     1, R1
                 MOVE    @R8, R8
                 ADD     OPTM_CLBK_SHOW, R8
                 CMP     0, @R8
-                RBRA    _OPTM_SHOW_0, Z         ; no: skip 
+                RBRA    _OPTM_SHOW_0, Z         ; no: skip
+
+                XOR     R12, R12                ; R12: skip counter
 
                 ; loop through the string, char by char and interpret \n as
                 ; newline (i.e. increment the index of the menu item)
@@ -248,23 +321,32 @@ _OPTM_TT_1      ADD     1, R1
                 MOVE    R0, R7                  ; R7 = start of current str
 _OPTM_HM_0      CMP     0, @R0                  ; end of string reached?
                 RBRA    _OPTM_SHOW_0, Z         ; yes
+
                 CMP     0x005C, @R0             ; search newline: backslash
-                RBRA    _OPTM_HM_1, !Z          ; no
+                RBRA    _OPTM_HM_1A, !Z         ; no
                 ADD     1, R0                   ; skip character
                 CMP     'n', @R0                ; "\n" found?
-                RBRA    _OPTM_HM_1, !Z          ; no
+                RBRA    _OPTM_HM_1A, !Z         ; no
                 ADD     1, R0                   ; skip character
                 MOVE    R0, R7                  ; R7 starts from the new line
-                ADD     1, R5                   ; next index of menu item
+                ADD     1, R5                   ; next index of menu item                
+                ADD     1, R1                   ; ..and next idx of men. strct
+                CMP     @R1, 0x7FFF             ; item currently invisible?
+                RBRA    _OPTM_HM_0, N           ; no: continue
+                ADD     1, R12                  ; yes: invis.: incr. skip cnt.                
                 RBRA    _OPTM_HM_0, 1                
 
                 ; search for %s in the string
-_OPTM_HM_1      CMP     '%', @R0                ; search for "%s"
+_OPTM_HM_1A     CMP     '%', @R0                ; search for "%s"
                 RBRA    _OPTM_HM_2, !Z          ; no
                 ADD     1, R0                   ; skip character
                 CMP     's', @R0                ; "%s" found?
                 RBRA    _OPTM_HM_2, !Z          ; no
                 ADD     1, R0                   ; skip character
+
+                ; respect (sub)menu structure: skip invisible items
+                CMP     @R1, 0x7FFF             ; item visible?
+                RBRA    _OPTM_HM_2, !N          ; no: skip printing
 
                 ; Extract from R7 (start of current string) to \n and provide
                 ; this string and the index to the callback function. This
@@ -302,7 +384,7 @@ _OPTM_HM_1      CMP     '%', @R0                ; search for "%s"
                 MOVE    R5, R9
                 RSUB    _OPTM_CALL, 1
 
-                ; print string from callback, which is in R8
+                ; print string from callback, which is in R8                
                 MOVE    OPTM_FP_PRINTXY, R7
                 MOVE    OPTM_X, R9
                 MOVE    @R9, R9
@@ -311,13 +393,21 @@ _OPTM_HM_1      CMP     '%', @R0                ; search for "%s"
                 MOVE    @R10, R10
                 ADD     R5, R10                 ; R5 is # of menu item, so..
                 ADD     1, R10                  ; ..add 1 to y b/c of frame
+                SUB     R12, R10                ; adjust for skipped items
+                MOVE    R11, @--SP              ; save R11
+                XOR     R11, R11                ; R11=0: show main menu
                 RSUB    _OPTM_CALL, 1
+                MOVE    @SP++, R11              ; restore R11
 
                 MOVE    @SP++, R7               ; restore ptr
 
                 ADD     R6, SP                  ; restore stack
                 ADD     1, R5                   ; next line
-                MOVE    R7, R0                  ; next part of original string
+                ADD     1, R1                   ; next (sub)menu struct. item
+                CMP     @R1, 0x7FFF             ; next item invisible?
+                RBRA    _OPTM_HM_1B, N          ; no: proceed
+                ADD     1, R12                  ; yes: increase skip counter
+_OPTM_HM_1B     MOVE    R7, R0                  ; next part of original string
                 ADD     R6, R0
                 MOVE    R0, R7
                 ADD     1, R7
@@ -330,20 +420,21 @@ _OPTM_HM_2      ADD     1, R0
                 ; Tag selected menu items and draw lines
                 ; ------------------------------------------------------------
 
-_OPTM_SHOW_0    MOVE    OPTM_DATA, R0           ; R0: string to be printed
-                MOVE    @R0, R0
-                ADD     OPTM_IR_ITEMS, R0
-                MOVE    @R0, R0
-
-                MOVE    OPTM_X, R5              ; R5: current x-pos
-                MOVE    @R5, R5
-                ADD     1, R5
+_OPTM_SHOW_0    MOVE    @SP++, R5               ; restore R5: (sub)menu struct
+                MOVE    @R5++, R1               ; amount of menu items
                 MOVE    1, R6                   ; R6: current y-pos
+                XOR     R12, R12                ; R12: skip counter
 
                 XOR     R0, R0                  ; R0: iteration position
 _OPTM_SHOW_1    CMP     R0, R1                  ; R0 < R1 (start from 0)
-                RBRA    _OPTM_SHOW_RET, Z       ; end reached
-                CMP     0, @R2++                ; show select. at this point?
+                RBRA    _OPTM_SHOW_4, Z         ; end reached
+
+                CMP     @R5++, 0x7FFF           ; active (sub)menu item?
+                RBRA    _OPTM_SHOW_1A, N        ; yes
+                ADD     1, R12                  ; no: increase skip counter
+                RBRA    _OPTM_SHOW_3, 1         ; next iteration
+
+_OPTM_SHOW_1A   CMP     0, @R2                  ; show select. at this point?
                 RBRA    _OPTM_SHOW_2, Z         ; no
                 MOVE    OPTM_DATA, R8           ; yes: print selection here
                 MOVE    @R8, R8
@@ -351,35 +442,83 @@ _OPTM_SHOW_1    CMP     R0, R1                  ; R0 < R1 (start from 0)
                 ADD     OPTM_IR_SEL, R8         ; decide: single or multi-sel.
                 MOVE    @R4, R7
                 AND     OPTM_SINGLESEL, R7
-                RBRA    _OPTM_SHOW_1A, Z        ; multi-select
+                RBRA    _OPTM_SHOW_1B, Z        ; multi-select
                 ADD     2, R8                   ; single-select
 
-_OPTM_SHOW_1A   MOVE    R5, R9
-                MOVE    R6, R10
+_OPTM_SHOW_1B   MOVE    OPTM_X, R9              ; R9: current x-pos
+                MOVE    @R9, R9
+                ADD     1, R9
+                MOVE    R6, R10                 ; R10: current y-pos
+                SUB     R12, R10                ; adjust for skipped items
                 MOVE    OPTM_FP_PRINTXY, R7
+                MOVE    R11, @--SP              ; save R11
+                XOR     R11, R11                ; R11=0: show main menu
                 RSUB    _OPTM_CALL, 1
+                MOVE    @SP++, R11              ; restore R11
+                RBRA    _OPTM_SHOW_3, 1
 
-_OPTM_SHOW_2    CMP     0, @R3++                ; horiz. line here?
+_OPTM_SHOW_2    CMP     0, @R3                  ; horiz. line here?
                 RBRA    _OPTM_SHOW_3, Z         ; no
                 MOVE    R6, R8                  ; yes: R8: y-pos of line
-                MOVE    OPTM_FP_LINE, R7
+                SUB     R12, R8                 ; adjust for skipped items
+                MOVE    OPTM_FP_LINE, R7        ; draw line
                 RSUB    _OPTM_CALL, 1
 
-_OPTM_SHOW_3    ADD     1, R6                   ; next y-pos
-                ADD     1, R0                   ; next menu item
-                ADD     1, R4                   ; next single/multi sel. info
+_OPTM_SHOW_3    ADD     1, R0                   ; next menu item
+                ADD     1, R2                   ; next selected info
+                ADD     1, R3                   ; next horiz. line flag
+                ADD     1, R4                   ; next single/multi sel. info                
+                ADD     1, R6                   ; next y-pos
                 RBRA    _OPTM_SHOW_1, 1
 
-_OPTM_SHOW_RET  SYSCALL(leave, 1)
+                ; End of list reached: Special case: Are we in a submenu and
+                ; is the submenu shorter than the window? Then draw a line
+                ; under the menu item that closes the submenu if there are
+                ; at least two lines before the end of the window (EOW)
+_OPTM_SHOW_4    MOVE    OPTM_MENULEVEL, R8
+                CMP     0, @R8
+                RBRA    _OPTM_SHOW_RET, Z       ; main menu: no special case
+
+                MOVE    OPTM_Y, R8
+                MOVE    @R8, R8
+                MOVE    OPTM_DY, R9
+                ADD     @R9, R8
+                SUB     3, R8                   ; at least 2 lines before EOW
+                CMP     0, R8                   ; underflow?
+                RBRA    _OPTM_SHOW_RET, V       ; yes: do not draw the line
+                MOVE    R8, R9
+
+                MOVE    R6, R8                  ; R8: y-pos of line
+                SUB     R12, R8                 ; adjust for skipped items
+                CMP     R8, R9                  ; should we draw the line?
+                RBRA    _OPTM_SHOW_RET, N       ; no
+                MOVE    OPTM_FP_LINE, R7        ; yes: draw line
+                RSUB    _OPTM_CALL, 1
+
+_OPTM_SHOW_RET  ADD     R1, SP                  ; restore SP / free memory
+                ADD     1, SP
+
+                SYSCALL(leave, 1)
                 RET
 
-; Runs menu and returns results
-; Input
-;   R8: Default cursor position/selection
-; Output
+; ----------------------------------------------------------------------------
+; OPTM_RUN: Runs menu and returns result
+;
+; Input:
+;  R8: Default cursor position/selection
+;
+; Output:
 ;   R8: Selected cursor position
-;   plus: Will callback to OPTM_CLBK_SEL (see above) on each press
-;         of the selection key
+;   plus: Will callback OPTM_CLBK_SEL (see above) on each press
+;         of the selection key (with the exception that pressing the selection
+;         key while hovering over a submenu entry or exit point handles the
+;         submenu instead of calling OPTM_CLBK_SEL).
+;
+; Semantics of "cursor position" in R8: It is the position within OPTM_ITEMS
+; and OPTM_GROUPS (both from config.vhd), i.e. R8 considers the menu to be
+; a big flat list without submenus.
+; ----------------------------------------------------------------------------
+
 OPTM_RUN        SYSCALL(enter, 1)
 
                 MOVE    OPTM_DATA, R0           ; R0: size of data structure
@@ -390,11 +529,38 @@ OPTM_RUN        SYSCALL(enter, 1)
                 MOVE    @R1, R1
                 ADD     OPTM_IR_GROUPS, R1
                 MOVE    @R1, R1
-                MOVE    R8, R2                  ; R2: selected item
+                MOVE    R8, R2                  ; R2: sel. item in flat coord
                 MOVE    R2, R3                  ; R3: old selected item
 
-_OPTM_RUN_SEL   MOVE    OPTM_FP_SELECT, R7      ; select line
+                ; Create the menu/submenu structure (array) on the stack
+                ;
+                ; SP+2 will point to the menu/submenu structure;
+                ;      use SP+3 to skip the size info that is not needed here
+                ; SP+1 will point to a pointer that indicates the current
+                ;      iteration position within (SP+2)
+                ; SP+0 will point to the size of the current (sub)menu
+                ;
+                ; We will need to add 3 when cleaning up the stack due to the
+                ; below-mentioned stack allocations.
+                SUB     R0, SP                  ; reserve memory on the stack
+                SUB     1, SP                   ; 1st word in array = size
+                MOVE    SP, R8
+                MOVE    R0, R9
+                RSUB    _OPTM_STRUCT, 1
+                SUB     1, SP                   ; reserve space for (SP+1)
+                MOVE    R9, @--SP               ; size of (sub)men at (SP+0)
+
+                ; Main loop
+_OPTM_RUN_SEL   MOVE    SP, R8                  ; update (SP+1), i.e. update..
+                ADD     3, R8                   ; ..the pointer to the curr..
+                ADD     R2, R8                  ; ..iteration pos
+                MOVE    SP, R7
+                ADD     1, R7
+                MOVE    R8, @R7
+
+                MOVE    OPTM_FP_SELECT, R7      ; select line
                 MOVE    R2, R8                  ; R8: selected item
+                RSUB    _OPTM_R_F2M, 1          ; convert R8 to screen coord.
                 MOVE    OPTM_SEL_SEL, R9
                 RSUB    _OPTM_CALL, 1
                 MOVE    OPTM_CUR_SEL, R8        ; remember for ext. routines..
@@ -403,52 +569,102 @@ _OPTM_RUN_SEL   MOVE    OPTM_FP_SELECT, R7      ; select line
                 MOVE    OPTM_FP_GETKEY, R7      ; get next keypress
                 RSUB    _OPTM_CALL, 1
 
+                ; Cursor up
                 CMP     OPTM_KEY_UP, R8         ; key: up?
                 RBRA    _OPTM_RUN_3, !Z         ; no: check other key
 _OPTM_RUN_1     CMP     0, R2                   ; yes: wrap around at top?
                 RBRA    _OPTM_KU_NWA, !Z        ; no: find next menu item
-                MOVE    R0, R2                  ; yes: wrap around
+                MOVE    R0, R2                  ; yes: wrap around R2
+                SUB     1, R2
+                MOVE    SP, R7                  ; wrap around (SP+1)
+                ADD     1, R7
+                MOVE    SP, R6
+                ADD     3, R6
+                ADD     R0, R6
+                SUB     1, R6
+                MOVE    R6, @R7
+                RBRA    _OPTM_KU_WA, 1
+
 _OPTM_KU_NWA    SUB     1, R2                   ; one element up
-                MOVE    R1, R6                  ; find next menu item: descnd.
-                ADD     R2, R6
+                MOVE    SP, R7                  ; is the prev. element still..
+                ADD     1, R7                   ; ..part of the currently..
+                SUB     1, @R7                  ; ..active (sub)menu?
+_OPTM_KU_WA     MOVE    @R7, R7
+                MOVE    @R7, R7                 ; R7: cur elm in (sub)mn strct
+
+                SHL     1, R7                   ; check bit 15
+                RBRA    _OPTM_RUN_1, !C         ; no: continue searching
+
+                MOVE    R1, R6                  ; yes: find next menu item:
+                ADD     R2, R6                  ; descending
                 MOVE    @R6, R6
+
+                MOVE    R6, R7                  ; headline/label of a submenu?
+                AND     OPTM_SUBMENU, R7
+                RBRA    _OPTM_RUN_2, !Z         ; yes: unselect cur. and go on
+
                 AND     0x00FF, R6              ; mask flags such as headline
                 CMP     0, R6                   ; menu item found?
                 RBRA    _OPTM_RUN_2, !Z         ; yes: unselect cur. and go on
                 RBRA    _OPTM_RUN_1, 1          ; no: continue searching
 
+                ; Unselect old item and select current item
 _OPTM_RUN_2     MOVE    OPTM_FP_SELECT, R7      ; unselect old item
                 MOVE    R3, R8
+                RSUB    _OPTM_R_F2M, 1          ; convert R8 to screen coord.
                 MOVE    OPTM_SEL_STD, R9
                 RSUB    _OPTM_CALL, 1
                 MOVE    R2, R3                  ; remember current item as old
                 RBRA    _OPTM_RUN_SEL, 1
 
+                ; Cursor down
 _OPTM_RUN_3     CMP     OPTM_KEY_DOWN, R8       ; key: down?
                 RBRA    _OPTM_RUN_5, !Z         ; no: check other key
+
 _OPTM_RUN_4     MOVE    R0, R7                  ; yes: wrap around at bottom?
                 SUB     1, R7
                 CMP     R7, R2
                 RBRA    _OPTM_KD_NWA, !Z        ; no: find next menu item
-                MOVE    0xFFFF, R2              ; yes: wrap around
+                XOR     R2, R2                  ; yes: wrap around R2
+                MOVE    SP, R7                  ; wrap around/reset (SP+1)
+                ADD     1, R7
+                MOVE    SP, R6
+                ADD     3, R6
+                MOVE    R6, @R7
+                RBRA    _OPTM_KD_WA, 1
+
 _OPTM_KD_NWA    ADD     1, R2                   ; one element down
-                MOVE    R1, R6                  ; find next menu item: ascend.
-                ADD     R2, R6
+                MOVE    SP, R7                  ; is the next element still..
+                ADD     1, R7                   ; ..part of the currently..
+                ADD     1, @R7                  ; ..active (sub)menu?
+_OPTM_KD_WA     MOVE    @R7, R7
+                MOVE    @R7, R7                 ; R7: cur elm in (sub)mn strct                 
+                SHL     1, R7                   ; check bit 15
+                RBRA    _OPTM_RUN_4, !C         ; no: continue searching
+
+                MOVE    R1, R6                  ; yes: find next menu item..
+                ADD     R2, R6                  ; ..ascending
                 MOVE    @R6, R6
-                AND     0x00FF, R6              ; mask out headline flag
+
+                MOVE    R6, R7                  ; headline/label of a submenu?
+                AND     OPTM_SUBMENU, R7
+                RBRA    _OPTM_RUN_2, !Z         ; yes: unselect cur. and go on
+
+                AND     0x00FF, R6              ; mask out any flags
                 CMP     0, R6                   ; menu item found?
                 RBRA    _OPTM_RUN_2, !Z         ; yes: unselect cur. and go on
                 RBRA    _OPTM_RUN_4, 1          ; no: continue searching
 
+                ; Close menu key
 _OPTM_RUN_5     CMP     OPTM_KEY_CLOSE, R8      ; key: close?
                 RBRA    _OPTM_RUN_6A, !Z        ; no: check other key
                 MOVE    R2, R8                  ; return selected item
                 RBRA    _OPTM_RUN_RET, 1
 
+                ; Select key
 _OPTM_RUN_6A    CMP     OPTM_KEY_SELECT, R8     ; key: select?
-                RBRA    _OPTM_RUN_6B, !Z
-                RBRA    _OPTM_RUN_6C, 1
-_OPTM_RUN_6B    CMP     OPTM_KEY_SELALT, R8
+                RBRA    _OPTM_RUN_6C, Z         ; yes
+_OPTM_RUN_6B    CMP     OPTM_KEY_SELALT, R8     ; key: alternative select?
                 RBRA    _OPTM_RUN_SEL, !Z       ; no: ignore key
 
                 ; avoid "double-firing" of already selected items by
@@ -463,6 +679,14 @@ _OPTM_RUN_6B    CMP     OPTM_KEY_SELALT, R8
                 ; needs to be robust enough to not fail in this case
 _OPTM_RUN_6C    MOVE    R8, R11                 ; R11: remember selection key
 
+                ; Submenus: Special behavior
+                MOVE    R1, R6                  ; R1: ptr. to OPTM_IR_GROUPS 
+                ADD     R2, R6                  ; R2: sel. item in flat coord
+                MOVE    @R6, R7
+                AND     OPTM_SUBMENU, R7        ; is it a submenu?
+                RBRA    _OPTM_RUN_SM, !Z        ; yes
+
+                ; No submenu: Standard behavior
                 MOVE    OPTM_DATA, R6           ; already selected?
                 MOVE    @R6, R6
                 ADD     OPTM_IR_STDSEL, R6
@@ -473,11 +697,8 @@ _OPTM_RUN_6C    MOVE    R8, R11                 ; R11: remember selection key
                 RBRA    _OPTM_RUN_6D, Z         ; no: not selected
 
                 ; yes: selected: is it a single-select item?
-                MOVE    OPTM_DATA, R6
-                MOVE    @R6, R6
-                ADD     OPTM_IR_GROUPS, R6
-                MOVE    @R6, R6
-                ADD     R2, R6
+                MOVE    R1, R6                  ; R1: ptr. to OPTM_IR_GROUPS 
+                ADD     R2, R6                  ; R2: sel. item in flat coord
                 MOVE    @R6, R8                 ; remember @R6 for later
                 MOVE    @R6, R6                 ; do not destroy original data
                 AND     OPTM_SINGLESEL, R6      ; ..by the AND command but use
@@ -492,20 +713,26 @@ _OPTM_RUN_6C    MOVE    R8, R11                 ; R11: remember selection key
                 MOVE    0, @R7                  ; unselect single-select item
                                                 ; in memory
 
-                MOVE    R8, @--SP               ; R8 still contains group id
+                MOVE    R8, R12                 ; R8 still contains group id
 
-                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete
                 MOVE    OPTM_X, R9              ; R9: x-coord
                 MOVE    @R9, R9
                 ADD     1, R9
                 MOVE    OPTM_Y, R10             ; R10: y-coord
                 MOVE    @R10, R10
-                ADD     R2, R10
+                MOVE    R2, R8                  ; transform R2 from flat..
+                RSUB    _OPTM_R_F2M, 1          ; ..to relative to (sub)menu
+                ADD     R8, R10
                 ADD     1, R10
+                MOVE    R11, @--SP              ; save R11
+                MOVE    OPTM_MENULEVEL, R11     ; R11: (sub)menu level, 0=main
+                MOVE    @R11, R11
                 MOVE    OPTM_FP_PRINTXY, R7     ; delete marker at current pos
+                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete            
                 RSUB    _OPTM_CALL, 1           ; ..on screen
+                MOVE    @SP++, R11              ; restore R11
 
-                MOVE    @SP++, R8               ; group id
+                MOVE    R12, R8                 ; restore group id
                 XOR     R9, R9
                 MOVE    R11, R10                ; selection key
                 MOVE    OPTM_CLBK_SEL, R7       ; call callback
@@ -542,20 +769,38 @@ _OPTM_RUN_16    MOVE    OPTM_SSMS, R12          ; Flag on stack: multi-select
                 ADD     OPTM_IR_STDSEL, R12
                 MOVE    @R12, R12
                 XOR     R4, R4                  ; R4: loop var
-                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete
                 MOVE    OPTM_X, R9              ; R9: x-coord
                 MOVE    @R9, R9
                 ADD     1, R9
-                MOVE    OPTM_Y, R10             ; R10: y-coord
-                MOVE    @R10, R10
-                ADD     1, R10
+                XOR     R10, R10                ; R10: flat list item pos
+
 _OPTM_RUN_7     CMP     R4, R0                  ; R4 < R0 (size of structure)
                 RBRA    _OPTM_RUN_9, Z          ; no
                 CMP     @R5++, R6               ; current entry group member?
                 RBRA    _OPTM_RUN_8, !Z         ; no
+
+                MOVE    OPTM_TEMP, R8           ; save R10
+                MOVE    R10, @R8
+
+                MOVE    R10, R8                 ; transform flat lst itm pos..
+                RSUB    _OPTM_R_F2M, 1          ; ..into relative list pos..
+                MOVE    OPTM_Y, R7              ; ..and then..
+                ADD     @R7, R8                 ; transform into screen coord
+                ADD     1, R8                   ; add 1 because of top frame
+                MOVE    R8, R10                 ; R10: OPTM_FP_PRINTXY y coord
+
                 MOVE    OPTM_FP_PRINTXY, R7     ; delete marker at current pos
+                MOVE    R11, @--SP              ; save R11            
+                MOVE    OPTM_MENULEVEL, R11     ; R11: current (sub)menu level
+                MOVE    @R11, R11
                 MOVE    0, @R12
+                MOVE    _OPTM_RUN_SPCE, R8      ; R8: use space char to delete
                 RSUB    _OPTM_CALL, 1
+
+                MOVE    @SP++, R11              ; restore R11
+                MOVE    OPTM_TEMP, R8           ; restore R10
+                MOVE    @R8, R10
+
 _OPTM_RUN_8     ADD     1, R10                  ; y-pos + 1
                 ADD     1, R4                   ; loop-var + 1
                 ADD     1, R12                  ; stdsel-ptr + 1
@@ -566,14 +811,19 @@ _OPTM_RUN_8     ADD     1, R10                  ; y-pos + 1
 _OPTM_RUN_9     MOVE    OPTM_Y, R10
                 MOVE    @R10, R10
                 ADD     1, R10
-                ADD     R2, R10
+                MOVE    R2, R8                  ; transform R2 from flat..
+                RSUB    _OPTM_R_F2M, 1          ; ..coords to (sub)menu coords
+                ADD     R8, R10
                 MOVE    OPTM_DATA, R8
                 MOVE    @R8, R8
                 ADD     OPTM_IR_SEL, R8
                 MOVE    OPTM_SSMS, R7           ; single select flag
                 ADD     @R7, R8
+                MOVE    R11, @--SP              ; save R11
+                XOR     R11, R11                ; R11=0: show main menu
                 MOVE    OPTM_FP_PRINTXY, R7
                 RSUB    _OPTM_CALL, 1
+                MOVE    @SP++, R11              ; restore R11
                 MOVE    OPTM_DATA, R12          ; R12: OPTM_IR_STDSEL ptr
                 MOVE    @R12, R12
                 ADD     OPTM_IR_STDSEL, R12
@@ -612,10 +862,67 @@ _OPTM_RUN_14    MOVE    R6, R8                  ; R8: return selected group
                 RBRA    _OPTM_RUN_SEL, !Z       ; no: continue menu loop
                 MOVE    R2, R8                  ; yes: return selected item               
 
-_OPTM_RUN_RET   MOVE    R8, @--SP               ; carry R8 over the LEAVE bump
+_OPTM_RUN_RET   ADD     R0, SP                  ; restore SP / free memory
+                ADD     3, SP
+                MOVE    R8, @--SP               ; carry R8 over the LEAVE bump
                 SYSCALL(leave, 1)
                 MOVE    @SP++, R8
+
                 RET
+
+                ; ------------------------------------------------------------
+                ; Switch menu level (enter/leave submenu)
+                ; ------------------------------------------------------------
+
+_OPTM_RUN_SM    MOVE    OPTM_MENULEVEL, R9
+
+                ; Find out: Which submenu level are we talking about
+                MOVE    SP, R8                  ; R8: ptr. to submenu struct.
+                ADD     3, R8
+                ADD     R2, R8                  ; R2: current selection
+                MOVE    @R8, R8
+                AND     0x7FFF, R8              ; R8: (sub)menu number
+
+                ; Are we entering or leaving a (sub)menu?
+                MOVE    @R6, R7                 ; R7: selected group item
+                AND     OPTM_CLOSE, R7          ; leave submenu?
+                RBRA    _OPTM_RUN_SM_1, Z       ; no: enter submenu
+
+                ; Leave submenu
+                MOVE    0, @R9                  ; 0=main menu
+                MOVE    OPTM_MAINSEL, R8
+                MOVE    @R8, R2                 ; restore main menu selection
+                RBRA    _OPTM_RUN_SM_4, 1       ; execute level change
+
+                ; Enter submenu
+_OPTM_RUN_SM_1  MOVE    R8, @R9                 ; R8: submenu number
+                MOVE    OPTM_MAINSEL, R8        ; remember main menu selection
+                MOVE    R2, @R8
+
+                ; Calculate the menu item that will be selected
+_OPTM_RUN_SM_2  ADD     1, R2                   ; next item
+                CMP     R0, R2                  ; error condition?
+                RBRA    _OPTM_RUN_SM_3, Z       ; yes
+                ADD     1, R6                   ; no error
+                MOVE    @R6, R7
+                AND     0x00FF, R7              ; selectable item?
+                RBRA    _OPTM_RUN_SM_2, Z       ; no: continue to search
+                RBRA    _OPTM_RUN_SM_4, 1
+
+                ; Fatal: No selectable menu item found
+_OPTM_RUN_SM_3  MOVE    OPTM_CLBK_FATAL, R7
+                MOVE    OPTM_F_NOSEL, R8
+                XOR     R9, R9
+                RBRA    _OPTM_CALL, 1           ; RBRA because of fatal
+
+                ; Execute the (sub)menu level change
+_OPTM_RUN_SM_4  ADD     R0, SP                  ; restore SP / free memory
+                ADD     3, SP
+                RSUB    OPTM_SHOW, 1            ; redraw
+                MOVE    R2, @--SP               ; carry R2 over the LEAVE bump
+                SYSCALL(leave, 1)
+                MOVE    @SP++, R8               ; R8: selected menu item
+                RBRA    OPTM_RUN, 1             ; restart _OPTM_RUN
 
 _OPTM_RUN_SPCE  .ASCII_W " "
 
@@ -636,4 +943,166 @@ _OPTM_CALL      MOVE    R7, @--SP               ; save R7 for usage & restore
                 ASUB    R7, 1                   ; call function
 
                 MOVE    @SP++, R7               ; restore R7
+                RET
+
+; Create an array that represents the menu structure: The lower 15-bits (i.e.
+; bits 0..14) of each item in the array is a number and represents one menu
+; item. A zero represents that this item is located on the main menu level and
+; any integer value represents that this item is located in a certain submenu
+; (counting from one).
+;
+; The highest bit (bit 15) is 1, when the entry is shown in the current menu
+; level indicated by OPTM_MENULEVEL, otherwise it is 0. There is a special
+; case around the very first entry of a sub-menu structure: If we are in the
+; main menu (OPTM_MENULEVEL is 0) then we treat the very first entry of the
+; sub-menu structure as the "headline"/"label" of the sub-menu, i.e. it needs
+; to be shown in the menu menu (bit 15 is 1). If we are within a sub-menu,
+; then this very first line is being ignored (bit 15 is 0).
+;
+; Input:
+;   R8: pointer to a memory region that is as large as all items together
+;   R9: amount of menu items
+; Output:
+;   R8: unchanged
+;   R9: amount of items in currently active menu level
+_OPTM_STRUCT    INCRB
+
+                MOVE    R8, R0                  ; R0: current array element
+                MOVE    R9, R1                  ; R1: amount of menu items
+                MOVE    OPTM_DATA, R2           ; R2: OPTM_IR_GROUPS array
+                MOVE    @R2, R2
+                ADD     OPTM_IR_GROUPS, R2
+                MOVE    @R2, R2
+                XOR     R3, R3                  ; R3: current main/submen id
+                MOVE    1, R4                   ; R4: next submen id
+                XOR     R5, R5                  ; R5: submenu region flag
+
+                MOVE    R1, @R0++               ; 1st element = size
+
+_OPTM_STRUCT_1  MOVE    @R2++, R6               ; R6: next menu group item
+                AND     OPTM_SUBMENU, R6        ; check for submenu marker
+                RBRA    _OPTM_STRUCT_3, Z       ; jump, if no submenu marker
+
+                CMP     1, R5                   ; are we already in a region?
+                RBRA    _OPTM_STRUCT_2, Z       ; yes: jump
+                MOVE    1, R5                   ; no: set region flag
+                MOVE    R4, R3                  ; current submen id = next..
+                ADD     1, R4                   ; ..submen id and inc. next
+                RBRA    _OPTM_STRUCT_3, 1       ; continue with storing
+
+_OPTM_STRUCT_2  MOVE    R3, @R0++               ; store item in struct array
+                XOR     R5, R5                  ; clear region flag
+                XOR     R3, R3                  ; current id = main menu
+                RBRA    _OPTM_STRUCT_4, 1       ; continue with next iteration
+
+_OPTM_STRUCT_3  MOVE    R3, @R0++               ; store item in struct array
+_OPTM_STRUCT_4  SUB     1, R1                   ; more menu items?
+                RBRA    _OPTM_STRUCT_1, !Z      ; yes: loop
+
+                CMP     1, R5                   ; no: region cntr still actve?
+                RBRA    _OPTM_STRUCT_C, !Z      ; no: all good: continue
+                MOVE    OPTM_CLBK_FATAL, R7     ; yes: fatal
+                MOVE    OPTM_F_MENUSUB, R8
+                XOR     R9, R9
+                RBRA    _OPTM_CALL, 1           ; RBRA because of fatal
+
+_OPTM_STRUCT_C  MOVE    R9, R0                  ; R0: size of menu (#items)
+                MOVE    R8, R1                  ; R1: current array entry
+                ADD     1, R1                   ; skip size information
+                MOVE    OPTM_MENULEVEL, R3      ; R3: current menu level
+                MOVE    @R3, R3
+                XOR     R7, R7                  ; R7: count active menu items
+
+_OPTM_STRUCT_5  CMP     R3, @R1                 ; are we in the curr. men. lvl
+                RBRA    _OPTM_STRUCT_7, Z       ; yes: set to 1 and next entry
+_OPTM_STRUCT_6  AND     0x7FFF, @R1++           ; no: highest bit = 0 and next
+                RBRA    _OPTM_STRUCT_8, 1
+_OPTM_STRUCT_7  OR      0x8000, @R1++           ; active itm: highest bit to 1
+                ADD     1, R7                   ; one more active item
+_OPTM_STRUCT_8  SUB     1, R0                   ; more entries?
+                RBRA    _OPTM_STRUCT_5, !Z      ; yes: iterate
+
+                MOVE    R9, R4                  ; preserve overall amount
+                MOVE    R7, R9                  ; return amount of active itms
+
+                ; Correct for the special case described above: In the case
+                ; that we are in main menu, the first item is part of the
+                ; list and otherwise it is not.
+                MOVE    1, R5                   ; R5: first occurance flag
+                MOVE    R8, R7                  ; R7: ptr. to curr. itm in lst
+                ADD     1, R7                   ; skip size info
+_OPTM_STRUCT_9  MOVE    @R7, R6
+                AND     0x8000, R6              ; part of current list?
+                RBRA    _OPTM_STRUCT_10, !Z     ; yes
+
+                CMP     0, R3                   ; are we in the main menu?
+                RBRA    _OPTM_STRUCT_11, !Z     ; no
+                CMP     1, R5                   ; yes: and is it first ocurr.?
+                RBRA    _OPTM_STRUCT_11, !Z     ; no
+                XOR     R5, R5                  ; yes: delete flag and..
+                OR      0x8000, @R7             ; ..make it part of the list
+                ADD     1, R9                   ; one more active item
+                RBRA    _OPTM_STRUCT_11, 1
+
+_OPTM_STRUCT_10 CMP     0, R3                   ; are we in the main menu?
+                RBRA    _OPTM_STRUCT_11, Z      ; yes: move on
+                CMP     1, R5                   ; no: and is it first ocurr.?
+                RBRA    _OPTM_STRUCT_11, !Z     ; no
+                XOR     R5, R5                  ; yes: delete flag and..
+                AND     0x7FFF, @R7             ; ..remove it from the list
+                SUB     1, R9                   ; one less active item         
+
+_OPTM_STRUCT_11 ADD     1, R7                   ; next list element
+                SUB     1, R4                   ; one less item to process
+                RBRA    _OPTM_STRUCT_9, !Z
+
+                DECRB
+                RET
+
+; _OPTM_R_F2M
+;
+; Converts a position relative to OPTM_ITEMS or OPTM_GROUPS (starting from 0)
+; to a position relative to the currently active (sub)menu
+;
+; Input:  R8 as flat position
+; Output: R8 as position relative to the currently active (sub)menu
+;
+; Helper subroutine for _OPTM_RUN that expects the stack to be set-up like
+; described above. We need to add +1 to the SP because we are in a subroutine.
+_OPTM_R_F2M     INCRB
+
+                MOVE    SP, R0                  ; R0: size of current (sub)men
+                ADD     1, R0
+                MOVE    @R0, R0
+                MOVE    SP, R1                  ; R1: (sub)menu structure
+                ADD     3, R1                   ; R1 now points to size info
+                MOVE    R8, R2                  ; R2: flat input position
+                XOR     R3, R3                  ; R3: relative output position
+                XOR     R4, R4                  ; R4: loop counter
+
+                ; Check for corrupt memory layout: Is R8 (aka R2) larger than
+                ; the size of the current (sub)menu allows? We need to
+                ; subtract 1 from the size of the current (sub)menu in R6
+                ; because R8 starts to count from zero.
+                MOVE    @R1++, R6
+                SUB     1, R6
+                CMP     R2, R6
+                RBRA    _OPTM_R_F2M_1, !N       ; all good: continue
+                MOVE    OPTM_CLBK_FATAL, R7     ; otherwise: fatal
+                MOVE    OPTM_F_F2M, R8
+                MOVE    R2, R9
+                RBRA    _OPTM_CALL, 1           ; RBRA because of fatal
+
+_OPTM_R_F2M_1   MOVE    @R1++, R6               ; check bit 15
+                SHL     1, R6                   ; cur strct item=cur active?
+                RBRA    _OPTM_R_F2M_2, !C       ; no: next item
+                CMP     R4, R2                  ; flat position reached?
+                RBRA    _OPTM_R_F2M_R, Z        ; yes: return
+                ADD     1, R3                   ; increase rel. pos.
+_OPTM_R_F2M_2   ADD     1, R4                   ; increase abs. pos
+                RBRA    _OPTM_R_F2M_1, 1
+
+_OPTM_R_F2M_R   MOVE    R3, R8                  ; return relative output pos.
+
+                DECRB
                 RET
