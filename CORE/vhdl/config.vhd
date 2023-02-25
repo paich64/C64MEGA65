@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A7]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A8]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A7]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A8]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A7]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A8]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A7]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A8]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -347,15 +347,15 @@ constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write c
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 29;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 34;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
--- We advise to use OPTM_SIZE as height, but there might be reasons for you to change it.
+-- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
 constant OPTM_DX           : natural := 23;
-constant OPTM_DY           : natural := OPTM_SIZE;
+constant OPTM_DY           : natural := 26;
                                              
 constant OPTM_ITEMS        : string :=
 
@@ -375,10 +375,17 @@ constant OPTM_ITEMS        : string :=
    " REU: 1750 with 512KB\n"  &
    " HDMI: CRT emulation\n"   &
    " HDMI: Zoom-in\n"         &
-   " HDMI: 16:9 50 Hz\n"      &
-   " HDMI: 16:9 60 Hz\n"      & 
-   " HDMI: 4:3  50 Hz\n"      &
-   " HDMI: 5:4  50 Hz\n"      &
+
+   " HDMI: %s\n"              &  -- HDMI submenu
+   " HDMI Display Mode\n"     &
+   "\n"                       &
+   " 720p 16:9 50 Hz\n"       &
+   " 720p 16:9 60 Hz\n"       & 
+   " 576p 4:3  50 Hz\n"       &
+   " 576p 5:4  50 Hz\n"       &
+   "\n"                       &
+   " Back to main menu\n"     &   
+   
    " HDMI: Flicker-free\n"    &
    " HDMI: DVI (no sound)\n"  &
    " VGA: Retro 15 kHz RGB\n" &             
@@ -424,10 +431,17 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_REU           + OPTM_G_SINGLESEL,
                                              OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
+                                             
+                                             OPTM_G_SUBMENU,
+                                             OPTM_G_TEXT + OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,                                                          
                                              OPTM_G_HDMI_MODES    + OPTM_G_STDSEL,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_HDMI_MODES,
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE + OPTM_G_SUBMENU,
+                                             
                                              OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
                                              OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,

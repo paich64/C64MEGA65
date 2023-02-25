@@ -6,7 +6,7 @@
 ;
 ; The execution starts at the label START_FIRMWARE.
 ;
-; done by sy2002 in 2022 and licensed under GPL v3
+; done by sy2002 in 2023 and licensed under GPL v3
 ; ****************************************************************************
 
 ; If the define RELEASE is defined, then the ROM will be a self-contained and
