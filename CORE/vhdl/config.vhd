@@ -329,8 +329,8 @@ constant OPTM_G_HEADLINE   : integer := 16#01000#;         -- like OPTM_G_TEXT b
 constant OPTM_G_SINGLESEL  : integer := 16#08000#;         -- single select item
 constant OPTM_G_MOUNT_DRV  : integer := 16#08800#;         -- line item means: mount drive; first occurance = drive 0, second = drive 1, ...
 constant OPTM_G_HELP       : integer := 16#0A000#;         -- line item means: help screen; first occurance = WHS(1), second = WHS(2), ...
-constant OPTM_G_SUBMENU    : integer := 16#0C000#;         -- line item means: load ROM; first occurance = rom 0, second = rom 1, ...
-constant OPTM_G_LOAD_ROM   : integer := 16#18000#;         -- starts/ends a section that is treated as submenu
+constant OPTM_G_SUBMENU    : integer := 16#0C000#;        -- starts/ends a section that is treated as submenu
+constant OPTM_G_LOAD_ROM   : integer := 16#18000#;        -- line item means: load ROM; first occurance = rom 0, second = rom 1, ...
 -- @TODO/REMINDER: As soon as we extend the OSM system so that we support loading ROMs and other things that need to be ignored
 -- when saving settings: Make sure to extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly:
 --     OPTM_G_SUBMENU
@@ -347,7 +347,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write c
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 34;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 44;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -355,7 +355,7 @@ constant OPTM_SIZE         : natural := 34;  -- amount of items including empty 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
 constant OPTM_DX           : natural := 23;
-constant OPTM_DY           : natural := 26;
+constant OPTM_DY           : natural := 29;
                                              
 constant OPTM_ITEMS        : string :=
 
@@ -363,34 +363,46 @@ constant OPTM_ITEMS        : string :=
    "\n"                       & 
    " 8:%s\n"                  &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
    "\n"                       &
-   " Flip joystick ports\n"   &
+   " Expansion Port\n"        &
    "\n"                       &
-   " SID\n"                   &
+   " Hardware\n"              &
+   " Simulation:\n"           &
+   " <Load Cartridge>\n"      &
+   "\n"                       &
+   " C64 Configuration\n"     &
+   "\n"                       &
+   " Flip joystick ports\n"   &
+      
+   " SID: %s\n"               &  -- SID submenu
+   " SID Settings\n"          &
    "\n"                       &
    " 6581\n"                  &
    " 8580\n"                  &
+   " Audio improvements\n"    &   
    "\n"                       &
-   " Advanced\n"              &
-   "\n"                       &
+   " Back to main menu\n"     &
+   
    " REU: 1750 with 512KB\n"  &
-   " HDMI: CRT emulation\n"   &
-   " HDMI: Zoom-in\n"         &
+   " CIA: Use 8521 (C64C)\n"  &
+   "\n"                       &
+   " Display settings\n"      &
+   "\n"                       &
 
    " HDMI: %s\n"              &  -- HDMI submenu
    " HDMI Display Mode\n"     &
    "\n"                       &
-   " 720p 16:9 50 Hz\n"       &
-   " 720p 16:9 60 Hz\n"       & 
-   " 576p 4:3  50 Hz\n"       &
-   " 576p 5:4  50 Hz\n"       &
+   " 16:9 720p 50 Hz\n"       &
+   " 16:9 720p 60 Hz\n"       & 
+   " 4:3  576p 50 Hz\n"       &
+   " 5:4  576p 50 Hz\n"       &
    "\n"                       &
-   " Back to main menu\n"     &   
+   " Back to main menu\n"     &
    
+   " HDMI: CRT emulation\n"   &
+   " HDMI: Zoom-in\n"         &
    " HDMI: Flicker-free\n"    &
    " HDMI: DVI (no sound)\n"  &
-   " VGA: Retro 15 kHz RGB\n" &             
-   " CIA: Use 8521 (C64C)\n"  &   
-   " Audio improvements\n"    &
+   " VGA: Retro 15 kHz RGB\n" &
    "\n"                       &
    " About & Help\n"          &
    "\n"                       &
@@ -398,18 +410,20 @@ constant OPTM_ITEMS        : string :=
         
 constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
-constant OPTM_G_FLIP_JOYS     : integer := 3;
-constant OPTM_G_SID           : integer := 4;
-constant OPTM_G_REU           : integer := 5;
-constant OPTM_G_CRT_EMULATION : integer := 6;
-constant OPTM_G_HDMI_ZOOM     : integer := 7;
-constant OPTM_G_HDMI_MODES    : integer := 8;
-constant OPTM_G_HDMI_FF       : integer := 9;
-constant OPTM_G_HDMI_DVI      : integer := 10;
-constant OPTM_G_VGA_RETRO     : integer := 11;
-constant OPTM_G_CIA_8521      : integer := 12;
-constant OPTM_G_IMPROVE_AUDIO : integer := 13;
-constant OPTM_G_ABOUT_HELP    : integer := 14;
+constant OPTM_G_EXP_PORT      : integer := 3;
+constant OPTM_G_MOUNT_CRT     : integer := 4;
+constant OPTM_G_FLIP_JOYS     : integer := 5;
+constant OPTM_G_SID           : integer := 6;
+constant OPTM_G_IMPROVE_AUDIO : integer := 7;
+constant OPTM_G_REU           : integer := 8;
+constant OPTM_G_CIA_8521      : integer := 9;
+constant OPTM_G_HDMI_MODES    : integer := 10;
+constant OPTM_G_CRT_EMULATION : integer := 11;
+constant OPTM_G_HDMI_ZOOM     : integer := 12;
+constant OPTM_G_HDMI_FF       : integer := 13;
+constant OPTM_G_HDMI_DVI      : integer := 14;
+constant OPTM_G_VGA_RETRO     : integer := 15;
+constant OPTM_G_ABOUT_HELP    : integer := 16;
 
 -- !!! DO NOT TOUCH !!!
 constant OPTM_GTC          : natural := 16;
@@ -419,19 +433,31 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_MOUNT_8       + OPTM_G_MOUNT_DRV   + OPTM_G_START,
                                              OPTM_G_LINE,
-                                             OPTM_G_FLIP_JOYS     + OPTM_G_SINGLESEL,
+                                             OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
+                                             OPTM_G_EXP_PORT      + OPTM_G_STDSEL,
+                                             OPTM_G_EXP_PORT,
+                                             OPTM_G_MOUNT_CRT     + OPTM_G_SINGLESEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_FLIP_JOYS     + OPTM_G_SINGLESEL,
+                                             
+                                             OPTM_G_SUBMENU,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_SID           + OPTM_G_STDSEL,
                                              OPTM_G_SID,
+                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE         + OPTM_G_SUBMENU,
+                                                                                          
+                                             OPTM_G_REU           + OPTM_G_SINGLESEL,
+                                             OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_REU           + OPTM_G_SINGLESEL,
-                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
-                                             OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
-                                             
+
                                              OPTM_G_SUBMENU,
                                              OPTM_G_TEXT + OPTM_G_HEADLINE,
                                              OPTM_G_LINE,                                                          
@@ -440,13 +466,13 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_LINE,
-                                             OPTM_G_CLOSE + OPTM_G_SUBMENU,
+                                             OPTM_G_CLOSE         + OPTM_G_SUBMENU,                                                                             
                                              
+                                             OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
+                                             OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
                                              OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
                                              OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
-                                             OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
-                                             OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,
                                              OPTM_G_LINE,

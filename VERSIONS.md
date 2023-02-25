@@ -10,6 +10,8 @@ images and `*.t64` tape images.
 
 ## New Features
 
+* More clearly arranged menu using submenus
+
 WIP Hardware cartridges via expansion port: @TODO we might not support
 all cartridge types, add constraints here: Game cartriges, real REUs, GEO
 RAMs, EasyFlash, etc. ... we need to test quite some amount of real hardware

@@ -198,20 +198,20 @@ signal main_cache_waitrequest   : std_logic;
 ---------------------------------------------------------------------------------------------
 
 -- OSM selections within qnice_osm_control_i
-constant C_MENU_FLIP_JOYS     : natural := 4;
-constant C_MENU_8580          : natural := 9;
-constant C_MENU_REU           : natural := 13;
-constant C_MENU_CRT_EMULATION : natural := 14;
-constant C_MENU_HDMI_ZOOM     : natural := 15;
-constant C_MENU_HDMI_16_9_50  : natural := 19;
-constant C_MENU_HDMI_16_9_60  : natural := 20;
-constant C_MENU_HDMI_4_3_50   : natural := 21;
-constant C_MENU_HDMI_5_4_50   : natural := 22;          
-constant C_MENU_HDMI_FF       : natural := 25;
-constant C_MENU_HDMI_DVI      : natural := 26;
-constant C_MENU_VGA_RETRO     : natural := 27;
-constant C_MENU_8521          : natural := 28;
-constant C_MENU_IMPROVE_AUDIO : natural := 29;
+constant C_MENU_FLIP_JOYS     : natural := 12;
+constant C_MENU_8580          : natural := 17;
+constant C_MENU_IMPROVE_AUDIO : natural := 18;
+constant C_MENU_REU           : natural := 21;
+constant C_MENU_8521          : natural := 22;
+constant C_MENU_HDMI_16_9_50  : natural := 29;
+constant C_MENU_HDMI_16_9_60  : natural := 30;
+constant C_MENU_HDMI_4_3_50   : natural := 31;
+constant C_MENU_HDMI_5_4_50   : natural := 32;
+constant C_MENU_CRT_EMULATION : natural := 35;
+constant C_MENU_HDMI_ZOOM     : natural := 36;          
+constant C_MENU_HDMI_FF       : natural := 37;
+constant C_MENU_HDMI_DVI      : natural := 38;
+constant C_MENU_VGA_RETRO     : natural := 39;
 
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
