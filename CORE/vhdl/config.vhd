@@ -317,17 +317,24 @@ constant SEL_OPTM_SAVING_STR  : std_logic_vector(15 downto 0) := x"030A";
 constant SEL_OPTM_HELP        : std_logic_vector(15 downto 0) := x"0310";
 
 -- !!! DO NOT TOUCH !!! Configuration constants for OPTM_GROUPS (shell.asm and menu.asm expect them to be like this)
-constant OPTM_G_TEXT       : integer := 0;                -- text that cannot be selected
-constant OPTM_G_CLOSE      : integer := 16#00FF#;         -- menu items that closes menu
-constant OPTM_G_STDSEL     : integer := 16#0100#;         -- item within a group that is selected by default
-constant OPTM_G_LINE       : integer := 16#0200#;         -- draw a line at this position
-constant OPTM_G_START      : integer := 16#0400#;         -- selector / cursor position after startup (only use once!)
-constant OPTM_G_HEADLINE   : integer := 16#1000#;         -- like OPTM_G_TEXT but will be shown in a brigher color
-constant OPTM_G_MOUNT_DRV  : integer := 16#8800#;         -- line item means: mount drive; first occurance = drive 0, second = drive 1, ...
-constant OPTM_G_HELP       : integer := 16#A000#;         -- line item means: help screen; first occurance = WHS(1), second = WHS(2), ...
-constant OPTM_G_SINGLESEL  : integer := 16#8000#;         -- single select item
+constant OPTM_G_TEXT       : integer := 0;                 -- text that cannot be selected
+constant OPTM_G_CLOSE      : integer := 16#000FF#;         -- menu items that closes menu
+constant OPTM_G_STDSEL     : integer := 16#00100#;         -- item within a group that is selected by default
+constant OPTM_G_LINE       : integer := 16#00200#;         -- draw a line at this position
+constant OPTM_G_START      : integer := 16#00400#;         -- selector / cursor position after startup (only use once!)
+                                                           -- 16#00800# is used in OPTM_G_MOUNT_DRV (OPTM_G_SINGLESEL)
+constant OPTM_G_HEADLINE   : integer := 16#01000#;         -- like OPTM_G_TEXT but will be shown in a brigher color
+                                                           -- 16#02000# is used in OPTM_G_HELP (plus OPTM_G_SINGLESEL)
+                                                           -- 16#04000# is used in OPTM_G_SUBMENU 
+constant OPTM_G_SINGLESEL  : integer := 16#08000#;         -- single select item
+constant OPTM_G_MOUNT_DRV  : integer := 16#08800#;         -- line item means: mount drive; first occurance = drive 0, second = drive 1, ...
+constant OPTM_G_HELP       : integer := 16#0A000#;         -- line item means: help screen; first occurance = WHS(1), second = WHS(2), ...
+constant OPTM_G_SUBMENU    : integer := 16#0C000#;         -- line item means: load ROM; first occurance = rom 0, second = rom 1, ...
+constant OPTM_G_LOAD_ROM   : integer := 16#18000#;         -- starts/ends a section that is treated as submenu
 -- @TODO/REMINDER: As soon as we extend the OSM system so that we support loading ROMs and other things that need to be ignored
--- when saving settings: Make sure to extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly
+-- when saving settings: Make sure to extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly:
+--     OPTM_G_SUBMENU
+--     OPTM_G_LOAD_ROM
 
 -- START YOUR CONFIGURATION BELOW THIS LINE:
 
@@ -397,7 +404,10 @@ constant OPTM_G_CIA_8521      : integer := 12;
 constant OPTM_G_IMPROVE_AUDIO : integer := 13;
 constant OPTM_G_ABOUT_HELP    : integer := 14;
 
-type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 65535;
+-- !!! DO NOT TOUCH !!!
+constant OPTM_GTC          : natural := 16;
+type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC- 1;
+
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_MOUNT_8       + OPTM_G_MOUNT_DRV   + OPTM_G_START,
@@ -541,15 +551,16 @@ begin
             when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
             when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
             when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);
-            when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15)) & "00" & 
-                                                    std_logic(to_unsigned(OPTM_GROUPS(index), 16)(12)) & "0000" &
-                                                    std_logic_vector(to_unsigned(OPTM_GROUPS(index), 16)(7 downto 0));
-            when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(8));
-            when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(9));
-            when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(10));
-            when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(11));
-            when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(13));
-            when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), 16)(15));      
+            when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(15)) & 
+                                                    std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(14)) & "0" & 
+                                                    std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(12)) & "0000" &
+                                                    std_logic_vector(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(7 downto 0));
+            when SEL_OPTM_STDSEL       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(8));
+            when SEL_OPTM_LINES        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(9));
+            when SEL_OPTM_START        => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(10));
+            when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(11));
+            when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(13));
+            when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(15));
             when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
             when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
 
