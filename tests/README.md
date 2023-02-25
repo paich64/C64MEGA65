@@ -10,7 +10,8 @@ Version 5 - Month Day, 2023
 
 @TODO @TODO @TODO @TODO @TODO
 
-Add "Reset and unmount prevention while writing to disk" to "Additional Smoke Tests"
+Add "Reset and unmount prevention while writing to disk" and
+"Change mount status while menu is closed (i.e. Smart Reset)" to "Additional Smoke Tests"
 
 Add tests around the migration of the saved settings and tests that are stressing the new menu system
 
