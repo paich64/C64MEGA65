@@ -1,3 +1,4 @@
+
 ----------------------------------------------------------------------------------
 -- Commodore 64 for MEGA65
 --
@@ -25,10 +26,10 @@ entity main is
       reset_hard_i            : in  std_logic;
       pause_i                 : in  std_logic;
 
-   -- Video mode selection:
-   -- c64_ntsc_i: PAL/NTSC switch
-   -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
-   -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
+      -- Video mode selection:
+      -- c64_ntsc_i: PAL/NTSC switch
+      -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
+      -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
       clk_main_speed_i        : in natural;     
       video_retro15kHz_i      : in std_logic;
@@ -75,7 +76,7 @@ entity main is
       audio_left_o            : out signed(15 downto 0);
       audio_right_o           : out signed(15 downto 0);
 
-                             -- C64 drive led (color is RGB)
+      -- C64 drive led (color is RGB)
       drive_led_o             : out std_logic;
       drive_led_col_o         : out std_logic_vector(23 downto 0);
 

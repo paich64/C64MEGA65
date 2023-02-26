@@ -385,7 +385,7 @@ constant OPTM_ITEMS        : string :=
    " REU: 1750 with 512KB\n"  &
    " CIA: Use 8521 (C64C)\n"  &
    "\n"                       &
-   " Display settings\n"      &
+   " Display Settings\n"      &
    "\n"                       &
 
    " HDMI: %s\n"              &  -- HDMI submenu

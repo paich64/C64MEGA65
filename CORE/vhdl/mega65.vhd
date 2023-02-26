@@ -401,7 +401,7 @@ begin
    core_specific_devices : process(all)
    begin
       -- avoid latches
-      qnice_dev_data_o     <= x"EEEE";
+      qnice_dev_data_o           <= x"EEEE";
       qnice_c64_ram_we           <= '0';
       qnice_c64_qnice_ce         <= '0';
       qnice_c64_qnice_we         <= '0';
