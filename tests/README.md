@@ -13,7 +13,35 @@ Version 5 - Month Day, 2023
 Add "Reset and unmount prevention while writing to disk" and
 "Change mount status while menu is closed (i.e. Smart Reset)" to "Additional Smoke Tests"
 
-Add tests around the migration of the saved settings and tests that are stressing the new menu system
+Add tests that stress the new menu system.
+
+@@@-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
+@REMOVE THIS FROM THE C64 tests documentation when done. This is just an
+internal reminder for making sure that the MiSTer2MEGA65 framework release
+that accompanies the release of the C64 core is rock solid:
+
+Since the C64 core has the drive and the cartrige "above the fold" (i.e.
+above any submenu), there might be some hidden bugs in the M2M framework that
+only become visible when the drive/cartridge and other menu-modifying logic
+happens "below the fold".
+
+Therefore we need to use the M2M demo core: We need to perform some tests (and
+thought experiments) to check: Are there any situations where the menu is
+changed with direct coordinate calculations from outside of menu.asm and
+therefore without the necessary transformation from flat coordinate space to
+relative coordinate space.
+
+Important is that we spend some time (re)searching for all the places and
+situations in the code that print directly to the screen outside menu.asm vs.
+just modifying the flat data structures.
+
+In shell.asm, `_HM_SETMENU` might be a candidate that needs to be refactored.
+From an architectural clarity perspective, menu.asm should be refactored to
+encapsulate the necessary functionality so that shell.asm (and probably
+options.asm, too) can access it and therefore things like the coordinate
+transformation in `_OPTM_R_F2M` but also other semantic knowledge
+are staying protected inside menu.asm.
+@@@-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 
 Add tests for Cartridges (real ones and simulated ones) and other tests regarding new features/changes
 
