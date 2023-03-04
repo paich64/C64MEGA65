@@ -92,9 +92,14 @@ entity main is
       c64_qnice_data_o        : out std_logic_vector(15 downto 0);
       c64_qnice_ce_i          : in std_logic;
       c64_qnice_we_i          : in std_logic;
+      
+      -- Mode selection for Expansion Port (aka Cartridge Port):
+      -- 0: Use the MEGA65's actual hardware slot
+      -- 1: Simulate a 1750 REU with 512KB
+      -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file) 
+      c64_exp_port_mode_i     : in natural range 0 to 2;
 
       -- RAM Expansion Unit
-      reu_cfg_i               : in  std_logic;
       ext_cycle_o             : out std_logic;
       reu_cycle_i             : in  std_logic;
       reu_addr_o              : out std_logic_vector(24 downto 0);
@@ -185,6 +190,7 @@ architecture synthesis of main is
    signal c64_ram_data        : unsigned(7 downto 0);
    
    -- RAM Expansion Unit (REU)
+   signal reu_cfg             : std_logic_vector(1 downto 0);
    signal dma_req             : std_logic;
    signal dma_cycle           : std_logic;
    signal dma_addr            : std_logic_vector(15 downto 0);
@@ -391,11 +397,14 @@ begin
          cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
+   -- REU configuration: "00":None, "01":512k, "10":2M, "11":16M
+   reu_cfg <= "01" when c64_exp_port_mode_i = 1 else "00";
+
    i_reu : reu
       port map (
          clk       => clk_main_i,
          reset     => not reset_core_n,
-         cfg       => "0" & reu_cfg_i, -- "00":None, "01":512k, "10":2M, "11":16M
+         cfg       => reu_cfg,
          dma_req   => dma_req,
          dma_cycle => dma_cycle,
          dma_addr  => dma_addr,

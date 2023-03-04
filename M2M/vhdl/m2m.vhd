@@ -3,7 +3,7 @@
 --
 -- Abstraction layer to simplify mega65.vhd
 --
--- MiSTer2MEGA65 done by sy2002 and MJoergen in 2022 and licensed under GPL v3
+-- MiSTer2MEGA65 done by sy2002 and MJoergen in 2023 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -86,7 +86,40 @@ port (
    hr_rwds        : inout std_logic;               -- RW Data strobe
    hr_reset       : out std_logic;                 -- Active low RESET line to HyperRAM
    hr_clk_p       : out std_logic;
-   hr_cs0         : out std_logic
+   hr_cs0         : out std_logic;
+   
+   --------------------------------------------------------------------
+   -- C64 specific ports that are not supported by the M2M framework
+   --------------------------------------------------------------------
+   
+   -- C64 Expansion Port (aka Cartridge Port) control lines
+   -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+   cart_ctrl_dir  : out std_logic;
+   cart_haddr_dir : out std_logic;
+   cart_laddr_dir : out std_logic;
+   cart_data_en   : out std_logic;
+   cart_addr_en   : out std_logic;
+   cart_data_dir  : out std_logic;
+   cart_phi2      : out std_logic;
+   cart_dotclock  : out std_logic;
+   cart_reset     : out std_logic;
+
+   -- C64 Expansion Port (aka Cartridge Port)
+   cart_nmi       : in std_logic;
+   cart_irq       : in std_logic;
+   cart_dma       : in std_logic;
+
+   cart_exrom     : inout std_logic := 'Z';
+   cart_ba        : inout std_logic := 'Z';
+   cart_rw        : inout std_logic := 'Z';
+   cart_roml      : inout std_logic := 'Z';
+   cart_romh      : inout std_logic := 'Z';
+   cart_io1       : inout std_logic := 'Z';
+   cart_game      : inout std_logic := 'Z';
+   cart_io2       : inout std_logic := 'Z';
+
+   cart_d         : inout unsigned(7 downto 0) := (others => 'Z');
+   cart_a         : inout unsigned(15 downto 0) := (others => 'Z')
 );
 end entity m2m;
 
@@ -456,7 +489,40 @@ begin
          hr_burstcount_o         => hr_burstcount,
          hr_readdata_i           => hr_readdata,
          hr_readdatavalid_i      => hr_readdatavalid,
-         hr_waitrequest_i        => hr_waitrequest         
+         hr_waitrequest_i        => hr_waitrequest,
+         
+         --------------------------------------------------------------------
+         -- C64 specific ports that are not supported by the M2M framework
+         --------------------------------------------------------------------
+   
+         -- C64 Expansion Port (aka Cartridge Port) control lines
+         -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+         cart_ctrl_dir           => cart_ctrl_dir,
+         cart_haddr_dir          => cart_haddr_dir,
+         cart_laddr_dir          => cart_laddr_dir,
+         cart_data_en            => cart_data_en,
+         cart_addr_en            => cart_addr_en,
+         cart_data_dir           => cart_data_dir,
+         cart_phi2               => cart_phi2,
+         cart_dotclock           => cart_dotclock,
+         cart_reset              => cart_reset,
+
+         -- C64 Expansion Port (aka Cartridge Port)
+         cart_nmi                => cart_nmi,
+         cart_irq                => cart_irq,
+         cart_dma                => cart_dma,
+      
+         cart_exrom              => cart_exrom,
+         cart_ba                 => cart_ba,
+         cart_rw                 => cart_rw,
+         cart_roml               => cart_roml,
+         cart_romh               => cart_romh,
+         cart_io1                => cart_io1,
+         cart_game               => cart_game,
+         cart_io2                => cart_io2,
+      
+         cart_d                  => cart_d,
+         cart_a                  => cart_a             
       ); -- CORE
 
 end architecture synthesis;

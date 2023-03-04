@@ -13,7 +13,7 @@ use ieee.numeric_std.all;
 
 entity CORE_R3 is
 port (
-   CLK            : in  std_logic;                  -- 100 MHz clock
+   CLK            : in  std_logic;                 -- 100 MHz clock
 
    -- MAX10 FPGA (delivers reset)
    max10_tx          : in std_logic;
@@ -22,8 +22,8 @@ port (
 
    -- serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
-   UART_RXD       : in  std_logic;                  -- receive data
-   UART_TXD       : out std_logic;                  -- send data
+   UART_RXD       : in  std_logic;                 -- receive data
+   UART_TXD       : out std_logic;                 -- send data
 
    -- VGA and VDAC
    VGA_RED        : out std_logic_vector(7 downto 0);
@@ -87,14 +87,47 @@ port (
    hr_rwds        : inout std_logic;               -- RW Data strobe
    hr_reset       : out std_logic;                 -- Active low RESET line to HyperRAM
    hr_clk_p       : out std_logic;
-   hr_cs0         : out std_logic
+   hr_cs0         : out std_logic;
 
    -- Optional additional HyperRAM in trap-door slot
 --   hr2_d          : inout unsigned(7 downto 0);    -- Data/Address
 --   hr2_rwds       : inout std_logic;               -- RW Data strobe
 --   hr2_reset      : out std_logic;                 -- Active low RESET line to HyperRAM
 --   hr2_clk_p      : out std_logic;
---   hr_cs1         : out std_logic
+--   hr_cs1         : out std_logic;
+
+   --------------------------------------------------------------------
+   -- C64 specific ports that are not supported by the M2M framework
+   --------------------------------------------------------------------
+   
+   -- C64 Expansion Port (aka Cartridge Port) control lines
+   -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+   cart_ctrl_dir  : out std_logic;
+   cart_haddr_dir : out std_logic;
+   cart_laddr_dir : out std_logic;
+   cart_data_en   : out std_logic;
+   cart_addr_en   : out std_logic;
+   cart_data_dir  : out std_logic;
+   cart_phi2      : out std_logic;
+   cart_dotclock  : out std_logic;
+   cart_reset     : out std_logic;
+
+   -- C64 Expansion Port (aka Cartridge Port)
+   cart_nmi       : in std_logic;
+   cart_irq       : in std_logic;
+   cart_dma       : in std_logic;
+
+   cart_exrom     : inout std_logic := 'Z';
+   cart_ba        : inout std_logic := 'Z';
+   cart_rw        : inout std_logic := 'Z';
+   cart_roml      : inout std_logic := 'Z';
+   cart_romh      : inout std_logic := 'Z';
+   cart_io1       : inout std_logic := 'Z';
+   cart_game      : inout std_logic := 'Z';
+   cart_io2       : inout std_logic := 'Z';
+
+   cart_d         : inout unsigned(7 downto 0) := (others => 'Z');
+   cart_a         : inout unsigned(15 downto 0) := (others => 'Z')
 );
 end entity CORE_R3;
 
@@ -176,8 +209,41 @@ begin
          hr_rwds        => hr_rwds,
          hr_reset       => hr_reset,
          hr_clk_p       => hr_clk_p,
-         hr_cs0         => hr_cs0
+         hr_cs0         => hr_cs0,
+         
+         --------------------------------------------------------------------
+         -- C64 specific ports that are not supported by the M2M framework
+         --------------------------------------------------------------------
+         
+         -- C64 Expansion Port (aka Cartridge Port) control lines
+         -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+         cart_ctrl_dir  => cart_ctrl_dir,
+         cart_haddr_dir => cart_haddr_dir,
+         cart_laddr_dir => cart_laddr_dir,
+         cart_data_en   => cart_data_en,
+         cart_addr_en   => cart_addr_en,
+         cart_data_dir  => cart_data_dir, 
+         cart_phi2      => cart_phi2,
+         cart_dotclock  => cart_dotclock,
+         cart_reset     => cart_reset,
+      
+         -- C64 Expansion Port (aka Cartridge Port)
+         cart_nmi       => cart_nmi,
+         cart_irq       => cart_irq,
+         cart_dma       => cart_dma,
+     
+         cart_exrom     => cart_exrom,
+         cart_ba        => cart_ba,
+         cart_rw        => cart_rw,
+         cart_roml      => cart_roml,
+         cart_romh      => cart_romh,
+         cart_io1       => cart_io1,
+         cart_game      => cart_game,
+         cart_io2       => cart_io2,
+     
+         cart_d         => cart_d,
+         cart_a         => cart_a        
       ); -- i_m2m
-
+      
 end architecture synthesis;
 
