@@ -119,11 +119,6 @@ create_pblock pblock_vga
 add_cells_to_pblock pblock_vga [get_cells [list M2M/i_framework/i_analog_pipeline/VGA_OUT_PHASE_SHIFTED.*]]
 resize_pblock pblock_vga -add SLICE_X0Y75:SLICE_X5Y99
 
-# Place cartidge near IO Pins
-create_pblock pblock_cart
-add_cells_to_pblock pblock_cart [get_cells [list slow_devices0/cartport0]]
-resize_pblock pblock_cart -add {SLICE_X0Y137:SLICE_X7Y185}
-
 ################################
 ## Pin to signal mapping
 ################################
@@ -267,18 +262,18 @@ set_property -dict {PACKAGE_PIN C22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports
 
 # C64 Cartridge port control lines
 # *_dir=1 means FPGA->Port, =0 means Port->FPGA
-set_property -dict {PACKAGE_PIN U17  IOSTANDARD LVCMOS33} [get_ports cart_ctrl_dir]
 set_property -dict {PACKAGE_PIN G18  IOSTANDARD LVCMOS33} [get_ports cart_ctrl_en]
+set_property -dict {PACKAGE_PIN U17  IOSTANDARD LVCMOS33} [get_ports cart_ctrl_dir]
+set_property -dict {PACKAGE_PIN L19  IOSTANDARD LVCMOS33} [get_ports cart_addr_en]
 set_property -dict {PACKAGE_PIN L18  IOSTANDARD LVCMOS33} [get_ports cart_haddr_dir]
 set_property -dict {PACKAGE_PIN L21  IOSTANDARD LVCMOS33} [get_ports cart_laddr_dir]
-set_property -dict {PACKAGE_PIN V22  IOSTANDARD LVCMOS33} [get_ports cart_data_dir]
-set_property -dict {PACKAGE_PIN L19  IOSTANDARD LVCMOS33} [get_ports cart_addr_en]
 set_property -dict {PACKAGE_PIN U21  IOSTANDARD LVCMOS33} [get_ports cart_data_en]
+set_property -dict {PACKAGE_PIN V22  IOSTANDARD LVCMOS33} [get_ports cart_data_dir]
 
 # C64 Cartridge port
+set_property -dict {PACKAGE_PIN N14  IOSTANDARD LVCMOS33} [get_ports cart_reset]
 set_property -dict {PACKAGE_PIN V17  IOSTANDARD LVCMOS33} [get_ports cart_phi2]
 set_property -dict {PACKAGE_PIN AA19 IOSTANDARD LVCMOS33} [get_ports cart_dotclock]
-set_property -dict {PACKAGE_PIN N14  IOSTANDARD LVCMOS33} [get_ports cart_reset]
 set_property -dict {PACKAGE_PIN W17  IOSTANDARD LVCMOS33} [get_ports cart_nmi]
 set_property -dict {PACKAGE_PIN P14  IOSTANDARD LVCMOS33} [get_ports cart_irq]
 set_property -dict {PACKAGE_PIN P15  IOSTANDARD LVCMOS33} [get_ports cart_dma]

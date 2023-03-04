@@ -106,7 +106,37 @@ entity main is
       reu_dout_o              : out std_logic_vector(7 downto 0);
       reu_din_i               : in  std_logic_vector(7 downto 0);
       reu_we_o                : out std_logic;
-      reu_cs_o                : out std_logic                       
+      reu_cs_o                : out std_logic;
+      
+      -- C64 Expansion Port (aka Cartridge Port) control lines
+      -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+      cart_ctrl_en_o          : out std_logic;
+      cart_ctrl_dir_o         : out std_logic;
+      cart_addr_en_o          : out std_logic;     
+      cart_haddr_dir_o        : out std_logic;
+      cart_laddr_dir_o        : out std_logic;
+      cart_data_en_o          : out std_logic;
+      cart_data_dir_o         : out std_logic;
+  
+      -- C64 Expansion Port (aka Cartridge Port)
+      cart_phi2_o             : out std_logic;
+      cart_dotclock_o         : out std_logic;
+      
+      cart_nmi_i              : in std_logic;
+      cart_irq_i              : in std_logic;
+      cart_dma_i              : in std_logic;
+      cart_exrom_i            : in std_logic;
+      cart_game_i             : in std_logic;      
+      
+      cart_ba_io              : inout std_logic;
+      cart_rw_io              : inout std_logic;
+      cart_roml_io            : inout std_logic;
+      cart_romh_io            : inout std_logic;
+      cart_io1_io             : inout std_logic;
+      cart_io2_io             : inout std_logic;
+   
+      cart_d_io               : inout unsigned(7 downto 0);
+      cart_a_io               : inout unsigned(15 downto 0)
    );
 end entity main;
 
@@ -188,6 +218,47 @@ architecture synthesis of main is
    signal hard_reset_n        : std_logic;
    signal hard_rst_counter    : natural := 0;
    signal c64_ram_data        : unsigned(7 downto 0);
+
+   -- Core's simulated expansion port
+   signal core_roml           : std_logic;
+   signal core_romh           : std_logic;
+   signal core_ioe            : std_logic;
+   signal core_iof            : std_logic;
+   signal core_nmi            : std_logic;
+   signal core_irq            : std_logic;
+   signal core_dma            : std_logic;
+   signal core_exrom          : std_logic;
+   signal core_game           : std_logic;
+   signal core_umax_romh      : std_logic;
+   signal core_io_rom         : std_logic;
+   signal core_io_ext         : std_logic;
+   signal core_io_data        : unsigned(7 downto 0);
+   
+   attribute MARK_DEBUG : string;
+   attribute MARK_DEBUG of core_roml      : signal is "TRUE";
+   attribute MARK_DEBUG of core_romh      : signal is "TRUE";
+   attribute MARK_DEBUG of core_ioe       : signal is "TRUE";
+   attribute MARK_DEBUG of core_nmi       : signal is "TRUE";
+   attribute MARK_DEBUG of core_irq       : signal is "TRUE";
+   attribute MARK_DEBUG of core_dma       : signal is "TRUE";
+   attribute MARK_DEBUG of core_exrom     : signal is "TRUE";
+   attribute MARK_DEBUG of core_game      : signal is "TRUE";
+   attribute MARK_DEBUG of core_umax_romh : signal is "TRUE";
+   attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
+   attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
+   attribute MARK_DEBUG of core_io_data   : signal is "TRUE";
+
+   -- Hardware Expansion Port (aka Cartridge Port)   
+   signal cart_roml           : std_logic;
+   signal cart_romh           : std_logic;
+   signal cart_ioe            : std_logic;
+   signal cart_iof            : std_logic;
+   signal cart_nmi            : std_logic;
+   signal cart_irq            : std_logic;
+   signal cart_dma            : std_logic;
+   signal cart_exrom          : std_logic;
+   signal cart_game           : std_logic;      
+   signal data_from_cart      : unsigned(7 downto 0);
    
    -- RAM Expansion Unit (REU)
    signal reu_cfg             : std_logic_vector(1 downto 0);
@@ -198,9 +269,9 @@ architecture synthesis of main is
    signal dma_din             : unsigned(7 downto 0);
    signal dma_we              : std_logic;
    signal reu_irq             : std_logic;
+   signal reu_iof             : std_logic;
    signal reu_oe              : std_logic;
    signal reu_dout            : unsigned(7 downto 0);
-   signal iof                 : std_logic;
 
    component reu
       port (
@@ -270,8 +341,10 @@ begin
    -- and avoid that the KERNAL ever sees the CBM80 signature during reset. But we cannot do it like
    -- on real hardware using the exrom signal because the MiSTer core is not supporting this.
    -- @TODO: As soon as we support cartridges, this code here needs to become smarter.
-   c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
-      
+   -- c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
+   
+   c64_ram_data <= c64_ram_data_i when cart_roml and cart_romh else data_from_cart;
+
    --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
    --------------------------------------------------------------------------------------------------
@@ -318,25 +391,25 @@ begin
          b           => vga_blue,
 
          -- cartridge port
-         game        => '1',           -- low active, 1 is default so that KERNAL ROM can be read
-         exrom       => '1',           -- ditto
-         io_rom      => '0',
-         io_ext      => reu_oe,        -- input
-         io_data     => reu_dout,      -- input
-         irq_n       => '1',
-         nmi_n       => restore_key_n, -- TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
+         game        => core_game,     -- low active, 1 is default so that KERNAL ROM can be read
+         exrom       => core_exrom,    -- ditto
+         io_rom      => core_io_rom,
+         io_ext      => core_io_ext,   -- input
+         io_data     => core_io_data,  -- input
+         irq_n       => core_irq,
+         nmi_n       => core_nmi,      -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
          nmi_ack     => open,
-         romL        => open,
-         romH        => open,
-         UMAXromH    => open,
-         IOE         => open,
-         IOF         => iof,           -- output
+         romL        => core_roml,
+         romH        => core_romh,
+         UMAXromH    => core_umax_romh,
+         IOE         => core_ioe,
+         IOF         => core_iof,      -- output
 --         freeze_key  => open,
 --         mod_key     => open,
 --         tape_play   => open,
 
          -- dma access
-         dma_req     => dma_req,
+         dma_req     => core_dma,
          dma_cycle   => dma_cycle,
          dma_addr    => unsigned(dma_addr),
          dma_dout    => unsigned(dma_dout),
@@ -397,6 +470,60 @@ begin
          cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
+   -- RAM write enable also needs to check for chip enable
+   c64_ram_we_o <= c64_ram_ce and c64_ram_we;
+
+   --------------------------------------------------------------------------------------------------
+   -- Expansion Port (aka Cartridge Port) handling
+   --------------------------------------------------------------------------------------------------
+
+   -- C64 Expansion Port (aka Cartridge Port) control lines
+   -- *_en is low active else tri-state high impedance
+   -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+   cart_ctrl_en_o    <= '0';
+   cart_ctrl_dir_o   <= '1';
+   cart_roml_io      <= cart_roml;
+   cart_romh_io      <= cart_romh;
+   cart_io1_io       <= cart_ioe;
+   cart_io2_io       <= cart_iof;
+   cart_ba_io        <= '1';           -- @TODO
+   cart_rw_io        <= '1';           -- @TODO
+
+   cart_phi2_o       <= '0';           -- @TODO
+   cart_dotclock_o   <= video_ce_o;    -- @TODO: more exact relationship to phi2
+      
+   cart_nmi          <= cart_nmi_i; 
+   cart_irq          <= cart_irq_i;       
+   cart_dma          <= cart_dma_i; 
+   cart_exrom        <= cart_exrom_i;
+   cart_game         <= cart_game_i;      
+        
+   cart_data_en_o    <= '0';
+   cart_data_dir_o   <= '0';   
+   data_from_cart    <= cart_d_io;
+   
+   cart_addr_en_o    <= '0';     
+   cart_haddr_dir_o  <= '1';
+   cart_laddr_dir_o  <= '1';
+   cart_a_io         <= c64_ram_addr_o;
+   
+   core_game         <= cart_game;
+   core_exrom        <= cart_exrom;
+   core_io_rom       <= '0'; 
+   core_io_ext       <= '0';
+   core_io_data      <= x"FF";
+   core_irq          <= '1';
+   core_nmi          <= '1';
+   core_dma          <= '1';          
+   cart_roml         <= not core_roml;
+   cart_romh         <= not core_romh;
+   cart_ioe          <= '1'; 
+   cart_iof          <= '1';   
+ 
+   --------------------------------------------------------------------------------------------------
+   -- Simulated REU
+   --------------------------------------------------------------------------------------------------
+
    -- REU configuration: "00":None, "01":512k, "10":2M, "11":16M
    reu_cfg <= "01" when c64_exp_port_mode_i = 1 else "00";
 
@@ -421,11 +548,15 @@ begin
          cpu_dout  => c64_ram_data_o,
          cpu_din   => reu_dout,
          cpu_we    => c64_ram_we,
-         cpu_cs    => iof,
+         cpu_cs    => reu_iof,
          irq       => reu_irq
       ); -- i_reu
 
-   reu_oe <= iof;
+   reu_oe <= reu_iof;
+
+   --------------------------------------------------------------------------------------------------
+   -- Generate video output for the M2M framework
+   --------------------------------------------------------------------------------------------------
 
    -- The M2M framework needs the signals vga_hblank_o, vga_vblank_o, and vga_ce_o.
    -- This shortens the hsync pulse width to 4.82 us, still with a period of 63.94 us.
@@ -458,9 +589,10 @@ begin
          video_ce <= video_ce + 1;
       end if;
    end process p_div;
-   
-   -- RAM write enable also needs to check for chip enable
-   c64_ram_we_o <= c64_ram_ce and c64_ram_we;
+
+   --------------------------------------------------------------------------------------------------
+   -- Keyboard- and joystick controller
+   --------------------------------------------------------------------------------------------------
 
    -- Convert MEGA65 keystrokes to the C64 keyboard matrix that the CIA1 can scan
    -- and convert the MEGA65 joystick signals to CIA1 signals as well

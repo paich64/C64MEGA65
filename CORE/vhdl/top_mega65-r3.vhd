@@ -102,32 +102,34 @@ port (
    
    -- C64 Expansion Port (aka Cartridge Port) control lines
    -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+   cart_ctrl_en   : out std_logic;
    cart_ctrl_dir  : out std_logic;
+   cart_addr_en   : out std_logic;     
    cart_haddr_dir : out std_logic;
    cart_laddr_dir : out std_logic;
    cart_data_en   : out std_logic;
-   cart_addr_en   : out std_logic;
    cart_data_dir  : out std_logic;
-   cart_phi2      : out std_logic;
-   cart_dotclock  : out std_logic;
-   cart_reset     : out std_logic;
 
    -- C64 Expansion Port (aka Cartridge Port)
+   cart_reset     : out std_logic   := '1';  -- seems to be a bug of the R3 PCB, should be an input port   
+   cart_phi2      : out std_logic;
+   cart_dotclock  : out std_logic;
+   
    cart_nmi       : in std_logic;
    cart_irq       : in std_logic;
    cart_dma       : in std_logic;
+   cart_exrom     : in std_logic;   
+   cart_game      : in std_logic;
 
-   cart_exrom     : inout std_logic := 'Z';
-   cart_ba        : inout std_logic := 'Z';
-   cart_rw        : inout std_logic := 'Z';
-   cart_roml      : inout std_logic := 'Z';
-   cart_romh      : inout std_logic := 'Z';
-   cart_io1       : inout std_logic := 'Z';
-   cart_game      : inout std_logic := 'Z';
-   cart_io2       : inout std_logic := 'Z';
+   cart_ba        : inout std_logic;
+   cart_rw        : inout std_logic;
+   cart_roml      : inout std_logic;
+   cart_romh      : inout std_logic;
+   cart_io1       : inout std_logic;
+   cart_io2       : inout std_logic;
 
-   cart_d         : inout unsigned(7 downto 0) := (others => 'Z');
-   cart_a         : inout unsigned(15 downto 0) := (others => 'Z')
+   cart_d         : inout unsigned(7 downto 0);
+   cart_a         : inout unsigned(15 downto 0)
 );
 end entity CORE_R3;
 
@@ -145,71 +147,71 @@ begin
          
          -- serial communication (rxd, txd only; rts/cts are not available)
          -- 115.200 baud, 8-N-1
-         UART_RXD       => UART_RXD,
-         UART_TXD       => UART_TXD,
+         UART_RXD          => UART_RXD,
+         UART_TXD          => UART_TXD,
 
          -- VGA and VDAC
-         VGA_RED        => VGA_RED,
-         VGA_GREEN      => VGA_GREEN,
-         VGA_BLUE       => VGA_BLUE,
-         VGA_HS         => VGA_HS,
-         VGA_VS         => VGA_VS,
+         VGA_RED           => VGA_RED,
+         VGA_GREEN         => VGA_GREEN,
+         VGA_BLUE          => VGA_BLUE,
+         VGA_HS            => VGA_HS,
+         VGA_VS            => VGA_VS,
 
-         vdac_clk       => vdac_clk,
-         vdac_sync_n    => vdac_sync_n,
-         vdac_blank_n   => vdac_blank_n,
+         vdac_clk          => vdac_clk,
+         vdac_sync_n       => vdac_sync_n,
+         vdac_blank_n      => vdac_blank_n,
 
          -- Digital Video (HDMI)
-         tmds_data_p    => tmds_data_p,
-         tmds_data_n    => tmds_data_n,
-         tmds_clk_p     => tmds_clk_p,
-         tmds_clk_n     => tmds_clk_n,
+         tmds_data_p       => tmds_data_p,
+         tmds_data_n       => tmds_data_n,
+         tmds_clk_p        => tmds_clk_p,
+         tmds_clk_n        => tmds_clk_n,
 
          -- MEGA65 smart keyboard controller
-         kb_io0         => kb_io0,
-         kb_io1         => kb_io1,
-         kb_io2         => kb_io2,
+         kb_io0            => kb_io0,
+         kb_io1            => kb_io1,
+         kb_io2            => kb_io2,
 
          -- SD Card (internal on bottom)
-         SD_RESET       => SD_RESET,
-         SD_CLK         => SD_CLK,
-         SD_MOSI        => SD_MOSI,
-         SD_MISO        => SD_MISO,
-         SD_CD          => SD_CD,
+         SD_RESET          => SD_RESET,
+         SD_CLK            => SD_CLK,
+         SD_MOSI           => SD_MOSI,
+         SD_MISO           => SD_MISO,
+         SD_CD             => SD_CD,
 
          -- SD Card (external on back)
-         SD2_RESET      => SD2_RESET,
-         SD2_CLK        => SD2_CLK,
-         SD2_MOSI       => SD2_MOSI,
-         SD2_MISO       => SD2_MISO,
-         SD2_CD         => SD2_CD,
+         SD2_RESET         => SD2_RESET,
+         SD2_CLK           => SD2_CLK,
+         SD2_MOSI          => SD2_MOSI,
+         SD2_MISO          => SD2_MISO,
+         SD2_CD            => SD2_CD,
 
          -- 3.5mm analog audio jack
-         pwm_l          => pwm_l,
-         pwm_r          => pwm_r,
+         pwm_l             => pwm_l,
+         pwm_r             => pwm_r,
        
          -- Joysticks and Paddles
-         joy_1_up_n     => joy_1_up_n,
-         joy_1_down_n   => joy_1_down_n,
-         joy_1_left_n   => joy_1_left_n,
-         joy_1_right_n  => joy_1_right_n,
-         joy_1_fire_n   => joy_1_fire_n,
+         joy_1_up_n        => joy_1_up_n,
+         joy_1_down_n      => joy_1_down_n,
+         joy_1_left_n      => joy_1_left_n,
+         joy_1_right_n     => joy_1_right_n,
+         joy_1_fire_n      => joy_1_fire_n,
       
-         joy_2_up_n     => joy_2_up_n,
-         joy_2_down_n   => joy_2_down_n,
-         joy_2_left_n   => joy_2_left_n,
-         joy_2_right_n  => joy_2_right_n,
-         joy_2_fire_n   => joy_2_fire_n,
+         joy_2_up_n        => joy_2_up_n,
+         joy_2_down_n      => joy_2_down_n,
+         joy_2_left_n      => joy_2_left_n,
+         joy_2_right_n     => joy_2_right_n,
+         joy_2_fire_n      => joy_2_fire_n,
          
-         paddle         => paddle,
-         paddle_drain   => paddle_drain,
+         paddle            => paddle,
+         paddle_drain      => paddle_drain,
 
          -- Built-in HyperRAM
-         hr_d           => hr_d,
-         hr_rwds        => hr_rwds,
-         hr_reset       => hr_reset,
-         hr_clk_p       => hr_clk_p,
-         hr_cs0         => hr_cs0,
+         hr_d              => hr_d,
+         hr_rwds           => hr_rwds,
+         hr_reset          => hr_reset,
+         hr_clk_p          => hr_clk_p,
+         hr_cs0            => hr_cs0,
          
          --------------------------------------------------------------------
          -- C64 specific ports that are not supported by the M2M framework
@@ -217,33 +219,33 @@ begin
          
          -- C64 Expansion Port (aka Cartridge Port) control lines
          -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
-         cart_ctrl_dir  => cart_ctrl_dir,
-         cart_haddr_dir => cart_haddr_dir,
-         cart_laddr_dir => cart_laddr_dir,
-         cart_data_en   => cart_data_en,
-         cart_addr_en   => cart_addr_en,
-         cart_data_dir  => cart_data_dir, 
-         cart_phi2      => cart_phi2,
-         cart_dotclock  => cart_dotclock,
-         cart_reset     => cart_reset,
-      
-         -- C64 Expansion Port (aka Cartridge Port)
-         cart_nmi       => cart_nmi,
-         cart_irq       => cart_irq,
-         cart_dma       => cart_dma,
+         cart_ctrl_en_o    => cart_ctrl_en,
+         cart_ctrl_dir_o   => cart_ctrl_dir,
+         cart_addr_en_o    => cart_addr_en,
+         cart_haddr_dir_o  => cart_haddr_dir,
+         cart_laddr_dir_o  => cart_laddr_dir,
+         cart_data_en_o    => cart_data_en,
+         cart_data_dir_o   => cart_data_dir,
+             
+         -- C64 Expansion Port (aka Cartridge Port)         
+         cart_phi2_o       => cart_phi2,
+         cart_dotclock_o   => cart_dotclock,
+         
+         cart_nmi_i        => cart_nmi,
+         cart_irq_i        => cart_irq,
+         cart_dma_i        => cart_dma,
+         cart_exrom_i      => cart_exrom,     
+         cart_game_i       => cart_game,
+         
+         cart_ba_io        => cart_ba,
+         cart_rw_io        => cart_rw,
+         cart_roml_io      => cart_roml,
+         cart_romh_io      => cart_romh,
+         cart_io1_io       => cart_io1,
+         cart_io2_io       => cart_io2,
      
-         cart_exrom     => cart_exrom,
-         cart_ba        => cart_ba,
-         cart_rw        => cart_rw,
-         cart_roml      => cart_roml,
-         cart_romh      => cart_romh,
-         cart_io1       => cart_io1,
-         cart_game      => cart_game,
-         cart_io2       => cart_io2,
-     
-         cart_d         => cart_d,
-         cart_a         => cart_a        
+         cart_d_io         => cart_d,
+         cart_a_io         => cart_a        
       ); -- i_m2m
       
 end architecture synthesis;
-
