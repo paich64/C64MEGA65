@@ -193,6 +193,16 @@ signal main_cache_readdata      : std_logic_vector(15 downto 0);
 signal main_cache_readdatavalid : std_logic;
 signal main_cache_waitrequest   : std_logic;
 
+signal main_errata_write         : std_logic;
+signal main_errata_read          : std_logic;
+signal main_errata_address       : std_logic_vector(31 downto 0) := (others => '0');
+signal main_errata_writedata     : std_logic_vector(15 downto 0);
+signal main_errata_byteenable    : std_logic_vector(1 downto 0);
+signal main_errata_burstcount    : std_logic_vector(7 downto 0);
+signal main_errata_readdata      : std_logic_vector(15 downto 0);
+signal main_errata_readdatavalid : std_logic;
+signal main_errata_waitrequest   : std_logic;
+
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -539,6 +549,30 @@ begin
          m_avm_readdatavalid_i => main_cache_readdatavalid
       ); -- i_avm_cache
 
+   i_avm_hyperram_errata : entity work.avm_hyperram_errata
+      port map (
+         clk_i                 => main_clk,
+         rst_i                 => main_rst,
+         s_avm_waitrequest_o   => main_cache_waitrequest,
+         s_avm_write_i         => main_cache_write,
+         s_avm_read_i          => main_cache_read,
+         s_avm_address_i       => main_cache_address,
+         s_avm_writedata_i     => main_cache_writedata,
+         s_avm_byteenable_i    => main_cache_byteenable,
+         s_avm_burstcount_i    => main_cache_burstcount,
+         s_avm_readdata_o      => main_cache_readdata,
+         s_avm_readdatavalid_o => main_cache_readdatavalid,
+         m_avm_waitrequest_i   => main_errata_waitrequest,
+         m_avm_write_o         => main_errata_write,
+         m_avm_read_o          => main_errata_read,
+         m_avm_address_o       => main_errata_address,
+         m_avm_writedata_o     => main_errata_writedata,
+         m_avm_byteenable_o    => main_errata_byteenable,
+         m_avm_burstcount_o    => main_errata_burstcount,
+         m_avm_readdata_i      => main_errata_readdata,
+         m_avm_readdatavalid_i => main_errata_readdatavalid
+      ); -- i_avm_hyperram_errata
+
    i_avm_fifo : entity work.avm_fifo
       generic map (
          G_DEPTH        => 16,
@@ -549,15 +583,15 @@ begin
       port map (
          s_clk_i               => main_clk,
          s_rst_i               => main_rst,
-         s_avm_waitrequest_o   => main_cache_waitrequest,
-         s_avm_write_i         => main_cache_write,
-         s_avm_read_i          => main_cache_read,
-         s_avm_address_i       => main_cache_address,
-         s_avm_writedata_i     => main_cache_writedata,
-         s_avm_byteenable_i    => main_cache_byteenable,
-         s_avm_burstcount_i    => main_cache_burstcount,
-         s_avm_readdata_o      => main_cache_readdata,
-         s_avm_readdatavalid_o => main_cache_readdatavalid,
+         s_avm_waitrequest_o   => main_errata_waitrequest,
+         s_avm_write_i         => main_errata_write,
+         s_avm_read_i          => main_errata_read,
+         s_avm_address_i       => main_errata_address,
+         s_avm_writedata_i     => main_errata_writedata,
+         s_avm_byteenable_i    => main_errata_byteenable,
+         s_avm_burstcount_i    => main_errata_burstcount,
+         s_avm_readdata_o      => main_errata_readdata,
+         s_avm_readdatavalid_o => main_errata_readdatavalid,
          m_clk_i               => hr_clk_i,
          m_rst_i               => hr_rst_i,
          m_avm_waitrequest_i   => hr_waitrequest_i,

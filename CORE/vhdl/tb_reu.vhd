@@ -52,6 +52,16 @@ architecture simulation of tb_reu is
    signal cache_readdatavalid : std_logic;
    signal cache_waitrequest   : std_logic;
 
+   signal mem_avm_write         : std_logic;
+   signal mem_avm_read          : std_logic;
+   signal mem_avm_address       : std_logic_vector(31 downto 0);
+   signal mem_avm_writedata     : std_logic_vector(15 downto 0);
+   signal mem_avm_byteenable    : std_logic_vector(1 downto 0);
+   signal mem_avm_burstcount    : std_logic_vector(7 downto 0);
+   signal mem_avm_readdata      : std_logic_vector(15 downto 0);
+   signal mem_avm_readdatavalid : std_logic;
+   signal mem_avm_waitrequest   : std_logic;
+
    component reu
       port (
          clk         : in  std_logic;
@@ -318,6 +328,30 @@ begin
          m_avm_readdatavalid_i => cache_readdatavalid
       ); -- i_avm_cache
 
+   i_avm_hyperram_errata : entity work.avm_hyperram_errata
+      port map (
+         clk_i                 => clk,
+         rst_i                 => rst,
+         s_avm_waitrequest_o   => cache_waitrequest,
+         s_avm_write_i         => cache_write,
+         s_avm_read_i          => cache_read,
+         s_avm_address_i       => cache_address,
+         s_avm_writedata_i     => cache_writedata,
+         s_avm_byteenable_i    => cache_byteenable,
+         s_avm_burstcount_i    => cache_burstcount,
+         s_avm_readdata_o      => cache_readdata,
+         s_avm_readdatavalid_o => cache_readdatavalid,
+         m_avm_waitrequest_i   => mem_avm_waitrequest,
+         m_avm_write_o         => mem_avm_write,
+         m_avm_read_o          => mem_avm_read,
+         m_avm_address_o       => mem_avm_address,
+         m_avm_writedata_o     => mem_avm_writedata,
+         m_avm_byteenable_o    => mem_avm_byteenable,
+         m_avm_burstcount_o    => mem_avm_burstcount,
+         m_avm_readdata_i      => mem_avm_readdata,
+         m_avm_readdatavalid_i => mem_avm_readdatavalid
+      ); -- i_avm_hyperram_errata
+
    i_avm_memory_pause : entity work.avm_memory_pause
       generic map (
          G_REQ_PAUSE    => 30,
@@ -328,15 +362,15 @@ begin
       port map (
          clk_i               => clk,
          rst_i               => rst,
-         avm_write_i         => cache_write,
-         avm_read_i          => cache_read,
-         avm_address_i       => cache_address(7 downto 0),
-         avm_writedata_i     => cache_writedata,
-         avm_byteenable_i    => cache_byteenable,
-         avm_burstcount_i    => cache_burstcount,
-         avm_readdata_o      => cache_readdata,
-         avm_readdatavalid_o => cache_readdatavalid,
-         avm_waitrequest_o   => cache_waitrequest
+         avm_write_i         => mem_avm_write,
+         avm_read_i          => mem_avm_read,
+         avm_address_i       => mem_avm_address(7 downto 0),
+         avm_writedata_i     => mem_avm_writedata,
+         avm_byteenable_i    => mem_avm_byteenable,
+         avm_burstcount_i    => mem_avm_burstcount,
+         avm_readdata_o      => mem_avm_readdata,
+         avm_readdatavalid_o => mem_avm_readdatavalid,
+         avm_waitrequest_o   => mem_avm_waitrequest
       ); -- i_avm_memory
 
 end architecture simulation;
