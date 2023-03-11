@@ -15,3 +15,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A6   | 01/07/23 | 6150985 | Identical with A5, but with a fixed regression introduced by the refactoring: In 5:4 and 4:3 modes, the file browser did not fit on the screen
 | WIP-V5-A7   | 01/16/23 | cdfe960 | HDMI output works with more monitors, frame grabbers, switches, etc. than before: Asserting the +5V power signal according to 4.2.7 of the HDMI specification version 1.4b
 | WIP-V5-A8   | 02/26/23 | aa1840d | Upgraded to new M2M framework containing the refactored menu system: More clearly arranged menu using submenus including preparing the menu for the new Expansion Port features. Needs a new c64mega65 menu file.
+| WIP-V5-A9   | 03/11/23 | 65d8fc8 | Add work-around for errata in some HyperRAM devices: This improves the REU experience on newer batches of the MEGA65.
