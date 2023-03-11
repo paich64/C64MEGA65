@@ -110,25 +110,25 @@ port (
    main_joy_2_left_n_i     : in std_logic;
    main_joy_2_right_n_i    : in std_logic;
    main_joy_2_fire_n_i     : in std_logic;
-   
+
    main_pot1_x_i           : in std_logic_vector(7 downto 0);
    main_pot1_y_i           : in std_logic_vector(7 downto 0);
    main_pot2_x_i           : in std_logic_vector(7 downto 0);
-   main_pot2_y_i           : in std_logic_vector(7 downto 0);   
+   main_pot2_y_i           : in std_logic_vector(7 downto 0);
 
    -- On-Screen-Menu selections
    main_osm_control_i     : in std_logic_vector(255 downto 0);
-   
+
    -- QNICE general purpose register converted to main clock domain
    main_qnice_gp_reg_i    : in std_logic_vector(255 downto 0);
-   
+
    --------------------------------------------------------------------------------------------------------
    -- Provide HyperRAM to core (in HyperRAM clock domain)
-   --------------------------------------------------------------------------------------------------------   
-   
+   --------------------------------------------------------------------------------------------------------
+
    hr_clk_i                : in  std_logic;
    hr_rst_i                : in  std_logic;
-   hr_write_o              : out std_logic := '0'; 
+   hr_write_o              : out std_logic := '0';
    hr_read_o               : out std_logic := '0';
    hr_address_o            : out std_logic_vector(31 downto 0) := (others => '0');
    hr_writedata_o          : out std_logic_vector(15 downto 0) := (others => '0');
@@ -153,7 +153,7 @@ signal main_rst               : std_logic;
 -- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
--- C64 specific signals for PAL/NTSC and core speed switching 
+-- C64 specific signals for PAL/NTSC and core speed switching
 signal core_speed             : unsigned(1 downto 0);    -- see clock.vhd for details
 signal c64_ntsc               : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
 signal c64_clock_speed        : natural;                 -- clock speed depending on PAL/NTSC
@@ -218,7 +218,7 @@ constant C_MENU_HDMI_16_9_60  : natural := 30;
 constant C_MENU_HDMI_4_3_50   : natural := 31;
 constant C_MENU_HDMI_5_4_50   : natural := 32;
 constant C_MENU_CRT_EMULATION : natural := 35;
-constant C_MENU_HDMI_ZOOM     : natural := 36;          
+constant C_MENU_HDMI_ZOOM     : natural := 36;
 constant C_MENU_HDMI_FF       : natural := 37;
 constant C_MENU_HDMI_DVI      : natural := 38;
 constant C_MENU_VGA_RETRO     : natural := 39;
@@ -238,22 +238,22 @@ begin
 
    -- MMCME2_ADV clock generators
    --   C64 PAL: 31.528 MHz (main) and 63.056 MHz (video)
-   --            HDMI: Flicker-free: 0.25% slower 
+   --            HDMI: Flicker-free: 0.25% slower
    clk_gen : entity work.clk
       port map (
          sys_clk_i         => CLK,             -- expects 100 MHz
          sys_rstn_i        => RESET_M2M_N,     -- Asynchronous, asserted low
          qnice_clk_i       => qnice_clk_i,
-         
+
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-free, 2=NTSC
-         
+
          main_clk_o        => main_clk,        -- core's clock
          main_rst_o        => main_rst         -- core's reset, synchronized
       ); -- clk_gen
-      
+
    -- share core's clock with the framework
    main_clk_o <= main_clk;
-   main_rst_o <= main_rst;      
+   main_rst_o <= main_rst;
 
    ---------------------------------------------------------------------------------------------
    -- Global switches for core speed and for switching between PAL and NTSC
@@ -310,12 +310,12 @@ begin
          joy_2_left_n_i       => main_joy_2_left_n_i,
          joy_2_right_n_i      => main_joy_2_right_n_i,
          joy_2_fire_n_i       => main_joy_2_fire_n_i,
-         
+
          pot1_x_i             => main_pot1_x_i,
          pot1_y_i             => main_pot1_y_i,
          pot2_x_i             => main_pot2_x_i,
          pot2_y_i             => main_pot2_y_i,
-            
+
          -- Video output
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
          video_ce_o           => main_video_ce_o,
@@ -332,7 +332,7 @@ begin
          -- Audio output (PCM format, signed values)
          audio_left_o         => main_audio_left_o,
          audio_right_o        => main_audio_right_o,
-         
+
         -- C64 drive led
          drive_led_o          => main_drive_led_o,
          drive_led_col_o      => main_drive_led_col_o,
@@ -359,7 +359,7 @@ begin
          reu_dout_o           => main_reu_dout,
          reu_din_i            => main_reu_din,
          reu_we_o             => main_reu_we,
-         reu_cs_o             => main_reu_cs                           
+         reu_cs_o             => main_reu_cs
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------
@@ -415,8 +415,8 @@ begin
       qnice_c64_ram_we           <= '0';
       qnice_c64_qnice_ce         <= '0';
       qnice_c64_qnice_we         <= '0';
-      qnice_c64_mount_buf_ram_we <= '0'; 
-      
+      qnice_c64_mount_buf_ram_we <= '0';
+
       case qnice_dev_id_i is
          -- C64 RAM
          when C_DEV_C64_RAM =>
@@ -466,7 +466,7 @@ begin
          wren_b            => qnice_c64_ram_we,
          q_b               => qnice_c64_ram_data
       ); -- c64_ram
-      
+
    -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
    -- the disks that we are mounting. This will work for D64 only.
    -- @TODO: Switch to HyperRAM at a later stage
@@ -606,3 +606,4 @@ begin
       ); -- i_avm_fifo
 
 end architecture synthesis;
+

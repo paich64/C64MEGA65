@@ -17,7 +17,7 @@ use work.vdrives_pkg.all;
 
 entity main is
    generic (
-      G_VDNUM                 : natural                     -- amount of virtual drives     
+      G_VDNUM                 : natural                     -- amount of virtual drives
    );
    port (
       clk_main_i              : in  std_logic;
@@ -30,17 +30,17 @@ entity main is
       -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
       -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
       c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
-      clk_main_speed_i        : in natural;     
+      clk_main_speed_i        : in natural;
       video_retro15kHz_i      : in std_logic;
-      
+
       -- SID and CIA versions
       c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
-      c64_cia_ver_i           : in std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"      
-    
+      c64_cia_ver_i           : in std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"
+
       -- M2M Keyboard interface
       kb_key_num_i            : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
       kb_key_pressed_n_i      : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
-      
+
       -- MEGA65 joysticks and paddles
       joy_1_up_n_i            : in  std_logic;
       joy_1_down_n_i          : in  std_logic;
@@ -101,7 +101,7 @@ entity main is
       reu_dout_o              : out std_logic_vector(7 downto 0);
       reu_din_i               : in  std_logic_vector(7 downto 0);
       reu_we_o                : out std_logic;
-      reu_cs_o                : out std_logic                       
+      reu_cs_o                : out std_logic
    );
 end entity main;
 
@@ -173,7 +173,7 @@ architecture synthesis of main is
    signal vga_red             : unsigned(7 downto 0);
    signal vga_green           : unsigned(7 downto 0);
    signal vga_blue            : unsigned(7 downto 0);
-   
+
    -- clock enable to derive the C64's pixel clock from the core's main clock: divide by 4
    signal video_ce           : std_logic_vector(1 downto 0);
 
@@ -183,7 +183,7 @@ architecture synthesis of main is
    signal hard_reset_n        : std_logic;
    signal hard_rst_counter    : natural := 0;
    signal c64_ram_data        : unsigned(7 downto 0);
-   
+
    -- RAM Expansion Unit (REU)
    signal dma_req             : std_logic;
    signal dma_cycle           : std_logic;
@@ -223,13 +223,14 @@ architecture synthesis of main is
    end component reu;
 
 begin
+
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
-   
+
    -- the color of the drive led is green normally, but it turns yellow
    -- when the cache is dirty and/or currently being flushed
    drive_led_col_o <= x"00FF00" when unsigned(cache_dirty) = 0 else x"FFFF00";
-   
+
    -- the drive led is on if either the C64 is writing to the virtual disk (cached in RAM)
    -- or if the dirty cache is dirty and/orcurrently being flushed to the SD card
    drive_led_o <= c64_drive_led when unsigned(cache_dirty) = 0 else '1';
@@ -237,17 +238,17 @@ begin
    --------------------------------------------------------------------------------------------------
    -- Hard reset
    --------------------------------------------------------------------------------------------------
-   
+
    hard_reset : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
          if reset_soft_i or reset_hard_i then
             hard_rst_counter  <= hard_rst_delay;
-            
+
             -- reset_core_n is low-active, so prevent_reset = 0 means execute reset
             -- but a hard reset can override
-            reset_core_n      <= prevent_reset and (not reset_hard_i);     
-            
+            reset_core_n      <= prevent_reset and (not reset_hard_i);
+
             hard_reset_n      <= not reset_hard_i;  -- "not" converts to low-active
          else
             reset_core_n      <= '1';
@@ -259,13 +260,13 @@ begin
          end if;
       end if;
    end process;
-   
+
    -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
    -- and avoid that the KERNAL ever sees the CBM80 signature during reset. But we cannot do it like
    -- on real hardware using the exrom signal because the MiSTer core is not supporting this.
    -- @TODO: As soon as we support cartridges, this code here needs to become smarter.
    c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
-      
+
    --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
    --------------------------------------------------------------------------------------------------
@@ -441,7 +442,7 @@ begin
    video_retro15kHz_o <= video_retro15kHz_i;
    video_ce_o         <= '1' when video_ce = 0 else '0';
    video_ce_ovl_o     <= '1' when video_retro15kHz_i = '0' else not video_ce(0);
-   
+
    -- Clock divider: The core's pixel clock is 1/4 of the main clock
    p_div : process (clk_main_i)
    begin
@@ -449,7 +450,7 @@ begin
          video_ce <= video_ce + 1;
       end if;
    end process p_div;
-   
+
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
@@ -615,7 +616,7 @@ begin
    -- ensure an exact 32 MHz frequency even though the system has been slowed down by the HDMI-Flicker-Free.
    -- This leads to a different frequency ratio C64 vs 1541 and therefore to incompatibilities such as the
    -- one described in this GitHub issue:
-   -- https://github.com/MJoergen/C64MEGA65/issues/2  
+   -- https://github.com/MJoergen/C64MEGA65/issues/2
    generate_drive_ce : process(all)
       variable msum, nextsum: integer;
    begin
@@ -661,8 +662,8 @@ begin
          -- and to signal via "the yellow led" to the user that the cache is not yet
          -- written to the SD card, i.e. that writing is in progress
          cache_dirty_o        => cache_dirty,
-         cache_flushing_o     => open,         
-      
+         cache_flushing_o     => open,
+
          -- MiSTer's "SD block level access" interface, which runs in QNICE's clock domain
          -- using dedicated signal on Mister's side such as "clk_sys"
          sd_lba_i             => iec_sd_lba_o,
@@ -688,3 +689,4 @@ begin
       ); -- i_vdrives
 
 end architecture synthesis;
+

@@ -77,8 +77,8 @@ port (
    joy_2_left_n   : in  std_logic;
    joy_2_right_n  : in  std_logic;
    joy_2_fire_n   : in  std_logic;
-   
-   paddle         : in std_logic_vector(3 downto 0);
+
+   paddle         : in  std_logic_vector(3 downto 0);
    paddle_drain   : out std_logic;
 
    -- Built-in HyperRAM
@@ -272,7 +272,7 @@ begin
       main_key_num_o          => main_key_num,
       main_key_pressed_n_o    => main_key_pressed_n,
       main_drive_led_i        => main_drive_led,
-      main_drive_led_col_i    => main_drive_led_col,      
+      main_drive_led_col_i    => main_drive_led_col,
       main_osm_control_m_o    => main_osm_control_m,
       main_qnice_gp_reg_o     => main_qnice_gp_reg,
       main_audio_l_i          => main_audio_l,
@@ -301,11 +301,11 @@ begin
       main_pot1_y_o           => main_pot1_y,
       main_pot2_x_o           => main_pot2_x,
       main_pot2_y_o           => main_pot2_y,
-      
+
       -- Provide HyperRAM to core (in HyperRAM clock domain)
       hr_clk_o                => hr_clk,
       hr_rst_o                => hr_rst,
-      hr_write_i              => hr_write, 
+      hr_write_i              => hr_write,
       hr_read_i               => hr_read,
       hr_address_i            => hr_address,
       hr_writedata_i          => hr_writedata,
@@ -360,7 +360,7 @@ begin
          -- Video and audio mode control
          qnice_dvi_o             => qnice_dvi,
          qnice_video_mode_o      => qnice_video_mode,
-         qnice_scandoubler_o     => qnice_scandoubler,         
+         qnice_scandoubler_o     => qnice_scandoubler,
          qnice_audio_mute_o      => qnice_audio_mute,
          qnice_audio_filter_o    => qnice_audio_filter,
          qnice_zoom_crop_o       => qnice_zoom_crop,
@@ -375,7 +375,7 @@ begin
          qnice_osm_control_i     => qnice_osm_control_m,
 
          -- QNICE general purpose register
-         qnice_gp_reg_i          => qnice_gp_reg,         
+         qnice_gp_reg_i          => qnice_gp_reg,
 
          -- Core-specific devices
          qnice_dev_id_i          => qnice_ramrom_dev,
@@ -400,7 +400,7 @@ begin
          main_osm_control_i      => main_osm_control_m,
 
          -- QNICE general purpose register (in main clock domain)
-         main_qnice_gp_reg_i          => main_qnice_gp_reg,         
+         main_qnice_gp_reg_i     => main_qnice_gp_reg,
 
          -- Video output
          main_video_ce_o         => main_video_ce,
@@ -436,19 +436,19 @@ begin
          main_joy_2_left_n_i     => main_joy2_left_n,
          main_joy_2_right_n_i    => main_joy2_right_n,
          main_joy_2_fire_n_i     => main_joy2_fire_n,
-         
+
          main_pot1_x_i           => main_pot1_x,
          main_pot1_y_i           => main_pot1_y,
          main_pot2_x_i           => main_pot2_x,
          main_pot2_y_i           => main_pot2_y,
-         
+
          --------------------------------------------------------------------------------------------------------
          -- Provide HyperRAM to core (in HyperRAM clock domain)
          --------------------------------------------------------------------------------------------------------
-      
+
          hr_clk_i                => hr_clk,
          hr_rst_i                => hr_rst,
-         hr_write_o              => hr_write, 
+         hr_write_o              => hr_write,
          hr_read_o               => hr_read,
          hr_address_o            => hr_address,
          hr_writedata_o          => hr_writedata,
@@ -456,7 +456,7 @@ begin
          hr_burstcount_o         => hr_burstcount,
          hr_readdata_i           => hr_readdata,
          hr_readdatavalid_i      => hr_readdatavalid,
-         hr_waitrequest_i        => hr_waitrequest         
+         hr_waitrequest_i        => hr_waitrequest
       ); -- CORE
 
 end architecture synthesis;
