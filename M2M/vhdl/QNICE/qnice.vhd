@@ -85,6 +85,7 @@ port (
    ramrom_data_o        : out std_logic_vector(15 downto 0);
    ramrom_data_i        : in std_logic_vector(15 downto 0);
    ramrom_ce_o          : out std_logic;
+   ramrom_wait_i        : in std_logic;
    ramrom_we_o          : out std_logic
 );
 end entity QNICE;
@@ -251,7 +252,7 @@ begin
       (
          CLK                  => clk50_i,
          RESET                => reset_ctl,
-         WAIT_FOR_DATA        => cpu_wait_for_data,
+         WAIT_FOR_DATA        => cpu_wait_for_data or ramrom_wait_i,
          ADDR                 => cpu_addr,
          DATA_IN              => cpu_data_in,
          DATA_OUT             => cpu_data_out,

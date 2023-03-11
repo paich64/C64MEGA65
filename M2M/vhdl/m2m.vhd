@@ -155,6 +155,16 @@ signal main_pot1_y            : std_logic_vector(7 downto 0);
 signal main_pot2_x            : std_logic_vector(7 downto 0);
 signal main_pot2_y            : std_logic_vector(7 downto 0);
 
+signal main_avm_write         : std_logic;
+signal main_avm_read          : std_logic;
+signal main_avm_address       : std_logic_vector(31 downto 0);
+signal main_avm_writedata     : std_logic_vector(15 downto 0);
+signal main_avm_byteenable    : std_logic_vector(1 downto 0);
+signal main_avm_burstcount    : std_logic_vector(7 downto 0);
+signal main_avm_readdata      : std_logic_vector(15 downto 0);
+signal main_avm_readdatavalid : std_logic;
+signal main_avm_waitrequest   : std_logic;
+
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -187,22 +197,6 @@ signal qnice_ramrom_data_o    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_data_i    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_ce        : std_logic;
 signal qnice_ramrom_we        : std_logic;
-
----------------------------------------------------------------------------------------------
--- hr_clk_o (HyperRAM clock provided by i_framework)
----------------------------------------------------------------------------------------------
-
-signal hr_clk                 : std_logic;
-signal hr_rst                 : std_logic;
-signal hr_write               : std_logic;
-signal hr_read                : std_logic;
-signal hr_address             : std_logic_vector(31 downto 0) := (others => '0');
-signal hr_writedata           : std_logic_vector(15 downto 0);
-signal hr_byteenable          : std_logic_vector(1 downto 0);
-signal hr_burstcount          : std_logic_vector(7 downto 0);
-signal hr_readdata            : std_logic_vector(15 downto 0);
-signal hr_readdatavalid       : std_logic;
-signal hr_waitrequest         : std_logic;
 
 begin
 
@@ -303,17 +297,15 @@ begin
       main_pot2_y_o           => main_pot2_y,
 
       -- Provide HyperRAM to core (in HyperRAM clock domain)
-      hr_clk_o                => hr_clk,
-      hr_rst_o                => hr_rst,
-      hr_write_i              => hr_write,
-      hr_read_i               => hr_read,
-      hr_address_i            => hr_address,
-      hr_writedata_i          => hr_writedata,
-      hr_byteenable_i         => hr_byteenable,
-      hr_burstcount_i         => hr_burstcount,
-      hr_readdata_o           => hr_readdata,
-      hr_readdatavalid_o      => hr_readdatavalid,
-      hr_waitrequest_o        => hr_waitrequest,
+      main_avm_write_i         => main_avm_write,
+      main_avm_read_i          => main_avm_read,
+      main_avm_address_i       => main_avm_address,
+      main_avm_writedata_i     => main_avm_writedata,
+      main_avm_byteenable_i    => main_avm_byteenable,
+      main_avm_burstcount_i    => main_avm_burstcount,
+      main_avm_readdata_o      => main_avm_readdata,
+      main_avm_readdatavalid_o => main_avm_readdatavalid,
+      main_avm_waitrequest_o   => main_avm_waitrequest,
 
       -- Connect to QNICE
       qnice_dvi_i             => qnice_dvi,
@@ -443,20 +435,18 @@ begin
          main_pot2_y_i           => main_pot2_y,
 
          --------------------------------------------------------------------------------------------------------
-         -- Provide HyperRAM to core (in HyperRAM clock domain)
+         -- Provide support for external memory (Avalon Memory Map)
          --------------------------------------------------------------------------------------------------------
 
-         hr_clk_i                => hr_clk,
-         hr_rst_i                => hr_rst,
-         hr_write_o              => hr_write,
-         hr_read_o               => hr_read,
-         hr_address_o            => hr_address,
-         hr_writedata_o          => hr_writedata,
-         hr_byteenable_o         => hr_byteenable,
-         hr_burstcount_o         => hr_burstcount,
-         hr_readdata_i           => hr_readdata,
-         hr_readdatavalid_i      => hr_readdatavalid,
-         hr_waitrequest_i        => hr_waitrequest
+         main_avm_write_o         => main_avm_write,
+         main_avm_read_o          => main_avm_read,
+         main_avm_address_o       => main_avm_address,
+         main_avm_writedata_o     => main_avm_writedata,
+         main_avm_byteenable_o    => main_avm_byteenable,
+         main_avm_burstcount_o    => main_avm_burstcount,
+         main_avm_readdata_i      => main_avm_readdata,
+         main_avm_readdatavalid_i => main_avm_readdatavalid,
+         main_avm_waitrequest_i   => main_avm_waitrequest
       ); -- CORE
 
 end architecture synthesis;
