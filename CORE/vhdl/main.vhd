@@ -224,11 +224,11 @@ architecture synthesis of main is
    signal core_romh           : std_logic;
    signal core_ioe            : std_logic;
    signal core_iof            : std_logic;
-   signal core_nmi            : std_logic;
-   signal core_irq            : std_logic;
+   signal core_nmi_n          : std_logic;
+   signal core_irq_n          : std_logic;
    signal core_dma            : std_logic;
-   signal core_exrom          : std_logic;
-   signal core_game           : std_logic;
+   signal core_exrom_n        : std_logic;
+   signal core_game_n         : std_logic;
    signal core_umax_romh      : std_logic;
    signal core_io_rom         : std_logic;
    signal core_io_ext         : std_logic;
@@ -238,26 +238,26 @@ architecture synthesis of main is
    attribute MARK_DEBUG of core_roml      : signal is "TRUE";
    attribute MARK_DEBUG of core_romh      : signal is "TRUE";
    attribute MARK_DEBUG of core_ioe       : signal is "TRUE";
-   attribute MARK_DEBUG of core_nmi       : signal is "TRUE";
-   attribute MARK_DEBUG of core_irq       : signal is "TRUE";
+   attribute MARK_DEBUG of core_nmi_n     : signal is "TRUE";
+   attribute MARK_DEBUG of core_irq_n     : signal is "TRUE";
    attribute MARK_DEBUG of core_dma       : signal is "TRUE";
-   attribute MARK_DEBUG of core_exrom     : signal is "TRUE";
-   attribute MARK_DEBUG of core_game      : signal is "TRUE";
+   attribute MARK_DEBUG of core_exrom_n   : signal is "TRUE";
+   attribute MARK_DEBUG of core_game_n    : signal is "TRUE";
    attribute MARK_DEBUG of core_umax_romh : signal is "TRUE";
    attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
    attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
    attribute MARK_DEBUG of core_io_data   : signal is "TRUE";
 
    -- Hardware Expansion Port (aka Cartridge Port)   
-   signal cart_roml           : std_logic;
-   signal cart_romh           : std_logic;
-   signal cart_ioe            : std_logic;
-   signal cart_iof            : std_logic;
-   signal cart_nmi            : std_logic;
-   signal cart_irq            : std_logic;
-   signal cart_dma            : std_logic;
-   signal cart_exrom          : std_logic;
-   signal cart_game           : std_logic;      
+   signal cart_roml_n         : std_logic;
+   signal cart_romh_n         : std_logic;
+   signal cart_io1_n          : std_logic;
+   signal cart_io2_n          : std_logic;
+   signal cart_nmi_n          : std_logic;
+   signal cart_irq_n          : std_logic;
+   signal cart_dma_n          : std_logic;
+   signal cart_exrom_n        : std_logic;
+   signal cart_game_n         : std_logic;      
    signal data_from_cart      : unsigned(7 downto 0);
    
    -- RAM Expansion Unit (REU)
@@ -343,7 +343,7 @@ begin
    -- @TODO: As soon as we support cartridges, this code here needs to become smarter.
    -- c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
    
-   c64_ram_data <= c64_ram_data_i when cart_roml and cart_romh else data_from_cart;
+   c64_ram_data <= c64_ram_data_i when cart_roml_n and cart_romh_n else data_from_cart;
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
@@ -391,13 +391,13 @@ begin
          b           => vga_blue,
 
          -- cartridge port
-         game        => core_game,     -- low active, 1 is default so that KERNAL ROM can be read
-         exrom       => core_exrom,    -- ditto
+         game        => core_game_n,   -- low active, 1 is default so that KERNAL ROM can be read
+         exrom       => core_exrom_n,  -- ditto
          io_rom      => core_io_rom,
          io_ext      => core_io_ext,   -- input
          io_data     => core_io_data,  -- input
-         irq_n       => core_irq,
-         nmi_n       => core_nmi,      -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
+         irq_n       => core_irq_n,
+         nmi_n       => core_nmi_n,    -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
          nmi_ack     => open,
          romL        => core_roml,
          romH        => core_romh,
@@ -482,21 +482,21 @@ begin
    -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
    cart_ctrl_en_o    <= '0';
    cart_ctrl_dir_o   <= '1';
-   cart_roml_io      <= cart_roml;
-   cart_romh_io      <= cart_romh;
-   cart_io1_io       <= cart_ioe;
-   cart_io2_io       <= cart_iof;
+   cart_roml_io      <= cart_roml_n;
+   cart_romh_io      <= cart_romh_n;
+   cart_io1_io       <= cart_io1_n;
+   cart_io2_io       <= cart_io2_n;
    cart_ba_io        <= '1';           -- @TODO
    cart_rw_io        <= '1';           -- @TODO
 
    cart_phi2_o       <= '0';           -- @TODO
    cart_dotclock_o   <= video_ce_o;    -- @TODO: more exact relationship to phi2
       
-   cart_nmi          <= cart_nmi_i; 
-   cart_irq          <= cart_irq_i;       
-   cart_dma          <= cart_dma_i; 
-   cart_exrom        <= cart_exrom_i;
-   cart_game         <= cart_game_i;      
+   cart_nmi_n        <= cart_nmi_i; 
+   cart_irq_n        <= cart_irq_i;       
+   cart_dma_n        <= cart_dma_i; 
+   cart_exrom_n      <= cart_exrom_i;
+   cart_game_n       <= cart_game_i;      
         
    cart_data_en_o    <= '0';
    cart_data_dir_o   <= '0';   
@@ -507,18 +507,18 @@ begin
    cart_laddr_dir_o  <= '1';
    cart_a_io         <= c64_ram_addr_o;
    
-   core_game         <= cart_game;
-   core_exrom        <= cart_exrom;
+   core_game_n       <= cart_game_n;
+   core_exrom_n      <= cart_exrom_n;
    core_io_rom       <= '0'; 
    core_io_ext       <= '0';
    core_io_data      <= x"FF";
-   core_irq          <= '1';
-   core_nmi          <= '1';
-   core_dma          <= '1';          
-   cart_roml         <= not core_roml;
-   cart_romh         <= not core_romh;
-   cart_ioe          <= '1'; 
-   cart_iof          <= '1';   
+   core_irq_n        <= '1';
+   core_nmi_n        <= '1';
+   core_dma          <= '0';          
+   cart_roml_n       <= not core_roml;
+   cart_romh_n       <= not core_romh;
+   cart_io1_n        <= '1'; 
+   cart_io2_n        <= '1';   
  
    --------------------------------------------------------------------------------------------------
    -- Simulated REU
