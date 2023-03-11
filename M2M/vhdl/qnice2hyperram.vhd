@@ -47,11 +47,11 @@ architecture synthesis of qnice2hyperram is
 
 begin
 
-   s_qnice_wait_o <= m_avm_write_o or m_avm_read_o or reading;
+   s_qnice_wait_o <= ((m_avm_write_o or m_avm_read_o) and m_avm_waitrequest_i) or reading;
 
    convert_proc : process (clk_i)
    begin
-      if falling_edge(clk_i) then
+      if rising_edge(clk_i) then
          if m_avm_waitrequest_i = '1' then
             m_avm_write_o <= '0';
             m_avm_read_o  <= '0';
