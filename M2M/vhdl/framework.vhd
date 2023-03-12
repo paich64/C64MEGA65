@@ -230,6 +230,7 @@ signal qnice_ramrom_data_in          : std_logic_vector(15 downto 0);
 signal qnice_ramrom_data_in_hyperram : std_logic_vector(15 downto 0);
 signal qnice_ramrom_wait             : std_logic;
 signal qnice_ramrom_wait_hyperram    : std_logic;
+signal qnice_ramrom_ce_hyperram      : std_logic;
 
 -- QNICE control and status register
 signal main_csr_keyboard_on   : std_logic;
@@ -662,11 +663,12 @@ begin
    -- (refer to M2M/rom/sysdef.asm for a memory map and more details)
    qnice_ramrom_devices : process(all)
    begin
-      qnice_ramrom_data_in    <= x"EEEE";
-      qnice_ramrom_wait       <= '0';
-      qnice_vram_we           <= '0';
-      qnice_vram_attr_we      <= '0';
-      qnice_poly_wr           <= '0';
+      qnice_ramrom_ce_hyperram <= '0';
+      qnice_ramrom_data_in     <= x"EEEE";
+      qnice_ramrom_wait        <= '0';
+      qnice_vram_we            <= '0';
+      qnice_vram_attr_we       <= '0';
+      qnice_poly_wr            <= '0';
 
       -----------------------------------
       -- Framework devices
@@ -693,6 +695,7 @@ begin
 
             -- HyperRAM access
             when C_DEV_HYPERRAM =>
+               qnice_ramrom_ce_hyperram   <= qnice_ramrom_ce_o;
                qnice_ramrom_data_in       <= qnice_ramrom_data_in_hyperram;
                qnice_ramrom_wait          <= qnice_ramrom_wait_hyperram;
 
@@ -757,15 +760,15 @@ begin
 
    i_qnice2hyperram : entity work.qnice2hyperram
       generic map (
-         G_ADDRESS_SIZE => 21,
+         G_ADDRESS_SIZE => 23, -- 8 MB
          G_BASE_ADDRESS => X"00000000"
       )
       port map (
          clk_i                 => qnice_clk,
          rst_i                 => qnice_rst,
          s_qnice_wait_o        => qnice_ramrom_wait_hyperram,
-         s_qnice_address_i     => qnice_ramrom_addr_o(20 downto 0),
-         s_qnice_cs_i          => qnice_ramrom_ce_o,
+         s_qnice_address_i     => qnice_ramrom_addr_o(22 downto 0),
+         s_qnice_cs_i          => qnice_ramrom_ce_hyperram,
          s_qnice_write_i       => qnice_ramrom_we_o,
          s_qnice_writedata_i   => qnice_ramrom_data_out_o(7 downto 0),
          s_qnice_readdata_o    => qnice_ramrom_data_in_hyperram(7 downto 0),
