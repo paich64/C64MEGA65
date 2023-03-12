@@ -159,6 +159,7 @@ architecture synthesis of main is
    -- signals for RAM
    signal c64_ram_ce          : std_logic;
    signal c64_ram_we          : std_logic;
+   signal c64_ram_data        : unsigned(7 downto 0);  
 
    -- 18-bit SID from C64: Needs to go through audio processing ported from Verilog to VHDL from MiSTer's c64.sv
    signal c64_sid_l           : std_logic_vector(17 downto 0);
@@ -218,7 +219,7 @@ architecture synthesis of main is
    signal reset_core_n        : std_logic;
    signal hard_reset_n        : std_logic;
    signal hard_rst_counter    : natural := 0;
-   signal c64_ram_data        : unsigned(7 downto 0);
+   signal system_cold_start   : natural range 0 to 4 := 4;
 
    -- Core's simulated expansion port
    signal core_roml           : std_logic;
@@ -287,7 +288,10 @@ architecture synthesis of main is
    attribute MARK_DEBUG of dbg_cart_dir   : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
-   --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";   
+   --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";  
+   attribute MARK_DEBUG of hard_reset_n      : signal is "TRUE";
+   attribute MARK_DEBUG of hard_rst_counter  : signal is "TRUE";
+   attribute MARK_DEBUG of system_cold_start : signal is "TRUE";    
 
    component reu
       port (
@@ -356,6 +360,17 @@ begin
          end if;
       end if;
    end process;
+   
+   handle_cold_start : process(clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         if hard_reset_n = '0' and hard_rst_counter = hard_rst_delay and (system_cold_start = 4 or system_cold_start = 2) then
+            system_cold_start <= system_cold_start - 1;
+         elsif hard_reset_n = '1' and hard_rst_counter = 0 and (system_cold_start = 3  or system_cold_start = 1) then
+            system_cold_start <= system_cold_start - 1;
+         end if;
+      end if;
+   end process;
 
    --------------------------------------------------------------------------------------------------
    -- Access to C64's RAM and hardware/simulated cartridge ROM
@@ -367,7 +382,7 @@ begin
       -- and avoid that the KERNAL ever sees the CBM80 signature during hard reset reset.
       -- But we cannot do it like on real hardware using the exrom signal because the
       -- MiSTer core is not supporting this.
-      if hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" then
+      if hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" and system_cold_start = 0 then
          c64_ram_data <= x"00";
       
       -- Access the hardware cartridge
@@ -547,7 +562,11 @@ begin
          data_from_cart    <= cart_d_io;
       else
          cart_data_dir_o   <= '1';
-         cart_d_io         <= c64_ram_data_i;
+         if c64_ram_we='0' then
+            cart_d_io         <= c64_ram_data_i;
+         else
+            cart_d_io         <= c64_ram_data_o;
+         end if;
       end if;
    end process;
    
