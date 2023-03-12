@@ -111,12 +111,12 @@ port (
    cart_data_dir  : out std_logic;
 
    -- C64 Expansion Port (aka Cartridge Port)
-   cart_reset     : out std_logic   := '1';  -- seems to be a bug of the R3 PCB, should be an input port   
+   cart_reset     : out std_logic;                 -- R3 board bug. Should be inout.
    cart_phi2      : out std_logic;
    cart_dotclock  : out std_logic;
    
-   cart_nmi       : in std_logic;
-   cart_irq       : in std_logic;
+   cart_nmi       : in std_logic;                  -- R3 board bug. Should be inout.
+   cart_irq       : in std_logic;                  -- R3 board bug. Should be inout.
    cart_dma       : in std_logic;
    cart_exrom     : in std_logic;   
    cart_game      : in std_logic;
@@ -227,7 +227,8 @@ begin
          cart_data_en_o    => cart_data_en,
          cart_data_dir_o   => cart_data_dir,
              
-         -- C64 Expansion Port (aka Cartridge Port)         
+         -- C64 Expansion Port (aka Cartridge Port)
+         cart_reset_o      => cart_reset,
          cart_phi2_o       => cart_phi2,
          cart_dotclock_o   => cart_dotclock,
          

@@ -15,6 +15,9 @@ images and `*.t64` tape images.
 WIP Hardware cartridges via expansion port: @TODO we might not support
 all cartridge types, add constraints here: Game cartriges, real REUs, GEO
 RAMs, EasyFlash, etc. ... we need to test quite some amount of real hardware
+@TODO already known problem: M65 R3 boards have a bug: RESET, NMI and IRQ
+are output only so modules that need to drive these lines to work properly
+will not work.
 
 WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
 all cartridge types, add constraints here

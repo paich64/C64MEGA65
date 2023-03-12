@@ -103,6 +103,7 @@ port (
    cart_data_dir_o         : out std_logic;
 
    -- C64 Expansion Port (aka Cartridge Port)
+   cart_reset_o            : out std_logic;   
    cart_phi2_o             : out std_logic;
    cart_dotclock_o         : out std_logic;
    
@@ -506,7 +507,8 @@ begin
          cart_data_en_o          => cart_data_en_o,
          cart_data_dir_o         => cart_data_dir_o,
              
-         -- C64 Expansion Port (aka Cartridge Port)         
+         -- C64 Expansion Port (aka Cartridge Port)
+         cart_reset_o            => cart_reset_o,
          cart_phi2_o             => cart_phi2_o,
          cart_dotclock_o         => cart_dotclock_o,
          

@@ -119,6 +119,7 @@ entity main is
       cart_data_dir_o         : out std_logic;
   
       -- C64 Expansion Port (aka Cartridge Port)
+      cart_reset_o            : out std_logic;
       cart_phi2_o             : out std_logic;
       cart_dotclock_o         : out std_logic;
       
@@ -233,22 +234,11 @@ architecture synthesis of main is
    signal core_io_rom         : std_logic;
    signal core_io_ext         : std_logic;
    signal core_io_data        : unsigned(7 downto 0);
+	signal core_dotclk         : std_logic;
+	signal core_phi0           : std_logic;
+	signal core_phi2           : std_logic;   
    
-   attribute MARK_DEBUG : string;
-   attribute MARK_DEBUG of core_roml      : signal is "TRUE";
-   attribute MARK_DEBUG of core_romh      : signal is "TRUE";
-   attribute MARK_DEBUG of core_ioe       : signal is "TRUE";
-   attribute MARK_DEBUG of core_nmi_n     : signal is "TRUE";
-   attribute MARK_DEBUG of core_irq_n     : signal is "TRUE";
-   attribute MARK_DEBUG of core_dma       : signal is "TRUE";
-   attribute MARK_DEBUG of core_exrom_n   : signal is "TRUE";
-   attribute MARK_DEBUG of core_game_n    : signal is "TRUE";
-   attribute MARK_DEBUG of core_umax_romh : signal is "TRUE";
-   attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
-   attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
-   attribute MARK_DEBUG of core_io_data   : signal is "TRUE";
-
-   -- Hardware Expansion Port (aka Cartridge Port)   
+   -- Hardware Expansion Port (aka Cartridge Port)
    signal cart_roml_n         : std_logic;
    signal cart_romh_n         : std_logic;
    signal cart_io1_n          : std_logic;
@@ -272,6 +262,32 @@ architecture synthesis of main is
    signal reu_iof             : std_logic;
    signal reu_oe              : std_logic;
    signal reu_dout            : unsigned(7 downto 0);
+   
+   
+   signal dbg_joybtn          : std_logic;
+   signal dbg_cart_dir        : std_logic;
+   attribute MARK_DEBUG : string;
+   attribute MARK_DEBUG of data_from_cart : signal is "TRUE";
+   attribute MARK_DEBUG of core_roml      : signal is "TRUE";
+   attribute MARK_DEBUG of core_romh      : signal is "TRUE";
+   attribute MARK_DEBUG of core_ioe       : signal is "TRUE";
+   attribute MARK_DEBUG of core_iof       : signal is "TRUE";
+   attribute MARK_DEBUG of core_nmi_n     : signal is "TRUE";
+   attribute MARK_DEBUG of core_irq_n     : signal is "TRUE";
+   attribute MARK_DEBUG of core_dma       : signal is "TRUE";
+   attribute MARK_DEBUG of core_exrom_n   : signal is "TRUE";
+   attribute MARK_DEBUG of core_game_n    : signal is "TRUE";
+   attribute MARK_DEBUG of core_umax_romh : signal is "TRUE";
+   attribute MARK_DEBUG of reset_core_n   : signal is "TRUE";
+   attribute MARK_DEBUG of core_dotclk    : signal is "TRUE";
+	attribute MARK_DEBUG of core_phi0      : signal is "TRUE";      
+	attribute MARK_DEBUG of core_phi2      : signal is "TRUE";
+   attribute MARK_DEBUG of cart_rw_io     : signal is "TRUE";
+   attribute MARK_DEBUG of dbg_joybtn     : signal is "TRUE";
+   attribute MARK_DEBUG of dbg_cart_dir   : signal is "TRUE";
+   --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
+   --attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
+   --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";   
 
    component reu
       port (
@@ -300,6 +316,10 @@ architecture synthesis of main is
    end component reu;
 
 begin
+   -- @TODO DEBUG/DELIT
+   dbg_joybtn     <= joy_2_fire_n_i;
+   dbg_cart_dir   <= cart_data_dir_o;
+
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
    
@@ -336,14 +356,29 @@ begin
          end if;
       end if;
    end process;
+
+   --------------------------------------------------------------------------------------------------
+   -- Access to C64's RAM and hardware/simulated cartridge ROM
+   --------------------------------------------------------------------------------------------------   
    
-   -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
-   -- and avoid that the KERNAL ever sees the CBM80 signature during reset. But we cannot do it like
-   -- on real hardware using the exrom signal because the MiSTer core is not supporting this.
-   -- @TODO: As soon as we support cartridges, this code here needs to become smarter.
-   -- c64_ram_data <= x"00" when hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" else c64_ram_data_i;
-   
-   c64_ram_data <= c64_ram_data_i when cart_roml_n and cart_romh_n else data_from_cart;
+   cpu_data_in : process(all)
+   begin
+      -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
+      -- and avoid that the KERNAL ever sees the CBM80 signature during hard reset reset.
+      -- But we cannot do it like on real hardware using the exrom signal because the
+      -- MiSTer core is not supporting this.
+      if hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" then
+         c64_ram_data <= x"00";
+      
+      -- Access the hardware cartridge
+      elsif cart_roml_n = '0' or cart_romh_n = '0' then
+         c64_ram_data <= data_from_cart;
+      
+      -- Standard access to the C64's RAM
+      else
+         c64_ram_data <= c64_ram_data_i;
+      end if;               
+   end process;
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
@@ -391,19 +426,22 @@ begin
          b           => vga_blue,
 
          -- cartridge port
-         game        => core_game_n,   -- low active, 1 is default so that KERNAL ROM can be read
-         exrom       => core_exrom_n,  -- ditto
-         io_rom      => core_io_rom,
-         io_ext      => core_io_ext,   -- input
-         io_data     => core_io_data,  -- input
-         irq_n       => core_irq_n,
-         nmi_n       => core_nmi_n,    -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
-         nmi_ack     => open,
-         romL        => core_roml,
-         romH        => core_romh,
-         UMAXromH    => core_umax_romh,
-         IOE         => core_ioe,
-         IOF         => core_iof,      -- output
+         game        => core_game_n,      -- input: low active
+         exrom       => core_exrom_n,     -- input: low active
+         io_rom      => core_io_rom,      -- input
+         io_ext      => core_io_ext,      -- input
+         io_data     => core_io_data,     -- input
+         irq_n       => core_irq_n,       -- input: low active
+         nmi_n       => core_nmi_n,       -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
+         nmi_ack     => open,             -- output
+         romL        => core_roml,        -- output
+         romH        => core_romh,        -- output
+         UMAXromH    => core_umax_romh,   -- output
+         IOE         => core_ioe,         -- output
+         IOF         => core_iof,         -- output
+	      dotclk      => core_dotclk,      -- output
+	      phi0        => core_phi0,        -- output
+	      phi2        => core_phi2,        -- output         
 --         freeze_key  => open,
 --         mod_key     => open,
 --         tape_play   => open,
@@ -486,21 +524,32 @@ begin
    cart_romh_io      <= cart_romh_n;
    cart_io1_io       <= cart_io1_n;
    cart_io2_io       <= cart_io2_n;
-   cart_ba_io        <= '1';           -- @TODO
-   cart_rw_io        <= '1';           -- @TODO
+   cart_ba_io        <= '1';              -- @TODO
+   cart_rw_io        <= not c64_ram_we;
 
-   cart_phi2_o       <= '0';           -- @TODO
-   cart_dotclock_o   <= video_ce_o;    -- @TODO: more exact relationship to phi2
+   cart_reset_o      <= reset_core_n;
+   cart_phi2_o       <= core_phi2;
+   cart_dotclock_o   <= core_dotclk;
       
    cart_nmi_n        <= cart_nmi_i; 
    cart_irq_n        <= cart_irq_i;       
    cart_dma_n        <= cart_dma_i; 
    cart_exrom_n      <= cart_exrom_i;
    cart_game_n       <= cart_game_i;      
-        
-   cart_data_en_o    <= '0';
-   cart_data_dir_o   <= '0';   
-   data_from_cart    <= cart_d_io;
+
+   handle_dataio : process(all)
+   begin
+      cart_data_en_o    <= '0';
+      data_from_cart    <= x"00";
+      cart_d_io         <= (others => 'Z'); 
+      if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
+         cart_data_dir_o   <= '0';
+         data_from_cart    <= cart_d_io;
+      else
+         cart_data_dir_o   <= '1';
+         cart_d_io         <= c64_ram_data_i;
+      end if;
+   end process;
    
    cart_addr_en_o    <= '0';     
    cart_haddr_dir_o  <= '1';
@@ -512,13 +561,13 @@ begin
    core_io_rom       <= '0'; 
    core_io_ext       <= '0';
    core_io_data      <= x"FF";
-   core_irq_n        <= '1';
-   core_nmi_n        <= '1';
+   core_irq_n        <= cart_irq_n;
+   core_nmi_n        <= cart_nmi_n;
    core_dma          <= '0';          
    cart_roml_n       <= not core_roml;
    cart_romh_n       <= not core_romh;
-   cart_io1_n        <= '1'; 
-   cart_io2_n        <= '1';   
+   cart_io1_n        <= not core_ioe; 
+   cart_io2_n        <= not core_iof;
  
    --------------------------------------------------------------------------------------------------
    -- Simulated REU
@@ -581,14 +630,14 @@ begin
    video_retro15kHz_o <= video_retro15kHz_i;
    video_ce_o         <= '1' when video_ce = 0 else '0';
    video_ce_ovl_o     <= '1' when video_retro15kHz_i = '0' else not video_ce(0);
-   
+
    -- Clock divider: The core's pixel clock is 1/4 of the main clock
-   p_div : process (clk_main_i)
+   generate_video_ce : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
          video_ce <= video_ce + 1;
       end if;
-   end process p_div;
+   end process;
 
    --------------------------------------------------------------------------------------------------
    -- Keyboard- and joystick controller
