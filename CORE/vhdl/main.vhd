@@ -235,9 +235,9 @@ architecture synthesis of main is
    signal core_io_rom         : std_logic;
    signal core_io_ext         : std_logic;
    signal core_io_data        : unsigned(7 downto 0);
-	signal core_dotclk         : std_logic;
-	signal core_phi0           : std_logic;
-	signal core_phi2           : std_logic;   
+   signal core_dotclk         : std_logic;
+   signal core_phi0           : std_logic;
+   signal core_phi2           : std_logic;   
    
    -- Hardware Expansion Port (aka Cartridge Port)
    signal cart_roml_n         : std_logic;
@@ -447,16 +447,16 @@ begin
          io_ext      => core_io_ext,      -- input
          io_data     => core_io_data,     -- input
          irq_n       => core_irq_n,       -- input: low active
-         nmi_n       => core_nmi_n,       -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
+         nmi_n       => core_nmi_n,       -- input
          nmi_ack     => open,             -- output
          romL        => core_roml,        -- output
          romH        => core_romh,        -- output
          UMAXromH    => core_umax_romh,   -- output
          IOE         => core_ioe,         -- output
          IOF         => core_iof,         -- output
-	      dotclk      => core_dotclk,      -- output
-	      phi0        => core_phi0,        -- output
-	      phi2        => core_phi2,        -- output         
+         dotclk      => core_dotclk,      -- output
+         phi0        => core_phi0,        -- output
+         phi2        => core_phi2,        -- output         
 --         freeze_key  => open,
 --         mod_key     => open,
 --         tape_play   => open,
@@ -527,7 +527,10 @@ begin
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
    --------------------------------------------------------------------------------------------------
-   -- Expansion Port (aka Cartridge Port) handling
+   -- Expansion Port (aka Cartridge Port) handling:
+   --    * MEGA65's hardware expansion port
+   --    * Simulated 1750 REU 512KB
+   --    * Simulateed cartridge using data from .crt file
    --------------------------------------------------------------------------------------------------
 
    handle_hardware_expansion_port : process(all)
@@ -602,9 +605,13 @@ begin
          cart_exrom_n      <= cart_exrom_i;
          cart_game_n       <= cart_game_i;
          
+         -- @TODO: As soon as we want to support DMA-enabled cartridges,
+         -- we need to treat the address bus as a bi-directional port
          cart_addr_en_o    <= '0';     
          cart_a_io         <= c64_ram_addr_o;         
       
+         -- Switch the data lines bi-directionally so that the CPU can also
+         -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
          if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
             cart_data_dir_o   <= '0';

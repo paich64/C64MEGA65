@@ -4,7 +4,7 @@
 -- MEGA65 main file that contains the whole machine
 --
 -- based on C64_MiSTer by the MiSTer development team
--- powered by MiSTer2MEGA65 done by sy2002 and MJoergen in 2022
+-- powered by MiSTer2MEGA65 done by sy2002 and MJoergen in 2023
 -- port done by MJoergen and sy2002 in 2022 and licensed under GPL v3
 ----------------------------------------------------------------------------------
 
