@@ -235,9 +235,9 @@ architecture synthesis of main is
    signal core_io_rom         : std_logic;
    signal core_io_ext         : std_logic;
    signal core_io_data        : unsigned(7 downto 0);
-	signal core_dotclk         : std_logic;
-	signal core_phi0           : std_logic;
-	signal core_phi2           : std_logic;   
+   signal core_dotclk         : std_logic;
+   signal core_phi0           : std_logic;
+   signal core_phi2           : std_logic;   
    
    -- Hardware Expansion Port (aka Cartridge Port)
    signal cart_roml_n         : std_logic;
@@ -253,12 +253,12 @@ architecture synthesis of main is
    
    -- RAM Expansion Unit (REU)
    signal reu_cfg             : std_logic_vector(1 downto 0);
-   signal dma_req             : std_logic;
-   signal dma_cycle           : std_logic;
-   signal dma_addr            : std_logic_vector(15 downto 0);
-   signal dma_dout            : std_logic_vector(7 downto 0);
-   signal dma_din             : unsigned(7 downto 0);
-   signal dma_we              : std_logic;
+   signal reu_dma_req         : std_logic;
+   signal reu_dma_cycle       : std_logic;
+   signal reu_dma_addr        : std_logic_vector(15 downto 0);
+   signal reu_dma_dout        : std_logic_vector(7 downto 0);
+   signal reu_dma_din         : unsigned(7 downto 0);
+   signal reu_dma_we          : std_logic;
    signal reu_irq             : std_logic;
    signal reu_iof             : std_logic;
    signal reu_oe              : std_logic;
@@ -289,9 +289,9 @@ architecture synthesis of main is
    --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";  
-   attribute MARK_DEBUG of hard_reset_n      : signal is "TRUE";
-   attribute MARK_DEBUG of hard_rst_counter  : signal is "TRUE";
-   attribute MARK_DEBUG of system_cold_start : signal is "TRUE";    
+--   attribute MARK_DEBUG of hard_reset_n      : signal is "TRUE";
+--   attribute MARK_DEBUG of hard_rst_counter  : signal is "TRUE";
+--   attribute MARK_DEBUG of system_cold_start : signal is "TRUE";    
 
    component reu
       port (
@@ -447,27 +447,27 @@ begin
          io_ext      => core_io_ext,      -- input
          io_data     => core_io_data,     -- input
          irq_n       => core_irq_n,       -- input: low active
-         nmi_n       => core_nmi_n,       -- @TODO restore_key_n: TODO: "freeze_key" handling also regarding the cartrige (see MiSTer)
+         nmi_n       => core_nmi_n,       -- input
          nmi_ack     => open,             -- output
          romL        => core_roml,        -- output
          romH        => core_romh,        -- output
          UMAXromH    => core_umax_romh,   -- output
          IOE         => core_ioe,         -- output
          IOF         => core_iof,         -- output
-	      dotclk      => core_dotclk,      -- output
-	      phi0        => core_phi0,        -- output
-	      phi2        => core_phi2,        -- output         
+         dotclk      => core_dotclk,      -- output
+         phi0        => core_phi0,        -- output
+         phi2        => core_phi2,        -- output         
 --         freeze_key  => open,
 --         mod_key     => open,
 --         tape_play   => open,
 
          -- dma access
          dma_req     => core_dma,
-         dma_cycle   => dma_cycle,
-         dma_addr    => unsigned(dma_addr),
-         dma_dout    => unsigned(dma_dout),
-         dma_din     => dma_din,
-         dma_we      => dma_we,
+         dma_cycle   => reu_dma_cycle,
+         dma_addr    => unsigned(reu_dma_addr),
+         dma_dout    => unsigned(reu_dma_dout),
+         dma_din     => reu_dma_din,
+         dma_we      => reu_dma_we,
          irq_ext_n   => not reu_irq,
 
          -- paddle interface
@@ -527,67 +527,143 @@ begin
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
    --------------------------------------------------------------------------------------------------
-   -- Expansion Port (aka Cartridge Port) handling
+   -- Expansion Port (aka Cartridge Port) handling:
+   --    * MEGA65's hardware expansion port
+   --    * Simulated 1750 REU 512KB
+   --    * Simulateed cartridge using data from .crt file
    --------------------------------------------------------------------------------------------------
 
-   -- C64 Expansion Port (aka Cartridge Port) control lines
-   -- *_en is low active else tri-state high impedance
-   -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
-   cart_ctrl_en_o    <= '0';
-   cart_ctrl_dir_o   <= '1';
-   cart_roml_io      <= cart_roml_n;
-   cart_romh_io      <= cart_romh_n;
-   cart_io1_io       <= cart_io1_n;
-   cart_io2_io       <= cart_io2_n;
-   cart_ba_io        <= '1';              -- @TODO
-   cart_rw_io        <= not c64_ram_we;
-
-   cart_reset_o      <= reset_core_n;
-   cart_phi2_o       <= core_phi2;
-   cart_dotclock_o   <= core_dotclk;
-      
-   cart_nmi_n        <= cart_nmi_i; 
-   cart_irq_n        <= cart_irq_i;       
-   cart_dma_n        <= cart_dma_i; 
-   cart_exrom_n      <= cart_exrom_i;
-   cart_game_n       <= cart_game_i;      
-
-   handle_dataio : process(all)
+   handle_hardware_expansion_port : process(all)
    begin
-      cart_data_en_o    <= '0';
-      data_from_cart    <= x"00";
-      cart_d_io         <= (others => 'Z'); 
-      if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
-         cart_data_dir_o   <= '0';
-         data_from_cart    <= cart_d_io;
-      else
-         cart_data_dir_o   <= '1';
-         if c64_ram_we='0' then
-            cart_d_io         <= c64_ram_data_i;
+      -- C64 Expansion Port (aka Cartridge Port) control lines
+      -- *_en is low active else tri-state high impedance
+      -- *_dir=1 means FPGA->Port, =0 means Port->FPGA   
+
+      -- Tristate all expansion port drivers that we can directly control
+      cart_ctrl_en_o       <= '1';
+      cart_addr_en_o       <= '1';      
+      cart_data_en_o       <= '1';
+      
+      -- Fixed direction signals: from FPGA to HW port
+      -- @TODO: As soon as we support modules that can act as busmaster, we need to become more flexible here
+      cart_ctrl_dir_o      <= '1';     -- control signals
+      cart_haddr_dir_o     <= '1';     -- CPU address bus: higher 8 bit
+      cart_laddr_dir_o     <= '1';     -- CPU address bus: lower 8 bit
+      
+      -- Default values for all signals
+      cart_a_io            <= (others => 'Z');
+      cart_d_io            <= (others => 'Z');
+      cart_roml_io         <= 'Z';
+      cart_romh_io         <= 'Z';
+      cart_io1_io          <= 'Z';
+      cart_io2_io          <= 'Z';
+      cart_ba_io           <= 'Z';
+      cart_rw_io           <= 'Z';
+      cart_reset_o         <= '1';
+      cart_phi2_o          <= '0';
+      cart_dotclock_o      <= '0';
+      cart_nmi_n           <= '1';
+      cart_irq_n           <= '1';
+      cart_dma_n           <= '1';
+      cart_exrom_n         <= '1';
+      cart_game_n          <= '1';
+      cart_data_dir_o      <= '0';     -- changes dynamically (see below)
+      data_from_cart       <= x"00";      
+      
+      -- @TODO: Get rid of these (see below)
+      cart_roml_n          <= '1';
+      cart_romh_n          <= '1';
+      cart_io1_n           <= '1'; 
+      cart_io2_n           <= '1';
+
+      -- Mode = Use hardware slot
+      if c64_exp_port_mode_i = 0 then
+
+         -- Expansion Port control signals
+         cart_ctrl_en_o    <= '0';
+         cart_roml_io      <= cart_roml_n;
+         cart_romh_io      <= cart_romh_n;
+         cart_io1_io       <= cart_io1_n;
+         cart_io2_io       <= cart_io2_n;
+         cart_ba_io        <= '1';              -- @TODO
+         cart_rw_io        <= not c64_ram_we;
+      
+         -- @TODO: These signals are for easier debugging. Consolidate with the
+         -- signals above as soon as we have a "stable enough" state
+         cart_roml_n       <= not core_roml;
+         cart_romh_n       <= not core_romh;
+         cart_io1_n        <= not core_ioe; 
+         cart_io2_n        <= not core_iof;
+      
+         cart_reset_o      <= reset_core_n;
+         cart_phi2_o       <= core_phi2;
+         cart_dotclock_o   <= core_dotclk;
+            
+         cart_nmi_n        <= cart_nmi_i; 
+         cart_irq_n        <= cart_irq_i;       
+         cart_dma_n        <= cart_dma_i; 
+         cart_exrom_n      <= cart_exrom_i;
+         cart_game_n       <= cart_game_i;
+         
+         -- @TODO: As soon as we want to support DMA-enabled cartridges,
+         -- we need to treat the address bus as a bi-directional port
+         cart_addr_en_o    <= '0';     
+         cart_a_io         <= c64_ram_addr_o;         
+      
+         -- Switch the data lines bi-directionally so that the CPU can also
+         -- write to the cartridge, e.g. for bank switching
+         cart_data_en_o       <= '0';
+         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
+            cart_data_dir_o   <= '0';
+            data_from_cart    <= cart_d_io;
          else
-            cart_d_io         <= c64_ram_data_o;
+            cart_data_dir_o   <= '1';
+            if c64_ram_we='0' then
+               cart_d_io         <= c64_ram_data_i;
+            else
+               cart_d_io         <= c64_ram_data_o;
+            end if;
          end if;
       end if;
    end process;
    
-   cart_addr_en_o    <= '0';     
-   cart_haddr_dir_o  <= '1';
-   cart_laddr_dir_o  <= '1';
-   cart_a_io         <= c64_ram_addr_o;
-   
-   core_game_n       <= cart_game_n;
-   core_exrom_n      <= cart_exrom_n;
-   core_io_rom       <= '0'; 
-   core_io_ext       <= '0';
-   core_io_data      <= x"FF";
-   core_irq_n        <= cart_irq_n;
-   core_nmi_n        <= cart_nmi_n;
-   core_dma          <= '0';          
-   cart_roml_n       <= not core_roml;
-   cart_romh_n       <= not core_romh;
-   cart_io1_n        <= not core_ioe; 
-   cart_io2_n        <= not core_iof;
- 
+   handle_cores_expansion_port_signals : process(all)
+   begin
+      core_game_n          <= '1';
+      core_exrom_n         <= '1';
+      core_io_rom          <= '0';
+      core_io_ext          <= '0';
+      core_io_data         <= x"FF";
+      core_irq_n           <= '1';
+      core_nmi_n           <= restore_key_n;
+      core_dma             <= '0';  -- @TODO: Currently we ignore the HW cartridge's DMA request
+      reu_iof              <= '0';
+
+      case c64_exp_port_mode_i is
+      
+         -- Use hardware slot
+         when 0 =>
+            core_game_n    <= cart_game_n;
+            core_exrom_n   <= cart_exrom_n;
+            core_irq_n     <= cart_irq_n;
+            core_nmi_n     <= cart_nmi_n and restore_key_n;
+            
+         -- Simulate 1750 REU 512KB
+         when 1 =>
+            core_io_ext    <= reu_oe;
+            core_io_data   <= reu_dout;
+            core_dma       <= reu_dma_req;
+            reu_iof        <= core_iof;
+            
+         -- Simulateed cartridge using data from .crt file
+         when 2 =>
+            null;
+            
+         when others =>
+            null;
+      end case;
+   end process;          
+    
    --------------------------------------------------------------------------------------------------
    -- Simulated REU
    --------------------------------------------------------------------------------------------------
@@ -600,12 +676,12 @@ begin
          clk       => clk_main_i,
          reset     => not reset_core_n,
          cfg       => reu_cfg,
-         dma_req   => dma_req,
-         dma_cycle => dma_cycle,
-         dma_addr  => dma_addr,
-         dma_dout  => dma_dout,
-         dma_din   => std_logic_vector(dma_din),
-         dma_we    => dma_we,
+         dma_req   => reu_dma_req,
+         dma_cycle => reu_dma_cycle,
+         dma_addr  => reu_dma_addr,
+         dma_dout  => reu_dma_dout,
+         dma_din   => std_logic_vector(reu_dma_din),
+         dma_we    => reu_dma_we,
          ram_cycle => reu_cycle_i,
          ram_addr  => reu_addr_o,
          ram_dout  => reu_dout_o,

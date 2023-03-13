@@ -1,3 +1,13 @@
+Development branch
+==================
+
+You are currently looking at the ROADMAP.md file in a development branch:
+
+* You need to open VERSIONS.md to find out what features are planned
+  for the next release (Version 5).
+
+* This file file shows you what is on our roadmap for *after* Version 5.
+
 Roadmap
 =======
 
@@ -11,13 +21,26 @@ Feature Roadmap
 * NTSC
 * Support two drives: 8 and 9
 * Dual SID
+* Hardware IEC port: Work with real floppy drives, printers and other serial
+  devices
+* Use the MEGA65's built-in disk drive as a C1581
+* Simulated C1581 via `*.d81` disk images
+* GCR encoded disk images (`*.g64`)
+* Improved C1541 compatibility due to real internal GCR handling of `*.d64`
+  images instead of simulated handling leads to games like "Seven Cities of
+  Gold" being able to format/create their non-standard game disks. Also highly
+  sophisticated bit nibblers (@TODO example!) are working now
+  * Existing C1541 disk images (`*.d64`) can now be formatted
+* Support `*.d64` images with error maps (filesizes 175,531 and 197,376)
+* Simulated tape drive using `*.t64` tape images
+* Directly load program files (`*.prg`)
+* You can use the Amiga mouse as a C64 mouse
 * Support autoswap via `*.lst` files
 * Support the creation of empty disk images
 * Supoprt the creation of empty config files and the migration of the config
   file from an older version to a newer version
 * Ability to "enter" image files (`*.d64`, etc.), browse them and select
   files for direct loading
-* Alternative KERNAL & Floppy Disk ROMs and fast loaders
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
@@ -35,6 +58,15 @@ robustness, performance, and stability of the whole system, we will need
 to implement certain technical improvements in the "backend", again in no
 particular order:
 
+* Research MiSTer's SID improvments from November 16 (and newer)
+* Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode
+  which exclusively uses GCR internally (c1541_direct_gcr.sv instead of
+  c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
+  from SD card.
+* Put major/minor version in the first two bytes of the config file so that
+  in case of a mismatch a warning can be issued (e.g. by directly printing it
+  into the C64's screen RAM). Needs new version of make_config.sh.
+* Clarify: Line 65 in fdc1772.v: back to 2 or work with generic?
 * Implement a remote-control mechanism via Serial/JTAG (similar to what
   already works on the MEGA65 core) that allows us to remote-control the
   C64 core so that we can for example run whole test suites remotely.

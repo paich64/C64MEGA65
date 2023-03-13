@@ -1,55 +1,34 @@
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
-Hardware compatibility release: Use the MEGA65's hardware ports for more retro
-fun! Stick cartridges into the expansion port, work with real floppy drives
-and printers using the IEC port and use the MEGA65's built-in disk drive as
-a C1581. Furthermore, use a vast array of simulated hardware with full support
-for `*.crt` cartridges, `*.d81` C1581 disk images, `*.g64` GCR encoded disk
-images and `*.t64` tape images.
+Cartridge release: Use hardware cartridges in the MEGA65's expansion port and
+enjoy simulated cartridges using `*.crt` files. And you can now use custom
+KERNALs such as JuffyDOS for the C64 and the C1541.
 
 ## New Features
 
 * More clearly arranged menu using submenus
 
-WIP Hardware cartridges via expansion port: @TODO we might not support
-all cartridge types, add constraints here: Game cartriges, real REUs, GEO
-RAMs, EasyFlash, etc. ... we need to test quite some amount of real hardware
-@TODO already known problem: M65 R3 boards have a bug: RESET, NMI and IRQ
-are output only so modules that need to drive these lines to work properly
-will not work.
+* Hardware cartridges can be used in the MEGA65's expansion port. Most game
+  cartridges ("passive" cartridges) are supported. Not supported yet are any
+  kind of "active" cartridges that act as busmaster. This includes Freezer
+  cartridges, Disk Speeders, RAM Expansion Units (REUs), etc.
+
+@TODO: Check, if we can support at least REUs and other cartridges that are
+not relying on the missing R3 signals (RESET, NMI and IRQ)
+
+@TODO: Either support Commodore MAX Machine modules (such as "Pinball
+Spectacular") or describe them as not supported.
 
 WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
 all cartridge types, add constraints here
 
-WIP Hardware IEC port: Work with real floppy drives, printers and other serial
-devices.
+WIP Ability to use custom KERNALs such as JiffyDOS for the C64 and the C1541
 
-WIP Use the MEGA65's built-in disk drive as a C1581.
-
-WIP Simulated C1581 via `*.d81` disk images. @TODO: Clarify: Line 65 in
-fdc1772.v: back to 2 or work with generic?
-
-WIP GCR encoded disk images (`*.g64`)
-
-WIP Existing C1541 disk images (`*.d64`) can now be formatted
-
-WIP Support `*.d64` images with error maps (filesizes 175,531 and 197,376)
-
-WIP Simulated tape drive using `*.t64` tape images
-
-WIP Directly load program files (`*.prg`)
-
-WIP You can use the Amiga mouse as a C64 mouse (@TODO describe exact models)
+WIP 15khz RGB + csync:
+https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500
 
 ## Improved C64 and C1541 Accuracy & Compatibility
-
-WIP ??? research MiSTer's SID improvements ???
-
-WIP Improved C1541 compatibility due to real internal GCR handling of `*.d64`
-images instead of simulated handling leads to games like "Seven Cities of
-Gold" being able to format/create their non-standard game disks. Also highly
-sophisticated bit nibblers (@TODO example!) are working now.
 
 * Improved the 6510 CPU's interrupt dispatching which results in more demos
   working flawlessly (for example "All Hallows' Eve", this fixes
@@ -101,11 +80,6 @@ WIP @TODO: Identify bugs and add them here
   core will benefit from an easier and faster workflow when it comes to
   migrating new framework features to the core.
 
-WIP Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode
-which exclusively uses GCR internally (c1541_direct_gcr.sv instead of
-c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
-from SD card.
-
 WIP HyperRAM device support to QNICE: @TODO Describe where this is used;
 for example for the `*.crt` support as these files can become very large
 
@@ -113,10 +87,6 @@ WIP Refactor audio clock, video clock, (<=== already done | @TODO ==>)
 asynchronous resets and other things around clk.vhd to reduce
 warnings upon `report_cdc` and to make sure the whole clock architecture is
 cleaner. (Also need to double-check M2M itself.)
-
-WIP Put major/minor version in the first two bytes of the config file so that
-in case of a mismatch a warning can be issued (e.g. by directly printing it
-into the C64's screen RAM). Needs new version of make_config.sh.
 
 Version 4 - November 25, 2022
 =============================
