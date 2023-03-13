@@ -136,7 +136,42 @@ port (
    hr_burstcount_o         : out std_logic_vector(7 downto 0)  := (others => '0');
    hr_readdata_i           : in  std_logic_vector(15 downto 0) := (others => '0');
    hr_readdatavalid_i      : in  std_logic;
-   hr_waitrequest_i        : in  std_logic
+   hr_waitrequest_i        : in  std_logic;
+   
+   --------------------------------------------------------------------
+   -- C64 specific ports that are not supported by the M2M framework
+   --------------------------------------------------------------------
+   
+   -- C64 Expansion Port (aka Cartridge Port) control lines
+   -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+   cart_ctrl_en_o          : out std_logic;
+   cart_ctrl_dir_o         : out std_logic;
+   cart_addr_en_o          : out std_logic;     
+   cart_haddr_dir_o        : out std_logic;
+   cart_laddr_dir_o        : out std_logic;
+   cart_data_en_o          : out std_logic;
+   cart_data_dir_o         : out std_logic;
+
+   -- C64 Expansion Port (aka Cartridge Port)
+   cart_reset_o            : out std_logic;
+   cart_phi2_o             : out std_logic;
+   cart_dotclock_o         : out std_logic;
+   
+   cart_nmi_i              : in std_logic;
+   cart_irq_i              : in std_logic;
+   cart_dma_i              : in std_logic;
+   cart_exrom_i            : in std_logic;
+   cart_game_i             : in std_logic;
+   
+   cart_ba_io              : inout std_logic;
+   cart_rw_io              : inout std_logic;
+   cart_roml_io            : inout std_logic;
+   cart_romh_io            : inout std_logic;
+   cart_io1_io             : inout std_logic;
+   cart_io2_io             : inout std_logic;
+
+   cart_d_io               : inout unsigned(7 downto 0);
+   cart_a_io               : inout unsigned(15 downto 0)
 );
 end entity MEGA65_Core;
 
@@ -157,6 +192,7 @@ signal main_rst               : std_logic;
 signal core_speed             : unsigned(1 downto 0);    -- see clock.vhd for details
 signal c64_ntsc               : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
 signal c64_clock_speed        : natural;                 -- clock speed depending on PAL/NTSC
+signal c64_exp_port_mode      : natural range 0 to 2;    -- Expansion Port: Use hardware, simulate REU, simulate cartridge (.crt file)
 
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
@@ -208,10 +244,12 @@ signal main_errata_waitrequest   : std_logic;
 ---------------------------------------------------------------------------------------------
 
 -- OSM selections within qnice_osm_control_i
-constant C_MENU_FLIP_JOYS     : natural := 12;
-constant C_MENU_8580          : natural := 17;
-constant C_MENU_IMPROVE_AUDIO : natural := 18;
-constant C_MENU_REU           : natural := 21;
+constant C_MENU_EXP_PORT_HW   : natural := 6;
+constant C_MENU_EXP_PORT_REU  : natural := 7;
+constant C_MENU_EXP_PORT_CRT  : natural := 8;
+constant C_MENU_FLIP_JOYS     : natural := 13;
+constant C_MENU_8580          : natural := 18;
+constant C_MENU_IMPROVE_AUDIO : natural := 19;
 constant C_MENU_8521          : natural := 22;
 constant C_MENU_HDMI_16_9_50  : natural := 29;
 constant C_MENU_HDMI_16_9_60  : natural := 30;
@@ -256,7 +294,7 @@ begin
    main_rst_o <= main_rst;      
 
    ---------------------------------------------------------------------------------------------
-   -- Global switches for core speed and for switching between PAL and NTSC
+   -- Global switches for the core
    ---------------------------------------------------------------------------------------------
 
    c64_ntsc          <= '0'; -- @TODO: For now, we hardcode PAL mode
@@ -266,6 +304,14 @@ begin
 
    -- needs to be in main clock domain
    c64_clock_speed   <= CORE_CLK_SPEED;
+   
+   -- Mode selection for Expansion Port (aka Cartridge Port):
+   -- 0: Use the MEGA65's actual hardware slot
+   -- 1: Simulate a 1750 REU with 512KB
+   -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file)    
+   c64_exp_port_mode <= 1 when main_osm_control_i(C_MENU_EXP_PORT_REU)  else
+                        2 when main_osm_control_i(C_MENU_EXP_PORT_CRT)  else
+                        0;
 
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
@@ -351,15 +397,51 @@ begin
          c64_qnice_ce_i       => qnice_c64_qnice_ce,
          c64_qnice_we_i       => qnice_c64_qnice_we,
 
+         -- Mode selection for Expansion Port (aka Cartridge Port):
+         -- 0: Use the MEGA65's actual hardware slot
+         -- 1: Simulate a 1750 REU with 512KB
+         -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file) 
+         c64_exp_port_mode_i  => c64_exp_port_mode,
+
          -- RAM Expansion Unit (REU)
-         reu_cfg_i            => main_osm_control_i(C_MENU_REU),
          ext_cycle_o          => main_ext_cycle,
          reu_cycle_i          => main_reu_cycle,
          reu_addr_o           => main_reu_addr,
          reu_dout_o           => main_reu_dout,
          reu_din_i            => main_reu_din,
          reu_we_o             => main_reu_we,
-         reu_cs_o             => main_reu_cs                           
+         reu_cs_o             => main_reu_cs,
+         
+         -- C64 Expansion Port (aka Cartridge Port) control lines
+         -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+         cart_ctrl_en_o       => cart_ctrl_en_o,
+         cart_ctrl_dir_o      => cart_ctrl_dir_o,
+         cart_addr_en_o       => cart_addr_en_o,
+         cart_haddr_dir_o     => cart_haddr_dir_o,
+         cart_laddr_dir_o     => cart_laddr_dir_o,
+         cart_data_en_o       => cart_data_en_o,
+         cart_data_dir_o      => cart_data_dir_o,
+             
+         -- C64 Expansion Port (aka Cartridge Port)
+         cart_reset_o         => cart_reset_o,
+         cart_phi2_o          => cart_phi2_o,
+         cart_dotclock_o      => cart_dotclock_o,
+         
+         cart_nmi_i           => cart_nmi_i,
+         cart_irq_i           => cart_irq_i,
+         cart_dma_i           => cart_dma_i,
+         cart_exrom_i         => cart_exrom_i,         
+         cart_game_i          => cart_game_i,     
+
+         cart_ba_io           => cart_ba_io,
+         cart_rw_io           => cart_rw_io,
+         cart_roml_io         => cart_roml_io,
+         cart_romh_io         => cart_romh_io,
+         cart_io1_io          => cart_io1_io,
+         cart_io2_io          => cart_io2_io,
+     
+         cart_d_io            => cart_d_io,
+         cart_a_io            => cart_a_io
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------

@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A9]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A9]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A9]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A9]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -365,8 +365,9 @@ constant OPTM_ITEMS        : string :=
    "\n"                       &
    " Expansion Port\n"        &
    "\n"                       &
-   " Hardware\n"              &
-   " Simulation:\n"           &
+   " Use hardware slot\n"     &
+   " Sim. 1750 REU 512KB\n"   &
+   " Simulated cartridge:\n"  &
    " <Load Cartridge>\n"      &
    "\n"                       &
    " C64 Configuration\n"     &
@@ -382,7 +383,6 @@ constant OPTM_ITEMS        : string :=
    "\n"                       &
    " Back to main menu\n"     &
    
-   " REU: 1750 with 512KB\n"  &
    " CIA: Use 8521 (C64C)\n"  &
    "\n"                       &
    " Display Settings\n"      &
@@ -437,6 +437,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_EXP_PORT      + OPTM_G_STDSEL,
                                              OPTM_G_EXP_PORT,
+                                             OPTM_G_EXP_PORT,
                                              OPTM_G_MOUNT_CRT     + OPTM_G_SINGLESEL,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
@@ -452,7 +453,6 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
                                                                                           
-                                             OPTM_G_REU           + OPTM_G_SINGLESEL,
                                              OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
