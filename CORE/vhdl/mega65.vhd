@@ -217,6 +217,18 @@ signal main_map_readdata      : std_logic_vector(15 downto 0);
 signal main_map_readdatavalid : std_logic;
 signal main_map_waitrequest   : std_logic;
 
+-- TBD: Signals from the framework to the cartridge.v module
+signal main_cartridge_loading    : std_logic;
+signal main_cartridge_id         : std_logic_vector(15 downto 0);
+signal main_cartridge_exrom      : std_logic_vector( 7 downto 0);
+signal main_cartridge_game       : std_logic_vector( 7 downto 0);
+signal main_cartridge_bank_laddr : std_logic_vector(15 downto 0);
+signal main_cartridge_bank_size  : std_logic_vector(15 downto 0);
+signal main_cartridge_bank_num   : std_logic_vector(15 downto 0);
+signal main_cartridge_bank_type  : std_logic_vector( 7 downto 0);
+signal main_cartridge_bank_raddr : std_logic_vector(24 downto 0);
+signal main_cartridge_bank_wr    : std_logic;
+
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -389,6 +401,18 @@ begin
          reu_din_i            => main_reu_din,
          reu_we_o             => main_reu_we,
          reu_cs_o             => main_reu_cs,
+
+         -- Signals from the framework to the cartridge.v module
+         cartridge_loading_i    => main_cartridge_loading,
+         cartridge_id_i         => main_cartridge_id,
+         cartridge_exrom_i      => main_cartridge_exrom,
+         cartridge_game_i       => main_cartridge_game,
+         cartridge_bank_laddr_i => main_cartridge_bank_laddr,
+         cartridge_bank_size_i  => main_cartridge_bank_size,
+         cartridge_bank_num_i   => main_cartridge_bank_num,
+         cartridge_bank_type_i  => main_cartridge_bank_type,
+         cartridge_bank_raddr_i => main_cartridge_bank_raddr,
+         cartridge_bank_wr_i    => main_cartridge_bank_wr,
          
          -- C64 Expansion Port (aka Cartridge Port) control lines
          -- *_dir=1 means FPGA->Port, =0 means Port->FPGA

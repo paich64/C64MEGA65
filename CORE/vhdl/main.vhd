@@ -107,6 +107,18 @@ entity main is
       reu_din_i               : in  std_logic_vector(7 downto 0);
       reu_we_o                : out std_logic;
       reu_cs_o                : out std_logic;
+
+      -- Signals from the framework to the cartridge.v module
+      cartridge_loading_i     : in  std_logic;
+      cartridge_id_i          : in  std_logic_vector(15 downto 0);
+      cartridge_exrom_i       : in  std_logic_vector( 7 downto 0);
+      cartridge_game_i        : in  std_logic_vector( 7 downto 0);
+      cartridge_bank_laddr_i  : in  std_logic_vector(15 downto 0);
+      cartridge_bank_size_i   : in  std_logic_vector(15 downto 0);
+      cartridge_bank_num_i    : in  std_logic_vector(15 downto 0);
+      cartridge_bank_type_i   : in  std_logic_vector( 7 downto 0);
+      cartridge_bank_raddr_i  : in  std_logic_vector(24 downto 0);
+      cartridge_bank_wr_i     : in  std_logic;
       
       -- C64 Expansion Port (aka Cartridge Port) control lines
       -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
@@ -227,6 +239,7 @@ architecture synthesis of main is
    signal core_ioe            : std_logic;
    signal core_iof            : std_logic;
    signal core_nmi_n          : std_logic;
+   signal core_nmi_ack        : std_logic;
    signal core_irq_n          : std_logic;
    signal core_dma            : std_logic;
    signal core_exrom_n        : std_logic;
@@ -263,6 +276,25 @@ architecture synthesis of main is
    signal reu_iof             : std_logic;
    signal reu_oe              : std_logic;
    signal reu_dout            : unsigned(7 downto 0);
+
+   signal reu_ram_addr        : std_logic_vector(24 downto 0);
+   signal reu_ram_dout        : std_logic_vector(7 downto 0);
+   signal reu_ram_we          : std_logic;
+   signal reu_ram_cs          : std_logic;
+
+   -- Signals from the cartridge.v module (software defined cartridges)
+   signal cart_addr           : std_logic_vector(24 downto 0);
+   signal cart_dout           : std_logic_vector(7 downto 0);
+   signal cart_we             : std_logic;
+   signal cart_cs             : std_logic;
+   signal cart_io_rom         : std_logic;
+   signal cart_oe             : std_logic;
+   signal cart_io_ext         : std_logic;
+   signal cart_io_data        : std_logic_vector(7 downto 0);
+   signal cart_nmi            : std_logic;
+   signal cart_exrom          : std_logic;
+   signal cart_game           : std_logic;
+
    
    
    signal dbg_joybtn          : std_logic;
@@ -298,18 +330,21 @@ architecture synthesis of main is
          clk         : in  std_logic;
          reset       : in  std_logic;
          cfg         : in  std_logic_vector(1 downto 0);
+         -- Connect to the DMA controller of the C64
          dma_req     : out std_logic;
          dma_cycle   : in  std_logic;
          dma_addr    : out std_logic_vector(15 downto 0);
          dma_dout    : out std_logic_vector(7 downto 0);
          dma_din     : in  std_logic_vector(7 downto 0);
          dma_we      : out std_logic;
+         -- Connect to the HyperRAM
          ram_cycle   : in  std_logic;
          ram_addr    : out std_logic_vector(24 downto 0);
          ram_dout    : out std_logic_vector(7 downto 0);
          ram_din     : in  std_logic_vector(7 downto 0);
          ram_we      : out std_logic;
          ram_cs      : out std_logic;
+         -- CPU register interface to the REU controller
          cpu_addr    : in  unsigned(15 downto 0);
          cpu_dout    : in  unsigned(7 downto 0);
          cpu_din     : out unsigned(7 downto 0);
@@ -318,6 +353,44 @@ architecture synthesis of main is
          irq         : out std_logic
       );
    end component reu;
+
+   component cartridge
+      port (
+         clk32           : in  std_logic;
+         reset_n         : in  std_logic;
+         cart_loading    : in  std_logic;
+         cart_id         : in  std_logic_vector(15 downto 0);
+         cart_exrom      : in  std_logic_vector( 7 downto 0);
+         cart_game       : in  std_logic_vector( 7 downto 0);
+         cart_bank_laddr : in  std_logic_vector(15 downto 0);
+         cart_bank_size  : in  std_logic_vector(15 downto 0);
+         cart_bank_num   : in  std_logic_vector(15 downto 0);
+         cart_bank_type  : in  std_logic_vector( 7 downto 0);
+         cart_bank_raddr : in  std_logic_vector(24 downto 0);
+         cart_bank_wr    : in  std_logic;
+         exrom           : out std_logic;
+         game            : out std_logic;
+         romL            : in  std_logic;
+         romH            : in  std_logic;
+         UMAXromH        : in  std_logic;
+         IOE             : in  std_logic;
+         IOF             : in  std_logic;
+         mem_write       : in  std_logic;
+         mem_ce          : in  std_logic;
+         mem_ce_out      : out std_logic;
+         mem_write_out   : out std_logic;
+         IO_rom          : out std_logic;
+         IO_rd           : out std_logic;
+         IO_data         : out std_logic_vector( 7 downto 0);
+         addr_in         : in  std_logic_vector(15 downto 0);
+         data_in         : in  std_logic_vector( 7 downto 0);
+         addr_out        : out std_logic_vector(24 downto 0);
+         freeze_key      : in  std_logic;
+         mod_key         : in  std_logic;
+         nmi             : out std_logic;
+         nmi_ack         : in  std_logic
+      );
+   end component cartridge;
 
 begin
    -- @TODO DEBUG/DELIT
@@ -448,7 +521,7 @@ begin
          io_data     => core_io_data,     -- input
          irq_n       => core_irq_n,       -- input: low active
          nmi_n       => core_nmi_n,       -- input
-         nmi_ack     => open,             -- output
+         nmi_ack     => core_nmi_ack,     -- output
          romL        => core_roml,        -- output
          romH        => core_romh,        -- output
          UMAXromH    => core_umax_romh,   -- output
@@ -683,11 +756,11 @@ begin
          dma_din   => std_logic_vector(reu_dma_din),
          dma_we    => reu_dma_we,
          ram_cycle => reu_cycle_i,
-         ram_addr  => reu_addr_o,
-         ram_dout  => reu_dout_o,
+         ram_addr  => reu_ram_addr,
+         ram_dout  => reu_ram_dout,
          ram_din   => reu_din_i,
-         ram_we    => reu_we_o,
-         ram_cs    => reu_cs_o,
+         ram_we    => reu_ram_we,
+         ram_cs    => reu_ram_cs,
          cpu_addr  => c64_ram_addr_o,
          cpu_dout  => c64_ram_data_o,
          cpu_din   => reu_dout,
@@ -696,7 +769,51 @@ begin
          irq       => reu_irq
       ); -- i_reu
 
+   -- TBD: Is it correct to use ext_cycle_o, or should we use reu_cycle_i instead?
+   reu_addr_o <= reu_ram_addr when ext_cycle_o = '1' else cart_addr;
+   reu_cs_o   <= reu_ram_cs   when ext_cycle_o = '1' else cart_cs;
+   reu_we_o   <= reu_ram_we   when ext_cycle_o = '1' else cart_we;
+   reu_dout_o <= reu_ram_dout when ext_cycle_o = '1' else std_logic_vector(c64_ram_data_o);
+
    reu_oe <= reu_iof;
+
+   i_cartridge : component cartridge
+      port map (
+         clk32           => clk_main_i,                        -- input
+         reset_n         => reset_core_n,                      -- input
+         cart_loading    => cartridge_loading_i,               -- input
+         cart_id         => cartridge_id_i,                    -- input
+         cart_exrom      => cartridge_exrom_i,                 -- input
+         cart_game       => cartridge_game_i,                  -- input
+         cart_bank_laddr => cartridge_bank_laddr_i,            -- input
+         cart_bank_size  => cartridge_bank_size_i,             -- input
+         cart_bank_num   => cartridge_bank_num_i,              -- input
+         cart_bank_type  => cartridge_bank_type_i,             -- input
+         cart_bank_raddr => cartridge_bank_raddr_i,            -- input
+         cart_bank_wr    => cartridge_bank_wr_i,               -- input
+         exrom           => cart_exrom,                        -- output
+         game            => cart_game,                         -- output
+         romL            => core_roml,                         -- input
+         romH            => core_romh,                         -- input
+         UMAXromH        => core_umax_romh,                    -- input
+         IOE             => core_ioe,                          -- input
+         IOF             => core_iof,                          -- input
+         mem_write       => c64_ram_we,                        -- input
+         mem_ce          => c64_ram_ce,                        -- input
+         mem_ce_out      => cart_cs,                           -- output
+         mem_write_out   => cart_we,                           -- output
+         IO_rom          => cart_io_rom,                       -- output
+         IO_rd           => cart_oe,                           -- output
+         IO_data         => cart_io_data,                      -- output
+         addr_in         => std_logic_vector(c64_ram_addr_o),  -- input
+         data_in         => std_logic_vector(c64_ram_data_o),  -- input
+         addr_out        => cart_addr,                         -- output
+         freeze_key      => not restore_key_n,                 -- input
+         mod_key         => '0',                               -- input  (TBD)
+         nmi             => cart_nmi,                          -- output (TBD: inverted of cart_nmi_n)
+         nmi_ack         => core_nmi_ack                       -- input
+      ); -- i_cartridge
+
 
    --------------------------------------------------------------------------------------------------
    -- Generate video output for the M2M framework
