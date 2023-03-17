@@ -91,8 +91,10 @@ that you can save your game states or your work in GEOS.
   important fact
   [here](https://github.com/MJoergen/C64MEGA65#512-kb-ram-expansion-unit-1750-reu).
 
-* Many modern games and demos are mainly tested on the C64C, so try to run the
-  game or demo using the setting "CIA: Use 8521 (C64C)".
+* Most demos work best when you use the original CIA, so we recommend to switch-off
+  "CIA: Use 8521 (C64C)" by default. But some games and demos need the new 8521 CIA.
+  So from time to time the only thing you can to is to experiment a bit with the
+  settings.
 
 * Try to run with deactivated "HDMI: Flicker-free", but don't forget to
   reactivate this afterwards, because your experience is 10x better with
