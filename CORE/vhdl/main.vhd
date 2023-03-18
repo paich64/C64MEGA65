@@ -283,17 +283,19 @@ architecture synthesis of main is
    signal reu_ram_cs          : std_logic;
 
    -- Signals from the cartridge.v module (software defined cartridges)
-   signal cart_addr           : std_logic_vector(24 downto 0);
-   signal cart_dout           : std_logic_vector(7 downto 0);
-   signal cart_we             : std_logic;
-   signal cart_cs             : std_logic;
-   signal cart_io_rom         : std_logic;
-   signal cart_oe             : std_logic;
-   signal cart_io_ext         : std_logic;
-   signal cart_io_data        : std_logic_vector(7 downto 0);
-   signal cart_nmi            : std_logic;
-   signal cart_exrom          : std_logic;
-   signal cart_game           : std_logic;
+   signal crt_addr            : std_logic_vector(24 downto 0);
+   signal crt_dout            : std_logic_vector(7 downto 0);
+   signal crt_we              : std_logic;
+   signal crt_cs              : std_logic;
+   signal crt_io_rom          : std_logic;
+   signal crt_oe              : std_logic;
+   signal crt_io_ext          : std_logic;
+   signal crt_io_data         : std_logic_vector(7 downto 0);
+   signal crt_nmi             : std_logic;
+   signal crt_exrom           : std_logic;
+   signal crt_game            : std_logic;
+   signal crt_bank_lo         : std_logic_vector(6 downto 0);
+   signal crt_bank_hi         : std_logic_vector(6 downto 0);
 
    
    
@@ -385,6 +387,8 @@ architecture synthesis of main is
          addr_in         : in  std_logic_vector(15 downto 0);
          data_in         : in  std_logic_vector( 7 downto 0);
          addr_out        : out std_logic_vector(24 downto 0);
+         bank_lo         : out std_logic_vector( 6 downto 0);
+         bank_hi         : out std_logic_vector( 6 downto 0);
          freeze_key      : in  std_logic;
          mod_key         : in  std_logic;
          nmi             : out std_logic;
@@ -522,11 +526,11 @@ begin
          irq_n       => core_irq_n,       -- input: low active
          nmi_n       => core_nmi_n,       -- input
          nmi_ack     => core_nmi_ack,     -- output
-         romL        => core_roml,        -- output
-         romH        => core_romh,        -- output
+         romL        => core_roml,        -- output. CPU access to 0x8000-0x9FFF
+         romH        => core_romh,        -- output. CPU access to 0xA000-0xBFFF or 0xE000-0xFFFF (ultimax)
          UMAXromH    => core_umax_romh,   -- output
-         IOE         => core_ioe,         -- output
-         IOF         => core_iof,         -- output
+         IOE         => core_ioe,         -- output. aka IO1. CPU access to 0xDExx
+         IOF         => core_iof,         -- output. aka IO2. CPU access to 0xDFxx
          dotclk      => core_dotclk,      -- output
          phi0        => core_phi0,        -- output
          phi2        => core_phi2,        -- output         
@@ -728,9 +732,13 @@ begin
             core_dma       <= reu_dma_req;
             reu_iof        <= core_iof;
             
-         -- Simulateed cartridge using data from .crt file
+         -- Simulated cartridge using data from .crt file
          when 2 =>
-            null;
+            core_io_rom    <= crt_io_rom;
+            core_io_ext    <= crt_io_ext;
+            core_io_data   <= unsigned(crt_io_data);
+            core_game_n    <= crt_game;
+            core_exrom_n   <= crt_exrom;
             
          when others =>
             null;
@@ -770,9 +778,9 @@ begin
       ); -- i_reu
 
    -- TBD: Is it correct to use ext_cycle_o, or should we use reu_cycle_i instead?
-   reu_addr_o <= reu_ram_addr when ext_cycle_o = '1' else cart_addr;
-   reu_cs_o   <= reu_ram_cs   when ext_cycle_o = '1' else cart_cs;
-   reu_we_o   <= reu_ram_we   when ext_cycle_o = '1' else cart_we;
+   reu_addr_o <= reu_ram_addr when ext_cycle_o = '1' else crt_addr;
+   reu_cs_o   <= reu_ram_cs   when ext_cycle_o = '1' else crt_cs;
+   reu_we_o   <= reu_ram_we   when ext_cycle_o = '1' else crt_we;
    reu_dout_o <= reu_ram_dout when ext_cycle_o = '1' else std_logic_vector(c64_ram_data_o);
 
    reu_oe <= reu_iof;
@@ -791,8 +799,8 @@ begin
          cart_bank_type  => cartridge_bank_type_i,             -- input
          cart_bank_raddr => cartridge_bank_raddr_i,            -- input
          cart_bank_wr    => cartridge_bank_wr_i,               -- input
-         exrom           => cart_exrom,                        -- output
-         game            => cart_game,                         -- output
+         exrom           => crt_exrom,                         -- output
+         game            => crt_game,                          -- output
          romL            => core_roml,                         -- input
          romH            => core_romh,                         -- input
          UMAXromH        => core_umax_romh,                    -- input
@@ -800,17 +808,19 @@ begin
          IOF             => core_iof,                          -- input
          mem_write       => c64_ram_we,                        -- input
          mem_ce          => c64_ram_ce,                        -- input
-         mem_ce_out      => cart_cs,                           -- output
-         mem_write_out   => cart_we,                           -- output
-         IO_rom          => cart_io_rom,                       -- output
-         IO_rd           => cart_oe,                           -- output
-         IO_data         => cart_io_data,                      -- output
+         mem_ce_out      => crt_cs,                            -- output
+         mem_write_out   => crt_we,                            -- output
+         IO_rom          => crt_io_rom,                        -- output
+         IO_rd           => crt_oe,                            -- output
+         IO_data         => crt_io_data,                       -- output
          addr_in         => std_logic_vector(c64_ram_addr_o),  -- input
          data_in         => std_logic_vector(c64_ram_data_o),  -- input
-         addr_out        => cart_addr,                         -- output
+         addr_out        => crt_addr,                          -- output
+         bank_lo         => crt_bank_lo,                       -- output
+         bank_hi         => crt_bank_hi,                       -- output
          freeze_key      => not restore_key_n,                 -- input
          mod_key         => '0',                               -- input  (TBD)
-         nmi             => cart_nmi,                          -- output (TBD: inverted of cart_nmi_n)
+         nmi             => crt_nmi,                           -- output (TBD: inverted of cart_nmi_n)
          nmi_ack         => core_nmi_ack                       -- input
       ); -- i_cartridge
 

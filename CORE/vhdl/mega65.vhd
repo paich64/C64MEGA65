@@ -197,6 +197,9 @@ signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bu
 signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data out
 signal main_ram_we            : std_logic;                     -- C64 RAM write enable
 signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data in
+signal main_ram_data          : std_logic_vector(7 downto 0);
+signal main_crt_lo_ram_data   : std_logic_vector(7 downto 0);
+signal main_crt_hi_ram_data   : std_logic_vector(7 downto 0);
 
 -- RAM Expansion Unit
 signal main_ext_cycle         : std_logic;
@@ -541,7 +544,7 @@ begin
          address_a         => std_logic_vector(main_ram_addr),
          data_a            => std_logic_vector(main_ram_data_from_c64),
          wren_a            => main_ram_we,
-         q_a               => main_ram_data_to_c64,
+         q_a               => main_ram_data,
 
          -- QNICE
          clock_b           => qnice_clk_i,
@@ -569,6 +572,35 @@ begin
          wren_a            => qnice_c64_mount_buf_ram_we,
          q_a               => qnice_c64_mount_buf_ram_data
       ); -- mount_buf_ram
+
+   -- Software cartridge (CRT) RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
+   -- as well as QNICE can access it
+   crt_lo_ram : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH        => 13,         -- 8 kB
+         DATA_WIDTH        => 8,
+         FALLING_A         => false,      -- C64 expects read/write to happen at the rising clock edge
+         FALLING_B         => true        -- QNICE expects read/write to happen at the falling clock edge
+      )
+      port map (
+         -- C64 MiSTer core
+         clock_a           => main_clk,
+         address_a         => std_logic_vector(main_ram_addr(12 downto 0)),
+         data_a            => (others => '0'),
+         wren_a            => '0',
+         q_a               => main_crt_lo_ram_data,
+
+         -- Not used
+         clock_b           => '0',
+         address_b         => (others => '0'),
+         data_b            => (others => '0'),
+         wren_b            => '0',
+         q_b               => open
+      ); -- crt_lo_ram
+
+   main_ram_data_to_c64 <= main_crt_lo_ram_data when cart_roml_io = '0' else
+                           main_crt_hi_ram_data when cart_romh_io = '0' else
+                           main_ram_data;
 
    -- RAM used by the REU inside i_main:
    -- Consists of a three-stage pipeline:
