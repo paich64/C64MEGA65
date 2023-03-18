@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A11]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A11]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A11]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A11]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -415,15 +415,14 @@ constant OPTM_G_MOUNT_CRT     : integer := 4;
 constant OPTM_G_FLIP_JOYS     : integer := 5;
 constant OPTM_G_SID           : integer := 6;
 constant OPTM_G_IMPROVE_AUDIO : integer := 7;
-constant OPTM_G_REU           : integer := 8;
-constant OPTM_G_CIA_8521      : integer := 9;
-constant OPTM_G_HDMI_MODES    : integer := 10;
-constant OPTM_G_CRT_EMULATION : integer := 11;
-constant OPTM_G_HDMI_ZOOM     : integer := 12;
-constant OPTM_G_HDMI_FF       : integer := 13;
-constant OPTM_G_HDMI_DVI      : integer := 14;
-constant OPTM_G_VGA_RETRO     : integer := 15;
-constant OPTM_G_ABOUT_HELP    : integer := 16;
+constant OPTM_G_CIA_8521      : integer := 8;
+constant OPTM_G_HDMI_MODES    : integer := 9;
+constant OPTM_G_CRT_EMULATION : integer := 10;
+constant OPTM_G_HDMI_ZOOM     : integer := 11;
+constant OPTM_G_HDMI_FF       : integer := 12;
+constant OPTM_G_HDMI_DVI      : integer := 13;
+constant OPTM_G_VGA_RETRO     : integer := 14;
+constant OPTM_G_ABOUT_HELP    : integer := 15;
 
 -- !!! DO NOT TOUCH !!!
 constant OPTM_GTC          : natural := 16;

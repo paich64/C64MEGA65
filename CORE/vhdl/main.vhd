@@ -361,6 +361,9 @@ begin
       end if;
    end process;
    
+   -- Ensure that the cpu_data_in process provides a potential cartridge's ROM to the CPU so that we can
+   -- start a cartridge directly upon power on (aka "cold start"). The complex reset mechanisms in the
+   -- system create two hard_reset_n signals directly after power on, so we need to compensate for that.
    handle_cold_start : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
@@ -386,7 +389,7 @@ begin
          c64_ram_data <= x"00";
       
       -- Access the hardware cartridge
-      elsif cart_roml_n = '0' or cart_romh_n = '0' then
+      elsif cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1' then
          c64_ram_data <= data_from_cart;
       
       -- Standard access to the C64's RAM
@@ -613,7 +616,7 @@ begin
          -- Switch the data lines bi-directionally so that the CPU can also
          -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
-         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
+         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1') then
             cart_data_dir_o   <= '0';
             data_from_cart    <= cart_d_io;
          else

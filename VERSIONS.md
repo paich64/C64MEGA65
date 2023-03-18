@@ -62,6 +62,7 @@ monitor which might lead to more HDMI compatibility in general. Research path:
 Use an FPGA board with HDMI input, to capture the data from both the MEGA65
 (has no sound) and the laptop (has sound), to compare them. Might very well
 help to fix https://github.com/MJoergen/C64MEGA65/issues/4
+And this: https://github.com/MJoergen/C64MEGA65/issues/13
 
 WIP Eliminate HDMI Flicker-free "~20min period artefact" by manual clock
 frequency tuning. Investigate dynamic PLL adjustment/autotune in conjunction
@@ -70,7 +71,9 @@ to achieve flicker-free without the need of slowing down by 0.25%)
 
 ## Bugfixes
 
-WIP @TODO: Identify bugs and add them here
+* Fixed a bug in the REU simulation that affected some owners of the newest
+  MEGA65 batches who have a so called "Revision D HyperRAM". One effect of the
+  bug was that these users were not able to play Sonic the Hedgehog.
 
 ## Under the Hood
 

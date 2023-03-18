@@ -1,3 +1,7 @@
+@TODO: Add description for cartridges, including what module types are
+supported and link to the FAQs for troubleshooting. Also Describe the
+short/long resets.
+
 Commodore 64 for MEGA65
 =======================
 
