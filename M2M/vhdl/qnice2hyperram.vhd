@@ -23,8 +23,8 @@ entity qnice2hyperram is
       s_qnice_address_i     : in  std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
       s_qnice_cs_i          : in  std_logic;
       s_qnice_write_i       : in  std_logic;
-      s_qnice_writedata_i   : in  std_logic_vector(7 downto 0);
-      s_qnice_readdata_o    : out std_logic_vector(7 downto 0);
+      s_qnice_writedata_i   : in  std_logic_vector(15 downto 0);
+      s_qnice_readdata_o    : out std_logic_vector(15 downto 0);
 
       -- Connect to HyperRAM (via avm_fifo)
       -- This is a master interface
@@ -43,7 +43,6 @@ end entity qnice2hyperram;
 architecture synthesis of qnice2hyperram is
 
    signal reading               : std_logic;
-   signal msb                   : std_logic;
    signal m_avm_readdatavalid_d : std_logic;
 
    attribute mark_debug : string;
@@ -63,7 +62,6 @@ architecture synthesis of qnice2hyperram is
    attribute mark_debug of m_avm_readdatavalid_i : signal is "true";
    attribute mark_debug of m_avm_waitrequest_i   : signal is "true";
    attribute mark_debug of reading               : signal is "true";
-   attribute mark_debug of msb                   : signal is "true";
    attribute mark_debug of m_avm_readdatavalid_d : signal is "true";
 
 begin
@@ -83,25 +81,16 @@ begin
          if s_qnice_cs_i = '1' and s_qnice_wait_o = '0' and m_avm_readdatavalid_d = '0' then
             m_avm_write_o      <= s_qnice_write_i;
             m_avm_read_o       <= not s_qnice_write_i;
-            m_avm_address_o    <= to_stdlogicvector(to_integer(s_qnice_address_i)/2 + to_integer(G_BASE_ADDRESS), 32);
-            m_avm_writedata_o  <= s_qnice_writedata_i & s_qnice_writedata_i;
-            if s_qnice_address_i(0) = '0' then
-               m_avm_byteenable_o <= "01";
-            else
-               m_avm_byteenable_o <= "10";
-            end if;
+            m_avm_address_o    <= to_stdlogicvector(to_integer(s_qnice_address_i) + to_integer(G_BASE_ADDRESS), 32);
+            m_avm_writedata_o  <= s_qnice_writedata_i;
+            m_avm_byteenable_o <= "11";
             m_avm_burstcount_o <= X"01";
 
             reading <= not s_qnice_write_i;
-            msb     <= s_qnice_address_i(0);
          end if;
 
          if m_avm_readdatavalid_i = '1' then
-            if msb = '0' then
-               s_qnice_readdata_o <= m_avm_readdata_i(7 downto 0);
-            else
-               s_qnice_readdata_o <= m_avm_readdata_i(15 downto 8);
-            end if;
+            s_qnice_readdata_o <= m_avm_readdata_i;
             reading       <= '0';
          end if;
 
