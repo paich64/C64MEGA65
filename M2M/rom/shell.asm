@@ -143,6 +143,310 @@ START_CONNECT   RSUB    WAIT333MS, 1
                 OR      M2M$CSR_KBD_JOY, @R0
 
                 ; ------------------------------------------------------------
+                ; DEV-SUPPORT: QND CART LOADER
+                ; ------------------------------------------------------------
+
+                ; skip the code of the debug functions: initialize the
+                ; debug system and start the main loop
+                RBRA    DBG_LOADCART, 1
+
+                ; backup main screen coordinate variables
+BACKUP_COORDS   SYSCALL(enter, 1)
+                MOVE    SCR$OSM_MEM, R8
+                MOVE    SCR$OSM_M_BCKUP, R9
+                MOVE    4, R10
+                SYSCALL(memcpy, 1)
+                SYSCALL(leave, 1)
+                RET
+
+                ; restore main screen coordinate variables
+RESTORE_COORDS  SYSCALL(enter, 1)
+                MOVE    SCR$OSM_M_BCKUP, R8
+                MOVE    SCR$OSM_MEM, R9            
+                MOVE    4, R10
+                SYSCALL(memcpy, 1)
+                SYSCALL(leave, 1)
+                RET
+
+                ; Show the debug screen overlay over the screen of the C64
+SET_DBG_SCR     SYSCALL(enter, 1)
+                MOVE    DBG_WINDOW, R8
+                MOVE    SCR$OSM_MEM, R9            
+                MOVE    4, R10
+                SYSCALL(memcpy, 1)
+                SYSCALL(leave, 1)
+                RET
+
+                ; Prepare mid/hi cycle counter to measure 1 second
+RESET_1S        INCRB
+                MOVE    DBG_CYC_MID, R0
+                MOVE    IO$CYC_MID, R1          ; "mid-word" of sys. cyc. cntr
+                MOVE    @R1, @R0
+                MOVE    DBG_CYC_HI, R0
+                MOVE    IO$CYC_HI, R1           ; "hi-word" of sys. cyc. cntr
+                MOVE    @R1, @R0
+                DECRB
+                RET
+
+                ; Activates the VRAM so that SCR$PRINT works
+DBG_PRINTACT    SYSCALL(enter, 1)
+                MOVE    M2M$RAMROM_DEV, R0
+                MOVE    M2M$VRAM_DATA, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0
+                MOVE    0, @R0
+                SYSCALL(leave, 1)
+                RET
+
+                ; Read next byte and return it in R8
+                ; If EOF then C=1, otherwise C=0
+                ; If error then FATAL
+DBG_READBYTE    INCRB
+                AND     0xFFFB, SR              ; clear carry
+                MOVE    R9, R0
+                MOVE    R10, R1
+
+                MOVE    CRT_FILE, R8
+                SYSCALL(f32_fread, 1)           ; read next byte
+                CMP     0, R10                  ; read OK?
+                RBRA    _DBG_RDBT_RET, Z        ; yes: return with C=0
+                CMP     FAT32$EOF, R10          ; eof?
+                RBRA    _DBG_RDBT_SETC, Z       ; yes: return with C=1
+                RSUB    RESTORE_COORDS, 1
+                MOVE    DBG_FATAL_READ, R8      ; other error?
+                RBRA    FATAL, 1                ; yes: fatal
+
+_DBG_RDBT_SETC  OR      0x0004, SR              ; set carry
+_DBG_RDBT_RET   MOVE    R9, R8                  ; return read byte
+                MOVE    R0, R9                  ; restore R9 and R10
+                MOVE    R1, R10
+                DECRB
+                RET
+
+
+                ; Skip the amount of bytes given by R8
+                ; If EOF during skipping then C=1, otherwise C=0
+DBG_FSKIP       INCRB
+                AND     0xFFFB, SR              ; clear carry
+                MOVE    R8, R0
+                MOVE    R8, R1
+_DBG_FSKIP_1    RSUB    DBG_READBYTE, 1
+                RBRA    _DBG_FSKIP_RET, C       ; return while C=1
+                SUB     1, R0
+                RBRA    _DBG_FSKIP_1, !Z
+_DBG_FSKIP_RET  DECRB
+                RET
+
+                ; x|y, dx|dy of debug window
+DBG_WINDOW      .DW 0, 0, 44, 3
+
+                ; Strings and constants for cartridge loading
+CRT_LOADADR_4K  .EQU 0x0200                     ; HR address: 0x00200000
+DBG_FILE        .ASCII_W "/c64/test.crt"
+DBG_S_ERR_FNF   .ASCII_W " Cartridge file /c64/test.crt not found.\n"
+DBG_S_CRTOK     .ASCII_W " Loading cartridge file: /c64/test.crt\n"
+DBG_S_PROGRESS  .ASCII_W " Progress:"
+DBG_C_PROGRESS  .DW 254, 0                      ; progress bar string
+DBG_PROGRESS    .EQU 0x4000                     ; progress-bar every 16KB
+DBG_S_DONE      .ASCII_W "\n Done. Cartridge successfully loaded.\n"
+
+DBG_S_NEW_CHIP  .ASCII_W "  CHIP packet "
+DBG_S_NEW_CHIP2 .ASCII_W " Size: "
+DBG_S_NEW_CRLF  .ASCII_W "\n"
+
+                ; Fatal situations
+DBG_FATAL_SEEK  .ASCII_W "CRTLOAD: fseek error\n"
+DBG_FATAL_READ  .ASCII_W "CRTLOAD: fread error\n"
+DBG_FATAL_ODD   .ASCII_W "CRTLOAD: Odd CHIP packet size.\n"
+
+                ; Debug main loop
+HANDLE_DEBUG    SYSCALL(enter, 1)
+
+                ; check if 1 second is over since the last measurement                
+                MOVE    DBG_CYC_MID, R8         ; 32-bit addition to calculate
+                MOVE    @R8, R8                 ; ..the target cycles
+                MOVE    DBG_CYC_HI, R9
+                MOVE    @R9, R9
+                ADD     DBG_WAIT, R8
+                ADDC    0, R9
+                MOVE    IO$CYC_MID, R10
+                MOVE    IO$CYC_HI, R11
+                CMP     @R11, R9
+                RBRA    _HNDL_DBG_1, N          ; wait until @R11 >= R9
+                RBRA    _HNDL_DBG_RET, !Z
+                CMP     @R10, R8
+                RBRA    _HNDL_DBG_RET, !N       ; wait while @R10 <= R8
+
+_HNDL_DBG_1     MOVE    DBG_TIMEOUT_VAR, R0
+                CMP     DBG_TIMEOUT_DEF, @R0
+                RBRA    _HNDL_DBG_HIDE, Z
+                ADD     1, @R0
+
+                RSUB    RESET_1S, 1
+                RBRA    _HNDL_DBG_RET, 1
+
+                ; Hide the debug window after the timeout
+_HNDL_DBG_HIDE  MOVE    DBG_SHOW, R0
+                CMP     1, @R0
+                RBRA    _HNDL_DBG_RET, !Z
+                RSUB    RESTORE_COORDS, 1
+                RSUB    SCR$OSM_OFF, 1
+                MOVE    0, @R0
+                RSUB    RESET_1S, 1
+
+                ; Prepare for next iteration by resetting the 1s interval cnt
+_HNDL_DBG_RET   SYSCALL(leave, 1)
+                RET
+
+                ; Setup and show debug screen
+DBG_LOADCART    RSUB    BACKUP_COORDS, 1
+                RSUB    SET_DBG_SCR, 1
+                RSUB    SCR$CLR, 1
+                RSUB    SCR$OSM_M_ON, 1
+                MOVE    DBG_TIMEOUT_VAR, R0
+                MOVE    0, @R0
+                MOVE    DBG_SHOW, R0
+                MOVE    1, @R0
+
+                ; Open .crt file using the already initialized device handle
+                ; used by the configuration file handler
+                RSUB    DBG_PRINTACT, 1                
+                MOVE    CONFIG_DEVH, R8         ; device handle
+                MOVE    CRT_FILE, R9            ; file handle
+                MOVE    DBG_FILE, R10           ; file name
+                XOR     R11, R11                ; use / as path separator
+                SYSCALL(f32_fopen, 1)
+                CMP     0, R10                  ; R10=0: no error
+                RBRA    _DBG_LC_1, Z            ; print file not found
+                RSUB    SCR$CLR,1
+                MOVE    DBG_S_ERR_FNF, R8
+                RSUB    SCR$PRINTSTR, 1
+                ADD     1, R8                   ; skip leading space on serial
+                SYSCALL(puts, 1)
+                RBRA    _DBG_LC_END, 1
+
+_DBG_LC_1       ; Print success message
+                MOVE    DBG_S_CRTOK, R8
+                RSUB    SCR$PRINTSTR, 1
+                ADD     1, R8                   ; Serial console: Skip space                
+                SYSCALL(puts, 1)
+                MOVE    DBG_S_PROGRESS, R8
+                RSUB    SCR$PRINTSTR, 1
+
+                ; Skip .crt header and go directly to the first CHIP packet
+                MOVE    CRT_FILE, R8            ; file handle
+                MOVE    0x0040, R9              ; seek-pos lo
+                XOR     R10, R0                 ; seek-pos hi
+                SYSCALL(f32_fseek, 1)
+                CMP     0, R9
+                RBRA    _DBG_LC_2, Z
+                RSUB    RESTORE_COORDS, 1
+                MOVE    DBG_FATAL_SEEK, R8
+                RBRA    FATAL, 1
+
+                ; Registers
+_DBG_LC_2       MOVE    DBG_PROGRESS, R0        ; R0: progress counter
+                MOVE    0x1000, R1              ; R1: 4k page boundary
+                ADD     M2M$RAMROM_DATA, R1
+                XOR     R2, R2                  ; R2: CHIP packet counter
+                XOR     R3, R3                  ; R3: CHIP packet size
+                MOVE    M2M$RAMROM_DATA, R4     ; R4: HyperRAM word address
+                MOVE    CRT_LOADADR_4K, R5      ; R5: Current HR 4k page
+                XOR     R6, R6                  ; R6: Byte in current PACKET
+
+                ; ------------------------------------------------------------
+                ; Cartridge load loop
+                ; ------------------------------------------------------------
+
+                ; New CHIP packet: skip 14 bytes to find the hi/lo bytes 
+                ; of the packet size and output the info. Then store the
+                ; packet size in R3
+_DBG_LC_3       MOVE    14, R8
+                RSUB    DBG_FSKIP, 1
+                RBRA    _DBG_LC_DONE, C         ; EOF
+                MOVE    DBG_S_NEW_CHIP, R8
+                SYSCALL(puts, 1)
+                MOVE    R2, R8
+                MOVE    SCRATCH_HEX, R9
+                RSUB    WORD2HEXSTR, 1
+                MOVE    R9, R8
+                SYSCALL(puts, 1)
+                MOVE    DBG_S_NEW_CHIP2, R8
+                SYSCALL(puts, 1)
+                RSUB    DBG_READBYTE, 1
+                MOVE    R8, R3
+                SWAP    R3, R3
+                RSUB    DBG_READBYTE, 1
+                OR      R8, R3
+                MOVE    R3, R8
+                MOVE    SCRATCH_HEX, R9
+                RSUB    WORD2HEXSTR, 1
+                MOVE    R9, R8
+                SYSCALL(puts, 1)
+                SYSCALL(crlf, 1)
+
+                ; Read one CHIP packet: The HyperRAM is 16-bit so we will
+                ; always read two bytes and form a word. We read LO/HI and
+                ; store the word as HI/LO.
+                ; Example: Read from file two bytes:   $23 then $24.
+                ;          Store to HyperRAM one word: 0x2423
+_DBG_LC_4       RSUB    DBG_READBYTE, 1         ; lo byte
+                RBRA    _DBG_LC_DONE, C
+                MOVE    R8, R10
+                RSUB    DBG_READBYTE, 1         ; hi byte
+                RBRA    _DBG_LC_5, !C
+                RSUB    RESTORE_COORDS, 1
+                MOVE    DBG_FATAL_ODD, R8
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+                ; convert two bytes read in LO/HI to one word HI/LO
+_DBG_LC_5       SWAP    R8, R8
+                OR      R10, R8
+                MOVE    R8, R10                 ; R10: next word for HyperRAM
+
+                ; Store current word to HyperRAM
+                MOVE    M2M$RAMROM_DEV, R7
+                MOVE    M2M$HYPERRAM, @R7
+                MOVE    M2M$RAMROM_4KWIN, R7
+                MOVE    R5, @R7
+                MOVE    R10, @R4++
+
+                ; HyperRAM access window page boundary reached?
+                CMP     R1, R4
+                RBRA    _DBG_LC_6, !Z           ; no
+                ADD     1, R5                   ; next 4k page
+                MOVE    M2M$RAMROM_DATA, R4     ; reset HyperRAM word address
+
+                ; Progress bar
+_DBG_LC_6       SUB     2, R0
+                RBRA    _DBG_LC_7, !Z           ; not yet new progress char
+                MOVE    DBG_PROGRESS, R0        ; reset progress counter
+                RSUB    DBG_PRINTACT, 1
+                MOVE    DBG_C_PROGRESS, R8
+                RSUB    SCR$PRINTSTR, 1
+
+                ; Check PACKET boundary
+_DBG_LC_7       ADD     2, R6
+                CMP     R3, R6
+                RBRA    _DBG_LC_4, !Z
+                ADD     1, R2                   ; next CHIP packet
+                XOR     R6, R6                  ; reset current byte counter
+                RBRA    _DBG_LC_3, 1    
+
+                ; Output success message
+_DBG_LC_DONE    RSUB    DBG_PRINTACT, 1
+                MOVE    DBG_C_PROGRESS, R8      ; final progress bar char
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    DBG_S_DONE, R8
+                RSUB    SCR$PRINTSTR, 1
+                ADD     3, R8                   ; Skip certain chars on serial
+                SYSCALL(puts, 1)
+       
+                ; remember the current cycle counter to reset the measurement
+                ; of 1 second intervals
+_DBG_LC_END     RSUB    RESET_1S, 1
+
+                ; ------------------------------------------------------------
                 ; Main loop:
                 ;
                 ; The core is running and QNICE is waiting for triggers to
@@ -162,6 +466,9 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
 
                 RSUB    CHECK_DEBUG, 1          ; (Run/Stop+Cursor Up) + Help
                 RSUB    HELP_MENU, 1            ; check/manage help menu
+
+                ; DEV-SUPPORT: QND CART LOADER
+                RSUB    HANDLE_DEBUG, 1
 
                 RBRA    MAIN_LOOP, 1
 
