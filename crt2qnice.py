@@ -23,12 +23,9 @@ def read_be(ar):
 
 def print_chip(chip_data, load_addr, chip_num, file_out):
     with open(file_out, mode='a') as output:
-        output.write("MCFFF40004\n")
-        output.write(f"MCFFF501{chip_num:02x}\n")
-        output.write("ML\n")
         for offset in range(0,len(chip_data),2):
             w = read_be(chip_data[offset:offset+2])
-            output.write(f"{load_addr+offset//2:04x}{w:04x}")
+            output.write(f"x{load_addr+offset//2:04x} x{w:04x}    ")
             if (offset%16) == 14:
                 output.write("\n")
 
@@ -69,4 +66,5 @@ def convert_file(file_in, file_out):
 
 
 convert_file('DblDrgon.crt', 'DblDrgon.txt')
+convert_file('Facemaker.crt', 'Facemaker.txt')
 

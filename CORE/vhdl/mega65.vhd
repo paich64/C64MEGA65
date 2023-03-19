@@ -302,6 +302,21 @@ signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
+attribute mark_debug : string;
+attribute mark_debug of main_crt_bank_lo         : signal is "true";
+attribute mark_debug of main_crt_bank_hi         : signal is "true";
+attribute mark_debug of c64_exp_port_mode        : signal is "true";
+attribute mark_debug of main_avm_write_o         : signal is "true";
+attribute mark_debug of main_avm_read_o          : signal is "true";
+attribute mark_debug of main_avm_address_o       : signal is "true";
+attribute mark_debug of main_avm_writedata_o     : signal is "true";
+attribute mark_debug of main_avm_byteenable_o    : signal is "true";
+attribute mark_debug of main_avm_burstcount_o    : signal is "true";
+attribute mark_debug of main_avm_waitrequest_i   : signal is "true";
+attribute mark_debug of main_avm_readdata_i      : signal is "true";
+attribute mark_debug of main_avm_readdatavalid_i : signal is "true";
+
+
 begin
 
    -- MMCME2_ADV clock generators
@@ -669,8 +684,8 @@ begin
          main_crt_bank_hi_d <= main_crt_bank_hi;
          main_crt_lo_load   <= '0';
          main_crt_hi_load   <= '0';
-         main_crt_lo_address <= X"00100000";
-         main_crt_hi_address <= X"00100000";
+         main_crt_lo_address <= X"00200000";
+         main_crt_hi_address <= X"00200000";
 
          if main_crt_bank_lo_d /= main_crt_bank_lo then
             main_crt_lo_load <= '1';
@@ -679,7 +694,7 @@ begin
             main_crt_hi_load <= '1';
          end if;
 
-         if main_rst = '1' then
+         if main_reset_core_i = '1' then
             main_crt_lo_load <= '1';
             main_crt_hi_load <= '1';
          end if;
@@ -689,7 +704,7 @@ begin
    i_crt2hyperram : entity work.crt2hyperram
       port map (
          clk_i               => main_clk,
-         rst_i               => main_rst,
+         rst_i               => main_reset_core_i,
          crt_busy_o          => main_crt_busy,
          crt_hi_load_i       => main_crt_hi_load,
          crt_hi_address_i    => main_crt_hi_address,
@@ -733,7 +748,7 @@ begin
       )
       port map (
          clk_i               => main_clk,
-         rst_i               => main_rst,
+         rst_i               => main_reset_core_i,
          reu_ext_cycle_i     => main_ext_cycle,
          reu_ext_cycle_o     => main_reu_cycle,
          reu_addr_i          => main_reu_addr,
@@ -760,7 +775,7 @@ begin
       )
       port map (
          clk_i                 => main_clk,
-         rst_i                 => main_rst,
+         rst_i                 => main_reset_core_i,
          s_avm_waitrequest_o   => main_map_waitrequest,
          s_avm_write_i         => main_map_write,
          s_avm_read_i          => main_map_read,
