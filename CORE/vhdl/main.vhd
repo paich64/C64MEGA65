@@ -119,6 +119,8 @@ entity main is
       cartridge_bank_type_i   : in  std_logic_vector( 7 downto 0);
       cartridge_bank_raddr_i  : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i     : in  std_logic;
+      crt_bank_lo_o           : out std_logic_vector(6 downto 0);
+      crt_bank_hi_o           : out std_logic_vector(6 downto 0);
       
       -- C64 Expansion Port (aka Cartridge Port) control lines
       -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
@@ -294,8 +296,6 @@ architecture synthesis of main is
    signal crt_nmi             : std_logic;
    signal crt_exrom           : std_logic;
    signal crt_game            : std_logic;
-   signal crt_bank_lo         : std_logic_vector(6 downto 0);
-   signal crt_bank_hi         : std_logic_vector(6 downto 0);
 
    
    
@@ -816,8 +816,8 @@ begin
          addr_in         => std_logic_vector(c64_ram_addr_o),  -- input
          data_in         => std_logic_vector(c64_ram_data_o),  -- input
          addr_out        => crt_addr,                          -- output
-         bank_lo         => crt_bank_lo,                       -- output
-         bank_hi         => crt_bank_hi,                       -- output
+         bank_lo         => crt_bank_lo_o,                     -- output
+         bank_hi         => crt_bank_hi_o,                     -- output
          freeze_key      => not restore_key_n,                 -- input
          mod_key         => '0',                               -- input  (TBD)
          nmi             => crt_nmi,                           -- output (TBD: inverted of cart_nmi_n)

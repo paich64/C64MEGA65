@@ -220,6 +220,16 @@ signal main_map_readdata      : std_logic_vector(15 downto 0);
 signal main_map_readdatavalid : std_logic;
 signal main_map_waitrequest   : std_logic;
 
+signal main_avm_reu_write         : std_logic;
+signal main_avm_reu_read          : std_logic;
+signal main_avm_reu_address       : std_logic_vector(31 downto 0);
+signal main_avm_reu_writedata     : std_logic_vector(15 downto 0);
+signal main_avm_reu_byteenable    : std_logic_vector(1 downto 0);
+signal main_avm_reu_burstcount    : std_logic_vector(7 downto 0);
+signal main_avm_reu_readdata      : std_logic_vector(15 downto 0);
+signal main_avm_reu_readdatavalid : std_logic;
+signal main_avm_reu_waitrequest   : std_logic;
+
 -- TBD: Signals from the framework to the cartridge.v module
 signal main_cartridge_loading    : std_logic;
 signal main_cartridge_id         : std_logic_vector(15 downto 0);
@@ -231,6 +241,33 @@ signal main_cartridge_bank_num   : std_logic_vector(15 downto 0);
 signal main_cartridge_bank_type  : std_logic_vector( 7 downto 0);
 signal main_cartridge_bank_raddr : std_logic_vector(24 downto 0);
 signal main_cartridge_bank_wr    : std_logic;
+
+signal main_crt_busy             : std_logic;
+signal main_crt_hi_load          : std_logic;
+signal main_crt_hi_address       : std_logic_vector(31 downto 0);
+signal main_crt_lo_load          : std_logic;
+signal main_crt_lo_address       : std_logic_vector(31 downto 0);
+signal main_bram_lo_address      : std_logic_vector(12 downto 0);
+signal main_bram_lo_data         : std_logic_vector(7 downto 0);
+signal main_bram_lo_wren         : std_logic;
+signal main_bram_hi_address      : std_logic_vector(12 downto 0);
+signal main_bram_hi_data         : std_logic_vector(7 downto 0);
+signal main_bram_hi_wren         : std_logic;
+
+signal main_avm_crt_write         : std_logic;
+signal main_avm_crt_read          : std_logic;
+signal main_avm_crt_address       : std_logic_vector(31 downto 0);
+signal main_avm_crt_writedata     : std_logic_vector(15 downto 0);
+signal main_avm_crt_byteenable    : std_logic_vector(1 downto 0);
+signal main_avm_crt_burstcount    : std_logic_vector(7 downto 0);
+signal main_avm_crt_readdata      : std_logic_vector(15 downto 0);
+signal main_avm_crt_readdatavalid : std_logic;
+signal main_avm_crt_waitrequest   : std_logic;
+
+signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
+signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
+signal main_crt_bank_lo_d         : std_logic_vector(6 downto 0);
+signal main_crt_bank_hi_d         : std_logic_vector(6 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -416,6 +453,8 @@ begin
          cartridge_bank_type_i  => main_cartridge_bank_type,
          cartridge_bank_raddr_i => main_cartridge_bank_raddr,
          cartridge_bank_wr_i    => main_cartridge_bank_wr,
+         crt_bank_lo_o          => main_crt_bank_lo,
+         crt_bank_hi_o          => main_crt_bank_hi,
          
          -- C64 Expansion Port (aka Cartridge Port) control lines
          -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
@@ -580,7 +619,7 @@ begin
          ADDR_WIDTH        => 13,         -- 8 kB
          DATA_WIDTH        => 8,
          FALLING_A         => false,      -- C64 expects read/write to happen at the rising clock edge
-         FALLING_B         => true        -- QNICE expects read/write to happen at the falling clock edge
+         FALLING_B         => false
       )
       port map (
          -- C64 MiSTer core
@@ -591,12 +630,89 @@ begin
          q_a               => main_crt_lo_ram_data,
 
          -- Not used
-         clock_b           => '0',
-         address_b         => (others => '0'),
-         data_b            => (others => '0'),
-         wren_b            => '0',
+         clock_b           => main_clk,
+         address_b         => main_bram_lo_address,
+         data_b            => main_bram_lo_data,
+         wren_b            => main_bram_lo_wren,
          q_b               => open
       ); -- crt_lo_ram
+
+   -- Software cartridge (CRT) RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
+   -- as well as QNICE can access it
+   crt_hi_ram : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH        => 13,         -- 8 kB
+         DATA_WIDTH        => 8,
+         FALLING_A         => false,      -- C64 expects read/write to happen at the rising clock edge
+         FALLING_B         => false
+      )
+      port map (
+         -- C64 MiSTer core
+         clock_a           => main_clk,
+         address_a         => std_logic_vector(main_ram_addr(12 downto 0)),
+         data_a            => (others => '0'),
+         wren_a            => '0',
+         q_a               => main_crt_hi_ram_data,
+
+         -- Not used
+         clock_b           => main_clk,
+         address_b         => main_bram_hi_address,
+         data_b            => main_bram_hi_data,
+         wren_b            => main_bram_hi_wren,
+         q_b               => open
+      ); -- crt_lo_ram
+
+   process (main_clk)
+   begin
+      if rising_edge(main_clk) then
+         main_crt_bank_lo_d <= main_crt_bank_lo;
+         main_crt_bank_hi_d <= main_crt_bank_hi;
+         main_crt_lo_load   <= '0';
+         main_crt_hi_load   <= '0';
+         main_crt_lo_address <= X"00100000";
+         main_crt_hi_address <= X"00100000";
+
+         if main_crt_bank_lo_d /= main_crt_bank_lo then
+            main_crt_lo_load <= '1';
+         end if;
+         if main_crt_bank_hi_d /= main_crt_bank_hi then
+            main_crt_hi_load <= '1';
+         end if;
+
+         if main_rst = '1' then
+            main_crt_lo_load <= '1';
+            main_crt_hi_load <= '1';
+         end if;
+      end if;
+   end process;
+
+   i_crt2hyperram : entity work.crt2hyperram
+      port map (
+         clk_i               => main_clk,
+         rst_i               => main_rst,
+         crt_busy_o          => main_crt_busy,
+         crt_hi_load_i       => main_crt_hi_load,
+         crt_hi_address_i    => main_crt_hi_address,
+         crt_lo_load_i       => main_crt_lo_load,
+         crt_lo_address_i    => main_crt_lo_address,
+         avm_write_o         => main_avm_crt_write,
+         avm_read_o          => main_avm_crt_read,
+         avm_address_o       => main_avm_crt_address,
+         avm_writedata_o     => main_avm_crt_writedata,
+         avm_byteenable_o    => main_avm_crt_byteenable,
+         avm_burstcount_o    => main_avm_crt_burstcount,
+         avm_readdata_i      => main_avm_crt_readdata,
+         avm_readdatavalid_i => main_avm_crt_readdatavalid,
+         avm_waitrequest_i   => main_avm_crt_waitrequest,
+         bram_lo_address_o   => main_bram_lo_address,
+         bram_lo_data_o      => main_bram_lo_data,
+         bram_lo_wren_o      => main_bram_lo_wren,
+         bram_lo_q_i         => (others => '0'),
+         bram_hi_address_o   => main_bram_hi_address,
+         bram_hi_data_o      => main_bram_hi_data,
+         bram_hi_wren_o      => main_bram_hi_wren,
+         bram_hi_q_i         => (others => '0')
+      ); -- i_crt2hyperram
 
    main_ram_data_to_c64 <= main_crt_lo_ram_data when cart_roml_io = '0' else
                            main_crt_hi_ram_data when cart_romh_io = '0' else
@@ -654,16 +770,70 @@ begin
          s_avm_burstcount_i    => main_map_burstcount,
          s_avm_readdata_o      => main_map_readdata,
          s_avm_readdatavalid_o => main_map_readdatavalid,
-         m_avm_waitrequest_i   => main_avm_waitrequest_i,
-         m_avm_write_o         => main_avm_write_o,
-         m_avm_read_o          => main_avm_read_o,
-         m_avm_address_o       => main_avm_address_o,
-         m_avm_writedata_o     => main_avm_writedata_o,
-         m_avm_byteenable_o    => main_avm_byteenable_o,
-         m_avm_burstcount_o    => main_avm_burstcount_o,
-         m_avm_readdata_i      => main_avm_readdata_i,
-         m_avm_readdatavalid_i => main_avm_readdatavalid_i
+         m_avm_waitrequest_i   => main_avm_reu_waitrequest,
+         m_avm_write_o         => main_avm_reu_write,
+         m_avm_read_o          => main_avm_reu_read,
+         m_avm_address_o       => main_avm_reu_address,
+         m_avm_writedata_o     => main_avm_reu_writedata,
+         m_avm_byteenable_o    => main_avm_reu_byteenable,
+         m_avm_burstcount_o    => main_avm_reu_burstcount,
+         m_avm_readdata_i      => main_avm_reu_readdata,
+         m_avm_readdatavalid_i => main_avm_reu_readdatavalid
       ); -- i_avm_cache
 
+   -- Multiplex the HyperRAM access between the REU and the Software Cartridge (CRT)
+   hyperram_mux_proc : process (all)
+   begin
+      -- Default values to avoid latches
+      main_avm_reu_waitrequest   <= '0';
+      main_avm_reu_readdata      <= (others => '0');
+      main_avm_reu_readdatavalid <= '0';
+
+      main_avm_crt_waitrequest   <= '0';
+      main_avm_crt_readdata      <= (others => '0');
+      main_avm_crt_readdatavalid <= '0';
+
+      main_avm_write_o           <= '0';
+      main_avm_read_o            <= '0';
+      main_avm_address_o         <= (others => '0');
+      main_avm_writedata_o       <= (others => '0');
+      main_avm_byteenable_o      <= (others => '0');
+      main_avm_burstcount_o      <= (others => '0');
+
+      case c64_exp_port_mode is
+         when 0 =>
+            -- Use the MEGA65's actual hardware slot
+            null;
+
+         when 1 =>
+            -- Simulate a 1750 REU with 512KB
+            main_avm_write_o           <= main_avm_reu_write;
+            main_avm_read_o            <= main_avm_reu_read;
+            main_avm_address_o         <= main_avm_reu_address;
+            main_avm_writedata_o       <= main_avm_reu_writedata;
+            main_avm_byteenable_o      <= main_avm_reu_byteenable;
+            main_avm_burstcount_o      <= main_avm_reu_burstcount;
+            main_avm_reu_waitrequest   <= main_avm_waitrequest_i;
+            main_avm_reu_readdata      <= main_avm_readdata_i;
+            main_avm_reu_readdatavalid <= main_avm_readdatavalid_i;
+
+         when 2 =>
+            -- Simulate a cartridge by using a cartridge from from the SD card (.crt file)
+            main_avm_write_o           <= main_avm_crt_write;
+            main_avm_read_o            <= main_avm_crt_read;
+            main_avm_address_o         <= main_avm_crt_address;
+            main_avm_writedata_o       <= main_avm_crt_writedata;
+            main_avm_byteenable_o      <= main_avm_crt_byteenable;
+            main_avm_burstcount_o      <= main_avm_crt_burstcount;
+            main_avm_crt_waitrequest   <= main_avm_waitrequest_i;
+            main_avm_crt_readdata      <= main_avm_readdata_i;
+            main_avm_crt_readdatavalid <= main_avm_readdatavalid_i;
+
+         when others =>
+            null;
+      end case;
+   end process hyperram_mux_proc;
+
 end architecture synthesis;
+
 
