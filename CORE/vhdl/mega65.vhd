@@ -299,15 +299,15 @@ attribute mark_debug : string;
 attribute mark_debug of main_crt_bank_lo         : signal is "true";
 attribute mark_debug of main_crt_bank_hi         : signal is "true";
 attribute mark_debug of c64_exp_port_mode        : signal is "true";
-attribute mark_debug of main_avm_write_o         : signal is "true";
-attribute mark_debug of main_avm_read_o          : signal is "true";
-attribute mark_debug of main_avm_address_o       : signal is "true";
-attribute mark_debug of main_avm_writedata_o     : signal is "true";
-attribute mark_debug of main_avm_byteenable_o    : signal is "true";
-attribute mark_debug of main_avm_burstcount_o    : signal is "true";
-attribute mark_debug of main_avm_waitrequest_i   : signal is "true";
-attribute mark_debug of main_avm_readdata_i      : signal is "true";
-attribute mark_debug of main_avm_readdatavalid_i : signal is "true";
+attribute mark_debug of main_ram_addr            : signal is "true";
+attribute mark_debug of main_ram_data_from_c64   : signal is "true";
+attribute mark_debug of main_ram_we              : signal is "true";
+attribute mark_debug of main_ram_data_to_c64     : signal is "true";
+attribute mark_debug of main_ram_data            : signal is "true";
+attribute mark_debug of main_crt_lo_ram_data     : signal is "true";
+attribute mark_debug of main_crt_hi_ram_data     : signal is "true";
+attribute mark_debug of cart_roml_io             : signal is "true";
+attribute mark_debug of cart_romh_io             : signal is "true";
 
 begin
 

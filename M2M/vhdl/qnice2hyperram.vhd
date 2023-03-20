@@ -45,25 +45,6 @@ architecture synthesis of qnice2hyperram is
    signal reading               : std_logic;
    signal m_avm_readdatavalid_d : std_logic;
 
-   attribute mark_debug : string;
-   attribute mark_debug of s_qnice_wait_o        : signal is "true";
-   attribute mark_debug of s_qnice_address_i     : signal is "true";
-   attribute mark_debug of s_qnice_cs_i          : signal is "true";
-   attribute mark_debug of s_qnice_write_i       : signal is "true";
-   attribute mark_debug of s_qnice_writedata_i   : signal is "true";
-   attribute mark_debug of s_qnice_readdata_o    : signal is "true";
-   attribute mark_debug of m_avm_write_o         : signal is "true";
-   attribute mark_debug of m_avm_read_o          : signal is "true";
-   attribute mark_debug of m_avm_address_o       : signal is "true";
-   attribute mark_debug of m_avm_writedata_o     : signal is "true";
-   attribute mark_debug of m_avm_byteenable_o    : signal is "true";
-   attribute mark_debug of m_avm_burstcount_o    : signal is "true";
-   attribute mark_debug of m_avm_readdata_i      : signal is "true";
-   attribute mark_debug of m_avm_readdatavalid_i : signal is "true";
-   attribute mark_debug of m_avm_waitrequest_i   : signal is "true";
-   attribute mark_debug of reading               : signal is "true";
-   attribute mark_debug of m_avm_readdatavalid_d : signal is "true";
-
 begin
 
    s_qnice_wait_o <= ((m_avm_write_o or m_avm_read_o) and m_avm_waitrequest_i) or reading;

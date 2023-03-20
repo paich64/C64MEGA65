@@ -1199,7 +1199,8 @@ begin
 
    avm_fifo_core : entity work.avm_fifo
       generic map (
-         G_DEPTH        => 16,
+         G_WR_DEPTH     => 16,
+         G_RD_DEPTH     => 256,  -- Must accommodate a read burst
          G_FILL_SIZE    => 1,
          G_ADDRESS_SIZE => 32,
          G_DATA_SIZE    => 16
@@ -1231,7 +1232,8 @@ begin
 
    avm_fifo_qnice : entity work.avm_fifo
       generic map (
-         G_DEPTH        => 16,
+         G_WR_DEPTH     => 16,
+         G_RD_DEPTH     => 16,
          G_FILL_SIZE    => 1,
          G_ADDRESS_SIZE => 32,
          G_DATA_SIZE    => 16
