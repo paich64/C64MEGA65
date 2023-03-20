@@ -243,15 +243,12 @@ signal main_cartridge_bank_raddr  : std_logic_vector(24 downto 0);
 signal main_cartridge_bank_wr     : std_logic;
 
 signal main_crt_busy              : std_logic;
-signal main_crt_hi_load           : std_logic;
-signal main_crt_hi_address        : std_logic_vector(31 downto 0);
-signal main_crt_lo_load           : std_logic;
-signal main_crt_lo_address        : std_logic_vector(31 downto 0);
-signal main_bram_lo_address       : std_logic_vector(12 downto 0);
-signal main_bram_lo_data          : std_logic_vector( 7 downto 0);
+signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
+signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
+
+signal main_bram_address          : std_logic_vector(12 downto 0);
+signal main_bram_data             : std_logic_vector( 7 downto 0);
 signal main_bram_lo_wren          : std_logic;
-signal main_bram_hi_address       : std_logic_vector(12 downto 0);
-signal main_bram_hi_data          : std_logic_vector( 7 downto 0);
 signal main_bram_hi_wren          : std_logic;
 
 signal main_avm_crt_write         : std_logic;
@@ -264,10 +261,6 @@ signal main_avm_crt_readdata      : std_logic_vector(15 downto 0);
 signal main_avm_crt_readdatavalid : std_logic;
 signal main_avm_crt_waitrequest   : std_logic;
 
-signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
-signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
-signal main_crt_bank_lo_d         : std_logic_vector(6 downto 0);
-signal main_crt_bank_hi_d         : std_logic_vector(6 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -503,7 +496,6 @@ begin
          cartridge_bank_wr_i    => main_cartridge_bank_wr,
          crt_bank_lo_o          => main_crt_bank_lo,
          crt_bank_hi_o          => main_crt_bank_hi
-
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------
@@ -649,8 +641,8 @@ begin
 
          -- Not used
          clock_b           => main_clk,
-         address_b         => main_bram_lo_address,
-         data_b            => main_bram_lo_data,
+         address_b         => main_bram_address,
+         data_b            => main_bram_data,
          wren_b            => main_bram_lo_wren,
          q_b               => open
       ); -- crt_lo_ram
@@ -674,45 +666,19 @@ begin
 
          -- Not used
          clock_b           => main_clk,
-         address_b         => main_bram_hi_address,
-         data_b            => main_bram_hi_data,
+         address_b         => main_bram_address,
+         data_b            => main_bram_data,
          wren_b            => main_bram_hi_wren,
          q_b               => open
       ); -- crt_lo_ram
-
-   process (main_clk)
-   begin
-      if rising_edge(main_clk) then
-         main_crt_bank_lo_d <= main_crt_bank_lo;
-         main_crt_bank_hi_d <= main_crt_bank_hi;
-         main_crt_lo_load   <= '0';
-         main_crt_hi_load   <= '0';
-         main_crt_lo_address <= X"00200000";
-         main_crt_hi_address <= X"00200000";
-
-         if main_crt_bank_lo_d /= main_crt_bank_lo then
-            main_crt_lo_load <= '1';
-         end if;
-         if main_crt_bank_hi_d /= main_crt_bank_hi then
-            main_crt_hi_load <= '1';
-         end if;
-
-         if main_reset_core_i = '1' then
-            main_crt_lo_load <= '1';
-            main_crt_hi_load <= '1';
-         end if;
-      end if;
-   end process;
 
    i_crt2hyperram : entity work.crt2hyperram
       port map (
          clk_i               => main_clk,
          rst_i               => main_reset_core_i,
          crt_busy_o          => main_crt_busy,
-         crt_hi_load_i       => main_crt_hi_load,
-         crt_hi_address_i    => main_crt_hi_address,
-         crt_lo_load_i       => main_crt_lo_load,
-         crt_lo_address_i    => main_crt_lo_address,
+         crt_bank_lo_i       => main_crt_bank_lo,
+         crt_bank_hi_i       => main_crt_bank_hi,
          avm_write_o         => main_avm_crt_write,
          avm_read_o          => main_avm_crt_read,
          avm_address_o       => main_avm_crt_address,
@@ -722,12 +688,10 @@ begin
          avm_readdata_i      => main_avm_crt_readdata,
          avm_readdatavalid_i => main_avm_crt_readdatavalid,
          avm_waitrequest_i   => main_avm_crt_waitrequest,
-         bram_lo_address_o   => main_bram_lo_address,
-         bram_lo_data_o      => main_bram_lo_data,
+         bram_address_o      => main_bram_address,
+         bram_data_o         => main_bram_data,
          bram_lo_wren_o      => main_bram_lo_wren,
          bram_lo_q_i         => (others => '0'),
-         bram_hi_address_o   => main_bram_hi_address,
-         bram_hi_data_o      => main_bram_hi_data,
          bram_hi_wren_o      => main_bram_hi_wren,
          bram_hi_q_i         => (others => '0')
       ); -- i_crt2hyperram
