@@ -22,47 +22,49 @@ use xpm.vcomponents.all;
 
 entity MEGA65_Core is
 port (
-   CLK                     : in std_logic;         -- 100 MHz clock
-   RESET_M2M_N             : in std_logic;         -- Debounced system reset in system clock domain
+   CLK                      : in  std_logic;                 -- 100 MHz clock
+   RESET_M2M_N              : in  std_logic;                 -- Debounced system reset in system clock domain
 
    -- Share clock and reset with the framework
-   main_clk_o              : out std_logic;        -- CORE's 54 MHz clock
-   main_rst_o              : out std_logic;        -- CORE's reset, synchronized
+   main_clk_o               : out std_logic;                 -- CORE's 54 MHz clock
+   main_rst_o               : out std_logic;                 -- CORE's reset, synchronized
 
    --------------------------------------------------------------------------------------------------------
    -- QNICE Clock Domain
    --------------------------------------------------------------------------------------------------------
 
    -- Get QNICE clock from the framework: for the vdrives as well as for RAMs and ROMs
-   qnice_clk_i             : in std_logic;
+   qnice_clk_i              : in  std_logic;
 
    -- Video and audio mode control
-   qnice_dvi_o             : out std_logic;              -- 0=HDMI (with sound), 1=DVI (no sound)
-   qnice_video_mode_o      : out natural range 0 to 3;   -- HDMI 1280x720 @ 50 Hz resolution = mode 0, 1280x720 @ 60 Hz resolution = mode 1, PAL 576p in 4:3 and 5:4 are modes 2 and 3
-   qnice_scandoubler_o     : out std_logic;              -- 0 = no scandoubler, 1 = scandoubler
-   qnice_audio_mute_o      : out std_logic;
-   qnice_audio_filter_o    : out std_logic;
-   qnice_zoom_crop_o       : out std_logic;
-   qnice_ascal_mode_o      : out std_logic_vector(1 downto 0);
-   qnice_ascal_polyphase_o : out std_logic;
-   qnice_ascal_triplebuf_o : out std_logic;
+   qnice_dvi_o              : out std_logic;                 -- 0=HDMI (with sound), 1=DVI (no sound)
+   qnice_video_mode_o       : out natural range 0 to 3;      -- HDMI 1280x720 @ 50 Hz resolution = mode 0,
+                                                             -- HDMI 1280x720 @ 60 Hz resolution = mode 1,
+                                                             -- PAL 576p in 4:3 and 5:4 are modes 2 and 3
+   qnice_scandoubler_o      : out std_logic;                 -- 0 = no scandoubler, 1 = scandoubler
+   qnice_audio_mute_o       : out std_logic;
+   qnice_audio_filter_o     : out std_logic;
+   qnice_zoom_crop_o        : out std_logic;
+   qnice_ascal_mode_o       : out std_logic_vector(1 downto 0);
+   qnice_ascal_polyphase_o  : out std_logic;
+   qnice_ascal_triplebuf_o  : out std_logic;
 
    -- Flip joystick ports
-   qnice_flip_joyports_o   : out std_logic;
+   qnice_flip_joyports_o    : out std_logic;
 
    -- On-Screen-Menu selections
-   qnice_osm_control_i     : in std_logic_vector(255 downto 0);
+   qnice_osm_control_i      : in  std_logic_vector(255 downto 0);
 
    -- QNICE general purpose register
-   qnice_gp_reg_i          : in std_logic_vector(255 downto 0);
+   qnice_gp_reg_i           : in  std_logic_vector(255 downto 0);
 
    -- Core-specific devices
-   qnice_dev_id_i          : in std_logic_vector(15 downto 0);
-   qnice_dev_addr_i        : in std_logic_vector(27 downto 0);
-   qnice_dev_data_i        : in std_logic_vector(15 downto 0);
-   qnice_dev_data_o        : out std_logic_vector(15 downto 0);
-   qnice_dev_ce_i          : in std_logic;
-   qnice_dev_we_i          : in std_logic;
+   qnice_dev_id_i           : in  std_logic_vector(15 downto 0);
+   qnice_dev_addr_i         : in  std_logic_vector(27 downto 0);
+   qnice_dev_data_i         : in  std_logic_vector(15 downto 0);
+   qnice_dev_data_o         : out std_logic_vector(15 downto 0);
+   qnice_dev_ce_i           : in  std_logic;
+   qnice_dev_we_i           : in  std_logic;
 
    --------------------------------------------------------------------------------------------------------
    -- Core Clock Domain
@@ -71,56 +73,54 @@ port (
    -- M2M's reset manager provides 2 signals:
    --    m2m:   Reset the whole machine: Core and Framework
    --    core:  Only reset the core
-   main_reset_m2m_i        : in std_logic;
-   main_reset_core_i       : in std_logic;
+   main_reset_m2m_i         : in  std_logic;
+   main_reset_core_i        : in  std_logic;
 
-   main_pause_core_i       : in std_logic;
-
-   -- Video output
-   main_video_ce_o         : out std_logic;
-   main_video_ce_ovl_o     : out std_logic;
-   main_video_retro15kHz_o : out std_logic;
-   main_video_red_o        : out std_logic_vector(7 downto 0);
-   main_video_green_o      : out std_logic_vector(7 downto 0);
-   main_video_blue_o       : out std_logic_vector(7 downto 0);
-   main_video_vs_o         : out std_logic;
-   main_video_hs_o         : out std_logic;
-   main_video_hblank_o     : out std_logic;
-   main_video_vblank_o     : out std_logic;
-
-   -- Audio output (Signed PCM)
-   main_audio_left_o       : out signed(15 downto 0);
-   main_audio_right_o      : out signed(15 downto 0);
-
-   -- M2M Keyboard interface (incl. drive led)
-   main_kb_key_num_i       : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
-   main_kb_key_pressed_n_i : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
-   main_drive_led_o        : out std_logic;
-   main_drive_led_col_o    : out std_logic_vector(23 downto 0);
-
-   -- Joysticks input
-   main_joy_1_up_n_i       : in std_logic;
-   main_joy_1_down_n_i     : in std_logic;
-   main_joy_1_left_n_i     : in std_logic;
-   main_joy_1_right_n_i    : in std_logic;
-   main_joy_1_fire_n_i     : in std_logic;
-
-   main_joy_2_up_n_i       : in std_logic;
-   main_joy_2_down_n_i     : in std_logic;
-   main_joy_2_left_n_i     : in std_logic;
-   main_joy_2_right_n_i    : in std_logic;
-   main_joy_2_fire_n_i     : in std_logic;
-
-   main_pot1_x_i           : in std_logic_vector(7 downto 0);
-   main_pot1_y_i           : in std_logic_vector(7 downto 0);
-   main_pot2_x_i           : in std_logic_vector(7 downto 0);
-   main_pot2_y_i           : in std_logic_vector(7 downto 0);
+   main_pause_core_i        : in  std_logic;
 
    -- On-Screen-Menu selections
-   main_osm_control_i     : in std_logic_vector(255 downto 0);
+   main_osm_control_i       : in  std_logic_vector(255 downto 0);
 
    -- QNICE general purpose register converted to main clock domain
-   main_qnice_gp_reg_i    : in std_logic_vector(255 downto 0);
+   main_qnice_gp_reg_i      : in  std_logic_vector(255 downto 0);
+
+   -- Video output
+   main_video_ce_o          : out std_logic;
+   main_video_ce_ovl_o      : out std_logic;
+   main_video_retro15kHz_o  : out std_logic;
+   main_video_red_o         : out std_logic_vector(7 downto 0);
+   main_video_green_o       : out std_logic_vector(7 downto 0);
+   main_video_blue_o        : out std_logic_vector(7 downto 0);
+   main_video_vs_o          : out std_logic;
+   main_video_hs_o          : out std_logic;
+   main_video_hblank_o      : out std_logic;
+   main_video_vblank_o      : out std_logic;
+
+   -- Audio output (Signed PCM)
+   main_audio_left_o        : out signed(15 downto 0);
+   main_audio_right_o       : out signed(15 downto 0);
+
+   -- M2M Keyboard interface (incl. drive led)
+   main_kb_key_num_i        : in  integer range 0 to 79;     -- cycles through all MEGA65 keys
+   main_kb_key_pressed_n_i  : in  std_logic;                 -- low active: debounced feedback: is kb_key_num_i pressed right now?
+   main_drive_led_o         : out std_logic;
+   main_drive_led_col_o     : out std_logic_vector(23 downto 0);
+
+   -- Joysticks and paddles input
+   main_joy_1_up_n_i        : in  std_logic;
+   main_joy_1_down_n_i      : in  std_logic;
+   main_joy_1_left_n_i      : in  std_logic;
+   main_joy_1_right_n_i     : in  std_logic;
+   main_joy_1_fire_n_i      : in  std_logic;
+   main_joy_2_up_n_i        : in  std_logic;
+   main_joy_2_down_n_i      : in  std_logic;
+   main_joy_2_left_n_i      : in  std_logic;
+   main_joy_2_right_n_i     : in  std_logic;
+   main_joy_2_fire_n_i      : in  std_logic;
+   main_pot1_x_i            : in  std_logic_vector(7 downto 0);
+   main_pot1_y_i            : in  std_logic_vector(7 downto 0);
+   main_pot2_x_i            : in  std_logic_vector(7 downto 0);
+   main_pot2_y_i            : in  std_logic_vector(7 downto 0);
 
    --------------------------------------------------------------------------------------------------------
    -- Provide support for external memory (Avalon Memory Map)
@@ -130,46 +130,46 @@ port (
    main_avm_read_o          : out std_logic;
    main_avm_address_o       : out std_logic_vector(31 downto 0);
    main_avm_writedata_o     : out std_logic_vector(15 downto 0);
-   main_avm_byteenable_o    : out std_logic_vector(1 downto 0);
-   main_avm_burstcount_o    : out std_logic_vector(7 downto 0);
+   main_avm_byteenable_o    : out std_logic_vector( 1 downto 0);
+   main_avm_burstcount_o    : out std_logic_vector( 7 downto 0);
    main_avm_readdata_i      : in  std_logic_vector(15 downto 0);
    main_avm_readdatavalid_i : in  std_logic;
    main_avm_waitrequest_i   : in  std_logic;
-   
+
    --------------------------------------------------------------------
    -- C64 specific ports that are not supported by the M2M framework
    --------------------------------------------------------------------
-   
+
    -- C64 Expansion Port (aka Cartridge Port) control lines
    -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
-   cart_ctrl_en_o          : out std_logic;
-   cart_ctrl_dir_o         : out std_logic;
-   cart_addr_en_o          : out std_logic;     
-   cart_haddr_dir_o        : out std_logic;
-   cart_laddr_dir_o        : out std_logic;
-   cart_data_en_o          : out std_logic;
-   cart_data_dir_o         : out std_logic;
+   cart_ctrl_en_o           : out std_logic;
+   cart_ctrl_dir_o          : out std_logic;
+   cart_addr_en_o           : out std_logic;
+   cart_haddr_dir_o         : out std_logic;
+   cart_laddr_dir_o         : out std_logic;
+   cart_data_en_o           : out std_logic;
+   cart_data_dir_o          : out std_logic;
 
    -- C64 Expansion Port (aka Cartridge Port)
-   cart_reset_o            : out std_logic;
-   cart_phi2_o             : out std_logic;
-   cart_dotclock_o         : out std_logic;
-   
-   cart_nmi_i              : in std_logic;
-   cart_irq_i              : in std_logic;
-   cart_dma_i              : in std_logic;
-   cart_exrom_i            : in std_logic;
-   cart_game_i             : in std_logic;
-   
-   cart_ba_io              : inout std_logic;
-   cart_rw_io              : inout std_logic;
-   cart_roml_io            : inout std_logic;
-   cart_romh_io            : inout std_logic;
-   cart_io1_io             : inout std_logic;
-   cart_io2_io             : inout std_logic;
+   cart_reset_o             : out std_logic;
+   cart_phi2_o              : out std_logic;
+   cart_dotclock_o          : out std_logic;
 
-   cart_d_io               : inout unsigned(7 downto 0);
-   cart_a_io               : inout unsigned(15 downto 0)
+   cart_nmi_i               : in  std_logic;
+   cart_irq_i               : in  std_logic;
+   cart_dma_i               : in  std_logic;
+   cart_exrom_i             : in  std_logic;
+   cart_game_i              : in  std_logic;
+
+   cart_ba_io               : inout std_logic;
+   cart_rw_io               : inout std_logic;
+   cart_roml_io             : inout std_logic;
+   cart_romh_io             : inout std_logic;
+   cart_io1_io              : inout std_logic;
+   cart_io2_io              : inout std_logic;
+
+   cart_d_io                : inout unsigned(7 downto 0);
+   cart_a_io                : inout unsigned(15 downto 0)
 );
 end entity MEGA65_Core;
 
@@ -179,87 +179,87 @@ architecture synthesis of MEGA65_Core is
 -- Clocks and active high reset signals for each clock domain
 ---------------------------------------------------------------------------------------------
 
-signal main_clk               : std_logic;               -- Core main clock
-signal main_rst               : std_logic;
+signal main_clk                   : std_logic;               -- Core main clock
+signal main_rst                   : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
 ---------------------------------------------------------------------------------------------
 
 -- C64 specific signals for PAL/NTSC and core speed switching
-signal core_speed             : unsigned(1 downto 0);    -- see clock.vhd for details
-signal c64_ntsc               : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
-signal c64_clock_speed        : natural;                 -- clock speed depending on PAL/NTSC
-signal c64_exp_port_mode      : natural range 0 to 2;    -- Expansion Port: Use hardware, simulate REU, simulate cartridge (.crt file)
+signal core_speed                 : unsigned(1 downto 0);    -- see clock.vhd for details
+signal c64_ntsc                   : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
+signal c64_clock_speed            : natural;                 -- clock speed depending on PAL/NTSC
+signal c64_exp_port_mode          : natural range 0 to 2;    -- Expansion Port: Use hardware, simulate REU, simulate cartridge (.crt file)
 
 -- C64 RAM
-signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
-signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data out
-signal main_ram_we            : std_logic;                     -- C64 RAM write enable
-signal main_ram_data_to_c64   : std_logic_vector(7 downto 0);  -- C64 RAM data in
-signal main_ram_data          : std_logic_vector(7 downto 0);
-signal main_crt_lo_ram_data   : std_logic_vector(7 downto 0);
-signal main_crt_hi_ram_data   : std_logic_vector(7 downto 0);
+signal main_ram_addr              : unsigned(15 downto 0);         -- C64 address bus
+signal main_ram_data_from_c64     : unsigned(7 downto 0);          -- C64 RAM data out
+signal main_ram_we                : std_logic;                     -- C64 RAM write enable
+signal main_ram_data_to_c64       : std_logic_vector(7 downto 0);  -- C64 RAM data in
+signal main_ram_data              : std_logic_vector(7 downto 0);
+signal main_crt_lo_ram_data       : std_logic_vector(7 downto 0);
+signal main_crt_hi_ram_data       : std_logic_vector(7 downto 0);
 
 -- RAM Expansion Unit
-signal main_ext_cycle         : std_logic;
-signal main_reu_cycle         : std_logic;
-signal main_reu_addr          : std_logic_vector(24 downto 0);
-signal main_reu_dout          : std_logic_vector(7 downto 0);
-signal main_reu_din           : std_logic_vector(7 downto 0);
-signal main_reu_we            : std_logic;
-signal main_reu_cs            : std_logic;
+signal main_ext_cycle             : std_logic;
+signal main_reu_cycle             : std_logic;
+signal main_reu_addr              : std_logic_vector(24 downto 0);
+signal main_reu_dout              : std_logic_vector( 7 downto 0);
+signal main_reu_din               : std_logic_vector( 7 downto 0);
+signal main_reu_we                : std_logic;
+signal main_reu_cs                : std_logic;
 
-signal main_map_write         : std_logic;
-signal main_map_read          : std_logic;
-signal main_map_address       : std_logic_vector(31 downto 0);
-signal main_map_writedata     : std_logic_vector(15 downto 0);
-signal main_map_byteenable    : std_logic_vector(1 downto 0);
-signal main_map_burstcount    : std_logic_vector(7 downto 0);
-signal main_map_readdata      : std_logic_vector(15 downto 0);
-signal main_map_readdatavalid : std_logic;
-signal main_map_waitrequest   : std_logic;
+signal main_map_write             : std_logic;
+signal main_map_read              : std_logic;
+signal main_map_address           : std_logic_vector(31 downto 0);
+signal main_map_writedata         : std_logic_vector(15 downto 0);
+signal main_map_byteenable        : std_logic_vector( 1 downto 0);
+signal main_map_burstcount        : std_logic_vector( 7 downto 0);
+signal main_map_readdata          : std_logic_vector(15 downto 0);
+signal main_map_readdatavalid     : std_logic;
+signal main_map_waitrequest       : std_logic;
 
 signal main_avm_reu_write         : std_logic;
 signal main_avm_reu_read          : std_logic;
 signal main_avm_reu_address       : std_logic_vector(31 downto 0);
 signal main_avm_reu_writedata     : std_logic_vector(15 downto 0);
-signal main_avm_reu_byteenable    : std_logic_vector(1 downto 0);
-signal main_avm_reu_burstcount    : std_logic_vector(7 downto 0);
+signal main_avm_reu_byteenable    : std_logic_vector( 1 downto 0);
+signal main_avm_reu_burstcount    : std_logic_vector( 7 downto 0);
 signal main_avm_reu_readdata      : std_logic_vector(15 downto 0);
 signal main_avm_reu_readdatavalid : std_logic;
 signal main_avm_reu_waitrequest   : std_logic;
 
 -- TBD: Signals from the framework to the cartridge.v module
-signal main_cartridge_loading    : std_logic;
-signal main_cartridge_id         : std_logic_vector(15 downto 0);
-signal main_cartridge_exrom      : std_logic_vector( 7 downto 0);
-signal main_cartridge_game       : std_logic_vector( 7 downto 0);
-signal main_cartridge_bank_laddr : std_logic_vector(15 downto 0);
-signal main_cartridge_bank_size  : std_logic_vector(15 downto 0);
-signal main_cartridge_bank_num   : std_logic_vector(15 downto 0);
-signal main_cartridge_bank_type  : std_logic_vector( 7 downto 0);
-signal main_cartridge_bank_raddr : std_logic_vector(24 downto 0);
-signal main_cartridge_bank_wr    : std_logic;
+signal main_cartridge_loading     : std_logic;
+signal main_cartridge_id          : std_logic_vector(15 downto 0);
+signal main_cartridge_exrom       : std_logic_vector( 7 downto 0);
+signal main_cartridge_game        : std_logic_vector( 7 downto 0);
+signal main_cartridge_bank_laddr  : std_logic_vector(15 downto 0);
+signal main_cartridge_bank_size   : std_logic_vector(15 downto 0);
+signal main_cartridge_bank_num    : std_logic_vector(15 downto 0);
+signal main_cartridge_bank_type   : std_logic_vector( 7 downto 0);
+signal main_cartridge_bank_raddr  : std_logic_vector(24 downto 0);
+signal main_cartridge_bank_wr     : std_logic;
 
-signal main_crt_busy             : std_logic;
-signal main_crt_hi_load          : std_logic;
-signal main_crt_hi_address       : std_logic_vector(31 downto 0);
-signal main_crt_lo_load          : std_logic;
-signal main_crt_lo_address       : std_logic_vector(31 downto 0);
-signal main_bram_lo_address      : std_logic_vector(12 downto 0);
-signal main_bram_lo_data         : std_logic_vector(7 downto 0);
-signal main_bram_lo_wren         : std_logic;
-signal main_bram_hi_address      : std_logic_vector(12 downto 0);
-signal main_bram_hi_data         : std_logic_vector(7 downto 0);
-signal main_bram_hi_wren         : std_logic;
+signal main_crt_busy              : std_logic;
+signal main_crt_hi_load           : std_logic;
+signal main_crt_hi_address        : std_logic_vector(31 downto 0);
+signal main_crt_lo_load           : std_logic;
+signal main_crt_lo_address        : std_logic_vector(31 downto 0);
+signal main_bram_lo_address       : std_logic_vector(12 downto 0);
+signal main_bram_lo_data          : std_logic_vector( 7 downto 0);
+signal main_bram_lo_wren          : std_logic;
+signal main_bram_hi_address       : std_logic_vector(12 downto 0);
+signal main_bram_hi_data          : std_logic_vector( 7 downto 0);
+signal main_bram_hi_wren          : std_logic;
 
 signal main_avm_crt_write         : std_logic;
 signal main_avm_crt_read          : std_logic;
 signal main_avm_crt_address       : std_logic_vector(31 downto 0);
 signal main_avm_crt_writedata     : std_logic_vector(15 downto 0);
-signal main_avm_crt_byteenable    : std_logic_vector(1 downto 0);
-signal main_avm_crt_burstcount    : std_logic_vector(7 downto 0);
+signal main_avm_crt_byteenable    : std_logic_vector( 1 downto 0);
+signal main_avm_crt_burstcount    : std_logic_vector( 7 downto 0);
 signal main_avm_crt_readdata      : std_logic_vector(15 downto 0);
 signal main_avm_crt_readdatavalid : std_logic;
 signal main_avm_crt_waitrequest   : std_logic;
@@ -316,7 +316,6 @@ attribute mark_debug of main_avm_waitrequest_i   : signal is "true";
 attribute mark_debug of main_avm_readdata_i      : signal is "true";
 attribute mark_debug of main_avm_readdatavalid_i : signal is "true";
 
-
 begin
 
    -- MMCME2_ADV clock generators
@@ -349,11 +348,11 @@ begin
 
    -- needs to be in main clock domain
    c64_clock_speed   <= CORE_CLK_SPEED;
-   
+
    -- Mode selection for Expansion Port (aka Cartridge Port):
    -- 0: Use the MEGA65's actual hardware slot
    -- 1: Simulate a 1750 REU with 512KB
-   -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file)    
+   -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file)
    c64_exp_port_mode <= 1 when main_osm_control_i(C_MENU_EXP_PORT_REU)  else
                         2 when main_osm_control_i(C_MENU_EXP_PORT_CRT)  else
                         0;
@@ -365,99 +364,133 @@ begin
    -- main.vhd contains the actual MiSTer core
    i_main : entity work.main
       generic map (
-         G_VDNUM              => C_VDNUM
+         G_VDNUM                => C_VDNUM
       )
       port map (
-         clk_main_i           => main_clk,
-         reset_soft_i         => main_reset_core_i,
-         reset_hard_i         => main_reset_m2m_i,
-         pause_i              => main_pause_core_i,
+         clk_main_i             => main_clk,
+         reset_soft_i           => main_reset_core_i,
+         reset_hard_i           => main_reset_m2m_i,
+         pause_i                => main_pause_core_i,
+
+         ---------------------------
+         -- Configuration options
+         ---------------------------
 
          -- Video mode selection:
          -- c64_ntsc_i: PAL/NTSC switch
          -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
-         -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
-         c64_ntsc_i           => c64_ntsc,
-         clk_main_speed_i     => c64_clock_speed,
-         video_retro15kHz_i   => main_osm_control_i(C_MENU_VGA_RETRO),
+         -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'  =30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
+         c64_ntsc_i             => c64_ntsc,
+         clk_main_speed_i       => c64_clock_speed,
+         video_retro15kHz_i     => main_osm_control_i(C_MENU_VGA_RETRO),
 
          -- SID and CIA versions
-         c64_sid_ver_i        => main_osm_control_i(C_MENU_8580) & main_osm_control_i(C_MENU_8580),
-         c64_cia_ver_i        => main_osm_control_i(C_MENU_8521),
-
-         -- M2M Keyboard interface
-         kb_key_num_i         => main_kb_key_num_i,
-         kb_key_pressed_n_i   => main_kb_key_pressed_n_i,
-
-         -- MEGA65 joysticks
-         joy_1_up_n_i         => main_joy_1_up_n_i ,
-         joy_1_down_n_i       => main_joy_1_down_n_i,
-         joy_1_left_n_i       => main_joy_1_left_n_i,
-         joy_1_right_n_i      => main_joy_1_right_n_i,
-         joy_1_fire_n_i       => main_joy_1_fire_n_i,
-
-         joy_2_up_n_i         => main_joy_2_up_n_i,
-         joy_2_down_n_i       => main_joy_2_down_n_i,
-         joy_2_left_n_i       => main_joy_2_left_n_i,
-         joy_2_right_n_i      => main_joy_2_right_n_i,
-         joy_2_fire_n_i       => main_joy_2_fire_n_i,
-
-         pot1_x_i             => main_pot1_x_i,
-         pot1_y_i             => main_pot1_y_i,
-         pot2_x_i             => main_pot2_x_i,
-         pot2_y_i             => main_pot2_y_i,
-
-         -- Video output
-         -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
-         video_ce_o           => main_video_ce_o,
-         video_ce_ovl_o       => main_video_ce_ovl_o,
-         video_retro15kHz_o   => main_video_retro15kHz_o,
-         video_red_o          => main_video_red_o,
-         video_green_o        => main_video_green_o,
-         video_blue_o         => main_video_blue_o,
-         video_vs_o           => main_video_vs_o,
-         video_hs_o           => main_video_hs_o,
-         video_hblank_o       => main_video_hblank_o,
-         video_vblank_o       => main_video_vblank_o,
-
-         -- Audio output (PCM format, signed values)
-         audio_left_o         => main_audio_left_o,
-         audio_right_o        => main_audio_right_o,
-
-        -- C64 drive led
-         drive_led_o          => main_drive_led_o,
-         drive_led_col_o      => main_drive_led_col_o,
-
-         -- C64 RAM
-         c64_ram_addr_o       => main_ram_addr,
-         c64_ram_data_o       => main_ram_data_from_c64,
-         c64_ram_we_o         => main_ram_we,
-         c64_ram_data_i       => unsigned(main_ram_data_to_c64),
-
-         -- C64 IEC handled by QNICE
-         c64_clk_sd_i         => qnice_clk_i,   -- "sd card write clock" for floppy drive internal dual clock RAM buffer
-         c64_qnice_addr_i     => qnice_dev_addr_i,
-         c64_qnice_data_i     => qnice_dev_data_i,
-         c64_qnice_data_o     => qnice_c64_qnice_data,
-         c64_qnice_ce_i       => qnice_c64_qnice_ce,
-         c64_qnice_we_i       => qnice_c64_qnice_we,
+         c64_sid_ver_i          => main_osm_control_i(C_MENU_8580) & main_osm_control_i(C_MENU_8580),
+         c64_cia_ver_i          => main_osm_control_i(C_MENU_8521),
 
          -- Mode selection for Expansion Port (aka Cartridge Port):
          -- 0: Use the MEGA65's actual hardware slot
          -- 1: Simulate a 1750 REU with 512KB
-         -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file) 
-         c64_exp_port_mode_i  => c64_exp_port_mode,
+         -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file)
+         c64_exp_port_mode_i    => c64_exp_port_mode,
+
+         ---------------------------
+         -- Commodore 64 I/O ports
+         ---------------------------
+
+         -- M2M Keyboard interface
+         kb_key_num_i           => main_kb_key_num_i,
+         kb_key_pressed_n_i     => main_kb_key_pressed_n_i,
+
+         -- MEGA65 joysticks and paddles
+         joy_1_up_n_i           => main_joy_1_up_n_i ,
+         joy_1_down_n_i         => main_joy_1_down_n_i,
+         joy_1_left_n_i         => main_joy_1_left_n_i,
+         joy_1_right_n_i        => main_joy_1_right_n_i,
+         joy_1_fire_n_i         => main_joy_1_fire_n_i,
+         joy_2_up_n_i           => main_joy_2_up_n_i,
+         joy_2_down_n_i         => main_joy_2_down_n_i,
+         joy_2_left_n_i         => main_joy_2_left_n_i,
+         joy_2_right_n_i        => main_joy_2_right_n_i,
+         joy_2_fire_n_i         => main_joy_2_fire_n_i,
+         pot1_x_i               => main_pot1_x_i,
+         pot1_y_i               => main_pot1_y_i,
+         pot2_x_i               => main_pot2_x_i,
+         pot2_y_i               => main_pot2_y_i,
+
+         -- Video output
+         -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
+         video_ce_o             => main_video_ce_o,
+         video_ce_ovl_o         => main_video_ce_ovl_o,
+         video_retro15kHz_o     => main_video_retro15kHz_o,
+         video_red_o            => main_video_red_o,
+         video_green_o          => main_video_green_o,
+         video_blue_o           => main_video_blue_o,
+         video_vs_o             => main_video_vs_o,
+         video_hs_o             => main_video_hs_o,
+         video_hblank_o         => main_video_hblank_o,
+         video_vblank_o         => main_video_vblank_o,
+
+         -- Audio output (PCM format, signed values)
+         audio_left_o           => main_audio_left_o,
+         audio_right_o          => main_audio_right_o,
+
+         -- C64 drive led
+         drive_led_o            => main_drive_led_o,
+         drive_led_col_o        => main_drive_led_col_o,
+
+         -- C64 RAM
+         c64_ram_addr_o         => main_ram_addr,
+         c64_ram_data_o         => main_ram_data_from_c64,
+         c64_ram_we_o           => main_ram_we,
+         c64_ram_data_i         => unsigned(main_ram_data_to_c64),
+
+         -- C64 IEC handled by QNICE
+         c64_clk_sd_i           => qnice_clk_i,   -- "sd card write clock" for floppy drive internal dual clock RAM buffer
+         c64_qnice_addr_i       => qnice_dev_addr_i,
+         c64_qnice_data_i       => qnice_dev_data_i,
+         c64_qnice_data_o       => qnice_c64_qnice_data,
+         c64_qnice_ce_i         => qnice_c64_qnice_ce,
+         c64_qnice_we_i         => qnice_c64_qnice_we,
+
+         -- C64 Expansion Port (aka Cartridge Port) control lines
+         -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
+         cart_ctrl_en_o         => cart_ctrl_en_o,
+         cart_ctrl_dir_o        => cart_ctrl_dir_o,
+         cart_addr_en_o         => cart_addr_en_o,
+         cart_haddr_dir_o       => cart_haddr_dir_o,
+         cart_laddr_dir_o       => cart_laddr_dir_o,
+         cart_data_en_o         => cart_data_en_o,
+         cart_data_dir_o        => cart_data_dir_o,
+
+         -- C64 Expansion Port (aka Cartridge Port)
+         cart_reset_o           => cart_reset_o,
+         cart_phi2_o            => cart_phi2_o,
+         cart_dotclock_o        => cart_dotclock_o,
+         cart_nmi_i             => cart_nmi_i,
+         cart_irq_i             => cart_irq_i,
+         cart_dma_i             => cart_dma_i,
+         cart_exrom_i           => cart_exrom_i,
+         cart_game_i            => cart_game_i,
+         cart_ba_io             => cart_ba_io,
+         cart_rw_io             => cart_rw_io,
+         cart_roml_io           => cart_roml_io,
+         cart_romh_io           => cart_romh_io,
+         cart_io1_io            => cart_io1_io,
+         cart_io2_io            => cart_io2_io,
+         cart_d_io              => cart_d_io,
+         cart_a_io              => cart_a_io,
 
          -- RAM Expansion Unit (REU)
-         ext_cycle_o          => main_ext_cycle,
-         reu_cycle_i          => main_reu_cycle,
-         reu_addr_o           => main_reu_addr,
-         reu_dout_o           => main_reu_dout,
-         reu_din_i            => main_reu_din,
-         reu_we_o             => main_reu_we,
-         reu_cs_o             => main_reu_cs,
+         ext_cycle_o            => main_ext_cycle,
+         reu_cycle_i            => main_reu_cycle,
+         reu_addr_o             => main_reu_addr,
+         reu_dout_o             => main_reu_dout,
+         reu_din_i              => main_reu_din,
+         reu_we_o               => main_reu_we,
+         reu_cs_o               => main_reu_cs,
 
-         -- Signals from the framework to the cartridge.v module
+         -- Support for software based cartridges (aka ".CRT" files)
          cartridge_loading_i    => main_cartridge_loading,
          cartridge_id_i         => main_cartridge_id,
          cartridge_exrom_i      => main_cartridge_exrom,
@@ -469,38 +502,8 @@ begin
          cartridge_bank_raddr_i => main_cartridge_bank_raddr,
          cartridge_bank_wr_i    => main_cartridge_bank_wr,
          crt_bank_lo_o          => main_crt_bank_lo,
-         crt_bank_hi_o          => main_crt_bank_hi,
-         
-         -- C64 Expansion Port (aka Cartridge Port) control lines
-         -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
-         cart_ctrl_en_o       => cart_ctrl_en_o,
-         cart_ctrl_dir_o      => cart_ctrl_dir_o,
-         cart_addr_en_o       => cart_addr_en_o,
-         cart_haddr_dir_o     => cart_haddr_dir_o,
-         cart_laddr_dir_o     => cart_laddr_dir_o,
-         cart_data_en_o       => cart_data_en_o,
-         cart_data_dir_o      => cart_data_dir_o,
-             
-         -- C64 Expansion Port (aka Cartridge Port)
-         cart_reset_o         => cart_reset_o,
-         cart_phi2_o          => cart_phi2_o,
-         cart_dotclock_o      => cart_dotclock_o,
-         
-         cart_nmi_i           => cart_nmi_i,
-         cart_irq_i           => cart_irq_i,
-         cart_dma_i           => cart_dma_i,
-         cart_exrom_i         => cart_exrom_i,         
-         cart_game_i          => cart_game_i,     
+         crt_bank_hi_o          => main_crt_bank_hi
 
-         cart_ba_io           => cart_ba_io,
-         cart_rw_io           => cart_rw_io,
-         cart_roml_io         => cart_roml_io,
-         cart_romh_io         => cart_romh_io,
-         cart_io1_io          => cart_io1_io,
-         cart_io2_io          => cart_io2_io,
-     
-         cart_d_io            => cart_d_io,
-         cart_a_io            => cart_a_io
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------
@@ -850,5 +853,4 @@ begin
    end process hyperram_mux_proc;
 
 end architecture synthesis;
-
 

@@ -17,141 +17,145 @@ use work.vdrives_pkg.all;
 
 entity main is
    generic (
-      G_VDNUM                 : natural                     -- amount of virtual drives
+      G_VDNUM                : natural                     -- amount of virtual drives
    );
    port (
-      clk_main_i              : in  std_logic;
-      reset_soft_i            : in  std_logic;
-      reset_hard_i            : in  std_logic;
-      pause_i                 : in  std_logic;
+      clk_main_i             : in  std_logic;
+      reset_soft_i           : in  std_logic;              -- Pulse once for a soft reset
+      reset_hard_i           : in  std_logic;              -- Pulse once for a hard reset
+      pause_i                : in  std_logic;              -- Pull high to pause the core
+
+      ---------------------------
+      -- Configuration options
+      ---------------------------
 
       -- Video mode selection:
       -- c64_ntsc_i: PAL/NTSC switch
       -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
       -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'=30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
-      c64_ntsc_i              : in std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
-      clk_main_speed_i        : in natural;
-      video_retro15kHz_i      : in std_logic;
+      c64_ntsc_i             : in  std_logic;               -- 0 = PAL mode, 1 = NTSC mode, clocks need to be correctly set, too
+      clk_main_speed_i       : in  natural;
+      video_retro15kHz_i     : in  std_logic;
 
       -- SID and CIA versions
-      c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
-      c64_cia_ver_i           : in std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"
+      c64_sid_ver_i          : in  std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
+      c64_cia_ver_i          : in  std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"
 
-      -- M2M Keyboard interface
-      kb_key_num_i            : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
-      kb_key_pressed_n_i      : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
-
-      -- MEGA65 joysticks and paddles
-      joy_1_up_n_i            : in  std_logic;
-      joy_1_down_n_i          : in  std_logic;
-      joy_1_left_n_i          : in  std_logic;
-      joy_1_right_n_i         : in  std_logic;
-      joy_1_fire_n_i          : in  std_logic;
-
-      joy_2_up_n_i            : in  std_logic;
-      joy_2_down_n_i          : in  std_logic;
-      joy_2_left_n_i          : in  std_logic;
-      joy_2_right_n_i         : in  std_logic;
-      joy_2_fire_n_i          : in  std_logic;
-
-      pot1_x_i                : in std_logic_vector(7 downto 0);
-      pot1_y_i                : in std_logic_vector(7 downto 0);
-      pot2_x_i                : in std_logic_vector(7 downto 0);
-      pot2_y_i                : in std_logic_vector(7 downto 0);
-
-      -- Video output
-      video_ce_o              : out std_logic;
-      video_ce_ovl_o          : out std_logic;
-      video_retro15kHz_o      : out std_logic;
-      video_red_o             : out std_logic_vector(7 downto 0);
-      video_green_o           : out std_logic_vector(7 downto 0);
-      video_blue_o            : out std_logic_vector(7 downto 0);
-      video_vs_o              : out std_logic;
-      video_hs_o              : out std_logic;
-      video_hblank_o          : out std_logic;
-      video_vblank_o          : out std_logic;
-
-      -- Audio output (Signed PCM)
-      audio_left_o            : out signed(15 downto 0);
-      audio_right_o           : out signed(15 downto 0);
-
-      -- C64 drive led (color is RGB)
-      drive_led_o             : out std_logic;
-      drive_led_col_o         : out std_logic_vector(23 downto 0);
-
-      -- C64 RAM: No address latching necessary and the chip can always be enabled
-      c64_ram_addr_o          : out unsigned(15 downto 0);  -- C64 address bus
-      c64_ram_data_o          : out unsigned(7 downto 0);   -- C64 RAM data out
-      c64_ram_we_o            : out std_logic;              -- C64 RAM write enable
-      c64_ram_data_i          : in unsigned(7 downto 0);    -- C64 RAM data in
-
-      -- C64 IEC handled by QNICE
-      c64_clk_sd_i            : in std_logic;               -- "sd card write clock" for floppy drive internal dual clock RAM buffer
-      c64_qnice_addr_i        : in std_logic_vector(27 downto 0);
-      c64_qnice_data_i        : in std_logic_vector(15 downto 0);
-      c64_qnice_data_o        : out std_logic_vector(15 downto 0);
-      c64_qnice_ce_i          : in std_logic;
-      c64_qnice_we_i          : in std_logic;
-      
       -- Mode selection for Expansion Port (aka Cartridge Port):
       -- 0: Use the MEGA65's actual hardware slot
       -- 1: Simulate a 1750 REU with 512KB
-      -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file) 
-      c64_exp_port_mode_i     : in natural range 0 to 2;
+      -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file)
+      c64_exp_port_mode_i    : in  natural range 0 to 2;
 
-      -- RAM Expansion Unit
-      ext_cycle_o             : out std_logic;
-      reu_cycle_i             : in  std_logic;
-      reu_addr_o              : out std_logic_vector(24 downto 0);
-      reu_dout_o              : out std_logic_vector(7 downto 0);
-      reu_din_i               : in  std_logic_vector(7 downto 0);
-      reu_we_o                : out std_logic;
-      reu_cs_o                : out std_logic;
 
-      -- Signals from the framework to the cartridge.v module
-      cartridge_loading_i     : in  std_logic;
-      cartridge_id_i          : in  std_logic_vector(15 downto 0);
-      cartridge_exrom_i       : in  std_logic_vector( 7 downto 0);
-      cartridge_game_i        : in  std_logic_vector( 7 downto 0);
-      cartridge_bank_laddr_i  : in  std_logic_vector(15 downto 0);
-      cartridge_bank_size_i   : in  std_logic_vector(15 downto 0);
-      cartridge_bank_num_i    : in  std_logic_vector(15 downto 0);
-      cartridge_bank_type_i   : in  std_logic_vector( 7 downto 0);
-      cartridge_bank_raddr_i  : in  std_logic_vector(24 downto 0);
-      cartridge_bank_wr_i     : in  std_logic;
-      crt_bank_lo_o           : out std_logic_vector(6 downto 0);
-      crt_bank_hi_o           : out std_logic_vector(6 downto 0);
-      
+      ---------------------------
+      -- Commodore 64 I/O ports
+      ---------------------------
+
+      -- M2M Keyboard interface
+      kb_key_num_i           : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
+      kb_key_pressed_n_i     : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+
+      -- MEGA65 joysticks and paddles
+      joy_1_up_n_i           : in  std_logic;
+      joy_1_down_n_i         : in  std_logic;
+      joy_1_left_n_i         : in  std_logic;
+      joy_1_right_n_i        : in  std_logic;
+      joy_1_fire_n_i         : in  std_logic;
+      joy_2_up_n_i           : in  std_logic;
+      joy_2_down_n_i         : in  std_logic;
+      joy_2_left_n_i         : in  std_logic;
+      joy_2_right_n_i        : in  std_logic;
+      joy_2_fire_n_i         : in  std_logic;
+      pot1_x_i               : in  std_logic_vector(7 downto 0);
+      pot1_y_i               : in  std_logic_vector(7 downto 0);
+      pot2_x_i               : in  std_logic_vector(7 downto 0);
+      pot2_y_i               : in  std_logic_vector(7 downto 0);
+
+      -- Video output
+      video_ce_o             : out std_logic;
+      video_ce_ovl_o         : out std_logic;
+      video_retro15kHz_o     : out std_logic;
+      video_red_o            : out std_logic_vector(7 downto 0);
+      video_green_o          : out std_logic_vector(7 downto 0);
+      video_blue_o           : out std_logic_vector(7 downto 0);
+      video_vs_o             : out std_logic;
+      video_hs_o             : out std_logic;
+      video_hblank_o         : out std_logic;
+      video_vblank_o         : out std_logic;
+
+      -- Audio output (Signed PCM)
+      audio_left_o           : out signed(15 downto 0);
+      audio_right_o          : out signed(15 downto 0);
+
+      -- C64 drive led (color is RGB)
+      drive_led_o            : out std_logic;
+      drive_led_col_o        : out std_logic_vector(23 downto 0);
+
+      -- C64 RAM: No address latching necessary and the chip can always be enabled
+      c64_ram_addr_o         : out unsigned(15 downto 0);    -- C64 address bus
+      c64_ram_data_o         : out unsigned(7 downto 0);     -- C64 RAM data out
+      c64_ram_we_o           : out std_logic;                -- C64 RAM write enable
+      c64_ram_data_i         : in  unsigned(7 downto 0);     -- C64 RAM data in
+
+      -- C64 IEC handled by QNICE
+      c64_clk_sd_i           : in  std_logic;                -- "sd card write clock" for floppy drive internal dual clock RAM buffer
+      c64_qnice_addr_i       : in  std_logic_vector(27 downto 0);
+      c64_qnice_data_i       : in  std_logic_vector(15 downto 0);
+      c64_qnice_data_o       : out std_logic_vector(15 downto 0);
+      c64_qnice_ce_i         : in  std_logic;
+      c64_qnice_we_i         : in  std_logic;
+
       -- C64 Expansion Port (aka Cartridge Port) control lines
       -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
-      cart_ctrl_en_o          : out std_logic;
-      cart_ctrl_dir_o         : out std_logic;
-      cart_addr_en_o          : out std_logic;     
-      cart_haddr_dir_o        : out std_logic;
-      cart_laddr_dir_o        : out std_logic;
-      cart_data_en_o          : out std_logic;
-      cart_data_dir_o         : out std_logic;
-  
+      cart_ctrl_en_o         : out std_logic;
+      cart_ctrl_dir_o        : out std_logic;
+      cart_addr_en_o         : out std_logic;
+      cart_haddr_dir_o       : out std_logic;
+      cart_laddr_dir_o       : out std_logic;
+      cart_data_en_o         : out std_logic;
+      cart_data_dir_o        : out std_logic;
+
       -- C64 Expansion Port (aka Cartridge Port)
-      cart_reset_o            : out std_logic;
-      cart_phi2_o             : out std_logic;
-      cart_dotclock_o         : out std_logic;
-      
-      cart_nmi_i              : in std_logic;
-      cart_irq_i              : in std_logic;
-      cart_dma_i              : in std_logic;
-      cart_exrom_i            : in std_logic;
-      cart_game_i             : in std_logic;      
-      
-      cart_ba_io              : inout std_logic;
-      cart_rw_io              : inout std_logic;
-      cart_roml_io            : inout std_logic;
-      cart_romh_io            : inout std_logic;
-      cart_io1_io             : inout std_logic;
-      cart_io2_io             : inout std_logic;
-   
-      cart_d_io               : inout unsigned(7 downto 0);
-      cart_a_io               : inout unsigned(15 downto 0)
+      cart_reset_o           : out   std_logic;
+      cart_phi2_o            : out   std_logic;
+      cart_dotclock_o        : out   std_logic;
+      cart_nmi_i             : in    std_logic;
+      cart_irq_i             : in    std_logic;
+      cart_dma_i             : in    std_logic;
+      cart_exrom_i           : in    std_logic;
+      cart_game_i            : in    std_logic;
+      cart_ba_io             : inout std_logic;
+      cart_rw_io             : inout std_logic;
+      cart_roml_io           : inout std_logic;
+      cart_romh_io           : inout std_logic;
+      cart_io1_io            : inout std_logic;
+      cart_io2_io            : inout std_logic;
+      cart_d_io              : inout unsigned(7 downto 0);
+      cart_a_io              : inout unsigned(15 downto 0);
+
+      -- RAM Expansion Unit
+      ext_cycle_o            : out std_logic;
+      reu_cycle_i            : in  std_logic;
+      reu_addr_o             : out std_logic_vector(24 downto 0);
+      reu_dout_o             : out std_logic_vector(7 downto 0);
+      reu_din_i              : in  std_logic_vector(7 downto 0);
+      reu_we_o               : out std_logic;
+      reu_cs_o               : out std_logic;
+
+      -- Support for software based cartridges (aka ".CRT" files)
+      cartridge_loading_i    : in  std_logic;
+      cartridge_id_i         : in  std_logic_vector(15 downto 0);
+      cartridge_exrom_i      : in  std_logic_vector( 7 downto 0);
+      cartridge_game_i       : in  std_logic_vector( 7 downto 0);
+      cartridge_bank_laddr_i : in  std_logic_vector(15 downto 0);
+      cartridge_bank_size_i  : in  std_logic_vector(15 downto 0);
+      cartridge_bank_num_i   : in  std_logic_vector(15 downto 0);
+      cartridge_bank_type_i  : in  std_logic_vector( 7 downto 0);
+      cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
+      cartridge_bank_wr_i    : in  std_logic;
+      crt_bank_lo_o          : out std_logic_vector(6 downto 0);
+      crt_bank_hi_o          : out std_logic_vector(6 downto 0)
    );
 end entity main;
 
@@ -173,7 +177,7 @@ architecture synthesis of main is
    -- signals for RAM
    signal c64_ram_ce          : std_logic;
    signal c64_ram_we          : std_logic;
-   signal c64_ram_data        : unsigned(7 downto 0);  
+   signal c64_ram_data        : unsigned(7 downto 0);
 
    -- 18-bit SID from C64: Needs to go through audio processing ported from Verilog to VHDL from MiSTer's c64.sv
    signal c64_sid_l           : std_logic_vector(17 downto 0);
@@ -252,8 +256,8 @@ architecture synthesis of main is
    signal core_io_data        : unsigned(7 downto 0);
    signal core_dotclk         : std_logic;
    signal core_phi0           : std_logic;
-   signal core_phi2           : std_logic;   
-   
+   signal core_phi2           : std_logic;
+
    -- Hardware Expansion Port (aka Cartridge Port)
    signal cart_roml_n         : std_logic;
    signal cart_romh_n         : std_logic;
@@ -263,9 +267,9 @@ architecture synthesis of main is
    signal cart_irq_n          : std_logic;
    signal cart_dma_n          : std_logic;
    signal cart_exrom_n        : std_logic;
-   signal cart_game_n         : std_logic;      
+   signal cart_game_n         : std_logic;
    signal data_from_cart      : unsigned(7 downto 0);
-   
+
    -- RAM Expansion Unit (REU)
    signal reu_cfg             : std_logic_vector(1 downto 0);
    signal reu_dma_req         : std_logic;
@@ -297,8 +301,8 @@ architecture synthesis of main is
    signal crt_exrom           : std_logic;
    signal crt_game            : std_logic;
 
-   
-   
+
+
    signal dbg_joybtn          : std_logic;
    signal dbg_cart_dir        : std_logic;
    attribute MARK_DEBUG : string;
@@ -315,18 +319,19 @@ architecture synthesis of main is
    attribute MARK_DEBUG of core_umax_romh : signal is "TRUE";
    attribute MARK_DEBUG of reset_core_n   : signal is "TRUE";
    attribute MARK_DEBUG of core_dotclk    : signal is "TRUE";
-	attribute MARK_DEBUG of core_phi0      : signal is "TRUE";      
+	attribute MARK_DEBUG of core_phi0      : signal is "TRUE";
 	attribute MARK_DEBUG of core_phi2      : signal is "TRUE";
    attribute MARK_DEBUG of cart_rw_io     : signal is "TRUE";
    attribute MARK_DEBUG of dbg_joybtn     : signal is "TRUE";
    attribute MARK_DEBUG of dbg_cart_dir   : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
-   --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";  
+   --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";
 --   attribute MARK_DEBUG of hard_reset_n      : signal is "TRUE";
 --   attribute MARK_DEBUG of hard_rst_counter  : signal is "TRUE";
---   attribute MARK_DEBUG of system_cold_start : signal is "TRUE";    
+--   attribute MARK_DEBUG of system_cold_start : signal is "TRUE";
 
+   -- Verilog file from MiSTer core
    component reu
       port (
          clk         : in  std_logic;
@@ -356,6 +361,7 @@ architecture synthesis of main is
       );
    end component reu;
 
+   -- Verilog file from MiSTer core
    component cartridge
       port (
          clk32           : in  std_logic;
@@ -397,6 +403,7 @@ architecture synthesis of main is
    end component cartridge;
 
 begin
+
    -- @TODO DEBUG/DELIT
    dbg_joybtn     <= joy_2_fire_n_i;
    dbg_cart_dir   <= cart_data_dir_o;
@@ -437,7 +444,7 @@ begin
          end if;
       end if;
    end process;
-   
+
    handle_cold_start : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
@@ -451,8 +458,8 @@ begin
 
    --------------------------------------------------------------------------------------------------
    -- Access to C64's RAM and hardware/simulated cartridge ROM
-   --------------------------------------------------------------------------------------------------   
-   
+   --------------------------------------------------------------------------------------------------
+
    cpu_data_in : process(all)
    begin
       -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
@@ -461,15 +468,15 @@ begin
       -- MiSTer core is not supporting this.
       if hard_reset_n = '0' and c64_ram_addr_o(15 downto 12) = x"8" and system_cold_start = 0 then
          c64_ram_data <= x"00";
-      
+
       -- Access the hardware cartridge
       elsif cart_roml_n = '0' or cart_romh_n = '0' then
          c64_ram_data <= data_from_cart;
-      
+
       -- Standard access to the C64's RAM
       else
          c64_ram_data <= c64_ram_data_i;
-      end if;               
+      end if;
    end process;
 
    --------------------------------------------------------------------------------------------------
@@ -533,7 +540,7 @@ begin
          IOF         => core_iof,         -- output. aka IO2. CPU access to 0xDFxx
          dotclk      => core_dotclk,      -- output
          phi0        => core_phi0,        -- output
-         phi2        => core_phi2,        -- output         
+         phi2        => core_phi2,        -- output
 --         freeze_key  => open,
 --         mod_key     => open,
 --         tape_play   => open,
@@ -614,19 +621,19 @@ begin
    begin
       -- C64 Expansion Port (aka Cartridge Port) control lines
       -- *_en is low active else tri-state high impedance
-      -- *_dir=1 means FPGA->Port, =0 means Port->FPGA   
+      -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
 
       -- Tristate all expansion port drivers that we can directly control
       cart_ctrl_en_o       <= '1';
-      cart_addr_en_o       <= '1';      
+      cart_addr_en_o       <= '1';
       cart_data_en_o       <= '1';
-      
+
       -- Fixed direction signals: from FPGA to HW port
       -- @TODO: As soon as we support modules that can act as busmaster, we need to become more flexible here
       cart_ctrl_dir_o      <= '1';     -- control signals
       cart_haddr_dir_o     <= '1';     -- CPU address bus: higher 8 bit
       cart_laddr_dir_o     <= '1';     -- CPU address bus: lower 8 bit
-      
+
       -- Default values for all signals
       cart_a_io            <= (others => 'Z');
       cart_d_io            <= (others => 'Z');
@@ -645,12 +652,12 @@ begin
       cart_exrom_n         <= '1';
       cart_game_n          <= '1';
       cart_data_dir_o      <= '0';     -- changes dynamically (see below)
-      data_from_cart       <= x"00";      
-      
+      data_from_cart       <= x"00";
+
       -- @TODO: Get rid of these (see below)
       cart_roml_n          <= '1';
       cart_romh_n          <= '1';
-      cart_io1_n           <= '1'; 
+      cart_io1_n           <= '1';
       cart_io2_n           <= '1';
 
       -- Mode = Use hardware slot
@@ -664,29 +671,29 @@ begin
          cart_io2_io       <= cart_io2_n;
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
-      
+
          -- @TODO: These signals are for easier debugging. Consolidate with the
          -- signals above as soon as we have a "stable enough" state
          cart_roml_n       <= not core_roml;
          cart_romh_n       <= not core_romh;
-         cart_io1_n        <= not core_ioe; 
+         cart_io1_n        <= not core_ioe;
          cart_io2_n        <= not core_iof;
-      
+
          cart_reset_o      <= reset_core_n;
          cart_phi2_o       <= core_phi2;
          cart_dotclock_o   <= core_dotclk;
-            
-         cart_nmi_n        <= cart_nmi_i; 
-         cart_irq_n        <= cart_irq_i;       
-         cart_dma_n        <= cart_dma_i; 
+
+         cart_nmi_n        <= cart_nmi_i;
+         cart_irq_n        <= cart_irq_i;
+         cart_dma_n        <= cart_dma_i;
          cart_exrom_n      <= cart_exrom_i;
          cart_game_n       <= cart_game_i;
-         
+
          -- @TODO: As soon as we want to support DMA-enabled cartridges,
          -- we need to treat the address bus as a bi-directional port
-         cart_addr_en_o    <= '0';     
-         cart_a_io         <= c64_ram_addr_o;         
-      
+         cart_addr_en_o    <= '0';
+         cart_a_io         <= c64_ram_addr_o;
+
          -- Switch the data lines bi-directionally so that the CPU can also
          -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
@@ -703,7 +710,7 @@ begin
          end if;
       end if;
    end process;
-   
+
    handle_cores_expansion_port_signals : process(all)
    begin
       core_game_n          <= '1';
@@ -717,21 +724,21 @@ begin
       reu_iof              <= '0';
 
       case c64_exp_port_mode_i is
-      
+
          -- Use hardware slot
          when 0 =>
             core_game_n    <= cart_game_n;
             core_exrom_n   <= cart_exrom_n;
             core_irq_n     <= cart_irq_n;
             core_nmi_n     <= cart_nmi_n and restore_key_n;
-            
+
          -- Simulate 1750 REU 512KB
          when 1 =>
             core_io_ext    <= reu_oe;
             core_io_data   <= reu_dout;
             core_dma       <= reu_dma_req;
             reu_iof        <= core_iof;
-            
+
          -- Simulated cartridge using data from .crt file
          when 2 =>
             core_io_rom    <= crt_io_rom;
@@ -739,12 +746,12 @@ begin
             core_io_data   <= unsigned(crt_io_data);
             core_game_n    <= crt_game;
             core_exrom_n   <= crt_exrom;
-            
+
          when others =>
             null;
       end case;
-   end process;          
-    
+   end process;
+
    --------------------------------------------------------------------------------------------------
    -- Simulated REU
    --------------------------------------------------------------------------------------------------
