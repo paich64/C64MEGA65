@@ -242,6 +242,7 @@ signal main_cartridge_bank_type   : std_logic_vector( 7 downto 0);
 signal main_cartridge_bank_raddr  : std_logic_vector(24 downto 0);
 signal main_cartridge_bank_wr     : std_logic;
 
+signal main_crt2hyperram_reset    : std_logic;
 signal main_crt_busy              : std_logic;
 signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
 signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
@@ -296,6 +297,7 @@ signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
 attribute mark_debug : string;
+attribute mark_debug of main_crt2hyperram_reset  : signal is "true";
 attribute mark_debug of main_crt_bank_lo         : signal is "true";
 attribute mark_debug of main_crt_bank_hi         : signal is "true";
 attribute mark_debug of c64_exp_port_mode        : signal is "true";
@@ -308,6 +310,10 @@ attribute mark_debug of main_crt_lo_ram_data     : signal is "true";
 attribute mark_debug of main_crt_hi_ram_data     : signal is "true";
 attribute mark_debug of cart_roml_io             : signal is "true";
 attribute mark_debug of cart_romh_io             : signal is "true";
+attribute mark_debug of main_bram_address        : signal is "true";
+attribute mark_debug of main_bram_data           : signal is "true";
+attribute mark_debug of main_bram_lo_wren        : signal is "true";
+attribute mark_debug of main_bram_hi_wren        : signal is "true";
 
 begin
 
@@ -672,10 +678,11 @@ begin
          q_b               => open
       ); -- crt_lo_ram
 
+   main_crt2hyperram_reset <= main_reset_core_i when c64_exp_port_mode = 2 else '1';
    i_crt2hyperram : entity work.crt2hyperram
       port map (
          clk_i               => main_clk,
-         rst_i               => main_reset_core_i,
+         rst_i               => main_crt2hyperram_reset,
          crt_busy_o          => main_crt_busy,
          crt_bank_lo_i       => main_crt_bank_lo,
          crt_bank_hi_i       => main_crt_bank_hi,

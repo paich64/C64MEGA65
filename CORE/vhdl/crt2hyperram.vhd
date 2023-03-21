@@ -39,12 +39,14 @@ end entity crt2hyperram;
 
 architecture synthesis of crt2hyperram is
 
-   signal crt_bank_lo_d  : std_logic_vector(6 downto 0);
-   signal crt_bank_hi_d  : std_logic_vector(6 downto 0);
-   signal crt_hi_load    : std_logic;
-   signal crt_hi_address : std_logic_vector(31 downto 0);
-   signal crt_lo_load    : std_logic;
-   signal crt_lo_address : std_logic_vector(31 downto 0);
+   signal crt_bank_lo_d    : std_logic_vector(6 downto 0);
+   signal crt_bank_hi_d    : std_logic_vector(6 downto 0);
+   signal crt_hi_load      : std_logic;
+   signal crt_hi_load_done : std_logic;
+   signal crt_hi_address   : std_logic_vector(31 downto 0);
+   signal crt_lo_load      : std_logic;
+   signal crt_lo_load_done : std_logic;
+   signal crt_lo_address   : std_logic_vector(31 downto 0);
 
    type t_state is (IDLE_ST, READ_LSB_HI_ST, READ_MSB_HI_ST, READ_LSB_LO_ST, READ_MSB_LO_ST);
 
@@ -57,15 +59,15 @@ architecture synthesis of crt2hyperram is
    attribute mark_debug of crt_busy_o          : signal is "true";
    attribute mark_debug of crt_bank_lo_i       : signal is "true";
    attribute mark_debug of crt_bank_hi_i       : signal is "true";
-   attribute mark_debug of avm_write_o         : signal is "true";
-   attribute mark_debug of avm_read_o          : signal is "true";
-   attribute mark_debug of avm_address_o       : signal is "true";
-   attribute mark_debug of avm_writedata_o     : signal is "true";
-   attribute mark_debug of avm_byteenable_o    : signal is "true";
-   attribute mark_debug of avm_burstcount_o    : signal is "true";
-   attribute mark_debug of avm_readdata_i      : signal is "true";
-   attribute mark_debug of avm_readdatavalid_i : signal is "true";
-   attribute mark_debug of avm_waitrequest_i   : signal is "true";
+--   attribute mark_debug of avm_write_o         : signal is "true";
+--   attribute mark_debug of avm_read_o          : signal is "true";
+--   attribute mark_debug of avm_address_o       : signal is "true";
+--   attribute mark_debug of avm_writedata_o     : signal is "true";
+--   attribute mark_debug of avm_byteenable_o    : signal is "true";
+--   attribute mark_debug of avm_burstcount_o    : signal is "true";
+--   attribute mark_debug of avm_readdata_i      : signal is "true";
+--   attribute mark_debug of avm_readdatavalid_i : signal is "true";
+--   attribute mark_debug of avm_waitrequest_i   : signal is "true";
    attribute mark_debug of bram_address_o      : signal is "true";
    attribute mark_debug of bram_data_o         : signal is "true";
    attribute mark_debug of bram_lo_wren_o      : signal is "true";
@@ -75,8 +77,10 @@ architecture synthesis of crt2hyperram is
    attribute mark_debug of crt_bank_lo_d       : signal is "true";
    attribute mark_debug of crt_bank_hi_d       : signal is "true";
    attribute mark_debug of crt_hi_load         : signal is "true";
+   attribute mark_debug of crt_hi_load_done    : signal is "true";
    attribute mark_debug of crt_hi_address      : signal is "true";
    attribute mark_debug of crt_lo_load         : signal is "true";
+   attribute mark_debug of crt_lo_load_done    : signal is "true";
    attribute mark_debug of crt_lo_address      : signal is "true";
    attribute mark_debug of state               : signal is "true";
    attribute mark_debug of fifo_ready          : signal is "true";
@@ -90,8 +94,12 @@ begin
       if rising_edge(clk_i) then
          crt_bank_lo_d  <= crt_bank_lo_i;
          crt_bank_hi_d  <= crt_bank_hi_i;
-         crt_lo_load    <= '0';
-         crt_hi_load    <= '0';
+         if crt_lo_load_done = '1' then
+            crt_lo_load <= '0';
+         end if;
+         if crt_hi_load_done = '1' then
+            crt_hi_load <= '0';
+         end if;
          crt_lo_address <= X"00200000";
          crt_hi_address <= X"00200000";
 
@@ -121,12 +129,14 @@ begin
             avm_read_o  <= '0';
          end if;
 
+         crt_lo_load_done <= '0';
+         crt_hi_load_done <= '0';
          bram_hi_wren_o <= '0';
          bram_lo_wren_o <= '0';
 
          case state is
             when IDLE_ST =>
-               if crt_hi_load = '1' then
+               if crt_hi_load = '1' and crt_hi_load_done = '0' then
                   report "Starting load to Hi BRAM from address " & to_hstring(crt_hi_address);
                   avm_write_o        <= '0';
                   avm_read_o         <= '1';
@@ -134,7 +144,7 @@ begin
                   avm_burstcount_o   <= X"80"; -- Read 256 bytes
                   bram_address_o     <= (others => '1');
                   state              <= READ_LSB_HI_ST;
-               elsif crt_lo_load = '1' then
+               elsif crt_lo_load = '1' and crt_lo_load_done = '0' then
                   report "Starting load to Lo BRAM from address " & to_hstring(crt_lo_address);
                   avm_write_o        <= '0';
                   avm_read_o         <= '1';
@@ -160,7 +170,8 @@ begin
                state          <= READ_LSB_HI_ST;
 
                if "000" & bram_address_o = X"1FFE" then
-                  state          <= IDLE_ST;
+                  crt_hi_load_done <= '1';
+                  state            <= IDLE_ST;
                elsif bram_address_o(7 downto 0) = X"FE" then
                   avm_write_o      <= '0';
                   avm_read_o       <= '1';
@@ -184,7 +195,8 @@ begin
                state          <= READ_LSB_LO_ST;
 
                if "000" & bram_address_o = X"1FFE" then
-                  state          <= IDLE_ST;
+                  crt_lo_load_done <= '1';
+                  state            <= IDLE_ST;
                elsif bram_address_o(7 downto 0) = X"FE" then
                   avm_write_o      <= '0';
                   avm_read_o       <= '1';
@@ -205,6 +217,8 @@ begin
             avm_burstcount_o <= (others => '0');
             bram_hi_wren_o   <= '0';
             bram_lo_wren_o   <= '0';
+            crt_lo_load_done <= '0';
+            crt_hi_load_done <= '0';
             state            <= IDLE_ST;
          end if;
 
