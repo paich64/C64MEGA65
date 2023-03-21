@@ -468,7 +468,7 @@ begin
          cart_dotclock_o        => cart_dotclock_o,
          cart_nmi_i             => cart_nmi_i,
          cart_irq_i             => cart_irq_i,
-         cart_dma_i             => cart_dma_i,
+         cart_dma_i             => cart_dma_i and not main_crt_busy,
          cart_exrom_i           => cart_exrom_i,
          cart_game_i            => cart_game_i,
          cart_ba_io             => cart_ba_io,
