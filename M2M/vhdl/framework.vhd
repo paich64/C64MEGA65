@@ -138,17 +138,19 @@ port (
    main_pot1_y_o           : out std_logic_vector(7 downto 0);
    main_pot2_x_o           : out std_logic_vector(7 downto 0);
    main_pot2_y_o           : out std_logic_vector(7 downto 0);
-   
+
    -- Provide HyperRAM to core (in HyperRAM clock domain)
-   main_avm_write_i         : in  std_logic;
-   main_avm_read_i          : in  std_logic;
-   main_avm_address_i       : in  std_logic_vector(31 downto 0);
-   main_avm_writedata_i     : in  std_logic_vector(15 downto 0);
-   main_avm_byteenable_i    : in  std_logic_vector(1 downto 0);
-   main_avm_burstcount_i    : in  std_logic_vector(7 downto 0);
-   main_avm_readdata_o      : out std_logic_vector(15 downto 0);
-   main_avm_readdatavalid_o : out std_logic;
-   main_avm_waitrequest_o   : out std_logic;
+   hr_clk_o                : out std_logic;
+   hr_rst_o                : out std_logic;
+   hr_core_write_i         : in  std_logic;
+   hr_core_read_i          : in  std_logic;
+   hr_core_address_i       : in  std_logic_vector(31 downto 0);
+   hr_core_writedata_i     : in  std_logic_vector(15 downto 0);
+   hr_core_byteenable_i    : in  std_logic_vector(1 downto 0);
+   hr_core_burstcount_i    : in  std_logic_vector(7 downto 0);
+   hr_core_readdata_o      : out std_logic_vector(15 downto 0);
+   hr_core_readdatavalid_o : out std_logic;
+   hr_core_waitrequest_o   : out std_logic;
 
    -- QNICE control signals
    qnice_dvi_i             : in  std_logic;
@@ -163,7 +165,7 @@ port (
    qnice_flip_joyports_i   : in  std_logic;
    qnice_osm_control_m_o   : out std_logic_vector(255 downto 0);
    qnice_gp_reg_o          : out std_logic_vector(255 downto 0);
-   
+
    -- QNICE device management
    qnice_ramrom_dev_o      : out std_logic_vector(15 downto 0);
    qnice_ramrom_addr_o     : out std_logic_vector(27 downto 0);
@@ -355,16 +357,6 @@ signal hr_dig_readdata      : std_logic_vector(15 downto 0);
 signal hr_dig_readdatavalid : std_logic;
 signal hr_dig_waitrequest   : std_logic;
 
-signal hr_core_write         : std_logic;
-signal hr_core_read          : std_logic;
-signal hr_core_address       : std_logic_vector(31 downto 0) := (others => '0');
-signal hr_core_writedata     : std_logic_vector(15 downto 0);
-signal hr_core_byteenable    : std_logic_vector(1 downto 0);
-signal hr_core_burstcount    : std_logic_vector(7 downto 0);
-signal hr_core_readdata      : std_logic_vector(15 downto 0);
-signal hr_core_readdatavalid : std_logic;
-signal hr_core_waitrequest   : std_logic;
-
 signal hr_qnice_write         : std_logic;
 signal hr_qnice_read          : std_logic;
 signal hr_qnice_address       : std_logic_vector(31 downto 0) := (others => '0');
@@ -435,6 +427,9 @@ component audio_out
 end component audio_out;
 
 begin
+
+   hr_clk_o <= hr_clk_x1;
+   hr_rst_o <= hr_rst;
 
    qnice_clk_o <= qnice_clk;
 
@@ -1197,39 +1192,6 @@ begin
          hr_waitrequest_i         => hr_dig_waitrequest
       ); -- i_digital_pipeline
 
-   avm_fifo_core : entity work.avm_fifo
-      generic map (
-         G_WR_DEPTH     => 16,
-         G_RD_DEPTH     => 256,  -- Must accommodate a read burst
-         G_FILL_SIZE    => 1,
-         G_ADDRESS_SIZE => 32,
-         G_DATA_SIZE    => 16
-      )
-      port map (
-         s_clk_i               => main_clk_i,
-         s_rst_i               => main_rst_i,
-         s_avm_waitrequest_o   => main_avm_waitrequest_o,
-         s_avm_write_i         => main_avm_write_i,
-         s_avm_read_i          => main_avm_read_i,
-         s_avm_address_i       => main_avm_address_i,
-         s_avm_writedata_i     => main_avm_writedata_i,
-         s_avm_byteenable_i    => main_avm_byteenable_i,
-         s_avm_burstcount_i    => main_avm_burstcount_i,
-         s_avm_readdata_o      => main_avm_readdata_o,
-         s_avm_readdatavalid_o => main_avm_readdatavalid_o,
-         m_clk_i               => hr_clk_x1,
-         m_rst_i               => hr_rst,
-         m_avm_waitrequest_i   => hr_core_waitrequest,
-         m_avm_write_o         => hr_core_write,
-         m_avm_read_o          => hr_core_read,
-         m_avm_address_o       => hr_core_address,
-         m_avm_writedata_o     => hr_core_writedata,
-         m_avm_byteenable_o    => hr_core_byteenable,
-         m_avm_burstcount_o    => hr_core_burstcount,
-         m_avm_readdata_i      => hr_core_readdata,
-         m_avm_readdatavalid_i => hr_core_readdatavalid
-      ); -- avm_fifo_core
-
    avm_fifo_qnice : entity work.avm_fifo
       generic map (
          G_WR_DEPTH     => 16,
@@ -1277,20 +1239,20 @@ begin
       port map (
          clk_i                 => hr_clk_x1,
          rst_i                 => hr_rst,
-         s_avm_write_i         => hr_dig_write         & hr_core_write         & hr_qnice_write,
-         s_avm_read_i          => hr_dig_read          & hr_core_read          & hr_qnice_read,
-         s_avm_address_i       => hr_dig_address       & hr_core_address       & hr_qnice_address,
-         s_avm_writedata_i     => hr_dig_writedata     & hr_core_writedata     & hr_qnice_writedata,
-         s_avm_byteenable_i    => hr_dig_byteenable    & hr_core_byteenable    & hr_qnice_byteenable,
-         s_avm_burstcount_i    => hr_dig_burstcount    & hr_core_burstcount    & hr_qnice_burstcount,
+         s_avm_write_i         => hr_dig_write         & hr_core_write_i         & hr_qnice_write,
+         s_avm_read_i          => hr_dig_read          & hr_core_read_i          & hr_qnice_read,
+         s_avm_address_i       => hr_dig_address       & hr_core_address_i       & hr_qnice_address,
+         s_avm_writedata_i     => hr_dig_writedata     & hr_core_writedata_i     & hr_qnice_writedata,
+         s_avm_byteenable_i    => hr_dig_byteenable    & hr_core_byteenable_i    & hr_qnice_byteenable,
+         s_avm_burstcount_i    => hr_dig_burstcount    & hr_core_burstcount_i    & hr_qnice_burstcount,
          s_avm_readdata_o(3*16-1 downto 2*16) => hr_dig_readdata,
-         s_avm_readdata_o(2*16-1 downto 1*16) => hr_core_readdata,
+         s_avm_readdata_o(2*16-1 downto 1*16) => hr_core_readdata_o,
          s_avm_readdata_o(1*16-1 downto 0*16) => hr_qnice_readdata,
          s_avm_readdatavalid_o(2) => hr_dig_readdatavalid,
-         s_avm_readdatavalid_o(1) => hr_core_readdatavalid,
+         s_avm_readdatavalid_o(1) => hr_core_readdatavalid_o,
          s_avm_readdatavalid_o(0) => hr_qnice_readdatavalid,
          s_avm_waitrequest_o(2)   => hr_dig_waitrequest,
-         s_avm_waitrequest_o(1)   => hr_core_waitrequest,
+         s_avm_waitrequest_o(1)   => hr_core_waitrequest_o,
          s_avm_waitrequest_o(0)   => hr_qnice_waitrequest,
          m_avm_write_o         => hr_write,
          m_avm_read_o          => hr_read,

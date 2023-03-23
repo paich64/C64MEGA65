@@ -126,15 +126,17 @@ port (
    -- Provide support for external memory (Avalon Memory Map)
    --------------------------------------------------------------------------------------------------------
 
-   main_avm_write_o         : out std_logic;
-   main_avm_read_o          : out std_logic;
-   main_avm_address_o       : out std_logic_vector(31 downto 0);
-   main_avm_writedata_o     : out std_logic_vector(15 downto 0);
-   main_avm_byteenable_o    : out std_logic_vector( 1 downto 0);
-   main_avm_burstcount_o    : out std_logic_vector( 7 downto 0);
-   main_avm_readdata_i      : in  std_logic_vector(15 downto 0);
-   main_avm_readdatavalid_i : in  std_logic;
-   main_avm_waitrequest_i   : in  std_logic;
+   hr_clk_i                : in  std_logic;
+   hr_rst_i                : in  std_logic;
+   hr_core_write_o         : out std_logic;
+   hr_core_read_o          : out std_logic;
+   hr_core_address_o       : out std_logic_vector(31 downto 0);
+   hr_core_writedata_o     : out std_logic_vector(15 downto 0);
+   hr_core_byteenable_o    : out std_logic_vector( 1 downto 0);
+   hr_core_burstcount_o    : out std_logic_vector( 7 downto 0);
+   hr_core_readdata_i      : in  std_logic_vector(15 downto 0);
+   hr_core_readdatavalid_i : in  std_logic;
+   hr_core_waitrequest_i   : in  std_logic;
 
    --------------------------------------------------------------------
    -- C64 specific ports that are not supported by the M2M framework
@@ -234,6 +236,16 @@ signal main_avm_reu_readdata      : std_logic_vector(15 downto 0);
 signal main_avm_reu_readdatavalid : std_logic;
 signal main_avm_reu_waitrequest   : std_logic;
 
+signal hr_reu_write               : std_logic;
+signal hr_reu_read                : std_logic;
+signal hr_reu_address             : std_logic_vector(31 downto 0);
+signal hr_reu_writedata           : std_logic_vector(15 downto 0);
+signal hr_reu_byteenable          : std_logic_vector( 1 downto 0);
+signal hr_reu_burstcount          : std_logic_vector( 7 downto 0);
+signal hr_reu_readdata            : std_logic_vector(15 downto 0);
+signal hr_reu_readdatavalid       : std_logic;
+signal hr_reu_waitrequest         : std_logic;
+
 -- TBD: Signals from the framework to the cartridge.v module
 signal main_cartridge_loading     : std_logic;
 signal main_cartridge_id          : std_logic_vector(15 downto 0);
@@ -251,21 +263,33 @@ signal main_crt_busy              : std_logic;
 signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
 signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
 
-signal main_bram_address          : std_logic_vector(12 downto 0);
-signal main_bram_data             : std_logic_vector( 7 downto 0);
-signal main_bram_lo_wren          : std_logic;
-signal main_bram_hi_wren          : std_logic;
+---------------------------------------------------------------------------------------------
+-- hr_clk
+---------------------------------------------------------------------------------------------
 
-signal main_avm_crt_write         : std_logic;
-signal main_avm_crt_read          : std_logic;
-signal main_avm_crt_address       : std_logic_vector(31 downto 0);
-signal main_avm_crt_writedata     : std_logic_vector(15 downto 0);
-signal main_avm_crt_byteenable    : std_logic_vector( 1 downto 0);
-signal main_avm_crt_burstcount    : std_logic_vector( 7 downto 0);
-signal main_avm_crt_readdata      : std_logic_vector(15 downto 0);
-signal main_avm_crt_readdatavalid : std_logic;
-signal main_avm_crt_waitrequest   : std_logic;
+signal hr_crt2hyperram_reset      : std_logic;
+signal hr_crt_busy                : std_logic;
+signal hr_crt_bank_lo             : std_logic_vector(6 downto 0);
+signal hr_crt_bank_hi             : std_logic_vector(6 downto 0);
 
+signal hr_bram_address            : std_logic_vector(12 downto 0);
+signal hr_bram_data               : std_logic_vector( 7 downto 0);
+signal hr_bram_lo_wren            : std_logic;
+signal hr_bram_hi_wren            : std_logic;
+
+signal hr_crt_write               : std_logic;
+signal hr_crt_read                : std_logic;
+signal hr_crt_address             : std_logic_vector(31 downto 0);
+signal hr_crt_writedata           : std_logic_vector(15 downto 0);
+signal hr_crt_byteenable          : std_logic_vector( 1 downto 0);
+signal hr_crt_burstcount          : std_logic_vector( 7 downto 0);
+signal hr_crt_readdata            : std_logic_vector(15 downto 0);
+signal hr_crt_readdatavalid       : std_logic;
+signal hr_crt_waitrequest         : std_logic;
+
+signal hr_crt_busy_d              : std_logic;
+signal hr_crt_busy_count          : unsigned(21 downto 0);
+signal hr_crt_busy_length         : unsigned(21 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -323,10 +347,27 @@ attribute mark_debug of main_crt_lo_ram_data     : signal is "true";
 attribute mark_debug of main_crt_hi_ram_data     : signal is "true";
 attribute mark_debug of cart_roml_io             : signal is "true";
 attribute mark_debug of cart_romh_io             : signal is "true";
-attribute mark_debug of main_bram_address        : signal is "true";
-attribute mark_debug of main_bram_data           : signal is "true";
-attribute mark_debug of main_bram_lo_wren        : signal is "true";
-attribute mark_debug of main_bram_hi_wren        : signal is "true";
+
+attribute mark_debug of hr_crt2hyperram_reset   : signal is "true";
+attribute mark_debug of hr_crt_busy             : signal is "true";
+attribute mark_debug of hr_crt_bank_lo          : signal is "true";
+attribute mark_debug of hr_crt_bank_hi          : signal is "true";
+attribute mark_debug of hr_bram_address         : signal is "true";
+attribute mark_debug of hr_bram_data            : signal is "true";
+attribute mark_debug of hr_bram_lo_wren         : signal is "true";
+attribute mark_debug of hr_bram_hi_wren         : signal is "true";
+attribute mark_debug of hr_crt_write            : signal is "true";
+attribute mark_debug of hr_crt_read             : signal is "true";
+attribute mark_debug of hr_crt_address          : signal is "true";
+attribute mark_debug of hr_crt_writedata        : signal is "true";
+attribute mark_debug of hr_crt_byteenable       : signal is "true";
+attribute mark_debug of hr_crt_burstcount       : signal is "true";
+attribute mark_debug of hr_crt_readdata         : signal is "true";
+attribute mark_debug of hr_crt_readdatavalid    : signal is "true";
+attribute mark_debug of hr_crt_waitrequest      : signal is "true";
+attribute mark_debug of hr_crt_busy_d           : signal is "true";
+attribute mark_debug of hr_crt_busy_count       : signal is "true";
+attribute mark_debug of hr_crt_busy_length      : signal is "true";
 
 begin
 
@@ -677,10 +718,10 @@ begin
          q_a               => main_crt_lo_ram_data,
 
          -- Not used
-         clock_b           => main_clk,
-         address_b         => main_bram_address,
-         data_b            => main_bram_data,
-         wren_b            => main_bram_lo_wren,
+         clock_b           => hr_clk_i,
+         address_b         => hr_bram_address,
+         data_b            => hr_bram_data,
+         wren_b            => hr_bram_lo_wren,
          q_b               => open
       ); -- crt_lo_ram
 
@@ -702,37 +743,84 @@ begin
          q_a               => main_crt_hi_ram_data,
 
          -- Not used
-         clock_b           => main_clk,
-         address_b         => main_bram_address,
-         data_b            => main_bram_data,
-         wren_b            => main_bram_hi_wren,
+         clock_b           => hr_clk_i,
+         address_b         => hr_bram_address,
+         data_b            => hr_bram_data,
+         wren_b            => hr_bram_hi_wren,
          q_b               => open
       ); -- crt_lo_ram
 
    main_crt2hyperram_reset <= main_reset_core_i when c64_exp_port_mode = 2 else '1';
+
+   i_main2hr: xpm_cdc_array_single
+      generic map (
+         WIDTH => 15
+      )
+      port map (
+         src_clk               => main_clk,
+         src_in( 6 downto 0)   => main_crt_bank_lo,
+         src_in(13 downto 7)   => main_crt_bank_hi,
+         src_in(14)            => main_crt2hyperram_reset,
+         dest_clk              => hr_clk_i,
+         dest_out( 6 downto 0) => hr_crt_bank_lo,
+         dest_out(13 downto 7) => hr_crt_bank_hi,
+         dest_out(14)          => hr_crt2hyperram_reset
+      ); -- i_main2hr
+
+   i_hr2main: xpm_cdc_array_single
+      generic map (
+         WIDTH => 1
+      )
+      port map (
+         src_clk     => hr_clk_i,
+         src_in(0)   => hr_crt_busy,
+         dest_clk    => main_clk,
+         dest_out(0) => main_crt_busy
+      ); -- i_hr2main
+
    i_crt2hyperram : entity work.crt2hyperram
       port map (
-         clk_i               => main_clk,
-         rst_i               => main_crt2hyperram_reset,
-         crt_busy_o          => main_crt_busy,
-         crt_bank_lo_i       => main_crt_bank_lo,
-         crt_bank_hi_i       => main_crt_bank_hi,
-         avm_write_o         => main_avm_crt_write,
-         avm_read_o          => main_avm_crt_read,
-         avm_address_o       => main_avm_crt_address,
-         avm_writedata_o     => main_avm_crt_writedata,
-         avm_byteenable_o    => main_avm_crt_byteenable,
-         avm_burstcount_o    => main_avm_crt_burstcount,
-         avm_readdata_i      => main_avm_crt_readdata,
-         avm_readdatavalid_i => main_avm_crt_readdatavalid,
-         avm_waitrequest_i   => main_avm_crt_waitrequest,
-         bram_address_o      => main_bram_address,
-         bram_data_o         => main_bram_data,
-         bram_lo_wren_o      => main_bram_lo_wren,
+         clk_i               => hr_clk_i,
+         rst_i               => hr_crt2hyperram_reset,
+         crt_busy_o          => hr_crt_busy,
+         crt_bank_lo_i       => hr_crt_bank_lo,
+         crt_bank_hi_i       => hr_crt_bank_hi,
+         avm_write_o         => hr_crt_write,
+         avm_read_o          => hr_crt_read,
+         avm_address_o       => hr_crt_address,
+         avm_writedata_o     => hr_crt_writedata,
+         avm_byteenable_o    => hr_crt_byteenable,
+         avm_burstcount_o    => hr_crt_burstcount,
+         avm_readdata_i      => hr_crt_readdata,
+         avm_readdatavalid_i => hr_crt_readdatavalid,
+         avm_waitrequest_i   => hr_crt_waitrequest,
+         bram_address_o      => hr_bram_address,
+         bram_data_o         => hr_bram_data,
+         bram_lo_wren_o      => hr_bram_lo_wren,
          bram_lo_q_i         => (others => '0'),
-         bram_hi_wren_o      => main_bram_hi_wren,
+         bram_hi_wren_o      => hr_bram_hi_wren,
          bram_hi_q_i         => (others => '0')
       ); -- i_crt2hyperram
+
+   -- Temporarily measure the length of time needed to fill the bank RAM.
+   debug_proc : process (hr_clk_i)
+   begin
+      if rising_edge(hr_clk_i) then
+         hr_crt_busy_d <= hr_crt_busy;
+
+         if hr_crt_busy = '1' then
+            hr_crt_busy_count <= hr_crt_busy_count + 1;
+         elsif hr_crt_busy_d = '1' then
+            hr_crt_busy_length <= hr_crt_busy_count;
+            hr_crt_busy_count  <= (others => '0');
+         end if;
+
+         if hr_rst_i = '1' then
+            hr_crt_busy_length <= (others => '0');
+            hr_crt_busy_count  <= (others => '0');
+         end if;
+      end if;
+   end process debug_proc;
 
    main_ram_data_to_c64 <= main_crt_lo_ram_data when cart_roml_io = '0' else
                            main_crt_hi_ram_data when cart_romh_io = '0' else
@@ -801,24 +889,58 @@ begin
          m_avm_readdatavalid_i => main_avm_reu_readdatavalid
       ); -- i_avm_cache
 
+   avm_fifo : entity work.avm_fifo
+      generic map (
+         G_WR_DEPTH     => 16,
+         G_RD_DEPTH     => 16,
+         G_FILL_SIZE    => 1,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         s_clk_i               => main_clk,
+         s_rst_i               => main_rst,
+         s_avm_waitrequest_o   => main_avm_reu_waitrequest,
+         s_avm_write_i         => main_avm_reu_write,
+         s_avm_read_i          => main_avm_reu_read,
+         s_avm_address_i       => main_avm_reu_address,
+         s_avm_writedata_i     => main_avm_reu_writedata,
+         s_avm_byteenable_i    => main_avm_reu_byteenable,
+         s_avm_burstcount_i    => main_avm_reu_burstcount,
+         s_avm_readdata_o      => main_avm_reu_readdata,
+         s_avm_readdatavalid_o => main_avm_reu_readdatavalid,
+         m_clk_i               => hr_clk_i,
+         m_rst_i               => hr_rst_i,
+         m_avm_waitrequest_i   => hr_reu_waitrequest,
+         m_avm_write_o         => hr_reu_write,
+         m_avm_read_o          => hr_reu_read,
+         m_avm_address_o       => hr_reu_address,
+         m_avm_writedata_o     => hr_reu_writedata,
+         m_avm_byteenable_o    => hr_reu_byteenable,
+         m_avm_burstcount_o    => hr_reu_burstcount,
+         m_avm_readdata_i      => hr_reu_readdata,
+         m_avm_readdatavalid_i => hr_reu_readdatavalid
+      ); -- avm_fifo
+
+
    -- Multiplex the HyperRAM access between the REU and the Software Cartridge (CRT)
    hyperram_mux_proc : process (all)
    begin
       -- Default values to avoid latches
-      main_avm_reu_waitrequest   <= '0';
-      main_avm_reu_readdata      <= (others => '0');
-      main_avm_reu_readdatavalid <= '0';
+      hr_reu_waitrequest   <= '0';
+      hr_reu_readdata      <= (others => '0');
+      hr_reu_readdatavalid <= '0';
 
-      main_avm_crt_waitrequest   <= '0';
-      main_avm_crt_readdata      <= (others => '0');
-      main_avm_crt_readdatavalid <= '0';
+      hr_crt_waitrequest   <= '0';
+      hr_crt_readdata      <= (others => '0');
+      hr_crt_readdatavalid <= '0';
 
-      main_avm_write_o           <= '0';
-      main_avm_read_o            <= '0';
-      main_avm_address_o         <= (others => '0');
-      main_avm_writedata_o       <= (others => '0');
-      main_avm_byteenable_o      <= (others => '0');
-      main_avm_burstcount_o      <= (others => '0');
+      hr_core_write_o      <= '0';
+      hr_core_read_o       <= '0';
+      hr_core_address_o    <= (others => '0');
+      hr_core_writedata_o  <= (others => '0');
+      hr_core_byteenable_o <= (others => '0');
+      hr_core_burstcount_o <= (others => '0');
 
       case c64_exp_port_mode is
          when 0 =>
@@ -827,32 +949,33 @@ begin
 
          when 1 =>
             -- Simulate a 1750 REU with 512KB
-            main_avm_write_o           <= main_avm_reu_write;
-            main_avm_read_o            <= main_avm_reu_read;
-            main_avm_address_o         <= main_avm_reu_address;
-            main_avm_writedata_o       <= main_avm_reu_writedata;
-            main_avm_byteenable_o      <= main_avm_reu_byteenable;
-            main_avm_burstcount_o      <= main_avm_reu_burstcount;
-            main_avm_reu_waitrequest   <= main_avm_waitrequest_i;
-            main_avm_reu_readdata      <= main_avm_readdata_i;
-            main_avm_reu_readdatavalid <= main_avm_readdatavalid_i;
+            hr_core_write_o      <= hr_reu_write;
+            hr_core_read_o       <= hr_reu_read;
+            hr_core_address_o    <= hr_reu_address;
+            hr_core_writedata_o  <= hr_reu_writedata;
+            hr_core_byteenable_o <= hr_reu_byteenable;
+            hr_core_burstcount_o <= hr_reu_burstcount;
+            hr_reu_waitrequest   <= hr_core_waitrequest_i;
+            hr_reu_readdata      <= hr_core_readdata_i;
+            hr_reu_readdatavalid <= hr_core_readdatavalid_i;
 
          when 2 =>
             -- Simulate a cartridge by using a cartridge from from the SD card (.crt file)
-            main_avm_write_o           <= main_avm_crt_write;
-            main_avm_read_o            <= main_avm_crt_read;
-            main_avm_address_o         <= main_avm_crt_address;
-            main_avm_writedata_o       <= main_avm_crt_writedata;
-            main_avm_byteenable_o      <= main_avm_crt_byteenable;
-            main_avm_burstcount_o      <= main_avm_crt_burstcount;
-            main_avm_crt_waitrequest   <= main_avm_waitrequest_i;
-            main_avm_crt_readdata      <= main_avm_readdata_i;
-            main_avm_crt_readdatavalid <= main_avm_readdatavalid_i;
+            hr_core_write_o      <= hr_crt_write;
+            hr_core_read_o       <= hr_crt_read;
+            hr_core_address_o    <= hr_crt_address;
+            hr_core_writedata_o  <= hr_crt_writedata;
+            hr_core_byteenable_o <= hr_crt_byteenable;
+            hr_core_burstcount_o <= hr_crt_burstcount;
+            hr_crt_waitrequest   <= hr_core_waitrequest_i;
+            hr_crt_readdata      <= hr_core_readdata_i;
+            hr_crt_readdatavalid <= hr_core_readdatavalid_i;
 
          when others =>
             null;
       end case;
    end process hyperram_mux_proc;
+
 
 end architecture synthesis;
 

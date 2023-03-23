@@ -190,15 +190,17 @@ signal main_pot1_y            : std_logic_vector(7 downto 0);
 signal main_pot2_x            : std_logic_vector(7 downto 0);
 signal main_pot2_y            : std_logic_vector(7 downto 0);
 
-signal main_avm_write         : std_logic;
-signal main_avm_read          : std_logic;
-signal main_avm_address       : std_logic_vector(31 downto 0);
-signal main_avm_writedata     : std_logic_vector(15 downto 0);
-signal main_avm_byteenable    : std_logic_vector(1 downto 0);
-signal main_avm_burstcount    : std_logic_vector(7 downto 0);
-signal main_avm_readdata      : std_logic_vector(15 downto 0);
-signal main_avm_readdatavalid : std_logic;
-signal main_avm_waitrequest   : std_logic;
+signal hr_clk                 : std_logic;
+signal hr_rst                 : std_logic;
+signal hr_core_write          : std_logic;
+signal hr_core_read           : std_logic;
+signal hr_core_address        : std_logic_vector(31 downto 0);
+signal hr_core_writedata      : std_logic_vector(15 downto 0);
+signal hr_core_byteenable     : std_logic_vector(1 downto 0);
+signal hr_core_burstcount     : std_logic_vector(7 downto 0);
+signal hr_core_readdata       : std_logic_vector(15 downto 0);
+signal hr_core_readdatavalid  : std_logic;
+signal hr_core_waitrequest    : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -332,15 +334,17 @@ begin
       main_pot2_y_o           => main_pot2_y,
 
       -- Provide HyperRAM to core (in HyperRAM clock domain)
-      main_avm_write_i         => main_avm_write,
-      main_avm_read_i          => main_avm_read,
-      main_avm_address_i       => main_avm_address,
-      main_avm_writedata_i     => main_avm_writedata,
-      main_avm_byteenable_i    => main_avm_byteenable,
-      main_avm_burstcount_i    => main_avm_burstcount,
-      main_avm_readdata_o      => main_avm_readdata,
-      main_avm_readdatavalid_o => main_avm_readdatavalid,
-      main_avm_waitrequest_o   => main_avm_waitrequest,
+      hr_clk_o                => hr_clk,
+      hr_rst_o                => hr_rst,
+      hr_core_write_i         => hr_core_write,
+      hr_core_read_i          => hr_core_read,
+      hr_core_address_i       => hr_core_address,
+      hr_core_writedata_i     => hr_core_writedata,
+      hr_core_byteenable_i    => hr_core_byteenable,
+      hr_core_burstcount_i    => hr_core_burstcount,
+      hr_core_readdata_o      => hr_core_readdata,
+      hr_core_readdatavalid_o => hr_core_readdatavalid,
+      hr_core_waitrequest_o   => hr_core_waitrequest,
 
       -- Connect to QNICE
       qnice_dvi_i             => qnice_dvi,
@@ -473,15 +477,17 @@ begin
          -- Provide support for external memory (Avalon Memory Map)
          --------------------------------------------------------------------------------------------------------
 
-         main_avm_write_o         => main_avm_write,
-         main_avm_read_o          => main_avm_read,
-         main_avm_address_o       => main_avm_address,
-         main_avm_writedata_o     => main_avm_writedata,
-         main_avm_byteenable_o    => main_avm_byteenable,
-         main_avm_burstcount_o    => main_avm_burstcount,
-         main_avm_readdata_i      => main_avm_readdata,
-         main_avm_readdatavalid_i => main_avm_readdatavalid,
-         main_avm_waitrequest_i   => main_avm_waitrequest,
+         hr_clk_i                => hr_clk,
+         hr_rst_i                => hr_rst,
+         hr_core_write_o         => hr_core_write,
+         hr_core_read_o          => hr_core_read,
+         hr_core_address_o       => hr_core_address,
+         hr_core_writedata_o     => hr_core_writedata,
+         hr_core_byteenable_o    => hr_core_byteenable,
+         hr_core_burstcount_o    => hr_core_burstcount,
+         hr_core_readdata_i      => hr_core_readdata,
+         hr_core_readdatavalid_i => hr_core_readdatavalid,
+         hr_core_waitrequest_i   => hr_core_waitrequest,
          
          --------------------------------------------------------------------
          -- C64 specific ports that are not supported by the M2M framework
