@@ -204,8 +204,8 @@ signal main_ram_data_from_c64     : unsigned(7 downto 0);          -- C64 RAM da
 signal main_ram_we                : std_logic;                     -- C64 RAM write enable
 signal main_ram_data_to_c64       : std_logic_vector(7 downto 0);  -- C64 RAM data in
 signal main_ram_data              : std_logic_vector(7 downto 0);
-signal main_crt_lo_ram_data       : std_logic_vector(7 downto 0);
-signal main_crt_hi_ram_data       : std_logic_vector(7 downto 0);
+signal main_crt_lo_ram_data       : std_logic_vector(15 downto 0);
+signal main_crt_hi_ram_data       : std_logic_vector(15 downto 0);
 
 -- RAM Expansion Unit
 signal main_ext_cycle             : std_logic;
@@ -272,8 +272,8 @@ signal hr_crt_busy                : std_logic;
 signal hr_crt_bank_lo             : std_logic_vector(6 downto 0);
 signal hr_crt_bank_hi             : std_logic_vector(6 downto 0);
 
-signal hr_bram_address            : std_logic_vector(12 downto 0);
-signal hr_bram_data               : std_logic_vector( 7 downto 0);
+signal hr_bram_address            : std_logic_vector(11 downto 0);
+signal hr_bram_data               : std_logic_vector(15 downto 0);
 signal hr_bram_lo_wren            : std_logic;
 signal hr_bram_hi_wren            : std_logic;
 
@@ -704,15 +704,15 @@ begin
    -- as well as QNICE can access it
    crt_lo_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH        => 13,         -- 8 kB
-         DATA_WIDTH        => 8,
+         ADDR_WIDTH        => 12,         -- 4 kW = 8 kB
+         DATA_WIDTH        => 16,
          FALLING_A         => false,      -- C64 expects read/write to happen at the rising clock edge
          FALLING_B         => false
       )
       port map (
          -- C64 MiSTer core
          clock_a           => main_clk,
-         address_a         => std_logic_vector(main_ram_addr(12 downto 0)),
+         address_a         => std_logic_vector(main_ram_addr(12 downto 1)),
          data_a            => (others => '0'),
          wren_a            => '0',
          q_a               => main_crt_lo_ram_data,
@@ -729,15 +729,15 @@ begin
    -- as well as QNICE can access it
    crt_hi_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH        => 13,         -- 8 kB
-         DATA_WIDTH        => 8,
+         ADDR_WIDTH        => 12,         -- 4 kW = 8 kB
+         DATA_WIDTH        => 16,
          FALLING_A         => false,      -- C64 expects read/write to happen at the rising clock edge
          FALLING_B         => false
       )
       port map (
          -- C64 MiSTer core
          clock_a           => main_clk,
-         address_a         => std_logic_vector(main_ram_addr(12 downto 0)),
+         address_a         => std_logic_vector(main_ram_addr(12 downto 1)),
          data_a            => (others => '0'),
          wren_a            => '0',
          q_a               => main_crt_hi_ram_data,
@@ -822,8 +822,10 @@ begin
       end if;
    end process debug_proc;
 
-   main_ram_data_to_c64 <= main_crt_lo_ram_data when cart_roml_io = '0' else
-                           main_crt_hi_ram_data when cart_romh_io = '0' else
+   main_ram_data_to_c64 <= main_crt_lo_ram_data(15 downto 8) when cart_roml_io = '0' and main_ram_addr(0) = '1' else
+                           main_crt_lo_ram_data( 7 downto 0) when cart_roml_io = '0' and main_ram_addr(0) = '0' else
+                           main_crt_hi_ram_data(15 downto 8) when cart_romh_io = '0' and main_ram_addr(0) = '1' else
+                           main_crt_hi_ram_data( 7 downto 0) when cart_romh_io = '0' and main_ram_addr(0) = '0' else
                            main_ram_data;
 
    -- RAM used by the REU inside i_main:
