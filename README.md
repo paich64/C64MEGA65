@@ -2,6 +2,8 @@
 supported and link to the FAQs for troubleshooting. Also Describe the
 short/long resets.
 
+@TODO: Add description for dual SID
+
 Commodore 64 for MEGA65
 =======================
 

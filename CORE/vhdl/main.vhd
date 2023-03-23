@@ -35,11 +35,12 @@ entity main is
       
       -- SID and CIA versions
       c64_sid_ver_i           : in std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
+      c64_sid_port_i          : in unsigned(2 downto 0);    -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
       c64_cia_ver_i           : in std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"      
     
       -- M2M Keyboard interface
-      kb_key_num_i            : in  integer range 0 to 79;    -- cycles through all MEGA65 keys
-      kb_key_pressed_n_i      : in  std_logic;                -- low active: debounced feedback: is kb_key_num_i pressed right now?
+      kb_key_num_i            : in  integer range 0 to 79;  -- cycles through all MEGA65 keys
+      kb_key_pressed_n_i      : in  std_logic;              -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
       -- MEGA65 joysticks and paddles
       joy_1_up_n_i            : in  std_logic;
@@ -407,10 +408,10 @@ begin
          clk32       => clk_main_i,
          clk32_speed => clk_main_speed_i,
          reset_n     => reset_core_n,
-         bios        => "01",          -- standard C64, internal ROM
+         bios        => "01",             -- standard C64, internal ROM
 
          pause       => pause_i,
-         pause_out   => c64_pause,     -- unused
+         pause_out   => c64_pause,        -- unused
 
          -- keyboard interface: directly connect the CIA1
          cia1_pa_i   => cia1_pa_i,
@@ -482,10 +483,10 @@ begin
          -- SID
          audio_l     => c64_sid_l,
          audio_r     => c64_sid_r,
-         sid_filter  => "11",          -- filter enable = true for both SIDs, low bit = left SID
-         sid_ver     => c64_sid_ver_i, -- SID version, 0=6581, 1=8580, low bit = left SID
-         sid_mode    => "000",         -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
-         sid_cfg     => "0000",        -- filter type: 0=Default, 1=Custom 1, 2=Custom 2, 3=Custom 3, lower two bits = left SID
+         sid_filter  => "11",             -- filter enable = true for both SIDs, low bit = left SID
+         sid_ver     => c64_sid_ver_i,    -- SID version, 0=6581, 1=8580, low bit = left SID
+         sid_mode    => c64_sid_port_i,   -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
+         sid_cfg     => "0000",           -- filter type: 0=Default, 1=Custom 1, 2=Custom 2, 3=Custom 3, lower two bits = left SID
 
          -- mechanism for loading custom SID filters: not supported, yet
          sid_ld_clk  => '0',
@@ -522,8 +523,8 @@ begin
 
          cass_motor  => open,
          cass_write  => open,
-         cass_sense  => '1',           -- low active
-         cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
+         cass_sense  => '1',              -- low active
+         cass_read   => '1'               -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
    -- RAM write enable also needs to check for chip enable

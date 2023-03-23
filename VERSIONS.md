@@ -1,6 +1,8 @@
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
+@TODO: Dual SID
+
 @TODO: Check, adjust/rewrite for clarity:
 Cartridge release: Use hardware cartridges in the MEGA65's expansion port and
 enjoy simulated cartridges using `*.crt` files. And you can now use custom
@@ -44,6 +46,8 @@ need quite some core specific code that resides in m2m-rom/m2m-rom.asm (and
 callback functions that are for example called before the main loop starts and
 that offer also a fatal mechanism for the authors of the callback; we should
 just make the interface of FATAL public because is available everywhere).
+
+* Stereo SID support
 
 WIP 15khz RGB + csync:
 https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500

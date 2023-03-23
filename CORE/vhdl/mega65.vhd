@@ -194,6 +194,10 @@ signal c64_ntsc               : std_logic;               -- global switch: 0 = P
 signal c64_clock_speed        : natural;                 -- clock speed depending on PAL/NTSC
 signal c64_exp_port_mode      : natural range 0 to 2;    -- Expansion Port: Use hardware, simulate REU, simulate cartridge (.crt file)
 
+-- C64 config settings
+signal sid_setup              : std_logic_vector(1 downto 0);
+signal sid_port               : natural range 0 to 4;
+
 -- C64 RAM
 signal main_ram_addr          : unsigned(15 downto 0);         -- C64 address bus
 signal main_ram_data_from_c64 : unsigned(7 downto 0);          -- C64 RAM data out
@@ -248,18 +252,27 @@ constant C_MENU_EXP_PORT_HW   : natural := 6;
 constant C_MENU_EXP_PORT_REU  : natural := 7;
 constant C_MENU_EXP_PORT_CRT  : natural := 8;
 constant C_MENU_FLIP_JOYS     : natural := 13;
-constant C_MENU_8580          : natural := 18;
-constant C_MENU_IMPROVE_AUDIO : natural := 19;
-constant C_MENU_8521          : natural := 22;
-constant C_MENU_HDMI_16_9_50  : natural := 29;
-constant C_MENU_HDMI_16_9_60  : natural := 30;
-constant C_MENU_HDMI_4_3_50   : natural := 31;
-constant C_MENU_HDMI_5_4_50   : natural := 32;
-constant C_MENU_CRT_EMULATION : natural := 35;
-constant C_MENU_HDMI_ZOOM     : natural := 36;          
-constant C_MENU_HDMI_FF       : natural := 37;
-constant C_MENU_HDMI_DVI      : natural := 38;
-constant C_MENU_VGA_RETRO     : natural := 39;
+constant C_MENU_MONO_6581     : natural := 19;
+constant C_MENU_MONO_8580     : natural := 20;
+constant C_MENU_STEREO_L6R6   : natural := 24;
+constant C_MENU_STEREO_L6R8   : natural := 25;
+constant C_MENU_STEREO_L8R6   : natural := 26;
+constant C_MENU_STEREO_L8R8   : natural := 27;
+constant C_MENU_STEREO_R_D420 : natural := 31;
+constant C_MENU_STEREO_R_D500 : natural := 32;
+constant C_MENU_STEREO_R_DE00 : natural := 33;
+constant C_MENU_STEREO_R_DF00 : natural := 34;
+constant C_MENU_IMPROVE_AUDIO : natural := 36;
+constant C_MENU_8521          : natural := 39;
+constant C_MENU_HDMI_16_9_50  : natural := 46;
+constant C_MENU_HDMI_16_9_60  : natural := 47;
+constant C_MENU_HDMI_4_3_50   : natural := 48;
+constant C_MENU_HDMI_5_4_50   : natural := 49;
+constant C_MENU_CRT_EMULATION : natural := 52;
+constant C_MENU_HDMI_ZOOM     : natural := 53;          
+constant C_MENU_HDMI_FF       : natural := 54;
+constant C_MENU_HDMI_DVI      : natural := 55;
+constant C_MENU_VGA_RETRO     : natural := 56;
 
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
@@ -313,6 +326,23 @@ begin
                         2 when main_osm_control_i(C_MENU_EXP_PORT_CRT)  else
                         0;
 
+   -- SID version, 0=6581, 1=8580, low bit = left SID                        
+   sid_setup <= "00" when main_osm_control_i(C_MENU_MONO_6581)    else
+                "11" when main_osm_control_i(C_MENU_MONO_8580)    else
+                "00" when main_osm_control_i(C_MENU_STEREO_L6R6)  else
+                "01" when main_osm_control_i(C_MENU_STEREO_L6R8)  else
+                "10" when main_osm_control_i(C_MENU_STEREO_L8R6)  else
+                "11" when main_osm_control_i(C_MENU_STEREO_L8R8)  else
+                "00";
+
+   -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
+   sid_port  <= 0 when main_osm_control_i(C_MENU_MONO_6581) or main_osm_control_i(C_MENU_MONO_8580) else
+                1 when main_osm_control_i(C_MENU_STEREO_R_DE00) else
+                2 when main_osm_control_i(C_MENU_STEREO_R_D420) else
+                3 when main_osm_control_i(C_MENU_STEREO_R_D500) else
+                4 when main_osm_control_i(C_MENU_STEREO_R_DF00) else
+                0;
+
    ---------------------------------------------------------------------------------------------
    -- main_clk (C64 MiSTer Core clock)
    ---------------------------------------------------------------------------------------------
@@ -337,7 +367,8 @@ begin
          video_retro15kHz_i   => main_osm_control_i(C_MENU_VGA_RETRO),
 
          -- SID and CIA versions
-         c64_sid_ver_i        => main_osm_control_i(C_MENU_8580) & main_osm_control_i(C_MENU_8580),
+         c64_sid_ver_i        => sid_setup,
+         c64_sid_port_i       => to_unsigned(sid_port, 3),
          c64_cia_ver_i        => main_osm_control_i(C_MENU_8521),
 
          -- M2M Keyboard interface
