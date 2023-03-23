@@ -18,4 +18,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A9   | 03/11/23 | 65d8fc8 | Add work-around for errata in some HyperRAM devices: This improves the REU experience on newer batches of the MEGA65.
 | WIP-V5-A10  | 03/13/23 | 9c336c2 | First version that supports hardware cartridges in the MEGA65's expansion port
 | WIP-V5-A11  | 03/19/23 | f91c9c7 | Debug version: HyperRAM latency information is shown at the top of the screen: Number of fast accesses divided by number slow accesses in the last few seconds. The higher the numbers the better. The core is based on WIP-V5-A9 (commit 65d8fc8), i.e. it does not have the features of WIP-V5-A10.
-| WIP-V5-A12  | 03/23/23 |         | Dual SID support (aka Stero SID)
+| WIP-V5-A12  | 03/23/23 | dcb2196 | Dual SID support (aka Stero SID)
