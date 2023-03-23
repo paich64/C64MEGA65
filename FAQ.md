@@ -1,3 +1,20 @@
+@TODO: Add some FAQs around starting the C64 core while a cartridge is
+inserted. Problems such as this here can arise:
+
+https://discord.com/channels/719326990221574164/794775503818588200/1084814386083930195
+
+Solutions range from putting the C64 core into Slot 1 to hitting keys
+"blindly" (need to research if he meant NOSCROLL+SLOT# or really blindly in
+the invisibly menu) to pressing NOSCROLL+SLOT#. Others?
+
+Also link to a description (README.md?) what module types are supported
+at all.
+
+I did not see it for a long time. But just in case the strange "sometimes the
+screen is black directly after startup" does not go away: Talk about pressing
+the reset button briefly to get it started.
+
+
 # FAQ - Frequently Asked Questions
 
 ## 1) My MEGA65 or the C64 core is behaving somehow weirdly

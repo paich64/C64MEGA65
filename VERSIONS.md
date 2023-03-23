@@ -1,9 +1,17 @@
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
+@TODO: Dual SID
+
+@TODO: Check, adjust/rewrite for clarity:
 Cartridge release: Use hardware cartridges in the MEGA65's expansion port and
 enjoy simulated cartridges using `*.crt` files. And you can now use custom
 KERNALs such as JuffyDOS for the C64 and the C1541.
+
+@TODO: For the release on Discord (and maybe also on the FileHost), we need a
+short video that demonstrates how different cartridge types are inserted and
+used (old to new, game, tool, GeoRAM, EasyFlash various models, ...) and then
+also software cartridges.
 
 ## New Features
 
@@ -23,7 +31,23 @@ Spectacular") or describe them as not supported.
 WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
 all cartridge types, add constraints here
 
-WIP Ability to use custom KERNALs such as JiffyDOS for the C64 and the C1541
+WIP Ability to use custom KERNALs such as JiffyDOS for the C64 and the C1541:
+Here is an idea how we can make this simple: Hardcoded filenames for ROM files
+in the /c64 folder and then introduce dependent menu items for the M2M menu:
+When Jiffy DOS is found, then a menu item called (for example) "Use JiffyDOS"
+is shown in the "C64 Configuration". The dependent menu item would be a pure
+"show/hide" thing, i.e. not influence the size of the config file and also
+if from time to time JiffyDOS is not found (other SD card inserted), a
+potential "switch ON" would not be forgotton next time it is being found.
+For convenience we should have the option to reset the C64 if this setting
+is changed. The dependency could be specified in config.vhd by specifying
+bits in a register (other than the register we use for the menu?). We would
+need quite some core specific code that resides in m2m-rom/m2m-rom.asm (and
+callback functions that are for example called before the main loop starts and
+that offer also a fatal mechanism for the authors of the callback; we should
+just make the interface of FATAL public because is available everywhere).
+
+* Stereo SID support
 
 WIP 15khz RGB + csync:
 https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500
@@ -62,6 +86,7 @@ monitor which might lead to more HDMI compatibility in general. Research path:
 Use an FPGA board with HDMI input, to capture the data from both the MEGA65
 (has no sound) and the laptop (has sound), to compare them. Might very well
 help to fix https://github.com/MJoergen/C64MEGA65/issues/4
+And this: https://github.com/MJoergen/C64MEGA65/issues/13
 
 WIP Eliminate HDMI Flicker-free "~20min period artefact" by manual clock
 frequency tuning. Investigate dynamic PLL adjustment/autotune in conjunction
@@ -70,7 +95,9 @@ to achieve flicker-free without the need of slowing down by 0.25%)
 
 ## Bugfixes
 
-WIP @TODO: Identify bugs and add them here
+* Fixed a bug in the REU simulation that affected some owners of the newest
+  MEGA65 batches who have a so called "Revision D HyperRAM". One effect of the
+  bug was that these users were not able to play Sonic the Hedgehog.
 
 ## Under the Hood
 

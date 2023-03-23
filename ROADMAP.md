@@ -44,6 +44,8 @@ Feature Roadmap
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
+* Use the MEGA65's RTC to simulate a PCF8583 real-time clock for the C64, so
+  that for example GEOS can make use of it
 * More sophisticated scalers and scandoublers 
 * Simulate the blending of colours when ALM and DCM are used
   as described here: https://github.com/MiSTer-devel/C64_MiSTer/issues/104

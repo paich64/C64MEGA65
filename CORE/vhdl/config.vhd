@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A12]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A12]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A12]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A10]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A12]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -347,7 +347,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write c
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 44;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 61;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -377,8 +377,25 @@ constant OPTM_ITEMS        : string :=
    " SID: %s\n"               &  -- SID submenu
    " SID Settings\n"          &
    "\n"                       &
+   " Mono SID\n"              &
+   "\n"                       &
    " 6581\n"                  &
    " 8580\n"                  &
+   "\n"                       &
+   " Stereo SID\n"            &
+   "\n"                       &
+   " L: 6581 R: 6581\n"       &
+   " L: 6581 R: 8580\n"       &
+   " L: 8580 R: 6581\n"       &
+   " L: 8580 R: 8580\n"       &
+   "\n"                       &
+   " Right SID Port\n"        &
+   "\n"                       &
+   " D420\n"                  &
+   " D500\n"                  &
+   " DE00\n"                  &
+   " DF00\n"                  &
+   "\n"                       &
    " Audio improvements\n"    &   
    "\n"                       &
    " Back to main menu\n"     &
@@ -413,9 +430,9 @@ constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive nee
 constant OPTM_G_EXP_PORT      : integer := 3;
 constant OPTM_G_MOUNT_CRT     : integer := 4;
 constant OPTM_G_FLIP_JOYS     : integer := 5;
-constant OPTM_G_SID           : integer := 6;
-constant OPTM_G_IMPROVE_AUDIO : integer := 7;
-constant OPTM_G_REU           : integer := 8;
+constant OPTM_G_SID_SETUP     : integer := 6;
+constant OPTM_G_SID_PORT      : integer := 7;
+constant OPTM_G_IMPROVE_AUDIO : integer := 8;
 constant OPTM_G_CIA_8521      : integer := 9;
 constant OPTM_G_HDMI_MODES    : integer := 10;
 constant OPTM_G_CRT_EMULATION : integer := 11;
@@ -447,8 +464,25 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_SUBMENU,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_SID           + OPTM_G_STDSEL,
-                                             OPTM_G_SID,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_SID_SETUP     + OPTM_G_STDSEL,
+                                             OPTM_G_SID_SETUP,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_SID_SETUP,
+                                             OPTM_G_SID_SETUP,
+                                             OPTM_G_SID_SETUP,
+                                             OPTM_G_SID_SETUP,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_SID_PORT      + OPTM_G_STDSEL,
+                                             OPTM_G_SID_PORT,
+                                             OPTM_G_SID_PORT,
+                                             OPTM_G_SID_PORT,
+                                             OPTM_G_LINE,                                           
                                              OPTM_G_IMPROVE_AUDIO + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,

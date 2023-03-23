@@ -39,6 +39,7 @@ entity main is
 
       -- SID and CIA versions
       c64_sid_ver_i          : in  std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
+      c64_sid_port_i         : in unsigned(2 downto 0);    -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
       c64_cia_ver_i          : in  std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"
 
       -- Mode selection for Expansion Port (aka Cartridge Port):
@@ -445,6 +446,9 @@ begin
       end if;
    end process;
 
+   -- Ensure that the cpu_data_in process provides a potential cartridge's ROM to the CPU so that we can
+   -- start a cartridge directly upon power on (aka "cold start"). The complex reset mechanisms in the
+   -- system create two hard_reset_n signals directly after power on, so we need to compensate for that.
    handle_cold_start : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
@@ -470,7 +474,7 @@ begin
          c64_ram_data <= x"00";
 
       -- Access the hardware cartridge
-      elsif cart_roml_n = '0' or cart_romh_n = '0' then
+      elsif cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1' then
          c64_ram_data <= data_from_cart;
 
       -- Standard access to the C64's RAM
@@ -488,10 +492,10 @@ begin
          clk32       => clk_main_i,
          clk32_speed => clk_main_speed_i,
          reset_n     => reset_core_n,
-         bios        => "01",          -- standard C64, internal ROM
+         bios        => "01",             -- standard C64, internal ROM
 
          pause       => pause_i,
-         pause_out   => c64_pause,     -- unused
+         pause_out   => c64_pause,        -- unused
 
          -- keyboard interface: directly connect the CIA1
          cia1_pa_i   => cia1_pa_i,
@@ -563,10 +567,10 @@ begin
          -- SID
          audio_l     => c64_sid_l,
          audio_r     => c64_sid_r,
-         sid_filter  => "11",          -- filter enable = true for both SIDs, low bit = left SID
-         sid_ver     => c64_sid_ver_i, -- SID version, 0=6581, 1=8580, low bit = left SID
-         sid_mode    => "000",         -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
-         sid_cfg     => "0000",        -- filter type: 0=Default, 1=Custom 1, 2=Custom 2, 3=Custom 3, lower two bits = left SID
+         sid_filter  => "11",             -- filter enable = true for both SIDs, low bit = left SID
+         sid_ver     => c64_sid_ver_i,    -- SID version, 0=6581, 1=8580, low bit = left SID
+         sid_mode    => c64_sid_port_i,   -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
+         sid_cfg     => "0000",           -- filter type: 0=Default, 1=Custom 1, 2=Custom 2, 3=Custom 3, lower two bits = left SID
 
          -- mechanism for loading custom SID filters: not supported, yet
          sid_ld_clk  => '0',
@@ -603,8 +607,8 @@ begin
 
          cass_motor  => open,
          cass_write  => open,
-         cass_sense  => '1',           -- low active
-         cass_read   => '1'            -- default is '1' according to MiSTer's c1530.vhd
+         cass_sense  => '1',              -- low active
+         cass_read   => '1'               -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
    -- RAM write enable also needs to check for chip enable
@@ -697,7 +701,7 @@ begin
             -- Switch the data lines bi-directionally so that the CPU can also
             -- write to the cartridge, e.g. for bank switching
             cart_data_en_o       <= '0';
-            if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
+            if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1') then
                cart_data_dir_o   <= '0';
                data_from_cart    <= cart_d_io;
             else
