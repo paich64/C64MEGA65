@@ -26,8 +26,8 @@ create_generated_clock -name main_clk_1    [get_pins M2M/CORE/clk_gen/i_clk_c64/
 ## Clock divider sdcard_clk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins M2M/i_framework/i_clk_m2m/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins M2M/i_framework/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
 
-## Handle CDC of audio data
-set_max_delay 8 -datapath_only -from [get_clocks] -to [get_pins -hierarchical "*audio_cdc_gen.dst_*_d_reg[*]/D"]
+## Generic CDC
+set_max_delay 8 -datapath_only -from [get_clocks] -to [get_pins -hierarchical "*cdc_stable_gen.dst_*_d_reg[*]/D"]
 
 ## QNICE's EAE combinatorial division networks take longer than the regular clock period, so we specify a multicycle path
 ## see also the comments in EAE.vhd and explanations in UG903/chapter 5/Multicycle Paths as well as ug911/page 25
