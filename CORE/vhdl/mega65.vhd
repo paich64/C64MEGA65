@@ -271,6 +271,7 @@ signal hr_crt2hyperram_reset      : std_logic;
 signal hr_crt_busy                : std_logic;
 signal hr_crt_bank_lo             : std_logic_vector(6 downto 0);
 signal hr_crt_bank_hi             : std_logic_vector(6 downto 0);
+signal hr_c64_exp_port_mode       : std_logic_vector(1 downto 0);
 
 signal hr_bram_address            : std_logic_vector(11 downto 0);
 signal hr_bram_data               : std_logic_vector(15 downto 0);
@@ -754,17 +755,19 @@ begin
 
    i_main2hr: xpm_cdc_array_single
       generic map (
-         WIDTH => 15
+         WIDTH => 17
       )
       port map (
-         src_clk               => main_clk,
-         src_in( 6 downto 0)   => main_crt_bank_lo,
-         src_in(13 downto 7)   => main_crt_bank_hi,
-         src_in(14)            => main_crt2hyperram_reset,
-         dest_clk              => hr_clk_i,
-         dest_out( 6 downto 0) => hr_crt_bank_lo,
-         dest_out(13 downto 7) => hr_crt_bank_hi,
-         dest_out(14)          => hr_crt2hyperram_reset
+         src_clk                => main_clk,
+         src_in( 6 downto 0)    => main_crt_bank_lo,
+         src_in(13 downto 7)    => main_crt_bank_hi,
+         src_in(14)             => main_crt2hyperram_reset,
+         src_in(16 downto 15)   => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
+         dest_clk               => hr_clk_i,
+         dest_out( 6 downto 0)  => hr_crt_bank_lo,
+         dest_out(13 downto 7)  => hr_crt_bank_hi,
+         dest_out(14)           => hr_crt2hyperram_reset,
+         dest_out(16 downto 15) => hr_c64_exp_port_mode
       ); -- i_main2hr
 
    i_hr2main: xpm_cdc_array_single
@@ -944,7 +947,7 @@ begin
       hr_core_byteenable_o <= (others => '0');
       hr_core_burstcount_o <= (others => '0');
 
-      case c64_exp_port_mode is
+      case to_integer(unsigned(hr_c64_exp_port_mode)) is
          when 0 =>
             -- Use the MEGA65's actual hardware slot
             null;
