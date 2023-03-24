@@ -538,7 +538,7 @@ begin
          cart_dotclock_o        => cart_dotclock_o,
          cart_nmi_i             => cart_nmi_i,
          cart_irq_i             => cart_irq_i,
-         cart_dma_i             => cart_dma_i and not main_crt_busy,
+         cart_dma_i             => cart_dma_i,
          cart_exrom_i           => cart_exrom_i,
          cart_game_i            => cart_game_i,
          cart_ba_io             => cart_ba_io,
@@ -570,6 +570,7 @@ begin
          cartridge_bank_type_i  => main_cartridge_bank_type,
          cartridge_bank_raddr_i => main_cartridge_bank_raddr,
          cartridge_bank_wr_i    => main_cartridge_bank_wr,
+         crt_busy_i             => main_crt_busy,
          crt_bank_lo_o          => main_crt_bank_lo,
          crt_bank_hi_o          => main_crt_bank_hi
       ); -- i_main
