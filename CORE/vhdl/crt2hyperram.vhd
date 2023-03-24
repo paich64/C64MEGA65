@@ -5,6 +5,7 @@ use ieee.numeric_std_unsigned.all;
 
 -- This module connects the HyperRAM device to the internal BRAM cache
 -- It acts as a master towards both the HyperRAM and the BRAM.
+-- It runs in the HyperRAM clock domain
 
 entity crt2hyperram is
    port (
@@ -39,6 +40,9 @@ end entity crt2hyperram;
 
 architecture synthesis of crt2hyperram is
 
+   constant C_CRT_LO_BASE_ADDRESS : std_logic_vector(31 downto 0) := X"00200000";
+   constant C_CRT_HI_BASE_ADDRESS : std_logic_vector(31 downto 0) := X"00200000";
+
    signal crt_bank_lo_d    : std_logic_vector(6 downto 0);
    signal crt_bank_hi_d    : std_logic_vector(6 downto 0);
    signal crt_hi_load      : std_logic;
@@ -50,40 +54,13 @@ architecture synthesis of crt2hyperram is
 
    type t_state is (IDLE_ST, READ_HI_ST, READ_LO_ST);
 
-   signal state       : t_state := IDLE_ST;
-
-   attribute mark_debug : string;
-   attribute mark_debug of crt_busy_o          : signal is "true";
-   attribute mark_debug of crt_bank_lo_i       : signal is "true";
-   attribute mark_debug of crt_bank_hi_i       : signal is "true";
---   attribute mark_debug of avm_write_o         : signal is "true";
---   attribute mark_debug of avm_read_o          : signal is "true";
---   attribute mark_debug of avm_address_o       : signal is "true";
---   attribute mark_debug of avm_writedata_o     : signal is "true";
---   attribute mark_debug of avm_byteenable_o    : signal is "true";
---   attribute mark_debug of avm_burstcount_o    : signal is "true";
---   attribute mark_debug of avm_readdata_i      : signal is "true";
---   attribute mark_debug of avm_readdatavalid_i : signal is "true";
---   attribute mark_debug of avm_waitrequest_i   : signal is "true";
-   attribute mark_debug of bram_address_o      : signal is "true";
-   attribute mark_debug of bram_data_o         : signal is "true";
-   attribute mark_debug of bram_lo_wren_o      : signal is "true";
-   attribute mark_debug of bram_lo_q_i         : signal is "true";
-   attribute mark_debug of bram_hi_wren_o      : signal is "true";
-   attribute mark_debug of bram_hi_q_i         : signal is "true";
-   attribute mark_debug of crt_bank_lo_d       : signal is "true";
-   attribute mark_debug of crt_bank_hi_d       : signal is "true";
-   attribute mark_debug of crt_hi_load         : signal is "true";
-   attribute mark_debug of crt_hi_load_done    : signal is "true";
-   attribute mark_debug of crt_hi_address      : signal is "true";
-   attribute mark_debug of crt_lo_load         : signal is "true";
-   attribute mark_debug of crt_lo_load_done    : signal is "true";
-   attribute mark_debug of crt_lo_address      : signal is "true";
-   attribute mark_debug of state               : signal is "true";
+   signal state : t_state := IDLE_ST;
 
 begin
 
-   process (clk_i)
+   crt_busy_o <= '0' when state = IDLE_ST and crt_lo_load = '0' and crt_hi_load = '0'  else '1';
+
+   p_crt_load : process (clk_i)
    begin
       if rising_edge(clk_i) then
          crt_bank_lo_d  <= crt_bank_lo_i;
@@ -94,9 +71,10 @@ begin
          if crt_hi_load_done = '1' then
             crt_hi_load <= '0';
          end if;
-         crt_lo_address <= X"00200000";
-         crt_hi_address <= X"00200000";
+         crt_lo_address <= C_CRT_LO_BASE_ADDRESS + (X"000" & "0" & crt_bank_lo_i & X"000");
+         crt_hi_address <= C_CRT_HI_BASE_ADDRESS + (X"000" & "0" & crt_bank_hi_i & X"000");
 
+         -- Detect change in bank numbers
          if crt_bank_lo_d /= crt_bank_lo_i then
             crt_lo_load <= '1';
          end if;
@@ -109,12 +87,10 @@ begin
             crt_hi_load <= '1';
          end if;
       end if;
-   end process;
+   end process p_crt_load;
 
 
-   crt_busy_o <= '0' when state = IDLE_ST else '1';
-
-   p_master : process (clk_i)
+   p_fsm : process (clk_i)
    begin
       if rising_edge(clk_i) then
          if avm_waitrequest_i = '0' then
@@ -130,7 +106,7 @@ begin
          case state is
             when IDLE_ST =>
                if crt_hi_load = '1' and crt_hi_load_done = '0' then
-                  report "Starting load to Hi BRAM from address " & to_hstring(crt_hi_address);
+                  -- Starting load to HI bank
                   avm_write_o        <= '0';
                   avm_read_o         <= '1';
                   avm_address_o      <= crt_hi_address;
@@ -138,7 +114,7 @@ begin
                   bram_address_o     <= (others => '1');
                   state              <= READ_HI_ST;
                elsif crt_lo_load = '1' and crt_lo_load_done = '0' then
-                  report "Starting load to Lo BRAM from address " & to_hstring(crt_lo_address);
+                  -- Starting load to LO bank
                   avm_write_o        <= '0';
                   avm_read_o         <= '1';
                   avm_address_o      <= crt_lo_address;
@@ -198,7 +174,7 @@ begin
          end if;
 
       end if;
-   end process p_master;
+   end process p_fsm;
 
 end architecture synthesis;
 
