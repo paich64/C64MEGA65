@@ -84,6 +84,7 @@ constant VRAM_ADDR_WIDTH      : natural := f_log2(CHAR_MEM_SIZE);
 constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";     -- C64's main RAM
 constant C_DEV_C64_VDRIVES    : std_logic_vector(15 downto 0) := x"0101";     -- Virtual Device Management System
 constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
+constant C_DEV_C64_CRT        : std_logic_vector(15 downto 0) := x"0103";     -- SW cartridges (*.CRT)
 
 ----------------------------------------------------------------------------------------------------------
 -- Virtual Drive Management System
