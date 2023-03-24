@@ -11,21 +11,21 @@ library ieee;
 entity cdc_stable is
   generic (
     G_DATA_SIZE    : integer;
-    G_REGISTER_SRC : boolean  -- Add register to input data
+    G_REGISTER_SRC : boolean := false  -- Add register to input data
   );
   port (
     src_clk_i  : in    std_logic;
-    src_data_i : in    signed(G_DATA_SIZE - 1 downto 0);
+    src_data_i : in    std_logic_vector(G_DATA_SIZE - 1 downto 0);
     dst_clk_i  : in    std_logic;
-    dst_data_o : out   signed(G_DATA_SIZE - 1 downto 0)
+    dst_data_o : out   std_logic_vector(G_DATA_SIZE - 1 downto 0)
   );
 end entity cdc_stable;
 
 architecture synthesis of cdc_stable is
 
-  signal src_data    : signed(G_DATA_SIZE - 1 downto 0);
-  signal dst_data_d  : signed(G_DATA_SIZE - 1 downto 0);
-  signal dst_data_dd : signed(G_DATA_SIZE - 1 downto 0);
+  signal src_data    : std_logic_vector(G_DATA_SIZE - 1 downto 0);
+  signal dst_data_d  : std_logic_vector(G_DATA_SIZE - 1 downto 0);
+  signal dst_data_dd : std_logic_vector(G_DATA_SIZE - 1 downto 0);
 
   attribute async_reg                : string;
   attribute async_reg of dst_data_d  : signal is "true";

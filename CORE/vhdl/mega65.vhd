@@ -17,9 +17,6 @@ use work.globals.all;
 use work.types_pkg.all;
 use work.qnice_tools.all;
 
-library xpm;
-use xpm.vcomponents.all;
-
 entity MEGA65_Core is
 port (
    CLK                      : in  std_logic;                 -- 100 MHz clock
@@ -753,32 +750,32 @@ begin
 
    main_crt2hyperram_reset <= main_reset_core_i when c64_exp_port_mode = 2 else '1';
 
-   i_main2hr: xpm_cdc_array_single
+   i_main2hr : entity work.cdc_stable
       generic map (
-         WIDTH => 17
+         G_DATA_SIZE => 17
       )
       port map (
-         src_clk                => main_clk,
-         src_in( 6 downto 0)    => main_crt_bank_lo,
-         src_in(13 downto 7)    => main_crt_bank_hi,
-         src_in(14)             => main_crt2hyperram_reset,
-         src_in(16 downto 15)   => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
-         dest_clk               => hr_clk_i,
-         dest_out( 6 downto 0)  => hr_crt_bank_lo,
-         dest_out(13 downto 7)  => hr_crt_bank_hi,
-         dest_out(14)           => hr_crt2hyperram_reset,
-         dest_out(16 downto 15) => hr_c64_exp_port_mode
+         src_clk_i                => main_clk,
+         src_data_i( 6 downto 0)  => main_crt_bank_lo,
+         src_data_i(13 downto 7)  => main_crt_bank_hi,
+         src_data_i(14)           => main_crt2hyperram_reset,
+         src_data_i(16 downto 15) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
+         dst_clk_i                => hr_clk_i,
+         dst_data_o( 6 downto 0)  => hr_crt_bank_lo,
+         dst_data_o(13 downto 7)  => hr_crt_bank_hi,
+         dst_data_o(14)           => hr_crt2hyperram_reset,
+         dst_data_o(16 downto 15) => hr_c64_exp_port_mode
       ); -- i_main2hr
 
-   i_hr2main: xpm_cdc_array_single
+   i_hr2main : entity work.cdc_stable
       generic map (
-         WIDTH => 1
+         G_DATA_SIZE => 1
       )
       port map (
-         src_clk     => hr_clk_i,
-         src_in(0)   => hr_crt_busy,
-         dest_clk    => main_clk,
-         dest_out(0) => main_crt_busy
+         src_clk_i     => hr_clk_i,
+         src_data_i(0) => hr_crt_busy,
+         dst_clk_i     => main_clk,
+         dst_data_o(0) => main_crt_busy
       ); -- i_hr2main
 
    i_crt2hyperram : entity work.crt2hyperram
