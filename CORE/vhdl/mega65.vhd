@@ -693,7 +693,7 @@ begin
             if qnice_dev_ce_i = '1' and qnice_dev_we_i = '0' then
                case qnice_dev_addr_i(2 downto 0) is
                   when "000" => qnice_dev_data_o <= qnice_cartridge_bank_laddr;
-                  when "001" => qnice_dev_data_o <= qnice_cartridge_bank_raddr;
+                  when "001" => qnice_dev_data_o <= qnice_cartridge_bank_raddr(24 downto 9);
                   when "010" => qnice_dev_data_o <= qnice_cartridge_bank_size;
                   when "011" => qnice_dev_data_o <= qnice_cartridge_bank_num;
                   when "100" => qnice_dev_data_o <= X"000" & "000" & qnice_cartridge_loading;
