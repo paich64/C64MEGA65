@@ -374,6 +374,13 @@ attribute mark_debug of qnice_cartridge_bank_type      : signal is "true";
 attribute mark_debug of qnice_cartridge_bank_raddr     : signal is "true";
 attribute mark_debug of qnice_cartridge_bank_wr_toggle : signal is "true";
 
+attribute mark_debug of qnice_dev_id_i           : signal is "true";
+attribute mark_debug of qnice_dev_addr_i         : signal is "true";
+attribute mark_debug of qnice_dev_data_i         : signal is "true";
+attribute mark_debug of qnice_dev_data_o         : signal is "true";
+attribute mark_debug of qnice_dev_ce_i           : signal is "true";
+attribute mark_debug of qnice_dev_we_i           : signal is "true";
+
 attribute mark_debug of main_cartridge_loading        : signal is "true";
 attribute mark_debug of main_cartridge_id             : signal is "true";
 attribute mark_debug of main_cartridge_exrom          : signal is "true";
@@ -667,15 +674,35 @@ begin
             qnice_dev_data_o           <= x"00" & qnice_c64_mount_buf_ram_data;
 
          when C_DEV_C64_CRT =>
-            case qnice_dev_addr_i(2 downto 0) is
-               when "000" => qnice_cartridge_bank_laddr     <= qnice_dev_data_i;
-               when "001" => qnice_cartridge_bank_raddr     <= qnice_dev_data_i & "000000000";
-               when "010" => qnice_cartridge_bank_size      <= qnice_dev_data_i;
-               when "011" => qnice_cartridge_bank_num       <= qnice_dev_data_i;
-               when "100" => qnice_cartridge_loading        <= qnice_dev_data_i(0);
-                             qnice_cartridge_bank_wr_toggle <= not qnice_cartridge_bank_wr_toggle;
-               when others => null;
-            end case;
+            if qnice_dev_ce_i = '1' and qnice_dev_we_i = '1' then
+               case qnice_dev_addr_i(2 downto 0) is
+                  -- We want latches on all these signals ...
+                  when "000" => qnice_cartridge_bank_laddr     <= qnice_dev_data_i;
+                  when "001" => qnice_cartridge_bank_raddr     <= qnice_dev_data_i & "000000000";
+                  when "010" => qnice_cartridge_bank_size      <= qnice_dev_data_i;
+                  when "011" => qnice_cartridge_bank_num       <= qnice_dev_data_i;
+                                qnice_cartridge_bank_wr_toggle <= not qnice_cartridge_bank_wr_toggle;
+                  when "100" => qnice_cartridge_loading        <= qnice_dev_data_i(0);
+                  when "101" => qnice_cartridge_id             <= qnice_dev_data_i;
+                  when "110" => qnice_cartridge_exrom          <= qnice_dev_data_i(7 downto 0);
+                  when "111" => qnice_cartridge_game           <= qnice_dev_data_i(7 downto 0);
+                  when others => null;
+               end case;
+            end if;
+
+            if qnice_dev_ce_i = '1' and qnice_dev_we_i = '0' then
+               case qnice_dev_addr_i(2 downto 0) is
+                  when "000" => qnice_dev_data_o <= qnice_cartridge_bank_laddr;
+                  when "001" => qnice_dev_data_o <= qnice_cartridge_bank_raddr;
+                  when "010" => qnice_dev_data_o <= qnice_cartridge_bank_size;
+                  when "011" => qnice_dev_data_o <= qnice_cartridge_bank_num;
+                  when "100" => qnice_dev_data_o <= qnice_cartridge_loading;
+                  when "101" => qnice_dev_data_o <= qnice_cartridge_id;
+                  when "110" => qnice_dev_data_o <= qnice_cartridge_exrom;
+                  when "111" => qnice_dev_data_o <= qnice_cartridge_game;
+                  when others => null;
+               end case;
+            end if;
 
          when others => null;
       end case;
