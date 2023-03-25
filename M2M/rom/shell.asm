@@ -332,16 +332,16 @@ _DBG_LC_1       ; Print success message
                 MOVE    DBG_S_PROGRESS, R8
                 RSUB    SCR$PRINTSTR, 1
 
-                ; Skip .crt header and go directly to the first CHIP packet
-                MOVE    CRT_FILE, R8            ; file handle
-                MOVE    0x0040, R9              ; seek-pos lo
-                XOR     R10, R0                 ; seek-pos hi
-                SYSCALL(f32_fseek, 1)
-                CMP     0, R9
-                RBRA    _DBG_LC_2, Z
-                RSUB    RESTORE_COORDS, 1
-                MOVE    DBG_FATAL_SEEK, R8
-                RBRA    FATAL, 1
+;                ; Skip .crt header and go directly to the first CHIP packet
+;                MOVE    CRT_FILE, R8            ; file handle
+;                MOVE    0x0040, R9              ; seek-pos lo
+;                XOR     R10, R0                 ; seek-pos hi
+;                SYSCALL(f32_fseek, 1)
+;                CMP     0, R9
+;                RBRA    _DBG_LC_2, Z
+;                RSUB    RESTORE_COORDS, 1
+;                MOVE    DBG_FATAL_SEEK, R8
+;                RBRA    FATAL, 1
 
                 ; Registers
 _DBG_LC_2       MOVE    DBG_PROGRESS, R0        ; R0: progress counter
@@ -360,29 +360,29 @@ _DBG_LC_2       MOVE    DBG_PROGRESS, R0        ; R0: progress counter
                 ; New CHIP packet: skip 14 bytes to find the hi/lo bytes 
                 ; of the packet size and output the info. Then store the
                 ; packet size in R3
-_DBG_LC_3       MOVE    14, R8
-                RSUB    DBG_FSKIP, 1
-                RBRA    _DBG_LC_DONE, C         ; EOF
-                MOVE    DBG_S_NEW_CHIP, R8
-                SYSCALL(puts, 1)
-                MOVE    R2, R8
-                MOVE    SCRATCH_HEX, R9
-                RSUB    WORD2HEXSTR, 1
-                MOVE    R9, R8
-                SYSCALL(puts, 1)
-                MOVE    DBG_S_NEW_CHIP2, R8
-                SYSCALL(puts, 1)
-                RSUB    DBG_READBYTE, 1
-                MOVE    R8, R3
-                SWAP    R3, R3
-                RSUB    DBG_READBYTE, 1
-                OR      R8, R3
-                MOVE    R3, R8
-                MOVE    SCRATCH_HEX, R9
-                RSUB    WORD2HEXSTR, 1
-                MOVE    R9, R8
-                SYSCALL(puts, 1)
-                SYSCALL(crlf, 1)
+_DBG_LC_3;       MOVE    14, R8
+         ;       RSUB    DBG_FSKIP, 1
+         ;       RBRA    _DBG_LC_DONE, C         ; EOF
+         ;       MOVE    DBG_S_NEW_CHIP, R8
+         ;       SYSCALL(puts, 1)
+         ;       MOVE    R2, R8
+         ;       MOVE    SCRATCH_HEX, R9
+         ;       RSUB    WORD2HEXSTR, 1
+         ;       MOVE    R9, R8
+         ;       SYSCALL(puts, 1)
+         ;       MOVE    DBG_S_NEW_CHIP2, R8
+         ;       SYSCALL(puts, 1)
+         ;       RSUB    DBG_READBYTE, 1
+         ;       MOVE    R8, R3
+         ;       SWAP    R3, R3
+         ;       RSUB    DBG_READBYTE, 1
+         ;       OR      R8, R3
+         ;       MOVE    R3, R8
+         ;       MOVE    SCRATCH_HEX, R9
+         ;       RSUB    WORD2HEXSTR, 1
+         ;       MOVE    R9, R8
+         ;       SYSCALL(puts, 1)
+         ;       SYSCALL(crlf, 1)
 
                 ; Read one CHIP packet: The HyperRAM is 16-bit so we will
                 ; always read two bytes and form a word. We read LO/HI and
@@ -426,11 +426,11 @@ _DBG_LC_6       SUB     2, R0
                 RSUB    SCR$PRINTSTR, 1
 
                 ; Check PACKET boundary
-_DBG_LC_7       ADD     2, R6
-                CMP     R3, R6
-                RBRA    _DBG_LC_4, !Z
-                ADD     1, R2                   ; next CHIP packet
-                XOR     R6, R6                  ; reset current byte counter
+_DBG_LC_7;       ADD     2, R6
+         ;       CMP     R3, R6
+         ;       RBRA    _DBG_LC_4, !Z
+         ;       ADD     1, R2                   ; next CHIP packet
+         ;       XOR     R6, R6                  ; reset current byte counter
                 RBRA    _DBG_LC_3, 1    
 
                 ; Output success message

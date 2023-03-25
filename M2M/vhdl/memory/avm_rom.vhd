@@ -1,9 +1,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use std.textio.all;
 
-entity avm_memory is
+entity avm_rom is
    generic (
+      G_INIT_FILE    : string := "";
       G_ADDRESS_SIZE : integer; -- Number of bits
       G_DATA_SIZE    : integer  -- Number of bits
    );
@@ -20,51 +22,60 @@ entity avm_memory is
       avm_readdatavalid_o : out std_logic;
       avm_waitrequest_o   : out std_logic
    );
-end entity avm_memory;
+end entity avm_rom;
 
-architecture simulation of avm_memory is
+architecture simulation of avm_rom is
 
    -- This defines a type containing an array of bytes
    type mem_t is array (0 to 2**G_ADDRESS_SIZE-1) of std_logic_vector(G_DATA_SIZE-1 downto 0);
 
-   signal write_burstcount     : std_logic_vector(7 downto 0);
-   signal write_address        : std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
-
    signal read_burstcount      : std_logic_vector(7 downto 0);
    signal read_address         : std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
 
-   signal mem_write_burstcount : std_logic_vector(7 downto 0);
    signal mem_read_burstcount  : std_logic_vector(7 downto 0);
-   signal mem_write_address    : std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
    signal mem_read_address     : std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
+
+   impure function read_romfile(rom_file_name : in string) return mem_t is
+      type char_file_t is file of character;
+      file char_file : char_file_t;
+      variable char_v : character;
+      subtype byte_t is natural range 0 to 255;
+      variable byte_v    : byte_t;
+      variable address_v : natural := 0;
+      variable index_v   : natural := 0;
+      variable data_v    : std_logic_vector(G_DATA_SIZE-1 downto 0);
+      variable rom_v     : mem_t;
+   begin
+      file_open(char_file, rom_file_name);
+      while not endfile(char_file) loop
+         read(char_file, char_v);
+         byte_v := character'pos(char_v);
+
+         data_v(index_v*8+7 downto index_v*8) := std_logic_vector(to_unsigned(byte_v, 8));
+         index_v := index_v + 1;
+         if index_v = G_DATA_SIZE/8 then
+            index_v := 0;
+            rom_v(address_v) := data_v;
+            address_v := address_v + 1;
+         end if;
+      end loop;
+      file_close(char_file);
+      return rom_v;
+   end function;
+
+   signal mem : mem_t := read_romfile(G_INIT_FILE);
 
 begin
 
-   mem_write_address    <= avm_address_i    when write_burstcount = X"00" else write_address;
    mem_read_address     <= avm_address_i    when read_burstcount = X"00" else read_address;
-   mem_write_burstcount <= avm_burstcount_i when write_burstcount = X"00" else write_burstcount;
    mem_read_burstcount  <= avm_burstcount_i when read_burstcount = X"00" else read_burstcount;
 
    avm_waitrequest_o <= '0' when unsigned(read_burstcount) = 0 else '1';
 
    p_mem : process (clk_i)
-      variable mem : mem_t;
    begin
       if rising_edge(clk_i) then
          avm_readdatavalid_o <= '0';
-
-         if avm_write_i = '1' and avm_waitrequest_o = '0' then
-            write_address <= std_logic_vector(unsigned(mem_write_address) + 1);
-            write_burstcount <= std_logic_vector(unsigned(mem_write_burstcount) - 1);
-
-            report "Writing 0x" & to_hstring(avm_writedata_i) & " to 0x" & to_hstring(mem_write_address) &
-                   " with burstcount " & to_hstring(write_burstcount);
-            for b in 0 to G_DATA_SIZE/8-1 loop
-               if avm_byteenable_i(b) = '1' then
-                  mem(to_integer(unsigned(mem_write_address)))(8*b+7 downto 8*b) := avm_writedata_i(8*b+7 downto 8*b);
-               end if;
-            end loop;
-         end if;
 
          if (avm_read_i = '1' and avm_waitrequest_o = '0') or to_integer(unsigned(read_burstcount)) > 0 then
             read_address <= std_logic_vector(unsigned(mem_read_address) + 1);
@@ -78,7 +89,6 @@ begin
          end if;
 
          if rst_i = '1' then
-            write_burstcount <= (others => '0');
             read_burstcount  <= (others => '0');
          end if;
       end if;
