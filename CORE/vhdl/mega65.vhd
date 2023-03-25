@@ -262,17 +262,17 @@ constant C_MENU_STEREO_R_D420 : natural := 31;
 constant C_MENU_STEREO_R_D500 : natural := 32;
 constant C_MENU_STEREO_R_DE00 : natural := 33;
 constant C_MENU_STEREO_R_DF00 : natural := 34;
-constant C_MENU_IMPROVE_AUDIO : natural := 36;
-constant C_MENU_8521          : natural := 39;
-constant C_MENU_HDMI_16_9_50  : natural := 46;
-constant C_MENU_HDMI_16_9_60  : natural := 47;
-constant C_MENU_HDMI_4_3_50   : natural := 48;
-constant C_MENU_HDMI_5_4_50   : natural := 49;
-constant C_MENU_CRT_EMULATION : natural := 52;
-constant C_MENU_HDMI_ZOOM     : natural := 53;          
-constant C_MENU_HDMI_FF       : natural := 54;
-constant C_MENU_HDMI_DVI      : natural := 55;
-constant C_MENU_VGA_RETRO     : natural := 56;
+constant C_MENU_IMPROVE_AUDIO : natural := 37;
+constant C_MENU_8521          : natural := 40;
+constant C_MENU_HDMI_16_9_50  : natural := 47;
+constant C_MENU_HDMI_16_9_60  : natural := 48;
+constant C_MENU_HDMI_4_3_50   : natural := 49;
+constant C_MENU_HDMI_5_4_50   : natural := 50;
+constant C_MENU_CRT_EMULATION : natural := 53;
+constant C_MENU_HDMI_ZOOM     : natural := 54;          
+constant C_MENU_HDMI_FF       : natural := 55;
+constant C_MENU_HDMI_DVI      : natural := 56;
+constant C_MENU_VGA_RETRO     : natural := 57;
 
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
