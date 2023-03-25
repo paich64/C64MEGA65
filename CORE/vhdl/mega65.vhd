@@ -330,8 +330,8 @@ begin
    sid_setup <= "00" when main_osm_control_i(C_MENU_MONO_6581)    else
                 "11" when main_osm_control_i(C_MENU_MONO_8580)    else
                 "00" when main_osm_control_i(C_MENU_STEREO_L6R6)  else
-                "01" when main_osm_control_i(C_MENU_STEREO_L6R8)  else
-                "10" when main_osm_control_i(C_MENU_STEREO_L8R6)  else
+                "10" when main_osm_control_i(C_MENU_STEREO_L6R8)  else
+                "01" when main_osm_control_i(C_MENU_STEREO_L8R6)  else
                 "11" when main_osm_control_i(C_MENU_STEREO_L8R8)  else
                 "00";
 
