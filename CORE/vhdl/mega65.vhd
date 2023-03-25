@@ -696,7 +696,7 @@ begin
                   when "001" => qnice_dev_data_o <= qnice_cartridge_bank_raddr;
                   when "010" => qnice_dev_data_o <= qnice_cartridge_bank_size;
                   when "011" => qnice_dev_data_o <= qnice_cartridge_bank_num;
-                  when "100" => qnice_dev_data_o <= qnice_cartridge_loading;
+                  when "100" => qnice_dev_data_o <= X"000" & "000" & qnice_cartridge_loading;
                   when "101" => qnice_dev_data_o <= qnice_cartridge_id;
                   when "110" => qnice_dev_data_o <= qnice_cartridge_exrom;
                   when "111" => qnice_dev_data_o <= qnice_cartridge_game;
