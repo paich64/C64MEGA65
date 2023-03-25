@@ -155,7 +155,6 @@ entity main is
       cartridge_bank_type_i  : in  std_logic_vector( 7 downto 0);
       cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i    : in  std_logic;
-      crt_busy_i             : in  std_logic;
       crt_bank_lo_o          : out std_logic_vector(6 downto 0);
       crt_bank_hi_o          : out std_logic_vector(6 downto 0)
    );
@@ -760,7 +759,7 @@ begin
             core_io_data   <= unsigned(crt_io_data);
             core_game_n    <= crt_game;
             core_exrom_n   <= crt_exrom;
-            core_dma       <= crt_busy_i;
+            core_dma       <= cartridge_loading_i;
 
          when others =>
             null;

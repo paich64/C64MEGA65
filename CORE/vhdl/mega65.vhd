@@ -244,6 +244,9 @@ signal main_cartridge_bank_type   : std_logic_vector( 7 downto 0);
 signal main_cartridge_bank_raddr  : std_logic_vector(24 downto 0);
 signal main_cartridge_bank_wr     : std_logic;
 
+signal main_cartridge_vector      : std_logic_vector(32 downto 0);
+signal main_cartridge_bank_vector : std_logic_vector(80 downto 0);
+
 signal hr_reu_write               : std_logic;
 signal hr_reu_read                : std_logic;
 signal hr_reu_address             : std_logic_vector(31 downto 0);
@@ -255,8 +258,6 @@ signal hr_reu_readdatavalid       : std_logic;
 signal hr_reu_waitrequest         : std_logic;
 
 -- Signals from QNICE to the cartridge.v module
-signal main_crt2hyperram_reset    : std_logic;
-signal main_crt_busy              : std_logic;
 signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
 signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
 
@@ -264,10 +265,7 @@ signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
 -- hr_clk
 ---------------------------------------------------------------------------------------------
 
-signal hr_vector                : std_logic_vector(114 downto 0);
-
-signal hr_crt2hyperram_reset      : std_logic;
-signal hr_crt_busy                : std_logic;
+signal hr_crt_start               : std_logic;
 signal hr_crt_bank_lo             : std_logic_vector(6 downto 0);
 signal hr_crt_bank_hi             : std_logic_vector(6 downto 0);
 signal hr_c64_exp_port_mode       : std_logic_vector(1 downto 0);
@@ -279,7 +277,7 @@ signal hr_bram_hi_wren            : std_logic;
 
 signal hr_crt_write               : std_logic;
 signal hr_crt_read                : std_logic;
-signal hr_crt_address             : std_logic_vector(31 downto 0);
+signal hr_crt_address             : std_logic_vector(21 downto 0);
 signal hr_crt_writedata           : std_logic_vector(15 downto 0);
 signal hr_crt_byteenable          : std_logic_vector( 1 downto 0);
 signal hr_crt_burstcount          : std_logic_vector( 7 downto 0);
@@ -301,8 +299,10 @@ signal hr_cartridge_bank_num    : std_logic_vector(15 downto 0);
 signal hr_cartridge_bank_type   : std_logic_vector( 7 downto 0);
 signal hr_cartridge_bank_raddr  : std_logic_vector(24 downto 0);
 signal hr_cartridge_bank_wr     : std_logic;
-signal hr_cartridge_bank_wr_toggle   : std_logic;
-signal hr_cartridge_bank_wr_toggle_d : std_logic;
+
+signal hr_cartridge_vector      : std_logic_vector(32 downto 0);
+signal hr_cartridge_bank_vector : std_logic_vector(80 downto 0);
+
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -346,21 +346,9 @@ signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
-signal qnice_cartridge_loading        : std_logic;
-signal qnice_cartridge_id             : std_logic_vector(15 downto 0);
-signal qnice_cartridge_exrom          : std_logic_vector( 7 downto 0);
-signal qnice_cartridge_game           : std_logic_vector( 7 downto 0);
-signal qnice_cartridge_bank_laddr     : std_logic_vector(15 downto 0);
-signal qnice_cartridge_bank_size      : std_logic_vector(15 downto 0);
-signal qnice_cartridge_bank_num       : std_logic_vector(15 downto 0);
-signal qnice_cartridge_bank_type      : std_logic_vector( 7 downto 0);
-signal qnice_cartridge_bank_raddr     : std_logic_vector(24 downto 0);
-signal qnice_cartridge_bank_wr_toggle : std_logic := '0';
-
-signal qnice_vector                   : std_logic_vector(114 downto 0);
+signal qnice_cartridge_crt_loaded : std_logic;
 
 attribute mark_debug : string;
-attribute mark_debug of main_crt2hyperram_reset  : signal is "true";
 attribute mark_debug of main_crt_bank_lo         : signal is "true";
 attribute mark_debug of main_crt_bank_hi         : signal is "true";
 attribute mark_debug of c64_exp_port_mode        : signal is "true";
@@ -374,35 +362,32 @@ attribute mark_debug of main_crt_hi_ram_data     : signal is "true";
 attribute mark_debug of cart_roml_io             : signal is "true";
 attribute mark_debug of cart_romh_io             : signal is "true";
 
-attribute mark_debug of qnice_cartridge_loading        : signal is "true";
-attribute mark_debug of qnice_cartridge_id             : signal is "true";
-attribute mark_debug of qnice_cartridge_exrom          : signal is "true";
-attribute mark_debug of qnice_cartridge_game           : signal is "true";
-attribute mark_debug of qnice_cartridge_bank_laddr     : signal is "true";
-attribute mark_debug of qnice_cartridge_bank_size      : signal is "true";
-attribute mark_debug of qnice_cartridge_bank_num       : signal is "true";
-attribute mark_debug of qnice_cartridge_bank_type      : signal is "true";
-attribute mark_debug of qnice_cartridge_bank_raddr     : signal is "true";
-attribute mark_debug of qnice_cartridge_bank_wr_toggle : signal is "true";
-
-attribute mark_debug of qnice_dev_id_i           : signal is "true";
-attribute mark_debug of qnice_dev_addr_i         : signal is "true";
-attribute mark_debug of qnice_dev_data_i         : signal is "true";
-attribute mark_debug of qnice_dev_data_o         : signal is "true";
-attribute mark_debug of qnice_dev_ce_i           : signal is "true";
-attribute mark_debug of qnice_dev_we_i           : signal is "true";
-
-attribute mark_debug of hr_cartridge_loading        : signal is "true";
-attribute mark_debug of hr_cartridge_id             : signal is "true";
-attribute mark_debug of hr_cartridge_exrom          : signal is "true";
-attribute mark_debug of hr_cartridge_game           : signal is "true";
-attribute mark_debug of hr_cartridge_bank_laddr     : signal is "true";
-attribute mark_debug of hr_cartridge_bank_size      : signal is "true";
-attribute mark_debug of hr_cartridge_bank_num       : signal is "true";
-attribute mark_debug of hr_cartridge_bank_type      : signal is "true";
-attribute mark_debug of hr_cartridge_bank_raddr     : signal is "true";
-attribute mark_debug of hr_cartridge_bank_wr_toggle : signal is "true";
-attribute mark_debug of hr_cartridge_bank_wr        : signal is "true";
+attribute mark_debug of hr_cartridge_loading     : signal is "true";
+attribute mark_debug of hr_cartridge_id          : signal is "true";
+attribute mark_debug of hr_cartridge_exrom       : signal is "true";
+attribute mark_debug of hr_cartridge_game        : signal is "true";
+attribute mark_debug of hr_cartridge_bank_laddr  : signal is "true";
+attribute mark_debug of hr_cartridge_bank_size   : signal is "true";
+attribute mark_debug of hr_cartridge_bank_num    : signal is "true";
+attribute mark_debug of hr_cartridge_bank_type   : signal is "true";
+attribute mark_debug of hr_cartridge_bank_raddr  : signal is "true";
+attribute mark_debug of hr_cartridge_bank_wr     : signal is "true";
+attribute mark_debug of hr_crt_start             : signal is "true";
+attribute mark_debug of hr_crt_bank_lo           : signal is "true";
+attribute mark_debug of hr_crt_bank_hi           : signal is "true";
+attribute mark_debug of hr_crt_write             : signal is "true";
+attribute mark_debug of hr_crt_read              : signal is "true";
+attribute mark_debug of hr_crt_address           : signal is "true";
+attribute mark_debug of hr_crt_writedata         : signal is "true";
+attribute mark_debug of hr_crt_byteenable        : signal is "true";
+attribute mark_debug of hr_crt_burstcount        : signal is "true";
+attribute mark_debug of hr_crt_readdata          : signal is "true";
+attribute mark_debug of hr_crt_readdatavalid     : signal is "true";
+attribute mark_debug of hr_crt_waitrequest       : signal is "true";
+attribute mark_debug of hr_bram_address          : signal is "true";
+attribute mark_debug of hr_bram_data             : signal is "true";
+attribute mark_debug of hr_bram_lo_wren          : signal is "true";
+attribute mark_debug of hr_bram_hi_wren          : signal is "true";
 
 begin
 
@@ -607,7 +592,6 @@ begin
          cartridge_bank_type_i  => main_cartridge_bank_type,
          cartridge_bank_raddr_i => main_cartridge_bank_raddr,
          cartridge_bank_wr_i    => main_cartridge_bank_wr,
-         crt_busy_i             => main_crt_busy,
          crt_bank_lo_o          => main_crt_bank_lo,
          crt_bank_hi_o          => main_crt_bank_hi
       ); -- i_main
@@ -686,33 +670,7 @@ begin
 
          when C_DEV_C64_CRT =>
             if qnice_dev_ce_i = '1' and qnice_dev_we_i = '1' then
-               case qnice_dev_addr_i(2 downto 0) is
-                  -- We want latches on all these signals ...
-                  when "000" => qnice_cartridge_bank_laddr     <= qnice_dev_data_i;
-                  when "001" => qnice_cartridge_bank_raddr     <= qnice_dev_data_i & "000000000";
-                  when "010" => qnice_cartridge_bank_size      <= qnice_dev_data_i;
-                  when "011" => qnice_cartridge_bank_num       <= qnice_dev_data_i;
-                  when "100" => qnice_cartridge_loading        <= qnice_dev_data_i(0);
-                                qnice_cartridge_bank_wr_toggle <= qnice_dev_data_i(0);
-                  when "101" => qnice_cartridge_id             <= qnice_dev_data_i;
-                  when "110" => qnice_cartridge_exrom          <= qnice_dev_data_i(7 downto 0);
-                  when "111" => qnice_cartridge_game           <= qnice_dev_data_i(7 downto 0);
-                  when others => null;
-               end case;
-            end if;
-
-            if qnice_dev_ce_i = '1' and qnice_dev_we_i = '0' then
-               case qnice_dev_addr_i(2 downto 0) is
-                  when "000" => qnice_dev_data_o <= qnice_cartridge_bank_laddr;
-                  when "001" => qnice_dev_data_o <= qnice_cartridge_bank_raddr(24 downto 9);
-                  when "010" => qnice_dev_data_o <= qnice_cartridge_bank_size;
-                  when "011" => qnice_dev_data_o <= qnice_cartridge_bank_num;
-                  when "100" => qnice_dev_data_o <= X"000" & "000" & qnice_cartridge_loading;
-                  when "101" => qnice_dev_data_o <= qnice_cartridge_id;
-                  when "110" => qnice_dev_data_o <= X"00" & qnice_cartridge_exrom;
-                  when "111" => qnice_dev_data_o <= X"00" & qnice_cartridge_game;
-                  when others => null;
-               end case;
+               qnice_cartridge_crt_loaded <= qnice_dev_data_i(0);
             end if;
 
          when others => null;
@@ -723,46 +681,52 @@ begin
    -- Dual Clocks
    ---------------------------------------------------------------------------------------------
 
-   qnice_vector <= qnice_cartridge_loading        &
-                   qnice_cartridge_id             &
-                   qnice_cartridge_exrom          &
-                   qnice_cartridge_game           &
-                   qnice_cartridge_bank_laddr     &
-                   qnice_cartridge_bank_size      &
-                   qnice_cartridge_bank_num       &
-                   qnice_cartridge_bank_type      &
-                   qnice_cartridge_bank_raddr     &
-                   qnice_cartridge_bank_wr_toggle;
+   i_cdc_slow : entity work.cdc_slow
+     generic map (
+       G_DATA_SIZE    => hr_cartridge_bank_vector'length,
+       G_REGISTER_SRC => false
+     )
+     port map (
+       src_clk_i   => hr_clk_i,
+       src_valid_i => hr_cartridge_bank_wr,
+       src_data_i  => hr_cartridge_bank_vector,
+       dst_clk_i   => main_clk,
+       dst_valid_o => main_cartridge_bank_wr,
+       dst_data_o  => main_cartridge_bank_vector
+     ); -- i_cdc_slow
 
-   i_qnice2hr : entity work.cdc_stable
-      generic map (
-         G_DATA_SIZE => qnice_vector'length
-      )
-      port map (
-         src_clk_i  => qnice_clk_i,
-         src_data_i => qnice_vector,
-         dst_clk_i  => hr_clk_i,
-         dst_data_o => hr_vector
-      ); -- i_qnice2hr
+   hr_cartridge_bank_vector <= hr_cartridge_bank_laddr &
+                               hr_cartridge_bank_size  &
+                               hr_cartridge_bank_num   &
+                               hr_cartridge_bank_type  &
+                               hr_cartridge_bank_raddr;
+   (main_cartridge_bank_laddr,
+    main_cartridge_bank_size ,
+    main_cartridge_bank_num  ,
+    main_cartridge_bank_type ,
+    main_cartridge_bank_raddr) <= main_cartridge_bank_vector;
 
-   (hr_cartridge_loading        ,
-    hr_cartridge_id             ,
-    hr_cartridge_exrom          ,
-    hr_cartridge_game           ,
-    hr_cartridge_bank_laddr     ,
-    hr_cartridge_bank_size      ,
-    hr_cartridge_bank_num       ,
-    hr_cartridge_bank_type      ,
-    hr_cartridge_bank_raddr     ,
-    hr_cartridge_bank_wr_toggle) <= hr_vector;
+   i_cdc_stable : entity work.cdc_stable
+     generic map (
+       G_DATA_SIZE    => hr_cartridge_vector'length,
+       G_REGISTER_SRC => false
+     )
+     port map (
+       src_clk_i   => hr_clk_i,
+       src_data_i  => hr_cartridge_vector,
+       dst_clk_i   => main_clk,
+       dst_data_o  => main_cartridge_vector
+     ); -- i_cdc_stable
 
-   hr_cartridge_bank_wr <= hr_cartridge_bank_wr_toggle xor hr_cartridge_bank_wr_toggle_d;
-   process (hr_clk_i)
-   begin
-      if rising_edge(hr_clk_i) then
-         hr_cartridge_bank_wr_toggle_d <=  hr_cartridge_bank_wr_toggle_d;
-      end if;
-   end process;
+   hr_cartridge_vector <= hr_cartridge_loading &
+                          hr_cartridge_id      &
+                          hr_cartridge_exrom   &
+                          hr_cartridge_game;
+   (main_cartridge_loading,
+    main_cartridge_id     ,
+    main_cartridge_exrom  ,
+    main_cartridge_game) <= main_cartridge_vector;
+
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
    -- as well as QNICE can access it
@@ -858,45 +822,40 @@ begin
          q_b               => open
       ); -- crt_lo_ram
 
-   main_crt2hyperram_reset <= main_reset_core_i when c64_exp_port_mode = 2 else '1';
-
    i_main2hr : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 17
+         G_DATA_SIZE => 16
       )
       port map (
          src_clk_i                => main_clk,
          src_data_i( 6 downto 0)  => main_crt_bank_lo,
          src_data_i(13 downto 7)  => main_crt_bank_hi,
-         src_data_i(14)           => main_crt2hyperram_reset,
-         src_data_i(16 downto 15) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
+         src_data_i(15 downto 14) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
          dst_clk_i                => hr_clk_i,
          dst_data_o( 6 downto 0)  => hr_crt_bank_lo,
          dst_data_o(13 downto 7)  => hr_crt_bank_hi,
-         dst_data_o(14)           => hr_crt2hyperram_reset,
-         dst_data_o(16 downto 15) => hr_c64_exp_port_mode
+         dst_data_o(15 downto 14) => hr_c64_exp_port_mode
       ); -- i_main2hr
 
-   i_hr2main : entity work.cdc_stable
+   i_qnice2hr2 : entity work.cdc_stable
       generic map (
          G_DATA_SIZE => 1
       )
       port map (
-         src_clk_i     => hr_clk_i,
-         src_data_i(0) => hr_crt_busy,
-         dst_clk_i     => main_clk,
-         dst_data_o(0) => main_crt_busy
-      ); -- i_hr2main
+         src_clk_i     => qnice_clk_i,
+         src_data_i(0) => qnice_cartridge_crt_loaded,
+         dst_clk_i     => hr_clk_i,
+         dst_data_o(0) => hr_crt_start
+      ); -- i_qnice2hr
 
    i_crt2hyperram : entity work.crt2hyperram
       port map (
          clk_i               => hr_clk_i,
          rst_i               => hr_rst_i,
-         start_i             => hr_cartridge_bank_wr,
-         address_i           => X"00200000",
---         crt_busy_o          => hr_crt_busy,
---         crt_bank_lo_i       => hr_crt_bank_lo,
---         crt_bank_hi_i       => hr_crt_bank_hi,
+         start_i             => hr_crt_start,
+         address_i           => std_logic_vector(to_unsigned(2*1024*1024, 22)),
+         crt_bank_lo_i       => hr_crt_bank_lo,
+         crt_bank_hi_i       => hr_crt_bank_hi,
          avm_write_o         => hr_crt_write,
          avm_read_o          => hr_crt_read,
          avm_address_o       => hr_crt_address,
@@ -906,6 +865,15 @@ begin
          avm_readdata_i      => hr_crt_readdata,
          avm_readdatavalid_i => hr_crt_readdatavalid,
          avm_waitrequest_i   => hr_crt_waitrequest,
+         cart_bank_laddr_o   => hr_cartridge_bank_laddr,
+         cart_bank_size_o    => hr_cartridge_bank_size,
+         cart_bank_num_o     => hr_cartridge_bank_num,
+         cart_bank_raddr_o   => hr_cartridge_bank_raddr,
+         cart_bank_wr_o      => hr_cartridge_bank_wr,
+         cart_loading_o      => hr_cartridge_loading,
+         cart_id_o           => hr_cartridge_id,
+         cart_exrom_o        => hr_cartridge_exrom,
+         cart_game_o         => hr_cartridge_game,
          bram_address_o      => hr_bram_address,
          bram_data_o         => hr_bram_data,
          bram_lo_wren_o      => hr_bram_lo_wren,
@@ -913,26 +881,6 @@ begin
          bram_hi_wren_o      => hr_bram_hi_wren,
          bram_hi_q_i         => (others => '0')
       ); -- i_crt2hyperram
-
-   -- Temporarily measure the length of time needed to fill the bank RAM.
-   debug_proc : process (hr_clk_i)
-   begin
-      if rising_edge(hr_clk_i) then
-         hr_crt_busy_d <= hr_crt_busy;
-
-         if hr_crt_busy = '1' then
-            hr_crt_busy_count <= hr_crt_busy_count + 1;
-         elsif hr_crt_busy_d = '1' then
-            hr_crt_busy_length <= hr_crt_busy_count;
-            hr_crt_busy_count  <= (others => '0');
-         end if;
-
-         if hr_rst_i = '1' then
-            hr_crt_busy_length <= (others => '0');
-            hr_crt_busy_count  <= (others => '0');
-         end if;
-      end if;
-   end process debug_proc;
 
    main_ram_data_to_c64 <= main_crt_lo_ram_data(15 downto 8) when cart_roml_io = '0' and main_ram_addr(0) = '1' else
                            main_crt_lo_ram_data( 7 downto 0) when cart_roml_io = '0' and main_ram_addr(0) = '0' else
@@ -1077,7 +1025,7 @@ begin
             -- Simulate a cartridge by using a cartridge from from the SD card (.crt file)
             hr_core_write_o      <= hr_crt_write;
             hr_core_read_o       <= hr_crt_read;
-            hr_core_address_o    <= hr_crt_address;
+            hr_core_address_o    <= "0000000000" & hr_crt_address;
             hr_core_writedata_o  <= hr_crt_writedata;
             hr_core_byteenable_o <= hr_crt_byteenable;
             hr_core_burstcount_o <= hr_crt_burstcount;

@@ -22,10 +22,12 @@ architecture simulation of tb_crt2hyperram is
    signal clk               : std_logic := '0';
    signal rst               : std_logic := '1';
    signal start             : std_logic;
-   signal address           : std_logic_vector(31 downto 0);
+   signal address           : std_logic_vector(21 downto 0);
+   signal crt_bank_lo       : std_logic_vector( 6 downto 0);
+   signal crt_bank_hi       : std_logic_vector( 6 downto 0);
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
-   signal avm_address       : std_logic_vector(31 downto 0);
+   signal avm_address       : std_logic_vector(21 downto 0);
    signal avm_writedata     : std_logic_vector(15 downto 0);
    signal avm_byteenable    : std_logic_vector(1 downto 0);
    signal avm_burstcount    : std_logic_vector(7 downto 0);
@@ -58,6 +60,8 @@ begin
          clk_i               => clk,
          rst_i               => rst,
          start_i             => start,
+         crt_bank_lo_i       => crt_bank_lo,
+         crt_bank_hi_i       => crt_bank_hi,
          address_i           => address,
          avm_write_o         => avm_write,
          avm_read_o          => avm_read,
@@ -111,7 +115,7 @@ begin
       start   <= '0';
       wait until rst = '0';
       wait until rising_edge(clk);
-      address <= X"00000000";
+      address <= (others => '0');
       start   <= '1';
       wait until rising_edge(clk);
       start   <= '0';

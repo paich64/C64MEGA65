@@ -18,12 +18,14 @@ entity crt2hyperram is
 
       -- Control interface
       start_i             : in  std_logic;
-      address_i           : in  std_logic_vector(31 downto 0);     -- Address in HyperRAM of start of CRT file
+      address_i           : in  std_logic_vector(21 downto 0);     -- Address in HyperRAM of start of CRT file
+      crt_bank_lo_i       : in  std_logic_vector(6 downto 0);
+      crt_bank_hi_i       : in  std_logic_vector(6 downto 0);
 
       -- Connect to HyperRAM
       avm_write_o         : out std_logic;
       avm_read_o          : out std_logic;
-      avm_address_o       : out std_logic_vector(31 downto 0) := (others => '0'); -- Force upper bits to zero (outside HyperRAM area)
+      avm_address_o       : out std_logic_vector(21 downto 0);
       avm_writedata_o     : out std_logic_vector(15 downto 0);
       avm_byteenable_o    : out std_logic_vector( 1 downto 0);
       avm_burstcount_o    : out std_logic_vector( 7 downto 0);
@@ -54,18 +56,6 @@ end entity crt2hyperram;
 
 architecture synthesis of crt2hyperram is
 
-   -- Use a wider data bus locally
-   -- This is just to simplify the following state machine
-   signal wide_write         : std_logic;
-   signal wide_read          : std_logic;
-   signal wide_address       : std_logic_vector(18 downto 0);
-   signal wide_writedata     : std_logic_vector(127 downto 0);
-   signal wide_byteenable    : std_logic_vector(15 downto 0);
-   signal wide_burstcount    : std_logic_vector(7 downto 0);
-   signal wide_readdata      : std_logic_vector(127 downto 0);
-   signal wide_readdatavalid : std_logic;
-   signal wide_waitrequest   : std_logic;
-
    subtype R_CRT_FILE_HEADER_LENGTH is natural range  4*8-1 downto  0*8;
    subtype R_CRT_CARTRIDGE_VERSION  is natural range  6*8-1 downto  4*8;
    subtype R_CRT_CARTRIDGE_TYPE     is natural range  8*8-1 downto  6*8;
@@ -83,11 +73,10 @@ architecture synthesis of crt2hyperram is
                     WAIT_FOR_CRT_HEADER_00_ST,
                     WAIT_FOR_CRT_HEADER_10_ST,
                     WAIT_FOR_CHIP_HEADER_ST,
-                    READ_CHIP_DATA_ST,
                     ERROR_ST);
-   signal state : t_state := IDLE_ST;
-   signal base_address : std_logic_vector(31 downto 0);
-   signal image_size   : std_logic_vector(15 downto 0);
+   signal state         : t_state := IDLE_ST;
+   signal read_pos      : integer range 0 to 7;
+   signal wide_readdata : std_logic_vector(127 downto 0);
 
    -- Convert an ASCII string to std_logic_vector
    pure function str2slv(s : string) return std_logic_vector is
@@ -114,130 +103,123 @@ architecture synthesis of crt2hyperram is
       return swapped;
    end function bswap;
 
---   attribute mark_debug : string;
---   attribute mark_debug of wide_read          : signal is "true";
---   attribute mark_debug of wide_address       : signal is "true";
---   attribute mark_debug of wide_burstcount    : signal is "true";
---   attribute mark_debug of wide_writedata     : signal is "true";
---   attribute mark_debug of wide_readdata      : signal is "true";
---   attribute mark_debug of wide_readdatavalid : signal is "true";
---   attribute mark_debug of wide_waitrequest   : signal is "true";
---   attribute mark_debug of state              : signal is "true";
---   attribute mark_debug of base_address       : signal is "true";
---   attribute mark_debug of image_size         : signal is "true";
---   attribute mark_debug of cart_id_o          : signal is "true";
---   attribute mark_debug of cart_exrom_o       : signal is "true";
---   attribute mark_debug of cart_game_o        : signal is "true";
+   attribute mark_debug : string;
+   attribute mark_debug of state         : signal is "true";
+   attribute mark_debug of wide_readdata : signal is "true";
+   attribute mark_debug of read_pos      : signal is "true";
+   attribute mark_debug of cart_id_o     : signal is "true";
+   attribute mark_debug of cart_exrom_o  : signal is "true";
+   attribute mark_debug of cart_game_o   : signal is "true";
 
 begin
 
    p_fsm : process (clk_i)
       variable file_header_length_v : std_logic_vector(31 downto 0);
+      variable image_size_v         : std_logic_vector(15 downto 0);
+      variable wide_readdata_v      : std_logic_vector(127 downto 0);
+      variable read_addr_v          : std_logic_vector(21 downto 0);
    begin
       if rising_edge(clk_i) then
-         if wide_waitrequest = '0' then
-            wide_write <= '0';
-            wide_read  <= '0';
+         cart_bank_wr_o <= '0';
+
+         if avm_waitrequest_i = '0' then
+            avm_write_o <= '0';
+            avm_read_o  <= '0';
+         end if;
+
+         wide_readdata_v := wide_readdata;
+         if avm_readdatavalid_i = '1' then
+            wide_readdata_v(16*read_pos + 15 downto 16*read_pos) := avm_readdata_i;
+            wide_readdata <= wide_readdata_v;
+
+            if read_pos = 7 then
+               read_pos <= 0;
+            else
+               read_pos <= read_pos + 1;
+            end if;
          end if;
 
          case state is
             when IDLE_ST =>
                if start_i = '1' then
-                  base_address    <= address_i; -- Address supplied by framework (in units of 16-bit words)
-
+                  cart_loading_o   <= '1';
                   -- Read first 0x20 bytes of CRT header
-                  wide_address    <= address_i(21 downto 3); -- Divide address by 8 to get in units of 128-bit words
-                  wide_read       <= '1';
-                  wide_burstcount <= X"02";
-                  state           <= WAIT_FOR_CRT_HEADER_00_ST;
+                  avm_address_o    <= address_i;
+                  avm_read_o       <= '1';
+                  avm_burstcount_o <= X"10";
+                  state            <= WAIT_FOR_CRT_HEADER_00_ST;
                end if;
 
             when WAIT_FOR_CRT_HEADER_00_ST =>
-               if wide_readdatavalid = '1' then
+               if avm_readdatavalid_i = '1' and read_pos = 7 then
                   state <= ERROR_ST; -- Assume error
 
-                  if wide_readdata = str2slv("C64 CARTRIDGE   ") then
+                  if wide_readdata_v = str2slv("C64 CARTRIDGE   ") then
                      state <= WAIT_FOR_CRT_HEADER_10_ST;
                   end if;
                end if;
 
             when WAIT_FOR_CRT_HEADER_10_ST =>
-               if wide_readdatavalid = '1' then
-                  cart_id_o    <= bswap(wide_readdata(R_CRT_CARTRIDGE_TYPE));
-                  cart_exrom_o <= wide_readdata(R_CRT_EXROM);
-                  cart_game_o  <= wide_readdata(R_CRT_GAME);
+               if avm_readdatavalid_i = '1' and read_pos = 7 then
+                  cart_id_o    <= bswap(wide_readdata_v(R_CRT_CARTRIDGE_TYPE));
+                  cart_exrom_o <= wide_readdata_v(R_CRT_EXROM);
+                  cart_game_o  <= wide_readdata_v(R_CRT_GAME);
 
                   -- Read 0x10 bytes from CHIP header
-                  file_header_length_v := bswap(wide_readdata(R_CRT_FILE_HEADER_LENGTH));
-                  wide_address    <= base_address(21 downto 3) + file_header_length_v(22 downto 4);
-                  wide_read       <= '1';
-                  wide_burstcount <= X"01";
+                  file_header_length_v := bswap(wide_readdata_v(R_CRT_FILE_HEADER_LENGTH));
+                  avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
+                  avm_read_o       <= '1';
+                  avm_burstcount_o <= X"08";
                   state <= WAIT_FOR_CHIP_HEADER_ST;
                end if;
 
             when WAIT_FOR_CHIP_HEADER_ST =>
-               if wide_readdatavalid = '1' then
-                  state <= ERROR_ST; -- Assume error
+               if avm_readdatavalid_i = '1' and read_pos = 7 then
+                  if wide_readdata_v(R_CHIP_SIGNATURE) = str2slv("CHIP") then
+                     cart_bank_laddr_o <= bswap(wide_readdata_v(R_CHIP_LOAD_ADDRESS));
+                     cart_bank_size_o  <= bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
+                     cart_bank_num_o   <= bswap(wide_readdata_v(R_CHIP_BANK_NUMBER));
+                     read_addr_v := avm_address_o + X"08";
+                     cart_bank_raddr_o <= "00" & read_addr_v & "0";
+                     cart_bank_wr_o    <= '1';
 
-                  if wide_readdata(R_CHIP_SIGNATURE) = str2slv("CHIP") then
-                     image_size <= bswap(wide_readdata(R_CHIP_IMAGE_SIZE));
-                     state <= READ_CHIP_DATA_ST;
+                     image_size_v := bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
+                     avm_address_o    <= avm_address_o + X"08" + image_size_v(15 downto 1);
+                     avm_read_o       <= '1';
+                     avm_burstcount_o <= X"08";
+                  else
+                     state <= IDLE_ST;
+                     cart_loading_o <= '0';
                   end if;
                end if;
 
-            when READ_CHIP_DATA_ST =>
-               null;
-
             when ERROR_ST =>
-               null;
+               cart_loading_o <= '0';
 
             when others =>
                null;
          end case;
 
          if rst_i = '1' then
-            wide_write      <= '0';
-            wide_read       <= '0';
-            wide_address    <= (others => '0');
-            wide_writedata  <= (others => '0');
-            wide_byteenable <= (others => '0');
-            wide_burstcount <= (others => '0');
-            state           <= IDLE_ST;
+            avm_write_o       <= '0';
+            avm_read_o        <= '0';
+            avm_address_o     <= (others => '0');
+            avm_writedata_o   <= (others => '0');
+            avm_byteenable_o  <= (others => '0');
+            avm_burstcount_o  <= (others => '0');
+            state             <= IDLE_ST;
+            cart_loading_o    <= '0';
+            cart_bank_raddr_o <= (others => '0');
+            cart_bank_wr_o    <= '0';
+            cart_loading_o    <= '0';
+            cart_id_o         <= (others => '0');
+            cart_exrom_o      <= (others => '0');
+            cart_game_o       <= (others => '0');
+            read_pos          <= 0;
          end if;
 
       end if;
    end process p_fsm;
-
-
-   i_avm_decrease : entity work.avm_decrease
-     generic map (
-       G_SLAVE_ADDRESS_SIZE  => 19,
-       G_SLAVE_DATA_SIZE     => 128,
-       G_MASTER_ADDRESS_SIZE => 22,
-       G_MASTER_DATA_SIZE    => 16
-     )
-     port map (
-       clk_i                 => clk_i,
-       rst_i                 => rst_i,
-       s_avm_write_i         => wide_write,
-       s_avm_read_i          => wide_read,
-       s_avm_address_i       => wide_address,
-       s_avm_writedata_i     => wide_writedata,
-       s_avm_byteenable_i    => wide_byteenable,
-       s_avm_burstcount_i    => wide_burstcount,
-       s_avm_readdata_o      => wide_readdata,
-       s_avm_readdatavalid_o => wide_readdatavalid,
-       s_avm_waitrequest_o   => wide_waitrequest,
-       m_avm_write_o         => avm_write_o,
-       m_avm_read_o          => avm_read_o,
-       m_avm_address_o       => avm_address_o(21 downto 0),
-       m_avm_writedata_o     => avm_writedata_o,
-       m_avm_byteenable_o    => avm_byteenable_o,
-       m_avm_burstcount_o    => avm_burstcount_o,
-       m_avm_readdata_i      => avm_readdata_i,
-       m_avm_readdatavalid_i => avm_readdatavalid_i,
-       m_avm_waitrequest_i   => avm_waitrequest_i
-     ); -- i_avm_decrease
 
 end architecture synthesis;
 
