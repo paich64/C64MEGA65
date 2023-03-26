@@ -155,8 +155,8 @@ entity main is
       cartridge_bank_type_i  : in  std_logic_vector( 7 downto 0);
       cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i    : in  std_logic;
-      crt_bank_lo_o          : out std_logic_vector(6 downto 0);
-      crt_bank_hi_o          : out std_logic_vector(6 downto 0)
+      crt_bank_lo_o          : out std_logic_vector(21 downto 0);
+      crt_bank_hi_o          : out std_logic_vector(21 downto 0)
    );
 end entity main;
 
@@ -394,8 +394,8 @@ architecture synthesis of main is
          addr_in         : in  std_logic_vector(15 downto 0);
          data_in         : in  std_logic_vector( 7 downto 0);
          addr_out        : out std_logic_vector(24 downto 0);
-         bank_lo         : out std_logic_vector( 6 downto 0);
-         bank_hi         : out std_logic_vector( 6 downto 0);
+         bank_lo         : out std_logic_vector(21 downto 0);
+         bank_hi         : out std_logic_vector(21 downto 0);
          freeze_key      : in  std_logic;
          mod_key         : in  std_logic;
          nmi             : out std_logic;

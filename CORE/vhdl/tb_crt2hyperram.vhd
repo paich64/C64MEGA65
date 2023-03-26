@@ -19,12 +19,16 @@ end entity tb_crt2hyperram;
 
 architecture simulation of tb_crt2hyperram is
 
+   type bank_t is array (natural range 0 to 255) of std_logic_vector(21 downto 0);
+   signal lobank : bank_t := (others => (others => '0'));
+   signal hibank : bank_t := (others => (others => '0'));
+
    signal clk               : std_logic := '0';
    signal rst               : std_logic := '1';
    signal start             : std_logic;
    signal address           : std_logic_vector(21 downto 0);
-   signal crt_bank_lo       : std_logic_vector( 6 downto 0);
-   signal crt_bank_hi       : std_logic_vector( 6 downto 0);
+   signal crt_bank_lo       : std_logic_vector(21 downto 0);
+   signal crt_bank_hi       : std_logic_vector(21 downto 0);
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
    signal avm_address       : std_logic_vector(21 downto 0);
@@ -60,9 +64,9 @@ begin
          clk_i               => clk,
          rst_i               => rst,
          start_i             => start,
+         address_i           => address,
          crt_bank_lo_i       => crt_bank_lo,
          crt_bank_hi_i       => crt_bank_hi,
-         address_i           => address,
          avm_write_o         => avm_write,
          avm_read_o          => avm_read,
          avm_address_o       => avm_address,
@@ -109,6 +113,24 @@ begin
          avm_readdatavalid_o => avm_readdatavalid,
          avm_waitrequest_o   => avm_waitrequest
       );
+
+   process (clk)
+   begin
+      if rising_edge(clk) then
+         if cart_bank_wr = '1' then
+            if cart_bank_laddr = X"8000" then
+               report "Writing " & to_hstring(cart_bank_raddr) & " to LO bank";
+               lobank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 0);
+            else
+               report "Writing " & to_hstring(cart_bank_raddr) & " to HI bank";
+               hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 0);
+            end if;
+         end if;
+      end if;
+   end process;
+
+   crt_bank_lo <= lobank(0);
+   crt_bank_hi <= hibank(0);
 
    process
    begin

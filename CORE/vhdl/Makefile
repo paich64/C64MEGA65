@@ -15,7 +15,7 @@ SAVE = $(TB).gtkw
 sim: $(SRC)
 	ghdl -i --std=08 --work=work $(SRC)
 	ghdl -m --std=08 -fexplicit $(TB)
-	ghdl -r --std=08 $(TB) $(GENERIC) --assert-level=error --wave=$(WAVE) --max-stack-alloc=1024 --stop-time=2us
+	ghdl -r --std=08 $(TB) $(GENERIC) --assert-level=error --wave=$(WAVE) --max-stack-alloc=1024 --stop-time=50us
 
 questa: $(SRC)
 	vcom -2008 $(SRC)

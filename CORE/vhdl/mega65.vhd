@@ -258,17 +258,17 @@ signal hr_reu_readdatavalid       : std_logic;
 signal hr_reu_waitrequest         : std_logic;
 
 -- Signals from QNICE to the cartridge.v module
-signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
-signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
+signal main_crt_bank_lo           : std_logic_vector(21 downto 0);
+signal main_crt_bank_hi           : std_logic_vector(21 downto 0);
 
 ---------------------------------------------------------------------------------------------
 -- hr_clk
 ---------------------------------------------------------------------------------------------
 
 signal hr_crt_start               : std_logic;
-signal hr_crt_bank_lo             : std_logic_vector(6 downto 0);
-signal hr_crt_bank_hi             : std_logic_vector(6 downto 0);
-signal hr_c64_exp_port_mode       : std_logic_vector(1 downto 0);
+signal hr_crt_bank_lo             : std_logic_vector(21 downto 0);
+signal hr_crt_bank_hi             : std_logic_vector(21 downto 0);
+signal hr_c64_exp_port_mode       : std_logic_vector( 1 downto 0);
 
 signal hr_bram_address            : std_logic_vector(11 downto 0);
 signal hr_bram_data               : std_logic_vector(15 downto 0);
@@ -361,33 +361,43 @@ attribute mark_debug of main_crt_lo_ram_data     : signal is "true";
 attribute mark_debug of main_crt_hi_ram_data     : signal is "true";
 attribute mark_debug of cart_roml_io             : signal is "true";
 attribute mark_debug of cart_romh_io             : signal is "true";
+attribute mark_debug of main_cartridge_loading    : signal is "true";
+attribute mark_debug of main_cartridge_id         : signal is "true";
+attribute mark_debug of main_cartridge_exrom      : signal is "true";
+attribute mark_debug of main_cartridge_game       : signal is "true";
+attribute mark_debug of main_cartridge_bank_laddr : signal is "true";
+attribute mark_debug of main_cartridge_bank_size  : signal is "true";
+attribute mark_debug of main_cartridge_bank_num   : signal is "true";
+attribute mark_debug of main_cartridge_bank_type  : signal is "true";
+attribute mark_debug of main_cartridge_bank_raddr : signal is "true";
+attribute mark_debug of main_cartridge_bank_wr    : signal is "true";
 
-attribute mark_debug of hr_cartridge_loading     : signal is "true";
-attribute mark_debug of hr_cartridge_id          : signal is "true";
-attribute mark_debug of hr_cartridge_exrom       : signal is "true";
-attribute mark_debug of hr_cartridge_game        : signal is "true";
-attribute mark_debug of hr_cartridge_bank_laddr  : signal is "true";
-attribute mark_debug of hr_cartridge_bank_size   : signal is "true";
-attribute mark_debug of hr_cartridge_bank_num    : signal is "true";
-attribute mark_debug of hr_cartridge_bank_type   : signal is "true";
-attribute mark_debug of hr_cartridge_bank_raddr  : signal is "true";
-attribute mark_debug of hr_cartridge_bank_wr     : signal is "true";
-attribute mark_debug of hr_crt_start             : signal is "true";
-attribute mark_debug of hr_crt_bank_lo           : signal is "true";
-attribute mark_debug of hr_crt_bank_hi           : signal is "true";
-attribute mark_debug of hr_crt_write             : signal is "true";
-attribute mark_debug of hr_crt_read              : signal is "true";
-attribute mark_debug of hr_crt_address           : signal is "true";
-attribute mark_debug of hr_crt_writedata         : signal is "true";
-attribute mark_debug of hr_crt_byteenable        : signal is "true";
-attribute mark_debug of hr_crt_burstcount        : signal is "true";
-attribute mark_debug of hr_crt_readdata          : signal is "true";
-attribute mark_debug of hr_crt_readdatavalid     : signal is "true";
-attribute mark_debug of hr_crt_waitrequest       : signal is "true";
-attribute mark_debug of hr_bram_address          : signal is "true";
-attribute mark_debug of hr_bram_data             : signal is "true";
-attribute mark_debug of hr_bram_lo_wren          : signal is "true";
-attribute mark_debug of hr_bram_hi_wren          : signal is "true";
+--attribute mark_debug of hr_cartridge_loading     : signal is "true";
+--attribute mark_debug of hr_cartridge_id          : signal is "true";
+--attribute mark_debug of hr_cartridge_exrom       : signal is "true";
+--attribute mark_debug of hr_cartridge_game        : signal is "true";
+--attribute mark_debug of hr_cartridge_bank_laddr  : signal is "true";
+--attribute mark_debug of hr_cartridge_bank_size   : signal is "true";
+--attribute mark_debug of hr_cartridge_bank_num    : signal is "true";
+--attribute mark_debug of hr_cartridge_bank_type   : signal is "true";
+--attribute mark_debug of hr_cartridge_bank_raddr  : signal is "true";
+--attribute mark_debug of hr_cartridge_bank_wr     : signal is "true";
+--attribute mark_debug of hr_crt_start             : signal is "true";
+--attribute mark_debug of hr_crt_bank_lo           : signal is "true";
+--attribute mark_debug of hr_crt_bank_hi           : signal is "true";
+--attribute mark_debug of hr_crt_write             : signal is "true";
+--attribute mark_debug of hr_crt_read              : signal is "true";
+--attribute mark_debug of hr_crt_address           : signal is "true";
+--attribute mark_debug of hr_crt_writedata         : signal is "true";
+--attribute mark_debug of hr_crt_byteenable        : signal is "true";
+--attribute mark_debug of hr_crt_burstcount        : signal is "true";
+--attribute mark_debug of hr_crt_readdata          : signal is "true";
+--attribute mark_debug of hr_crt_readdatavalid     : signal is "true";
+--attribute mark_debug of hr_crt_waitrequest       : signal is "true";
+--attribute mark_debug of hr_bram_address          : signal is "true";
+--attribute mark_debug of hr_bram_data             : signal is "true";
+--attribute mark_debug of hr_bram_lo_wren          : signal is "true";
+--attribute mark_debug of hr_bram_hi_wren          : signal is "true";
 
 begin
 
@@ -822,22 +832,22 @@ begin
          q_b               => open
       ); -- crt_lo_ram
 
-   i_main2hr : entity work.cdc_stable
+   i_cdc_main2hr : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 16
+         G_DATA_SIZE => 46
       )
       port map (
          src_clk_i                => main_clk,
-         src_data_i( 6 downto 0)  => main_crt_bank_lo,
-         src_data_i(13 downto 7)  => main_crt_bank_hi,
-         src_data_i(15 downto 14) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
+         src_data_i(21 downto  0) => main_crt_bank_lo,
+         src_data_i(43 downto 22) => main_crt_bank_hi,
+         src_data_i(45 downto 44) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
          dst_clk_i                => hr_clk_i,
-         dst_data_o( 6 downto 0)  => hr_crt_bank_lo,
-         dst_data_o(13 downto 7)  => hr_crt_bank_hi,
-         dst_data_o(15 downto 14) => hr_c64_exp_port_mode
-      ); -- i_main2hr
+         dst_data_o(21 downto  0) => hr_crt_bank_lo,
+         dst_data_o(43 downto 22) => hr_crt_bank_hi,
+         dst_data_o(45 downto 44) => hr_c64_exp_port_mode
+      ); -- i_cdc_main2hr
 
-   i_qnice2hr2 : entity work.cdc_stable
+   i_cdc_qnice2hr : entity work.cdc_stable
       generic map (
          G_DATA_SIZE => 1
       )
@@ -846,7 +856,7 @@ begin
          src_data_i(0) => qnice_cartridge_crt_loaded,
          dst_clk_i     => hr_clk_i,
          dst_data_o(0) => hr_crt_start
-      ); -- i_qnice2hr
+      ); -- i_cdc_qnice2hr
 
    i_crt2hyperram : entity work.crt2hyperram
       port map (
