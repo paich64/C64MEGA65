@@ -146,6 +146,10 @@ START_CONNECT   RSUB    WAIT333MS, 1
                 ; DEV-SUPPORT: QND CART LOADER
                 ; ------------------------------------------------------------
 
+                ; Status Idle
+                MOVE    DBG_CRT_ST_IDLE, R8
+                RSUB    DBG_SETSTATUS, 1
+
                 ; skip the code of the debug functions: initialize the
                 ; debug system and start the main loop
                 RBRA    DBG_LOADCART, 1
@@ -213,7 +217,7 @@ DBG_READBYTE    INCRB
                 RBRA    _DBG_RDBT_SETC, Z       ; yes: return with C=1
                 RSUB    RESTORE_COORDS, 1
                 MOVE    DBG_FATAL_READ, R8      ; other error?
-                RBRA    FATAL, 1                ; yes: fatal
+                RBRA    DBG_FATAL, 1            ; yes: fatal
 
 _DBG_RDBT_SETC  OR      0x0004, SR              ; set carry
 _DBG_RDBT_RET   MOVE    R9, R8                  ; return read byte
@@ -222,19 +226,23 @@ _DBG_RDBT_RET   MOVE    R9, R8                  ; return read byte
                 DECRB
                 RET
 
-
-                ; Skip the amount of bytes given by R8
-                ; If EOF during skipping then C=1, otherwise C=0
-DBG_FSKIP       INCRB
-                AND     0xFFFB, SR              ; clear carry
-                MOVE    R8, R0
-                MOVE    R8, R1
-_DBG_FSKIP_1    RSUB    DBG_READBYTE, 1
-                RBRA    _DBG_FSKIP_RET, C       ; return while C=1
-                SUB     1, R0
-                RBRA    _DBG_FSKIP_1, !Z
-_DBG_FSKIP_RET  DECRB
+                ; Set CRT module status: new status in R8
+DBG_SETSTATUS   INCRB
+                MOVE    M2M$RAMROM_DEV, R7
+                MOVE    DBG_CRT_DEVICE, @R7
+                MOVE    M2M$RAMROM_4KWIN, R7
+                MOVE    DBG_CRT_CASREG, @R7
+                MOVE    DBG_CRT_STATUS, R7
+                MOVE    R8, @R7
+                DECRB
                 RET
+
+                ; Set the error status for the CRT before going fatal
+DBG_FATAL       MOVE    R8, R0
+                MOVE    DBG_CRT_ST_ERR, R8
+                RSUB    DBG_SETSTATUS, 1
+                MOVE    R0, R8
+                RBRA    FATAL, 1
 
                 ; x|y, dx|dy of debug window
 DBG_WINDOW      .DW 0, 0, 44, 3
@@ -254,7 +262,6 @@ DBG_S_NEW_CHIP2 .ASCII_W " Size: "
 DBG_S_NEW_CRLF  .ASCII_W "\n"
 
                 ; Fatal situations
-DBG_FATAL_SEEK  .ASCII_W "CRTLOAD: fseek error\n"
 DBG_FATAL_READ  .ASCII_W "CRTLOAD: fread error\n"
 DBG_FATAL_ODD   .ASCII_W "CRTLOAD: Odd CHIP packet size.\n"
 
@@ -307,6 +314,10 @@ DBG_LOADCART    RSUB    BACKUP_COORDS, 1
                 MOVE    DBG_SHOW, R0
                 MOVE    1, @R0
 
+                ; Status Loading
+                MOVE    DBG_CRT_ST_LDNG, R8
+                RSUB    DBG_SETSTATUS, 1
+
                 ; Open .crt file using the already initialized device handle
                 ; used by the configuration file handler
                 RSUB    DBG_PRINTACT, 1                
@@ -332,17 +343,6 @@ _DBG_LC_1       ; Print success message
                 MOVE    DBG_S_PROGRESS, R8
                 RSUB    SCR$PRINTSTR, 1
 
-;                ; Skip .crt header and go directly to the first CHIP packet
-;                MOVE    CRT_FILE, R8            ; file handle
-;                MOVE    0x0040, R9              ; seek-pos lo
-;                XOR     R10, R0                 ; seek-pos hi
-;                SYSCALL(f32_fseek, 1)
-;                CMP     0, R9
-;                RBRA    _DBG_LC_2, Z
-;                RSUB    RESTORE_COORDS, 1
-;                MOVE    DBG_FATAL_SEEK, R8
-;                RBRA    FATAL, 1
-
                 ; Registers
 _DBG_LC_2       MOVE    DBG_PROGRESS, R0        ; R0: progress counter
                 MOVE    0x1000, R1              ; R1: 4k page boundary
@@ -357,36 +357,9 @@ _DBG_LC_2       MOVE    DBG_PROGRESS, R0        ; R0: progress counter
                 ; Cartridge load loop
                 ; ------------------------------------------------------------
 
-                ; New CHIP packet: skip 14 bytes to find the hi/lo bytes 
-                ; of the packet size and output the info. Then store the
-                ; packet size in R3
-_DBG_LC_3;       MOVE    14, R8
-         ;       RSUB    DBG_FSKIP, 1
-         ;       RBRA    _DBG_LC_DONE, C         ; EOF
-         ;       MOVE    DBG_S_NEW_CHIP, R8
-         ;       SYSCALL(puts, 1)
-         ;       MOVE    R2, R8
-         ;       MOVE    SCRATCH_HEX, R9
-         ;       RSUB    WORD2HEXSTR, 1
-         ;       MOVE    R9, R8
-         ;       SYSCALL(puts, 1)
-         ;       MOVE    DBG_S_NEW_CHIP2, R8
-         ;       SYSCALL(puts, 1)
-         ;       RSUB    DBG_READBYTE, 1
-         ;       MOVE    R8, R3
-         ;       SWAP    R3, R3
-         ;       RSUB    DBG_READBYTE, 1
-         ;       OR      R8, R3
-         ;       MOVE    R3, R8
-         ;       MOVE    SCRATCH_HEX, R9
-         ;       RSUB    WORD2HEXSTR, 1
-         ;       MOVE    R9, R8
-         ;       SYSCALL(puts, 1)
-         ;       SYSCALL(crlf, 1)
-
-                ; Read one CHIP packet: The HyperRAM is 16-bit so we will
-                ; always read two bytes and form a word. We read LO/HI and
-                ; store the word as HI/LO.
+                ; Read the cartridge file flat into the HyperRAM.
+                ; The HyperRAM is 16-bit so we will always read two bytes and
+                ; form a word. We read LO/HI and store the word as HI/LO.
                 ; Example: Read from file two bytes:   $23 then $24.
                 ;          Store to HyperRAM one word: 0x2423
 _DBG_LC_4       RSUB    DBG_READBYTE, 1         ; lo byte
@@ -397,7 +370,7 @@ _DBG_LC_4       RSUB    DBG_READBYTE, 1         ; lo byte
                 RSUB    RESTORE_COORDS, 1
                 MOVE    DBG_FATAL_ODD, R8
                 XOR     R9, R9
-                RBRA    FATAL, 1
+                RBRA    DBG_FATAL, 1
 
                 ; convert two bytes read in LO/HI to one word HI/LO
 _DBG_LC_5       SWAP    R8, R8
@@ -419,19 +392,12 @@ _DBG_LC_5       SWAP    R8, R8
 
                 ; Progress bar
 _DBG_LC_6       SUB     2, R0
-                RBRA    _DBG_LC_7, !Z           ; not yet new progress char
+                RBRA    _DBG_LC_4, !Z           ; not yet new progress char
                 MOVE    DBG_PROGRESS, R0        ; reset progress counter
                 RSUB    DBG_PRINTACT, 1
                 MOVE    DBG_C_PROGRESS, R8
                 RSUB    SCR$PRINTSTR, 1
-
-                ; Check PACKET boundary
-_DBG_LC_7;       ADD     2, R6
-         ;       CMP     R3, R6
-         ;       RBRA    _DBG_LC_4, !Z
-         ;       ADD     1, R2                   ; next CHIP packet
-         ;       XOR     R6, R6                  ; reset current byte counter
-                RBRA    _DBG_LC_3, 1    
+                RBRA    _DBG_LC_4, 1
 
                 ; Output success message
 _DBG_LC_DONE    RSUB    DBG_PRINTACT, 1
@@ -441,6 +407,70 @@ _DBG_LC_DONE    RSUB    DBG_PRINTACT, 1
                 RSUB    SCR$PRINTSTR, 1
                 ADD     3, R8                   ; Skip certain chars on serial
                 SYSCALL(puts, 1)
+
+                ; Write info needed by the Shell/VHDL protocol to the
+                ; control and status registers of the cartridge device
+
+DBG_CRT_DEVICE  .EQU 0x0103                     ; hardcoded cartridge device
+DBG_CRT_CASREG  .EQU 0xFFFF                     ; 4k page for ctrl & status rg
+
+                ; 0x0000: Status indicator: Values: Shell to VHDL:
+                ;         0=the loading did not start yet
+                ;         1=loading in progress
+                ;         2=loading errors (SD card errors, FAT32 errors,
+                ;           odd file length as we only support file length
+                ;           that have an even size, etc.)
+                ;         3=loading successfully done (successfully as in:
+                ;           the file was loaded successfully, no parsing as 
+                ;           this is done in VHDL)
+                ; 0x0001: file-size low word
+                ; 0x0002: file-size high word
+                ; 0x0003: start address in HyperRAM low word
+                ; 0x0004: start address in HyperRAM high word
+                ; 0x0010: error indicator from VHDL to Shell:
+                ;         0xFFFF=VHDL busy
+                ;         0=no errors
+                ;         >0: error code, to be defined by the very VHDL impl.
+                ;         The Shell will print the error code plus it will
+                ;         print up to two additional words to specify more
+                ;         info
+                ; 0x0011: will be printed if @0x0010 > 0 and @0x0011 /= 0
+                ; 0x0012: will be printed if @0x0010 > 0 and @0x0012 /= 0
+DBG_CRT_STATUS  .EQU 0x7000
+DBG_CRT_FS_LO   .EQU 0x7001
+DBG_CRT_FS_HI   .EQU 0x7002
+DBG_CRT_HRS_LO  .EQU 0x7003
+DBG_CRT_HRS_HI  .EQU 0x7004
+DBG_CRT_PARSEST .EQU 0x7010
+DBG_CRT_PARSEE1 .EQU 0x7011
+DBG_CRT_PARSEE2 .EQU 0x7012
+
+DBG_CRT_ST_IDLE .EQU 0x0000
+DBG_CRT_ST_LDNG .EQU 0x0001
+DBG_CRT_ST_ERR  .EQU 0x0002
+DBG_CRT_ST_OK   .EQU 0x0003
+
+                MOVE    M2M$RAMROM_DEV, R7
+                MOVE    DBG_CRT_DEVICE, @R7
+                MOVE    M2M$RAMROM_4KWIN, R7
+                MOVE    DBG_CRT_CASREG, @R7
+
+                ; HyperRAM start address
+                MOVE    DBG_CRT_HRS_LO, R7
+                MOVE    0x0000, @R7++           ; low word
+                MOVE    CRT_LOADADR_4K, @R7     ; high word
+
+                ; File size
+                MOVE    DBG_CRT_FS_LO, R7                
+                MOVE    CRT_FILE, R8
+                ADD     FAT32$FDH_SIZE_LO, R8
+                MOVE    @R8++, @R7++            ; low word
+                MOVE    @R8, @R7                ; high word
+
+                ; Status OK: Only after all the other registers have been
+                ; updated
+                MOVE    DBG_CRT_STATUS, R7
+                MOVE    DBG_CRT_ST_OK, @R7
        
                 ; remember the current cycle counter to reset the measurement
                 ; of 1 second intervals
