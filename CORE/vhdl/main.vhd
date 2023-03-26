@@ -285,6 +285,7 @@ architecture synthesis of main is
 	attribute MARK_DEBUG of core_phi0      : signal is "TRUE";      
 	attribute MARK_DEBUG of core_phi2      : signal is "TRUE";
    attribute MARK_DEBUG of cart_rw_io     : signal is "TRUE";
+   attribute MARK_DEBUG of cart_romh_n    : signal is "TRUE";
    attribute MARK_DEBUG of dbg_joybtn     : signal is "TRUE";
    attribute MARK_DEBUG of dbg_cart_dir   : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
@@ -390,7 +391,7 @@ begin
          c64_ram_data <= x"00";
       
       -- Access the hardware cartridge
-      elsif cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1' then
+      elsif cart_roml_n = '0' or cart_romh_n = '0' then
          c64_ram_data <= data_from_cart;
       
       -- Standard access to the C64's RAM
@@ -592,10 +593,8 @@ begin
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
       
-         -- @TODO: These signals are for easier debugging. Consolidate with the
-         -- signals above as soon as we have a "stable enough" state
          cart_roml_n       <= not core_roml;
-         cart_romh_n       <= not core_romh;
+         cart_romh_n       <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
          cart_io1_n        <= not core_ioe; 
          cart_io2_n        <= not core_iof;
       
@@ -611,13 +610,20 @@ begin
          
          -- @TODO: As soon as we want to support DMA-enabled cartridges,
          -- we need to treat the address bus as a bi-directional port
-         cart_addr_en_o    <= '0';     
-         cart_a_io         <= c64_ram_addr_o;         
+         cart_addr_en_o    <= '0';
+         if core_umax_romh = '0' then
+            cart_a_io         <= c64_ram_addr_o;            
+         -- Ultimax mode and VIC accesses the bus
+         else
+            -- According to "The PLA Dissected", zhe address lines A12 to A15 of the C64 address bus are pulled up by
+            -- RP4 whenever the VIC-II has the bus, so they are %1111 usually.
+            cart_a_io         <= "11" & c64_ram_addr_o(13 downto 0);
+         end if;  
       
          -- Switch the data lines bi-directionally so that the CPU can also
          -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
-         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1') then
+         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
             cart_data_dir_o   <= '0';
             data_from_cart    <= cart_d_io;
          else

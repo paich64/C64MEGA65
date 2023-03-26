@@ -99,6 +99,9 @@ The following resources and tools were invaluable for developing C64MEGA65:
   * "Emulator file formats", chapter 17 of the Vice emulator's user manual:
     https://vice-emu.sourceforge.io/vice_17.html#SEC351
 
+  * The C64 PLA Dissected, Revision 1.1 by Thomas ’skoe’ Giesel
+    http://skoe.de/docs/c64-dissected/pla/c64_pla_dissected_a4ds.pdf
+
   * "MCS6500, MICROCOMPUTER FAMILY PROGRAMMING MANUAL" by MOS Technology
     Special thanks to Erik Van den Broeck for the excellent HTML version:
     https://web.archive.org/web/20211204223049/http://users.telenet.be/kim1-6502/6502/proman.html
