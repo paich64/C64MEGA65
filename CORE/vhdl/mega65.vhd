@@ -260,6 +260,8 @@ signal hr_reu_waitrequest         : std_logic;
 -- Signals from QNICE to the cartridge.v module
 signal main_crt_bank_lo           : std_logic_vector(21 downto 0);
 signal main_crt_bank_hi           : std_logic_vector(21 downto 0);
+signal main_crt_roml_n            : std_logic;
+signal main_crt_romh_n            : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- hr_clk
@@ -603,7 +605,9 @@ begin
          cartridge_bank_raddr_i => main_cartridge_bank_raddr,
          cartridge_bank_wr_i    => main_cartridge_bank_wr,
          crt_bank_lo_o          => main_crt_bank_lo,
-         crt_bank_hi_o          => main_crt_bank_hi
+         crt_bank_hi_o          => main_crt_bank_hi,
+         crt_roml_n_o           => main_crt_roml_n,
+         crt_romh_n_o           => main_crt_romh_n     
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------
@@ -892,10 +896,10 @@ begin
          bram_hi_q_i         => (others => '0')
       ); -- i_crt2hyperram
 
-   main_ram_data_to_c64 <= main_crt_lo_ram_data(15 downto 8) when cart_roml_io = '0' and main_ram_addr(0) = '1' else
-                           main_crt_lo_ram_data( 7 downto 0) when cart_roml_io = '0' and main_ram_addr(0) = '0' else
-                           main_crt_hi_ram_data(15 downto 8) when cart_romh_io = '0' and main_ram_addr(0) = '1' else
-                           main_crt_hi_ram_data( 7 downto 0) when cart_romh_io = '0' and main_ram_addr(0) = '0' else
+   main_ram_data_to_c64 <= main_crt_lo_ram_data(15 downto 8) when main_crt_roml_n = '0' and main_ram_addr(0) = '1' else
+                           main_crt_lo_ram_data( 7 downto 0) when main_crt_roml_n = '0' and main_ram_addr(0) = '0' else
+                           main_crt_hi_ram_data(15 downto 8) when main_crt_romh_n = '0' and main_ram_addr(0) = '1' else
+                           main_crt_hi_ram_data( 7 downto 0) when main_crt_romh_n = '0' and main_ram_addr(0) = '0' else
                            main_ram_data;
 
    -- RAM used by the REU inside i_main:

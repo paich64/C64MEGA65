@@ -156,7 +156,9 @@ entity main is
       cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i    : in  std_logic;
       crt_bank_lo_o          : out std_logic_vector(21 downto 0);
-      crt_bank_hi_o          : out std_logic_vector(21 downto 0)
+      crt_bank_hi_o          : out std_logic_vector(21 downto 0);
+      crt_roml_n_o           : out std_logic;
+      crt_romh_n_o           : out std_logic
    );
 end entity main;
 
@@ -658,11 +660,11 @@ begin
       cart_data_dir_o      <= '0';     -- changes dynamically (see below)
       data_from_cart       <= x"00";
 
-      -- @TODO: Get rid of these (see below)
-      cart_roml_n          <= '1';
-      cart_romh_n          <= '1';
-      cart_io1_n           <= '1'; 
-      cart_io2_n           <= '1';
+      -- memory access flags
+      cart_roml_n       <= not core_roml;
+      cart_romh_n       <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
+      cart_io1_n        <= not core_ioe; 
+      cart_io2_n        <= not core_iof;
 
       -- Mode = Use hardware slot
       if c64_exp_port_mode_i = 0 then
@@ -675,11 +677,6 @@ begin
          cart_io2_io       <= cart_io2_n;
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
-      
-         cart_roml_n       <= not core_roml;
-         cart_romh_n       <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
-         cart_io1_n        <= not core_ioe; 
-         cart_io2_n        <= not core_iof;
       
          cart_reset_o      <= reset_core_n;
          cart_phi2_o       <= core_phi2;
@@ -731,6 +728,8 @@ begin
       core_nmi_n           <= restore_key_n;
       core_dma             <= '0';  -- @TODO: Currently we ignore the HW cartridge's DMA request
       reu_iof              <= '0';
+      crt_roml_n_o         <= '1';
+      crt_romh_n_o         <= '1';
 
       case c64_exp_port_mode_i is
 
@@ -756,6 +755,8 @@ begin
             core_game_n    <= crt_game;
             core_exrom_n   <= crt_exrom;
             core_dma       <= cartridge_loading_i;
+            crt_roml_n_o   <= cart_roml_n;
+            crt_romh_n_o   <= cart_romh_n;
 
          when others =>
             null;
