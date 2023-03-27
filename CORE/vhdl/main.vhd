@@ -476,10 +476,10 @@ begin
          c64_ram_data <= x"00";
 
       -- Access the hardware cartridge
-      elsif cart_roml_n = '0' or cart_romh_n = '0' or core_umax_romh = '1' then
+      elsif c64_exp_port_mode_i = 0 and (cart_roml_n = '0' or cart_romh_n = '0') then
          c64_ram_data <= data_from_cart;
 
-      -- Standard access to the C64's RAM
+      -- Standard access to the C64's RAM and to simulated CRT ROMs which are ingested on-demand in mega65.vhd 
       else
          c64_ram_data <= c64_ram_data_i;
       end if;
@@ -728,8 +728,8 @@ begin
       core_nmi_n           <= restore_key_n;
       core_dma             <= '0';  -- @TODO: Currently we ignore the HW cartridge's DMA request
       reu_iof              <= '0';
-      crt_roml_n_o         <= '1';
-      crt_romh_n_o         <= '1';
+      crt_roml_n_o         <= '1';  -- needs to be '1' by default to avoid unintended simulated CRT data ingestion in mega65.vhd
+      crt_romh_n_o         <= '1';  -- ditto
 
       case c64_exp_port_mode_i is
 
