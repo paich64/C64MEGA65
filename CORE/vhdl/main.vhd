@@ -325,6 +325,7 @@ architecture synthesis of main is
 	attribute MARK_DEBUG of core_phi0      : signal is "TRUE";
 	attribute MARK_DEBUG of core_phi2      : signal is "TRUE";
    attribute MARK_DEBUG of cart_rw_io     : signal is "TRUE";
+   attribute MARK_DEBUG of cart_romh_n    : signal is "TRUE";
    attribute MARK_DEBUG of dbg_joybtn     : signal is "TRUE";
    attribute MARK_DEBUG of dbg_cart_dir   : signal is "TRUE";
    --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
@@ -661,10 +662,10 @@ begin
       data_from_cart       <= x"00";
 
       -- memory access flags
-      cart_roml_n       <= not core_roml;
-      cart_romh_n       <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
-      cart_io1_n        <= not core_ioe; 
-      cart_io2_n        <= not core_iof;
+      cart_roml_n          <= not core_roml;
+      cart_romh_n          <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
+      cart_io1_n           <= not core_ioe;
+      cart_io2_n           <= not core_iof;
 
       -- Mode = Use hardware slot
       if c64_exp_port_mode_i = 0 then
@@ -677,17 +678,17 @@ begin
          cart_io2_io       <= cart_io2_n;
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
-      
+
          cart_reset_o      <= reset_core_n;
          cart_phi2_o       <= core_phi2;
          cart_dotclock_o   <= core_dotclk;
-            
+
          cart_nmi_n        <= cart_nmi_i; 
          cart_irq_n        <= cart_irq_i;       
          cart_dma_n        <= cart_dma_i; 
          cart_exrom_n      <= cart_exrom_i;
          cart_game_n       <= cart_game_i;
-         
+
          -- @TODO: As soon as we want to support DMA-enabled cartridges,
          -- we need to treat the address bus as a bi-directional port
          cart_addr_en_o    <= '0';

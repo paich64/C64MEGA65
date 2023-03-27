@@ -31,6 +31,14 @@ Spectacular") or describe them as not supported.
 WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
 all cartridge types, add constraints here
 
+WIP Ability to directly load `*.prg` files. This is especially useful in the
+context of SID tunes which often come as stand alone `.prg` files
+@TODO idea: M2M can offer a callback that is executed right before the
+main loop of the shell starts. While PRG loading is like cartridge loading
+but slightly different, the m2m-rom.asm main program can keep a state and then
+jump to the C64's kernal function for RUN to start the program after loading.
+Actually, what we need to do is: reset, load prg, run
+
 WIP Ability to use custom KERNALs such as JiffyDOS for the C64 and the C1541:
 Here is an idea how we can make this simple: Hardcoded filenames for ROM files
 in the /c64 folder and then introduce dependent menu items for the M2M menu:
@@ -47,7 +55,12 @@ callback functions that are for example called before the main loop starts and
 that offer also a fatal mechanism for the authors of the callback; we should
 just make the interface of FATAL public because is available everywhere).
 
-* Stereo SID support
+* Stereo SID support: You can chose from multiple real dual SID combinations
+  and enjoy stereo SID tunes and demos. And you can also use "pseudo stereo"
+  by running the two different SID models 6581 and 8050 at the same (one left
+  and one right) while they play the same mono tune.
+
+
 
 WIP 15khz RGB + csync:
 https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500
