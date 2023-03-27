@@ -391,7 +391,7 @@ begin
          c64_ram_data <= x"00";
       
       -- Access the hardware cartridge
-      elsif cart_roml_n = '0' or cart_romh_n = '0' then
+      elsif c64_exp_port_mode_i = 0 and (cart_roml_n = '0' or cart_romh_n = '0') then
          c64_ram_data <= data_from_cart;
       
       -- Standard access to the C64's RAM
@@ -575,11 +575,11 @@ begin
       cart_data_dir_o      <= '0';     -- changes dynamically (see below)
       data_from_cart       <= x"00";      
       
-      -- @TODO: Get rid of these (see below)
-      cart_roml_n          <= '1';
-      cart_romh_n          <= '1';
-      cart_io1_n           <= '1'; 
-      cart_io2_n           <= '1';
+      -- memory access flags
+      cart_roml_n          <= not core_roml;
+      cart_romh_n          <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
+      cart_io1_n           <= not core_ioe; 
+      cart_io2_n           <= not core_iof;
 
       -- Mode = Use hardware slot
       if c64_exp_port_mode_i = 0 then
@@ -592,22 +592,17 @@ begin
          cart_io2_io       <= cart_io2_n;
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
-      
-         cart_roml_n       <= not core_roml;
-         cart_romh_n       <= (not core_romh) and (not core_umax_romh); -- normal ROMH and Ultimax VIC access ROMH
-         cart_io1_n        <= not core_ioe; 
-         cart_io2_n        <= not core_iof;
-      
+
          cart_reset_o      <= reset_core_n;
          cart_phi2_o       <= core_phi2;
          cart_dotclock_o   <= core_dotclk;
-            
+
          cart_nmi_n        <= cart_nmi_i; 
          cart_irq_n        <= cart_irq_i;       
          cart_dma_n        <= cart_dma_i; 
          cart_exrom_n      <= cart_exrom_i;
          cart_game_n       <= cart_game_i;
-         
+
          -- @TODO: As soon as we want to support DMA-enabled cartridges,
          -- we need to treat the address bus as a bi-directional port
          cart_addr_en_o    <= '0';
