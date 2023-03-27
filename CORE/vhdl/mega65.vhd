@@ -258,8 +258,8 @@ signal hr_reu_readdatavalid       : std_logic;
 signal hr_reu_waitrequest         : std_logic;
 
 -- Signals from QNICE to the cartridge.v module
-signal main_crt_bank_lo           : std_logic_vector(21 downto 0);
-signal main_crt_bank_hi           : std_logic_vector(21 downto 0);
+signal main_crt_bank_lo           : std_logic_vector(6 downto 0);
+signal main_crt_bank_hi           : std_logic_vector(6 downto 0);
 signal main_crt_roml_n            : std_logic;
 signal main_crt_romh_n            : std_logic;
 
@@ -267,9 +267,10 @@ signal main_crt_romh_n            : std_logic;
 -- hr_clk
 ---------------------------------------------------------------------------------------------
 
-signal hr_crt_start               : std_logic;
-signal hr_crt_bank_lo             : std_logic_vector(21 downto 0);
-signal hr_crt_bank_hi             : std_logic_vector(21 downto 0);
+signal hr_cartridge_address       : std_logic_vector(21 downto 0);
+signal hr_cartridge_crt_loaded    : std_logic;
+signal hr_crt_bank_lo             : std_logic_vector( 6 downto 0);
+signal hr_crt_bank_hi             : std_logic_vector( 6 downto 0);
 signal hr_c64_exp_port_mode       : std_logic_vector( 1 downto 0);
 
 signal hr_bram_address            : std_logic_vector(11 downto 0);
@@ -337,6 +338,21 @@ constant C_MENU_HDMI_FF       : natural := 55;
 constant C_MENU_HDMI_DVI      : natural := 56;
 constant C_MENU_VGA_RETRO     : natural := 57;
 
+constant C_CRT_CASREG  : std_logic_vector(15 downto 0) := X"FFFF";
+constant C_CRT_STATUS  : std_logic_vector(11 downto 0) := X"000";
+constant C_CRT_FS_LO   : std_logic_vector(11 downto 0) := X"001";
+constant C_CRT_FS_HI   : std_logic_vector(11 downto 0) := X"002";
+constant C_CRT_HRS_LO  : std_logic_vector(11 downto 0) := X"003";
+constant C_CRT_HRS_HI  : std_logic_vector(11 downto 0) := X"004";
+constant C_CRT_PARSEST : std_logic_vector(11 downto 0) := X"010";
+constant C_CRT_PARSEE1 : std_logic_vector(11 downto 0) := X"011";
+constant C_CRT_PARSEE2 : std_logic_vector(11 downto 0) := X"012";
+
+constant C_CRT_ST_IDLE : std_logic_vector(15 downto 0) := X"0000";
+constant C_CRT_ST_LDNG : std_logic_vector(15 downto 0) := X"0001";
+constant C_CRT_ST_ERR  : std_logic_vector(15 downto 0) := X"0002";
+constant C_CRT_ST_OK   : std_logic_vector(15 downto 0) := X"0003";
+
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
 signal qnice_c64_ram_we             : std_logic;
@@ -348,21 +364,29 @@ signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
+signal qnice_cartridge_address    : std_logic_vector(21 downto 0);
 signal qnice_cartridge_crt_loaded : std_logic;
 
+signal qnice_crt_status  : std_logic_vector(15 downto 0);
+signal qnice_crt_fs_lo   : std_logic_vector(15 downto 0);
+signal qnice_crt_fs_hi   : std_logic_vector(15 downto 0);
+signal qnice_crt_hrs_lo  : std_logic_vector(15 downto 0);
+signal qnice_crt_hrs_hi  : std_logic_vector(15 downto 0);
+signal qnice_crt_parsest : std_logic_vector(15 downto 0);
+signal qnice_crt_parsee1 : std_logic_vector(15 downto 0);
+signal qnice_crt_parsee2 : std_logic_vector(15 downto 0);
+
 attribute mark_debug : string;
-attribute mark_debug of main_crt_bank_lo         : signal is "true";
-attribute mark_debug of main_crt_bank_hi         : signal is "true";
-attribute mark_debug of c64_exp_port_mode        : signal is "true";
-attribute mark_debug of main_ram_addr            : signal is "true";
-attribute mark_debug of main_ram_data_from_c64   : signal is "true";
-attribute mark_debug of main_ram_we              : signal is "true";
-attribute mark_debug of main_ram_data_to_c64     : signal is "true";
-attribute mark_debug of main_ram_data            : signal is "true";
-attribute mark_debug of main_crt_lo_ram_data     : signal is "true";
-attribute mark_debug of main_crt_hi_ram_data     : signal is "true";
-attribute mark_debug of cart_roml_io             : signal is "true";
-attribute mark_debug of cart_romh_io             : signal is "true";
+attribute mark_debug of main_crt_bank_lo          : signal is "true";
+attribute mark_debug of main_crt_bank_hi          : signal is "true";
+attribute mark_debug of c64_exp_port_mode         : signal is "true";
+attribute mark_debug of main_ram_addr             : signal is "true";
+attribute mark_debug of main_ram_data_from_c64    : signal is "true";
+attribute mark_debug of main_ram_we               : signal is "true";
+attribute mark_debug of main_ram_data_to_c64      : signal is "true";
+attribute mark_debug of main_ram_data             : signal is "true";
+attribute mark_debug of main_crt_lo_ram_data      : signal is "true";
+attribute mark_debug of main_crt_hi_ram_data      : signal is "true";
 attribute mark_debug of main_cartridge_loading    : signal is "true";
 attribute mark_debug of main_cartridge_id         : signal is "true";
 attribute mark_debug of main_cartridge_exrom      : signal is "true";
@@ -374,32 +398,22 @@ attribute mark_debug of main_cartridge_bank_type  : signal is "true";
 attribute mark_debug of main_cartridge_bank_raddr : signal is "true";
 attribute mark_debug of main_cartridge_bank_wr    : signal is "true";
 
---attribute mark_debug of hr_cartridge_loading     : signal is "true";
---attribute mark_debug of hr_cartridge_id          : signal is "true";
---attribute mark_debug of hr_cartridge_exrom       : signal is "true";
---attribute mark_debug of hr_cartridge_game        : signal is "true";
---attribute mark_debug of hr_cartridge_bank_laddr  : signal is "true";
---attribute mark_debug of hr_cartridge_bank_size   : signal is "true";
---attribute mark_debug of hr_cartridge_bank_num    : signal is "true";
---attribute mark_debug of hr_cartridge_bank_type   : signal is "true";
---attribute mark_debug of hr_cartridge_bank_raddr  : signal is "true";
---attribute mark_debug of hr_cartridge_bank_wr     : signal is "true";
---attribute mark_debug of hr_crt_start             : signal is "true";
---attribute mark_debug of hr_crt_bank_lo           : signal is "true";
---attribute mark_debug of hr_crt_bank_hi           : signal is "true";
---attribute mark_debug of hr_crt_write             : signal is "true";
---attribute mark_debug of hr_crt_read              : signal is "true";
---attribute mark_debug of hr_crt_address           : signal is "true";
---attribute mark_debug of hr_crt_writedata         : signal is "true";
---attribute mark_debug of hr_crt_byteenable        : signal is "true";
---attribute mark_debug of hr_crt_burstcount        : signal is "true";
---attribute mark_debug of hr_crt_readdata          : signal is "true";
---attribute mark_debug of hr_crt_readdatavalid     : signal is "true";
---attribute mark_debug of hr_crt_waitrequest       : signal is "true";
---attribute mark_debug of hr_bram_address          : signal is "true";
---attribute mark_debug of hr_bram_data             : signal is "true";
---attribute mark_debug of hr_bram_lo_wren          : signal is "true";
---attribute mark_debug of hr_bram_hi_wren          : signal is "true";
+attribute mark_debug of qnice_dev_id_i             : signal is "true";
+attribute mark_debug of qnice_dev_addr_i           : signal is "true";
+attribute mark_debug of qnice_dev_data_i           : signal is "true";
+attribute mark_debug of qnice_dev_data_o           : signal is "true";
+attribute mark_debug of qnice_dev_ce_i             : signal is "true";
+attribute mark_debug of qnice_dev_we_i             : signal is "true";
+attribute mark_debug of qnice_cartridge_address    : signal is "true";
+attribute mark_debug of qnice_cartridge_crt_loaded : signal is "true";
+attribute mark_debug of qnice_crt_status           : signal is "true";
+attribute mark_debug of qnice_crt_fs_lo            : signal is "true";
+attribute mark_debug of qnice_crt_fs_hi            : signal is "true";
+attribute mark_debug of qnice_crt_hrs_lo           : signal is "true";
+attribute mark_debug of qnice_crt_hrs_hi           : signal is "true";
+attribute mark_debug of qnice_crt_parsest          : signal is "true";
+attribute mark_debug of qnice_crt_parsee1          : signal is "true";
+attribute mark_debug of qnice_crt_parsee2          : signal is "true";
 
 begin
 
@@ -682,14 +696,55 @@ begin
             qnice_c64_mount_buf_ram_we <= qnice_dev_we_i;
             qnice_dev_data_o           <= x"00" & qnice_c64_mount_buf_ram_data;
 
+         -- SW cartridges (*.CRT)
          when C_DEV_C64_CRT =>
-            if qnice_dev_ce_i = '1' and qnice_dev_we_i = '1' then
-               qnice_cartridge_crt_loaded <= qnice_dev_data_i(0);
+            if qnice_dev_ce_i = '1' and qnice_dev_we_i = '0' and qnice_dev_addr_i(27 downto 12) = C_CRT_CASREG then
+               case qnice_dev_addr_i(11 downto 0) is
+                  when C_CRT_PARSEST => qnice_dev_data_o <= qnice_crt_parsest;
+                  when C_CRT_PARSEE1 => qnice_dev_data_o <= qnice_crt_parsee1;
+                  when C_CRT_PARSEE2 => qnice_dev_data_o <= qnice_crt_parsee2;
+                  when others => null;
+               end case;
             end if;
 
          when others => null;
       end case;
    end process core_specific_devices;
+
+   process (qnice_clk_i)
+   begin
+      if rising_edge(qnice_clk_i) then
+         if qnice_crt_status = C_CRT_ST_OK then
+            qnice_cartridge_address    <= qnice_crt_hrs_hi(5 downto 0) & qnice_crt_hrs_lo;
+            qnice_cartridge_crt_loaded <= '1';
+         else
+            qnice_cartridge_crt_loaded <= '0';
+         end if;
+
+         if qnice_dev_id_i = C_DEV_C64_CRT and
+            qnice_dev_ce_i = '1' and
+            qnice_dev_we_i = '1' and
+            qnice_dev_addr_i(27 downto 12) = C_CRT_CASREG
+         then
+            case qnice_dev_addr_i(11 downto 0) is
+               when C_CRT_STATUS => qnice_crt_status <= qnice_dev_data_i;
+               when C_CRT_FS_LO  => qnice_crt_fs_lo  <= qnice_dev_data_i;
+               when C_CRT_FS_HI  => qnice_crt_fs_hi  <= qnice_dev_data_i;
+               when C_CRT_HRS_LO => qnice_crt_hrs_lo <= qnice_dev_data_i;
+               when C_CRT_HRS_HI => qnice_crt_hrs_hi <= qnice_dev_data_i;
+               when others => null;
+            end case;
+         end if;
+
+         if RESET_M2M_N = '0' then
+            qnice_crt_status <= (others => '0');
+            qnice_crt_fs_lo  <= (others => '0');
+            qnice_crt_fs_hi  <= (others => '0');
+            qnice_crt_hrs_lo <= (others => '0');
+            qnice_crt_hrs_hi <= (others => '0');
+         end if;
+      end if;
+   end process;
 
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
@@ -838,36 +893,38 @@ begin
 
    i_cdc_main2hr : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 46
+         G_DATA_SIZE => 16
       )
       port map (
          src_clk_i                => main_clk,
-         src_data_i(21 downto  0) => main_crt_bank_lo,
-         src_data_i(43 downto 22) => main_crt_bank_hi,
-         src_data_i(45 downto 44) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
+         src_data_i( 6 downto  0) => main_crt_bank_lo,
+         src_data_i(13 downto  7) => main_crt_bank_hi,
+         src_data_i(15 downto 14) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
          dst_clk_i                => hr_clk_i,
-         dst_data_o(21 downto  0) => hr_crt_bank_lo,
-         dst_data_o(43 downto 22) => hr_crt_bank_hi,
-         dst_data_o(45 downto 44) => hr_c64_exp_port_mode
+         dst_data_o( 6 downto  0) => hr_crt_bank_lo,
+         dst_data_o(13 downto  7) => hr_crt_bank_hi,
+         dst_data_o(15 downto 14) => hr_c64_exp_port_mode
       ); -- i_cdc_main2hr
 
    i_cdc_qnice2hr : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 1
+         G_DATA_SIZE => 23
       )
       port map (
-         src_clk_i     => qnice_clk_i,
-         src_data_i(0) => qnice_cartridge_crt_loaded,
-         dst_clk_i     => hr_clk_i,
-         dst_data_o(0) => hr_crt_start
+         src_clk_i               => qnice_clk_i,
+         src_data_i(21 downto 0) => qnice_cartridge_address,
+         src_data_i(22)          => qnice_cartridge_crt_loaded,
+         dst_clk_i               => hr_clk_i,
+         dst_data_o(21 downto 0) => hr_cartridge_address,
+         dst_data_o(22)          => hr_cartridge_crt_loaded
       ); -- i_cdc_qnice2hr
 
    i_crt2hyperram : entity work.crt2hyperram
       port map (
          clk_i               => hr_clk_i,
          rst_i               => hr_rst_i,
-         start_i             => hr_crt_start,
-         address_i           => std_logic_vector(to_unsigned(2*1024*1024, 22)),
+         address_i           => hr_cartridge_address,
+         start_i             => hr_cartridge_crt_loaded,
          crt_bank_lo_i       => hr_crt_bank_lo,
          crt_bank_hi_i       => hr_crt_bank_hi,
          avm_write_o         => hr_crt_write,

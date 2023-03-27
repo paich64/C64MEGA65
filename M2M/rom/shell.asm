@@ -458,7 +458,7 @@ DBG_CRT_ST_OK   .EQU 0x0003
                 ; HyperRAM start address
                 MOVE    DBG_CRT_HRS_LO, R7
                 MOVE    0x0000, @R7++           ; low word
-                MOVE    CRT_LOADADR_4K, @R7     ; high word
+                MOVE    0x0020, @R7             ; high word (TBD)
 
                 ; File size
                 MOVE    DBG_CRT_FS_LO, R7                

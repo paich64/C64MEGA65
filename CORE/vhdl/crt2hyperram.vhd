@@ -19,8 +19,8 @@ entity crt2hyperram is
       -- Control interface
       start_i             : in  std_logic;
       address_i           : in  std_logic_vector(21 downto 0);     -- Address in HyperRAM of start of CRT file
-      crt_bank_lo_i       : in  std_logic_vector(21 downto 0);     -- Current location in HyperRAM of bank LO
-      crt_bank_hi_i       : in  std_logic_vector(21 downto 0);     -- Current location in HyperRAM of bank HI
+      crt_bank_lo_i       : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
+      crt_bank_hi_i       : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
 
       -- Connect to HyperRAM
       avm_write_o         : out std_logic;
@@ -77,11 +77,12 @@ architecture synthesis of crt2hyperram is
                     READ_HI_ST,
                     READ_LO_ST,
                     ERROR_ST);
+   signal base_address     : std_logic_vector(21 downto 0);
    signal state            : t_state := IDLE_ST;
    signal read_pos         : integer range 0 to 7;
    signal wide_readdata    : std_logic_vector(127 downto 0);
-   signal crt_bank_lo_d    : std_logic_vector(21 downto 0);
-   signal crt_bank_hi_d    : std_logic_vector(21 downto 0);
+   signal crt_bank_lo_d    : std_logic_vector(6 downto 0);
+   signal crt_bank_hi_d    : std_logic_vector(6 downto 0);
    signal crt_hi_load      : std_logic;
    signal crt_hi_load_done : std_logic;
    signal crt_lo_load      : std_logic;
@@ -112,6 +113,41 @@ architecture synthesis of crt2hyperram is
       return swapped;
    end function bswap;
 
+attribute mark_debug : string;
+attribute mark_debug of start_i             : signal is "true";
+attribute mark_debug of address_i           : signal is "true";
+attribute mark_debug of crt_bank_lo_i       : signal is "true";
+attribute mark_debug of crt_bank_hi_i       : signal is "true";
+attribute mark_debug of avm_write_o         : signal is "true";
+attribute mark_debug of avm_read_o          : signal is "true";
+attribute mark_debug of avm_address_o       : signal is "true";
+attribute mark_debug of avm_writedata_o     : signal is "true";
+attribute mark_debug of avm_byteenable_o    : signal is "true";
+attribute mark_debug of avm_burstcount_o    : signal is "true";
+attribute mark_debug of avm_readdata_i      : signal is "true";
+attribute mark_debug of avm_readdatavalid_i : signal is "true";
+attribute mark_debug of avm_waitrequest_i   : signal is "true";
+attribute mark_debug of cart_bank_laddr_o   : signal is "true";
+attribute mark_debug of cart_bank_size_o    : signal is "true";
+attribute mark_debug of cart_bank_num_o     : signal is "true";
+attribute mark_debug of cart_bank_raddr_o   : signal is "true";
+attribute mark_debug of cart_bank_wr_o      : signal is "true";
+attribute mark_debug of cart_loading_o      : signal is "true";
+attribute mark_debug of cart_id_o           : signal is "true";
+attribute mark_debug of cart_exrom_o        : signal is "true";
+attribute mark_debug of cart_game_o         : signal is "true";
+attribute mark_debug of bram_address_o      : signal is "true";
+attribute mark_debug of bram_data_o         : signal is "true";
+attribute mark_debug of bram_lo_wren_o      : signal is "true";
+attribute mark_debug of bram_lo_q_i         : signal is "true";
+attribute mark_debug of bram_hi_wren_o      : signal is "true";
+attribute mark_debug of bram_hi_q_i         : signal is "true";
+attribute mark_debug of state               : signal is "true";
+attribute mark_debug of crt_hi_load         : signal is "true";
+attribute mark_debug of crt_hi_load_done    : signal is "true";
+attribute mark_debug of crt_lo_load         : signal is "true";
+attribute mark_debug of crt_lo_load_done    : signal is "true";
+
 begin
 
    cart_loading_o <= '0' when state = IDLE_ST or
@@ -124,6 +160,7 @@ begin
       variable image_size_v         : std_logic_vector(15 downto 0);
       variable wide_readdata_v      : std_logic_vector(127 downto 0);
       variable read_addr_v          : std_logic_vector(21 downto 0);
+      variable offset_v             : natural;
    begin
       if rising_edge(clk_i) then
          cart_bank_wr_o   <= '0';
@@ -179,6 +216,7 @@ begin
                   avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
                   avm_read_o       <= '1';
                   avm_burstcount_o <= X"08";
+                  base_address     <= avm_address_o + file_header_length_v(22 downto 1) + X"08";
                   state <= WAIT_FOR_CHIP_HEADER_ST;
                end if;
 
@@ -189,7 +227,8 @@ begin
                      cart_bank_size_o  <= bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
                      cart_bank_num_o   <= bswap(wide_readdata_v(R_CHIP_BANK_NUMBER));
                      read_addr_v := avm_address_o + X"08";
-                     cart_bank_raddr_o <= "000" & read_addr_v;
+                     cart_bank_raddr_o <= (others => '0');
+                     cart_bank_raddr_o(22 downto 1) <= read_addr_v - base_address;
                      cart_bank_wr_o    <= '1';
 
                      image_size_v := bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
@@ -206,7 +245,8 @@ begin
                   -- Starting load to HI bank
                   avm_write_o        <= '0';
                   avm_read_o         <= '1';
-                  avm_address_o      <= crt_bank_hi_i;
+                  offset_v := 16#1008# * to_integer(crt_bank_hi_i);
+                  avm_address_o      <= base_address + offset_v;
                   avm_burstcount_o   <= X"80"; -- Read 256 bytes
                   bram_address_o     <= (others => '1');
                   state              <= READ_HI_ST;
@@ -214,7 +254,8 @@ begin
                   -- Starting load to LO bank
                   avm_write_o        <= '0';
                   avm_read_o         <= '1';
-                  avm_address_o      <= crt_bank_lo_i;
+                  offset_v := 16#1008# * to_integer(crt_bank_lo_i);
+                  avm_address_o      <= base_address + offset_v;
                   avm_burstcount_o   <= X"80"; -- Read 256 bytes
                   bram_address_o     <= (others => '1');
                   state              <= READ_LO_ST;
@@ -274,8 +315,8 @@ begin
             cart_bank_raddr_o <= (others => '0');
             cart_bank_wr_o    <= '0';
             cart_id_o         <= (others => '0');
-            cart_exrom_o      <= (others => '0');
-            cart_game_o       <= (others => '0');
+            cart_exrom_o      <= (others => '1');
+            cart_game_o       <= (others => '1');
             read_pos          <= 0;
          end if;
 
@@ -300,6 +341,10 @@ begin
          end if;
          if crt_bank_hi_d /= crt_bank_hi_i then
             crt_hi_load <= '1';
+         end if;
+
+         if state = WAIT_FOR_CHIP_HEADER_ST then
+            crt_lo_load <= '1';
          end if;
 
          if rst_i = '1' or state = IDLE_ST then

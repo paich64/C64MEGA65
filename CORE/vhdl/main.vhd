@@ -155,8 +155,8 @@ entity main is
       cartridge_bank_type_i  : in  std_logic_vector( 7 downto 0);
       cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i    : in  std_logic;
-      crt_bank_lo_o          : out std_logic_vector(21 downto 0);
-      crt_bank_hi_o          : out std_logic_vector(21 downto 0);
+      crt_bank_lo_o          : out std_logic_vector(6 downto 0);
+      crt_bank_hi_o          : out std_logic_vector(6 downto 0);
       crt_roml_n_o           : out std_logic;
       crt_romh_n_o           : out std_logic
    );
@@ -308,32 +308,6 @@ architecture synthesis of main is
 
    signal dbg_joybtn          : std_logic;
    signal dbg_cart_dir        : std_logic;
-   attribute MARK_DEBUG : string;
-   attribute MARK_DEBUG of data_from_cart : signal is "TRUE";
-   attribute MARK_DEBUG of core_roml      : signal is "TRUE";
-   attribute MARK_DEBUG of core_romh      : signal is "TRUE";
-   attribute MARK_DEBUG of core_ioe       : signal is "TRUE";
-   attribute MARK_DEBUG of core_iof       : signal is "TRUE";
-   attribute MARK_DEBUG of core_nmi_n     : signal is "TRUE";
-   attribute MARK_DEBUG of core_irq_n     : signal is "TRUE";
-   attribute MARK_DEBUG of core_dma       : signal is "TRUE";
-   attribute MARK_DEBUG of core_exrom_n   : signal is "TRUE";
-   attribute MARK_DEBUG of core_game_n    : signal is "TRUE";
-   attribute MARK_DEBUG of core_umax_romh : signal is "TRUE";
-   attribute MARK_DEBUG of reset_core_n   : signal is "TRUE";
-   attribute MARK_DEBUG of core_dotclk    : signal is "TRUE";
-	attribute MARK_DEBUG of core_phi0      : signal is "TRUE";
-	attribute MARK_DEBUG of core_phi2      : signal is "TRUE";
-   attribute MARK_DEBUG of cart_rw_io     : signal is "TRUE";
-   attribute MARK_DEBUG of cart_romh_n    : signal is "TRUE";
-   attribute MARK_DEBUG of dbg_joybtn     : signal is "TRUE";
-   attribute MARK_DEBUG of dbg_cart_dir   : signal is "TRUE";
-   --attribute MARK_DEBUG of core_io_rom    : signal is "TRUE";
-   --attribute MARK_DEBUG of core_io_ext    : signal is "TRUE";
-   --attribute MARK_DEBUG of core_io_data   : signal is "TRUE";
---   attribute MARK_DEBUG of hard_reset_n      : signal is "TRUE";
---   attribute MARK_DEBUG of hard_rst_counter  : signal is "TRUE";
---   attribute MARK_DEBUG of system_cold_start : signal is "TRUE";
 
    -- Verilog file from MiSTer core
    component reu
@@ -397,14 +371,53 @@ architecture synthesis of main is
          addr_in         : in  std_logic_vector(15 downto 0);
          data_in         : in  std_logic_vector( 7 downto 0);
          addr_out        : out std_logic_vector(24 downto 0);
-         bank_lo         : out std_logic_vector(21 downto 0);
-         bank_hi         : out std_logic_vector(21 downto 0);
+         bank_lo         : out std_logic_vector(6 downto 0);
+         bank_hi         : out std_logic_vector(6 downto 0);
          freeze_key      : in  std_logic;
          mod_key         : in  std_logic;
          nmi             : out std_logic;
          nmi_ack         : in  std_logic
       );
    end component cartridge;
+
+   attribute mark_debug : string;
+   attribute mark_debug of c64_ram_addr_o         : signal is "true";
+   attribute mark_debug of c64_ram_ce             : signal is "true";
+   attribute mark_debug of c64_ram_data_o         : signal is "true";
+   attribute mark_debug of c64_ram_data           : signal is "true";
+   attribute mark_debug of c64_ram_we             : signal is "true";
+   attribute mark_debug of cartridge_bank_laddr_i : signal is "true";
+   attribute mark_debug of cartridge_bank_num_i   : signal is "true";
+   attribute mark_debug of cartridge_bank_raddr_i : signal is "true";
+   attribute mark_debug of cartridge_bank_size_i  : signal is "true";
+   attribute mark_debug of cartridge_bank_type_i  : signal is "true";
+   attribute mark_debug of cartridge_bank_wr_i    : signal is "true";
+   attribute mark_debug of cartridge_exrom_i      : signal is "true";
+   attribute mark_debug of cartridge_game_i       : signal is "true";
+   attribute mark_debug of cartridge_id_i         : signal is "true";
+   attribute mark_debug of cartridge_loading_i    : signal is "true";
+   attribute mark_debug of core_exrom_n           : signal is "true";
+   attribute mark_debug of core_game_n            : signal is "true";
+   attribute mark_debug of core_ioe               : signal is "true";
+   attribute mark_debug of core_iof               : signal is "true";
+   attribute mark_debug of core_nmi_ack           : signal is "true";
+   attribute mark_debug of core_romh              : signal is "true";
+   attribute mark_debug of core_roml              : signal is "true";
+   attribute mark_debug of core_umax_romh         : signal is "true";
+   attribute mark_debug of crt_addr               : signal is "true";
+   attribute mark_debug of crt_bank_hi_o          : signal is "true";
+   attribute mark_debug of crt_bank_lo_o          : signal is "true";
+   attribute mark_debug of crt_cs                 : signal is "true";
+   attribute mark_debug of crt_exrom              : signal is "true";
+   attribute mark_debug of crt_game               : signal is "true";
+   attribute mark_debug of crt_io_data            : signal is "true";
+   attribute mark_debug of crt_io_rom             : signal is "true";
+   attribute mark_debug of crt_nmi                : signal is "true";
+   attribute mark_debug of crt_oe                 : signal is "true";
+   attribute mark_debug of crt_we                 : signal is "true";
+   attribute mark_debug of ext_cycle_o            : signal is "true";
+   attribute mark_debug of reset_core_n           : signal is "true";
+   attribute mark_debug of restore_key_n          : signal is "true";
 
 begin
 
@@ -797,10 +810,10 @@ begin
       ); -- i_reu
 
    -- TBD: Is it correct to use ext_cycle_o, or should we use reu_cycle_i instead?
-   reu_addr_o <= reu_ram_addr when ext_cycle_o = '1' else crt_addr;
-   reu_cs_o   <= reu_ram_cs   when ext_cycle_o = '1' else crt_cs;
-   reu_we_o   <= reu_ram_we   when ext_cycle_o = '1' else crt_we;
-   reu_dout_o <= reu_ram_dout when ext_cycle_o = '1' else std_logic_vector(c64_ram_data_o);
+   reu_addr_o <= reu_ram_addr; -- when ext_cycle_o = '1' else crt_addr;
+   reu_cs_o   <= reu_ram_cs  ; -- when ext_cycle_o = '1' else crt_cs;
+   reu_we_o   <= reu_ram_we  ; -- when ext_cycle_o = '1' else crt_we;
+   reu_dout_o <= reu_ram_dout; -- when ext_cycle_o = '1' else std_logic_vector(c64_ram_data_o);
 
    reu_oe <= reu_iof;
 
