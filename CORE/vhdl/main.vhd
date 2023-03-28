@@ -618,7 +618,7 @@ begin
          -- Switch the data lines bi-directionally so that the CPU can also
          -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
-         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
+         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0' or cart_io1_n = '0' or cart_io2_n = '0') then
             cart_data_dir_o   <= '0';
             data_from_cart    <= cart_d_io;
          else
