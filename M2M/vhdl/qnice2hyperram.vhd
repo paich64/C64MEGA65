@@ -8,10 +8,6 @@ use ieee.numeric_std_unsigned.all;
 -- This module runs in the QNICE clock domain.
 
 entity qnice2hyperram is
-   generic (
-      G_ADDRESS_SIZE : integer                       := 21;  -- 2 MB
-      G_BASE_ADDRESS : std_logic_vector(31 downto 0) := X"00000000"
-   );
    port (
       -- This is the QNICE clock
       clk_i                 : in  std_logic;
@@ -20,7 +16,7 @@ entity qnice2hyperram is
       -- Connect to QNICE CPU
       -- This is a slave interface
       s_qnice_wait_o        : out std_logic;
-      s_qnice_address_i     : in  std_logic_vector(G_ADDRESS_SIZE-1 downto 0);
+      s_qnice_address_i     : in  std_logic_vector(31 downto 0);
       s_qnice_cs_i          : in  std_logic;
       s_qnice_write_i       : in  std_logic;
       s_qnice_writedata_i   : in  std_logic_vector(15 downto 0);
@@ -62,7 +58,7 @@ begin
          if s_qnice_cs_i = '1' and s_qnice_wait_o = '0' and m_avm_readdatavalid_d = '0' then
             m_avm_write_o      <= s_qnice_write_i;
             m_avm_read_o       <= not s_qnice_write_i;
-            m_avm_address_o    <= to_stdlogicvector(to_integer(s_qnice_address_i) + to_integer(G_BASE_ADDRESS), 32);
+            m_avm_address_o    <= s_qnice_address_i;
             m_avm_writedata_o  <= s_qnice_writedata_i;
             m_avm_byteenable_o <= "11";
             m_avm_burstcount_o <= X"01";

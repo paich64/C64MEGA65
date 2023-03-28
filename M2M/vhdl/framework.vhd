@@ -233,6 +233,7 @@ signal qnice_ramrom_data_in_hyperram : std_logic_vector(15 downto 0);
 signal qnice_ramrom_wait             : std_logic;
 signal qnice_ramrom_wait_hyperram    : std_logic;
 signal qnice_ramrom_ce_hyperram      : std_logic;
+signal qnice_ramrom_address          : std_logic_vector(31 downto 0);
 
 -- QNICE control and status register
 signal main_csr_keyboard_on   : std_logic;
@@ -753,16 +754,15 @@ begin
       end if;
    end process qnice_ramrom_devices;
 
+   qnice_ramrom_address <= "10000" & qnice_ramrom_addr_o(26 downto 0) when qnice_ramrom_addr_o(27) = '1'
+                           else "000000000" & qnice_ramrom_addr_o(22 downto 0);
+
    i_qnice2hyperram : entity work.qnice2hyperram
-      generic map (
-         G_ADDRESS_SIZE => 23, -- 8 MB
-         G_BASE_ADDRESS => X"00000000"
-      )
       port map (
          clk_i                 => qnice_clk,
          rst_i                 => qnice_rst,
          s_qnice_wait_o        => qnice_ramrom_wait_hyperram,
-         s_qnice_address_i     => qnice_ramrom_addr_o(22 downto 0),
+         s_qnice_address_i     => qnice_ramrom_address,
          s_qnice_cs_i          => qnice_ramrom_ce_hyperram,
          s_qnice_write_i       => qnice_ramrom_we_o,
          s_qnice_writedata_i   => qnice_ramrom_data_out_o,
