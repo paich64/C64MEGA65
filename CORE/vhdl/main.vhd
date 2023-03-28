@@ -286,11 +286,6 @@ architecture synthesis of main is
    signal reu_oe              : std_logic;
    signal reu_dout            : unsigned(7 downto 0);
 
-   signal reu_ram_addr        : std_logic_vector(24 downto 0);
-   signal reu_ram_dout        : std_logic_vector(7 downto 0);
-   signal reu_ram_we          : std_logic;
-   signal reu_ram_cs          : std_logic;
-
    -- Signals from the cartridge.v module (software defined cartridges)
    signal crt_addr            : std_logic_vector(24 downto 0);
    signal crt_dout            : std_logic_vector(7 downto 0);
@@ -396,6 +391,7 @@ architecture synthesis of main is
    attribute mark_debug of cartridge_game_i       : signal is "true";
    attribute mark_debug of cartridge_id_i         : signal is "true";
    attribute mark_debug of cartridge_loading_i    : signal is "true";
+   attribute mark_debug of core_dma               : signal is "true";
    attribute mark_debug of core_exrom_n           : signal is "true";
    attribute mark_debug of core_game_n            : signal is "true";
    attribute mark_debug of core_ioe               : signal is "true";
@@ -796,11 +792,11 @@ begin
          dma_din   => std_logic_vector(reu_dma_din),
          dma_we    => reu_dma_we,
          ram_cycle => reu_cycle_i,
-         ram_addr  => reu_ram_addr,
-         ram_dout  => reu_ram_dout,
+         ram_addr  => reu_addr_o,
+         ram_dout  => reu_dout_o,
          ram_din   => reu_din_i,
-         ram_we    => reu_ram_we,
-         ram_cs    => reu_ram_cs,
+         ram_we    => reu_we_o,
+         ram_cs    => reu_cs_o,
          cpu_addr  => c64_ram_addr_o,
          cpu_dout  => c64_ram_data_o,
          cpu_din   => reu_dout,
@@ -808,12 +804,6 @@ begin
          cpu_cs    => reu_iof,
          irq       => reu_irq
       ); -- i_reu
-
-   -- TBD: Is it correct to use ext_cycle_o, or should we use reu_cycle_i instead?
-   reu_addr_o <= reu_ram_addr; -- when ext_cycle_o = '1' else crt_addr;
-   reu_cs_o   <= reu_ram_cs  ; -- when ext_cycle_o = '1' else crt_cs;
-   reu_we_o   <= reu_ram_we  ; -- when ext_cycle_o = '1' else crt_we;
-   reu_dout_o <= reu_ram_dout; -- when ext_cycle_o = '1' else std_logic_vector(c64_ram_data_o);
 
    reu_oe <= reu_iof;
 

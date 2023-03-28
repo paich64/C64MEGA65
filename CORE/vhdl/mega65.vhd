@@ -1076,10 +1076,6 @@ begin
       hr_core_burstcount_o <= (others => '0');
 
       case to_integer(unsigned(hr_c64_exp_port_mode)) is
-         when 0 =>
-            -- Use the MEGA65's actual hardware slot
-            null;
-
          when 1 =>
             -- Simulate a 1750 REU with 512KB
             hr_core_write_o      <= hr_reu_write;
@@ -1092,8 +1088,8 @@ begin
             hr_reu_readdata      <= hr_core_readdata_i;
             hr_reu_readdatavalid <= hr_core_readdatavalid_i;
 
-         when 2 =>
-            -- Simulate a cartridge by using a cartridge from from the SD card (.crt file)
+         when others =>
+            -- Simulate a cartridge by using a cartridge from the SD card (.CRT file)
             hr_core_write_o      <= hr_crt_write;
             hr_core_read_o       <= hr_crt_read;
             hr_core_address_o    <= "0000000000" & hr_crt_address;
@@ -1103,12 +1099,8 @@ begin
             hr_crt_waitrequest   <= hr_core_waitrequest_i;
             hr_crt_readdata      <= hr_core_readdata_i;
             hr_crt_readdatavalid <= hr_core_readdatavalid_i;
-
-         when others =>
-            null;
       end case;
    end process hyperram_mux_proc;
-
 
 end architecture synthesis;
 
