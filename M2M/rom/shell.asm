@@ -248,7 +248,7 @@ DBG_FATAL       MOVE    R8, R0
 DBG_WINDOW      .DW 0, 0, 44, 3
 
                 ; Strings and constants for cartridge loading
-CRT_LOADADR_4K  .EQU 0x0200                     ; HR address: 0x00200000
+CRT_LOADADR_4K  .EQU 0x0020                     ; HR address: 0x00200000
 DBG_FILE        .ASCII_W "/c64/test.crt"
 DBG_S_ERR_FNF   .ASCII_W " Cartridge file /c64/test.crt not found.\n"
 DBG_S_CRTOK     .ASCII_W " Loading cartridge file: /c64/test.crt\n"
@@ -458,7 +458,7 @@ DBG_CRT_ST_OK   .EQU 0x0003
                 ; HyperRAM start address
                 MOVE    DBG_CRT_HRS_LO, R7
                 MOVE    0x0000, @R7++           ; low word
-                MOVE    0x0020, @R7             ; high word (TBD)
+                MOVE    CRT_LOADADR_4K, @R7     ; high word (TBD)
 
                 ; File size
                 MOVE    DBG_CRT_FS_LO, R7                
