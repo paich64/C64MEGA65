@@ -807,6 +807,15 @@ begin
 
    reu_oe <= reu_iof;
 
+   -- This component is part of the MiSTer core, and provides
+   -- support for software emulated cartridges (aka *.CRT files).
+   -- This module does 3 things:
+   -- 1: It stores the decoded CRT file header information in a local RAM.
+   -- 2: It handles the CPU writes to $DExx and $DFxx for the bank switching.
+   -- 3: It does real-time address translation.
+   -- In our implementation we are not using part 3 above, but we are
+   -- relying on part 1 and 2 above.
+
    i_cartridge : component cartridge
       port map (
          clk32           => clk_main_i,                        -- input
