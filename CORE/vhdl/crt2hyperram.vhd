@@ -22,6 +22,7 @@ entity crt2hyperram is
       length_i            : in  std_logic_vector(21 downto 0);     -- Length of CRT file in HyperRAM
       crt_bank_lo_i       : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
       crt_bank_hi_i       : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
+      status_o            : out std_logic_vector( 3 downto 0);
 
       -- Connect to HyperRAM
       avm_write_o         : out std_logic;
@@ -57,6 +58,13 @@ end entity crt2hyperram;
 
 architecture synthesis of crt2hyperram is
 
+   constant C_STAT_IDLE         : std_logic_vector(3 downto 0) := "0000";
+   constant C_STAT_PARSING      : std_logic_vector(3 downto 0) := "0001";
+   constant C_STAT_READY        : std_logic_vector(3 downto 0) := "0010"; -- Successfully parsed CRT file
+   constant C_STAT_ERR_LENGTH   : std_logic_vector(3 downto 0) := "1000"; -- Invalid file length
+   constant C_STAT_ERR_CRT_HDR  : std_logic_vector(3 downto 0) := "1001"; -- Missing CRT header
+   constant C_STAT_ERR_CHIP_HDR : std_logic_vector(3 downto 0) := "1010"; -- Missing CHIP header
+
    subtype R_CRT_FILE_HEADER_LENGTH is natural range  4*8-1 downto  0*8;
    subtype R_CRT_CARTRIDGE_VERSION  is natural range  6*8-1 downto  4*8;
    subtype R_CRT_CARTRIDGE_TYPE     is natural range  8*8-1 downto  6*8;
@@ -88,6 +96,7 @@ architecture synthesis of crt2hyperram is
    signal crt_hi_load_done : std_logic;
    signal crt_lo_load      : std_logic;
    signal crt_lo_load_done : std_logic;
+   signal remaining_size   : std_logic_vector(21 downto 0);
 
    -- Convert an ASCII string to std_logic_vector
    pure function str2slv(s : string) return std_logic_vector is
@@ -175,6 +184,9 @@ begin
             avm_read_o  <= '0';
          end if;
 
+         -- Gather together 16 bytes of data.
+         -- This is just to make the following state machine simpler,
+         -- i.e. we can process more data at a time.
          wide_readdata_v := wide_readdata;
          if avm_readdatavalid_i = '1' then
             wide_readdata_v(16*read_pos + 15 downto 16*read_pos) := avm_readdata_i;
@@ -190,19 +202,27 @@ begin
          case state is
             when IDLE_ST =>
                if start_i = '1' then
-                  -- Read first 0x20 bytes of CRT header
-                  avm_address_o    <= address_i;
-                  avm_read_o       <= '1';
-                  avm_burstcount_o <= X"10";
-                  state            <= WAIT_FOR_CRT_HEADER_00_ST;
+                  if length_i >= X"00040" then
+                     -- Read first 0x20 bytes of CRT header
+                     avm_address_o    <= address_i;
+                     avm_read_o       <= '1';
+                     avm_burstcount_o <= X"10";
+                     remaining_size   <= length_i;
+                     status_o         <= C_STAT_PARSING;
+                     state            <= WAIT_FOR_CRT_HEADER_00_ST;
+                  else
+                     status_o <= C_STAT_ERR_LENGTH;
+                     state    <= ERROR_ST;
+                  end if;
                end if;
 
             when WAIT_FOR_CRT_HEADER_00_ST =>
                if avm_readdatavalid_i = '1' and read_pos = 7 then
-                  state <= ERROR_ST; -- Assume error
-
                   if wide_readdata_v = str2slv("C64 CARTRIDGE   ") then
                      state <= WAIT_FOR_CRT_HEADER_10_ST;
+                  else
+                     status_o <= C_STAT_ERR_CRT_HDR;
+                     state    <= ERROR_ST;
                   end if;
                end if;
 
@@ -212,17 +232,27 @@ begin
                   cart_exrom_o <= wide_readdata_v(R_CRT_EXROM);
                   cart_game_o  <= wide_readdata_v(R_CRT_GAME);
 
-                  -- Read 0x10 bytes from CHIP header
-                  file_header_length_v := bswap(wide_readdata_v(R_CRT_FILE_HEADER_LENGTH));
-                  avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
-                  avm_read_o       <= '1';
-                  avm_burstcount_o <= X"08";
-                  base_address     <= avm_address_o + file_header_length_v(22 downto 1) + X"08";
-                  state <= WAIT_FOR_CHIP_HEADER_ST;
+                  if length_i >= file_header_length_v(22 downto 1) + X"10" then
+                     -- Read 0x10 bytes from CHIP header
+                     file_header_length_v := bswap(wide_readdata_v(R_CRT_FILE_HEADER_LENGTH));
+                     avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
+                     avm_read_o       <= '1';
+                     avm_burstcount_o <= X"08";
+                     base_address     <= avm_address_o + file_header_length_v(22 downto 1) + X"08";
+                     remaining_size   <= remaining_size - file_header_length_v(22 downto 1);
+                     state <= WAIT_FOR_CHIP_HEADER_ST;
+                  else
+                     status_o <= C_STAT_ERR_LENGTH;
+                     state    <= ERROR_ST;
+                  end if;
                end if;
 
             when WAIT_FOR_CHIP_HEADER_ST =>
                if avm_readdatavalid_i = '1' and read_pos = 7 then
+                  -- For now, assume error
+                  status_o <= C_STAT_ERR_CHIP_HDR;
+                  state    <= ERROR_ST;
+
                   if wide_readdata_v(R_CHIP_SIGNATURE) = str2slv("CHIP") then
                      cart_bank_laddr_o <= bswap(wide_readdata_v(R_CHIP_LOAD_ADDRESS));
                      cart_bank_size_o  <= bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
@@ -232,12 +262,20 @@ begin
                      cart_bank_raddr_o(22 downto 1) <= read_addr_v - base_address;
                      cart_bank_wr_o    <= '1';
 
-                     image_size_v := bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
-                     avm_address_o    <= avm_address_o + X"08" + image_size_v(15 downto 1);
-                     avm_read_o       <= '1';
-                     avm_burstcount_o <= X"08";
-                  else
+                     -- OK, assume we're done now
+                     status_o         <= C_STAT_READY;
                      state            <= READY_ST;
+
+                     image_size_v := bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
+                     if remaining_size >= X"08" + image_size_v(15 downto 1) then
+                        -- Oh, there's more ...
+                        avm_address_o    <= avm_address_o + X"08" + image_size_v(15 downto 1);
+                        avm_read_o       <= '1';
+                        avm_burstcount_o <= X"08";
+                        remaining_size   <= remaining_size - (X"08" + image_size_v(15 downto 1));
+                        status_o         <= C_STAT_PARSING;
+                        state            <= WAIT_FOR_CHIP_HEADER_ST;
+                     end if;
                   end if;
                end if;
 
@@ -295,7 +333,10 @@ begin
                end if;
 
             when ERROR_ST =>
-               null;
+               if start_i = '0' then
+                  status_o <= C_STAT_IDLE;
+                  state    <= IDLE_ST;
+               end if;
 
             when others =>
                null;
@@ -319,6 +360,7 @@ begin
             cart_exrom_o      <= (others => '1');
             cart_game_o       <= (others => '1');
             read_pos          <= 0;
+            status_o          <= C_STAT_IDLE;
          end if;
 
       end if;

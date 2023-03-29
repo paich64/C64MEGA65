@@ -60,12 +60,14 @@ architecture synthesis of sw_cartridge_wrapper is
    signal qnice_cartridge_address    : std_logic_vector(21 downto 0);
    signal qnice_cartridge_length     : std_logic_vector(21 downto 0);
    signal qnice_cartridge_crt_loaded : std_logic;
+   signal qnice_crt_status           : std_logic_vector( 3 downto 0);
 
    signal hr_cartridge_address       : std_logic_vector(21 downto 0);
    signal hr_cartridge_length        : std_logic_vector(21 downto 0);
    signal hr_cartridge_crt_loaded    : std_logic;
    signal hr_crt_bank_lo             : std_logic_vector( 6 downto 0);
    signal hr_crt_bank_hi             : std_logic_vector( 6 downto 0);
+   signal hr_crt_status              : std_logic_vector( 3 downto 0);
 
    signal hr_bram_address            : std_logic_vector(11 downto 0);
    signal hr_bram_data               : std_logic_vector(15 downto 0);
@@ -102,6 +104,16 @@ begin
       end if;
    end process;
 
+   process (qnice_clk_i)
+   begin
+      if rising_edge(qnice_clk_i) then
+         qnice_crt_parsest_o <= (others => '0');
+         qnice_crt_parsee1_o <= (others => '0');
+         qnice_crt_parsee2_o <= (others => '0');
+         qnice_crt_parsest_o(3 downto 0) <= qnice_crt_status;
+      end if;
+   end process;
+
 
    --------------------------------------------
    -- Clock Domain Crossing: QNICE -> HyperRAM
@@ -121,6 +133,21 @@ begin
          dst_data_o(43 downto 22) => hr_cartridge_length,
          dst_data_o(44)           => hr_cartridge_crt_loaded
       ); -- i_cdc_qnice2hr
+
+
+   --------------------------------------------
+   -- Clock Domain Crossing: HyperRAM -> QNICE
+   --------------------------------------------
+   i_cdc_hr2qnice : entity work.cdc_stable
+      generic map (
+         G_DATA_SIZE => 4
+      )
+      port map (
+         src_clk_i              => hr_clk_i,
+         src_data_i(3 downto 0) => hr_crt_status,
+         dst_clk_i              => qnice_clk_i,
+         dst_data_o(3 downto 0) => qnice_crt_status
+      ); -- i_cdc_hr2qnice
 
 
    --------------------------------------------
@@ -155,6 +182,7 @@ begin
          start_i             => hr_cartridge_crt_loaded,
          crt_bank_lo_i       => hr_crt_bank_lo,
          crt_bank_hi_i       => hr_crt_bank_hi,
+         status_o            => hr_crt_status,
          avm_write_o         => hr_crt_write_o,
          avm_read_o          => hr_crt_read_o,
          avm_address_o       => hr_crt_address_o(21 downto 0),
