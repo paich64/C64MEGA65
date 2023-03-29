@@ -99,6 +99,7 @@ port (
 
    -- Connect to CORE
    qnice_clk_o             : out std_logic;
+   qnice_rst_o             : out std_logic;
    reset_m2m_n_o           : out std_logic;
    main_clk_i              : in  std_logic;
    main_rst_i              : in  std_logic;
@@ -433,6 +434,7 @@ begin
    hr_rst_o <= hr_rst;
 
    qnice_clk_o <= qnice_clk;
+   qnice_rst_o <= qnice_rst;
 
    -----------------------------------------------------------------------------------------
    -- MAX10 FPGA handling: extract reset signal

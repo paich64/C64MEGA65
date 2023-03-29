@@ -19,6 +19,7 @@ entity crt2hyperram is
       -- Control interface
       start_i             : in  std_logic;
       address_i           : in  std_logic_vector(21 downto 0);     -- Address in HyperRAM of start of CRT file
+      length_i            : in  std_logic_vector(21 downto 0);     -- Length of CRT file in HyperRAM
       crt_bank_lo_i       : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
       crt_bank_hi_i       : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
 
@@ -113,40 +114,40 @@ architecture synthesis of crt2hyperram is
       return swapped;
    end function bswap;
 
-attribute mark_debug : string;
-attribute mark_debug of start_i             : signal is "true";
-attribute mark_debug of address_i           : signal is "true";
-attribute mark_debug of crt_bank_lo_i       : signal is "true";
-attribute mark_debug of crt_bank_hi_i       : signal is "true";
-attribute mark_debug of avm_write_o         : signal is "true";
-attribute mark_debug of avm_read_o          : signal is "true";
-attribute mark_debug of avm_address_o       : signal is "true";
-attribute mark_debug of avm_writedata_o     : signal is "true";
-attribute mark_debug of avm_byteenable_o    : signal is "true";
-attribute mark_debug of avm_burstcount_o    : signal is "true";
-attribute mark_debug of avm_readdata_i      : signal is "true";
-attribute mark_debug of avm_readdatavalid_i : signal is "true";
-attribute mark_debug of avm_waitrequest_i   : signal is "true";
-attribute mark_debug of cart_bank_laddr_o   : signal is "true";
-attribute mark_debug of cart_bank_size_o    : signal is "true";
-attribute mark_debug of cart_bank_num_o     : signal is "true";
-attribute mark_debug of cart_bank_raddr_o   : signal is "true";
-attribute mark_debug of cart_bank_wr_o      : signal is "true";
-attribute mark_debug of cart_loading_o      : signal is "true";
-attribute mark_debug of cart_id_o           : signal is "true";
-attribute mark_debug of cart_exrom_o        : signal is "true";
-attribute mark_debug of cart_game_o         : signal is "true";
-attribute mark_debug of bram_address_o      : signal is "true";
-attribute mark_debug of bram_data_o         : signal is "true";
-attribute mark_debug of bram_lo_wren_o      : signal is "true";
-attribute mark_debug of bram_lo_q_i         : signal is "true";
-attribute mark_debug of bram_hi_wren_o      : signal is "true";
-attribute mark_debug of bram_hi_q_i         : signal is "true";
-attribute mark_debug of state               : signal is "true";
-attribute mark_debug of crt_hi_load         : signal is "true";
-attribute mark_debug of crt_hi_load_done    : signal is "true";
-attribute mark_debug of crt_lo_load         : signal is "true";
-attribute mark_debug of crt_lo_load_done    : signal is "true";
+--attribute mark_debug : string;
+--attribute mark_debug of start_i             : signal is "true";
+--attribute mark_debug of address_i           : signal is "true";
+--attribute mark_debug of crt_bank_lo_i       : signal is "true";
+--attribute mark_debug of crt_bank_hi_i       : signal is "true";
+--attribute mark_debug of avm_write_o         : signal is "true";
+--attribute mark_debug of avm_read_o          : signal is "true";
+--attribute mark_debug of avm_address_o       : signal is "true";
+--attribute mark_debug of avm_writedata_o     : signal is "true";
+--attribute mark_debug of avm_byteenable_o    : signal is "true";
+--attribute mark_debug of avm_burstcount_o    : signal is "true";
+--attribute mark_debug of avm_readdata_i      : signal is "true";
+--attribute mark_debug of avm_readdatavalid_i : signal is "true";
+--attribute mark_debug of avm_waitrequest_i   : signal is "true";
+--attribute mark_debug of cart_bank_laddr_o   : signal is "true";
+--attribute mark_debug of cart_bank_size_o    : signal is "true";
+--attribute mark_debug of cart_bank_num_o     : signal is "true";
+--attribute mark_debug of cart_bank_raddr_o   : signal is "true";
+--attribute mark_debug of cart_bank_wr_o      : signal is "true";
+--attribute mark_debug of cart_loading_o      : signal is "true";
+--attribute mark_debug of cart_id_o           : signal is "true";
+--attribute mark_debug of cart_exrom_o        : signal is "true";
+--attribute mark_debug of cart_game_o         : signal is "true";
+--attribute mark_debug of bram_address_o      : signal is "true";
+--attribute mark_debug of bram_data_o         : signal is "true";
+--attribute mark_debug of bram_lo_wren_o      : signal is "true";
+--attribute mark_debug of bram_lo_q_i         : signal is "true";
+--attribute mark_debug of bram_hi_wren_o      : signal is "true";
+--attribute mark_debug of bram_hi_q_i         : signal is "true";
+--attribute mark_debug of state               : signal is "true";
+--attribute mark_debug of crt_hi_load         : signal is "true";
+--attribute mark_debug of crt_hi_load_done    : signal is "true";
+--attribute mark_debug of crt_lo_load         : signal is "true";
+--attribute mark_debug of crt_lo_load_done    : signal is "true";
 
 begin
 

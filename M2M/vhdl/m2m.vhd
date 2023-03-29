@@ -131,6 +131,7 @@ signal main_clk    : std_logic;
 signal main_rst    : std_logic;
 signal reset_m2m_n : std_logic;
 signal qnice_clk   : std_logic;
+signal qnice_rst   : std_logic;
 
 --------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -293,6 +294,7 @@ begin
 
       -- Connect to CORE
       qnice_clk_o             => qnice_clk,
+      qnice_rst_o             => qnice_rst,
       reset_m2m_n_o           => reset_m2m_n,
       main_clk_i              => main_clk,
       main_rst_i              => main_rst,
@@ -387,6 +389,7 @@ begin
 
          -- Provide QNICE clock to the core: for the vdrives as well as for RAMs and ROMs
          qnice_clk_i             => qnice_clk,
+         qnice_rst_i             => qnice_rst,
 
          -- Video and audio mode control
          qnice_dvi_o             => qnice_dvi,

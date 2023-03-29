@@ -19,7 +19,7 @@ end entity tb_crt2hyperram;
 
 architecture simulation of tb_crt2hyperram is
 
-   type bank_t is array (natural range 0 to 255) of std_logic_vector(21 downto 0);
+   type bank_t is array (natural range 0 to 255) of std_logic_vector(6 downto 0);
    signal lobank : bank_t := (others => (others => '0'));
    signal hibank : bank_t := (others => (others => '0'));
 
@@ -27,8 +27,8 @@ architecture simulation of tb_crt2hyperram is
    signal rst               : std_logic := '1';
    signal start             : std_logic;
    signal address           : std_logic_vector(21 downto 0);
-   signal crt_bank_lo       : std_logic_vector(21 downto 0);
-   signal crt_bank_hi       : std_logic_vector(21 downto 0);
+   signal crt_bank_lo       : std_logic_vector(6 downto 0);
+   signal crt_bank_hi       : std_logic_vector(6 downto 0);
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
    signal avm_address       : std_logic_vector(21 downto 0);
@@ -64,6 +64,7 @@ begin
          clk_i               => clk,
          rst_i               => rst,
          start_i             => start,
+         length_i            => (others => '0'),
          address_i           => address,
          crt_bank_lo_i       => crt_bank_lo,
          crt_bank_hi_i       => crt_bank_hi,
@@ -120,10 +121,10 @@ begin
          if cart_bank_wr = '1' then
             if cart_bank_laddr = X"8000" then
                report "Writing " & to_hstring(cart_bank_raddr) & " to LO bank";
-               lobank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 0);
+               lobank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 15);
             else
                report "Writing " & to_hstring(cart_bank_raddr) & " to HI bank";
-               hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 0);
+               hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 15);
             end if;
          end if;
       end if;
