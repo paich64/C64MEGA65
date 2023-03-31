@@ -27,14 +27,16 @@ architecture simulation of tb_crt2hyperram is
    signal rst               : std_logic := '1';
    signal start             : std_logic;
    signal address           : std_logic_vector(21 downto 0);
-   signal crt_bank_lo       : std_logic_vector(6 downto 0);
-   signal crt_bank_hi       : std_logic_vector(6 downto 0);
+   signal length            : std_logic_vector(21 downto 0);
+   signal crt_bank_lo       : std_logic_vector( 6 downto 0);
+   signal crt_bank_hi       : std_logic_vector( 6 downto 0);
+   signal status            : std_logic_vector( 3 downto 0);
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
    signal avm_address       : std_logic_vector(21 downto 0);
    signal avm_writedata     : std_logic_vector(15 downto 0);
-   signal avm_byteenable    : std_logic_vector(1 downto 0);
-   signal avm_burstcount    : std_logic_vector(7 downto 0);
+   signal avm_byteenable    : std_logic_vector( 1 downto 0);
+   signal avm_burstcount    : std_logic_vector( 7 downto 0);
    signal avm_readdata      : std_logic_vector(15 downto 0);
    signal avm_readdatavalid : std_logic;
    signal avm_waitrequest   : std_logic;
@@ -45,8 +47,8 @@ architecture simulation of tb_crt2hyperram is
    signal cart_bank_wr      : std_logic;
    signal cart_loading      : std_logic;
    signal cart_id           : std_logic_vector(15 downto 0);
-   signal cart_exrom        : std_logic_vector(7 downto 0);
-   signal cart_game         : std_logic_vector(7 downto 0);
+   signal cart_exrom        : std_logic_vector( 7 downto 0);
+   signal cart_game         : std_logic_vector( 7 downto 0);
    signal bram_address      : std_logic_vector(11 downto 0);
    signal bram_data         : std_logic_vector(15 downto 0);
    signal bram_lo_wren      : std_logic;
@@ -64,10 +66,11 @@ begin
          clk_i               => clk,
          rst_i               => rst,
          start_i             => start,
-         length_i            => (others => '0'),
+         length_i            => length,
          address_i           => address,
          crt_bank_lo_i       => crt_bank_lo,
          crt_bank_hi_i       => crt_bank_hi,
+         status_o            => status,
          avm_write_o         => avm_write,
          avm_read_o          => avm_read,
          avm_address_o       => avm_address,
@@ -98,7 +101,7 @@ begin
    i_avm_rom : entity work.avm_rom
       generic map (
          G_INIT_FILE    => G_INIT_FILE,
-         G_ADDRESS_SIZE => 16,
+         G_ADDRESS_SIZE => 14,
          G_DATA_SIZE    => 16
       )
       port map (
@@ -106,7 +109,7 @@ begin
          rst_i               => rst,
          avm_write_i         => avm_write,
          avm_read_i          => avm_read,
-         avm_address_i       => avm_address(15 downto 0),
+         avm_address_i       => avm_address(13 downto 0),
          avm_writedata_i     => avm_writedata,
          avm_byteenable_i    => avm_byteenable,
          avm_burstcount_i    => avm_burstcount,
@@ -139,6 +142,7 @@ begin
       wait until rst = '0';
       wait until rising_edge(clk);
       address <= (others => '0');
+      length  <= "00" & X"08000";
       start   <= '1';
       wait until rising_edge(clk);
       start   <= '0';

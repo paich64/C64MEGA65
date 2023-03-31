@@ -47,7 +47,7 @@ architecture simulation of avm_rom is
       variable rom_v     : mem_t;
    begin
       file_open(char_file, rom_file_name);
-      while not endfile(char_file) loop
+      while not endfile(char_file) and address_v <= 2**G_ADDRESS_SIZE-1 loop
          read(char_file, char_v);
          byte_v := character'pos(char_v);
 

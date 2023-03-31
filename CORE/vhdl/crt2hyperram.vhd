@@ -231,10 +231,10 @@ begin
                   cart_id_o    <= bswap(wide_readdata_v(R_CRT_CARTRIDGE_TYPE));
                   cart_exrom_o <= wide_readdata_v(R_CRT_EXROM);
                   cart_game_o  <= wide_readdata_v(R_CRT_GAME);
+                  file_header_length_v := bswap(wide_readdata_v(R_CRT_FILE_HEADER_LENGTH));
 
                   if length_i >= file_header_length_v(22 downto 1) + X"10" then
                      -- Read 0x10 bytes from CHIP header
-                     file_header_length_v := bswap(wide_readdata_v(R_CRT_FILE_HEADER_LENGTH));
                      avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
                      avm_read_o       <= '1';
                      avm_burstcount_o <= X"08";

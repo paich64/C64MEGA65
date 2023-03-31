@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Sun Mar 26 05:46:59 2023
+[*] Fri Mar 31 06:26:04 2023
 [*]
-[dumpfile] "/home/mike/git/MJoergen/C64MEGA65/CORE/vhdl/tb_crt2hyperram.ghw"
-[dumpfile_mtime] "Sun Mar 26 05:46:52 2023"
-[dumpfile_size] 4551491
-[savefile] "/home/mike/git/MJoergen/C64MEGA65/CORE/vhdl/tb_crt2hyperram.gtkw"
-[timestart] 0
+[dumpfile] "/home/mfj/git/PRIVATE/MJoergen/C64MEGA65/CORE/vhdl/tb_crt2hyperram.ghw"
+[dumpfile_mtime] "Fri Mar 31 06:25:46 2023"
+[dumpfile_size] 1063138
+[savefile] "/home/mfj/git/PRIVATE/MJoergen/C64MEGA65/CORE/vhdl/tb_crt2hyperram.gtkw"
+[timestart] 555100000
 [size] 1920 1052
 [pos] 1869 0
-*-33.013889 621000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-25.898611 729000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top.
 [treeopen] top.tb_crt2hyperram.
 [treeopen] top.tb_crt2hyperram.i_crt2hyperram.
@@ -23,8 +23,10 @@ top.tb_crt2hyperram.i_crt2hyperram.rst_i
 top.tb_crt2hyperram.i_crt2hyperram.start_i
 @22
 #{top.tb_crt2hyperram.i_crt2hyperram.address_i[31:0]} top.tb_crt2hyperram.i_crt2hyperram.address_i[21] top.tb_crt2hyperram.i_crt2hyperram.address_i[20] top.tb_crt2hyperram.i_crt2hyperram.address_i[19] top.tb_crt2hyperram.i_crt2hyperram.address_i[18] top.tb_crt2hyperram.i_crt2hyperram.address_i[17] top.tb_crt2hyperram.i_crt2hyperram.address_i[16] top.tb_crt2hyperram.i_crt2hyperram.address_i[15] top.tb_crt2hyperram.i_crt2hyperram.address_i[14] top.tb_crt2hyperram.i_crt2hyperram.address_i[13] top.tb_crt2hyperram.i_crt2hyperram.address_i[12] top.tb_crt2hyperram.i_crt2hyperram.address_i[11] top.tb_crt2hyperram.i_crt2hyperram.address_i[10] top.tb_crt2hyperram.i_crt2hyperram.address_i[9] top.tb_crt2hyperram.i_crt2hyperram.address_i[8] top.tb_crt2hyperram.i_crt2hyperram.address_i[7] top.tb_crt2hyperram.i_crt2hyperram.address_i[6] top.tb_crt2hyperram.i_crt2hyperram.address_i[5] top.tb_crt2hyperram.i_crt2hyperram.address_i[4] top.tb_crt2hyperram.i_crt2hyperram.address_i[3] top.tb_crt2hyperram.i_crt2hyperram.address_i[2] top.tb_crt2hyperram.i_crt2hyperram.address_i[1] top.tb_crt2hyperram.i_crt2hyperram.address_i[0]
-#{top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[21:0]} top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[21] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[20] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[19] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[18] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[17] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[16] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[15] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[14] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[13] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[12] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[11] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[10] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[9] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[8] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[7] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[6] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[5] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[4] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[3] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[2] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[1] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[0]
-#{top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[21:0]} top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[21] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[20] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[19] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[18] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[17] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[16] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[15] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[14] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[13] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[12] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[11] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[10] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[9] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[8] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[7] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[6] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[5] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[4] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[3] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[2] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[1] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[0]
+#{top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[21:0]} top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[6] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[5] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[4] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[3] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[2] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[1] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_lo_i[0]
+#{top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[21:0]} top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[6] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[5] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[4] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[3] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[2] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[1] top.tb_crt2hyperram.i_crt2hyperram.crt_bank_hi_i[0]
+@23
+#{top.tb_crt2hyperram.status[3:0]} top.tb_crt2hyperram.status[3] top.tb_crt2hyperram.status[2] top.tb_crt2hyperram.status[1] top.tb_crt2hyperram.status[0]
 @28
 top.tb_crt2hyperram.i_crt2hyperram.avm_waitrequest_i
 top.tb_crt2hyperram.i_crt2hyperram.avm_write_o
@@ -62,7 +64,6 @@ top.tb_crt2hyperram.i_crt2hyperram.state
 top.tb_crt2hyperram.i_crt2hyperram.crt_hi_load
 top.tb_crt2hyperram.i_crt2hyperram.crt_hi_load_done
 top.tb_crt2hyperram.i_crt2hyperram.crt_lo_load
-@29
 top.tb_crt2hyperram.i_crt2hyperram.crt_lo_load_done
 [pattern_trace] 1
 [pattern_trace] 0
