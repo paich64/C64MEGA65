@@ -101,7 +101,7 @@ begin
    i_avm_rom : entity work.avm_rom
       generic map (
          G_INIT_FILE    => G_INIT_FILE,
-         G_ADDRESS_SIZE => 14,
+         G_ADDRESS_SIZE => 16,
          G_DATA_SIZE    => 16
       )
       port map (
@@ -109,7 +109,7 @@ begin
          rst_i               => rst,
          avm_write_i         => avm_write,
          avm_read_i          => avm_read,
-         avm_address_i       => avm_address(13 downto 0),
+         avm_address_i       => avm_address(15 downto 0),
          avm_writedata_i     => avm_writedata,
          avm_byteenable_i    => avm_byteenable,
          avm_burstcount_i    => avm_burstcount,
@@ -142,7 +142,7 @@ begin
       wait until rst = '0';
       wait until rising_edge(clk);
       address <= (others => '0');
-      length  <= "00" & X"08000";
+      length  <= "00" & X"08060";
       start   <= '1';
       wait until rising_edge(clk);
       start   <= '0';

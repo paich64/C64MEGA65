@@ -207,7 +207,7 @@ begin
                      avm_address_o    <= address_i;
                      avm_read_o       <= '1';
                      avm_burstcount_o <= X"10";
-                     remaining_size   <= length_i;
+                     remaining_size   <= "0" & length_i(21 downto 1); -- Convert #-of-bytes to #-of-words
                      status_o         <= C_STAT_PARSING;
                      state            <= WAIT_FOR_CRT_HEADER_00_ST;
                   else
@@ -267,7 +267,7 @@ begin
                      state            <= READY_ST;
 
                      image_size_v := bswap(wide_readdata_v(R_CHIP_IMAGE_SIZE));
-                     if remaining_size >= X"08" + image_size_v(15 downto 1) then
+                     if remaining_size > X"08" + image_size_v(15 downto 1) then
                         -- Oh, there's more ...
                         avm_address_o    <= avm_address_o + X"08" + image_size_v(15 downto 1);
                         avm_read_o       <= '1';
