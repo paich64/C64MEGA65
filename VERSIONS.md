@@ -18,9 +18,13 @@ also software cartridges.
 * More clearly arranged menu using submenus
 
 * Hardware cartridges can be used in the MEGA65's expansion port. Most game
-  cartridges ("passive" cartridges) are supported. Not supported yet are any
+  cartridges ("passive" cartridges) are supported.
+
+@TODO: What s not supported: Not supported yet are any
   kind of "active" cartridges that act as busmaster. This includes Freezer
   cartridges, Disk Speeders, RAM Expansion Units (REUs), etc.
+
+@TODO: EF 1CR?
 
 @TODO: Check, if we can support at least REUs and other cartridges that are
 not relying on the missing R3 signals (RESET, NMI and IRQ)
