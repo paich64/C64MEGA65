@@ -594,6 +594,8 @@ LOAD_IMAGE      SYSCALL(enter, 1)
                 ; Callback function that can handle headers, sanity check
                 ; the disk image, determine the type of the disk image, etc.
 _LI_FOPEN_OK    MOVE    R5, R8
+                MOVE    SF_CONTEXT, R9
+                MOVE    @R9, R9
                 RSUB    PREP_LOAD_IMAGE, 1
                 MOVE    R8, R6                  ; R6: error code=0 (means OK)
                 MOVE    R9, R7                  ; R7: img type or error msg

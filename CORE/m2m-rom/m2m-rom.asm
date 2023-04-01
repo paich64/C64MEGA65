@@ -121,12 +121,22 @@ _FFILES_RET     MOVE    R0, R9
 ;
 ; Input:
 ;   R8: File handle: You are allowed to modify the read pointer of the handle
+;   R9: Context (CTX_* constants in sysdef.asm)
 ; Output:
 ;   R8: 0=OK, error code otherwise
-;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
+;   R9: image type if R8=0, otherwise 0 or optional ptr to error msg string
 PREP_LOAD_IMAGE INCRB
 
-                MOVE    R8, R0
+                ; Context CRT/ROM loading: Do not check the file-size
+                CMP     CTX_LOAD_ROM, R9
+                RBRA    _PREP_LI_START, !Z
+                XOR     R8, R8
+                XOR     R9, R9
+                RBRA    _PREP_LI_RET, 1
+
+                ; Context is disk image loading: We check for valid disk
+                ; image sizes as defined in D64_STDSIZE_L and D64_STDSIZE_H
+_PREP_LI_START  MOVE    R8, R0
                 MOVE    R0, R1
 
                 ADD     FAT32$FDH_SIZE_LO, R0

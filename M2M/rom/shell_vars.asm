@@ -135,3 +135,5 @@ VDRIVES_FL_OFS  .BLOCK  VDRIVES_MAX
 
 ; System to handle manually and automatically loaded cartridges and ROMs
 CRTROM_MAN_NUM  .BLOCK 1                        ; amount of manual CRTs/ROMs
+CRTROM_MAN_MAX  .EQU   3                        ; max. amt. of. man. CRTS/ROMs
+CRTROM_MAN_LDF  .BLOCK CRTROM_MAN_MAX           ; flag: has been loaded

@@ -128,7 +128,7 @@ constant C_CRTROMTYPE_SDRAM      : std_logic_vector(15 downto 0) := x"0002";    
 --    1) Type of CRT or ROM: Load to a QNICE device, load into HyperRAM, load into SDRAM
 --    2) If (1) = QNICE device, then this is the device ID
 --       else it is a 4k window in HyperRAM or in SDRAM
-constant C_CRTROM_MAN_NUM        : natural := 1;                                       -- amount of manually loadable ROMs and carts. Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROM_MAN_NUM        : natural := 1;                                       -- amount of manually loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
 constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_HYPERRAM, C_HR_C64_CRT,
                                                          x"EEEE");                     -- Always finish the array using x"EEEE"
 

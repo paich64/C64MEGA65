@@ -159,15 +159,18 @@ _HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
                 ; overwrite FP_HEAP: We will use OPTM_HEAP to store the
                 ; strings that will be displayed instead of the "%s" strings
                 ; from config.vhd. The maximum length per string (rounded up)
-                ; equals to @SCR$OSM_O_DX and the maximum amount of such kind
-                ; of "%s" strings equals to the actual amount of virtual
-                ; drives, i.e. VDRIVES_NUM plus the amount of submenus
+                ; equals to @SCR$OSM_O_DX multiplied with the maximum amount
+                ; of such kind of "%s" strings, which equals to the actual
+                ; amount of virtual drives, i.e. VDRIVES_NUM plus the amount
+                ; of submenus plus the amount of manual CRT/ROM loading items
+                ; (i.e. CRTROM_MAN_NUM).
                 ;
-                ; But need one more than VDRIVES_NUM (i.e. VDRIVES_NUM + 1)
-                ; because we need a scratch buffer to remember the adjusted
-                ; filename during the period, where OPTM_S_SAVING from
-                ; config.vhd is being shown, i.e. while the save buffer
-                ; is dirty. We store the pointer to this in OPTM_HEAP_LAST.
+                ; But need one more than that (i.e. VDRIVES_NUM +
+                ; amount of submenus + CRTROM_MAN_NUM) because we need a
+                ; scratch buffer to remember the adjusted filename during the
+                ; period, where OPTM_S_SAVING from config.vhd is being shown,
+                ; i.e. while the save buffer is dirty. We store the pointer
+                ; to this in OPTM_HEAP_LAST.
                 MOVE    OPTM_SCOUNT, R11        ; R11: amount of submenus
                 MOVE    @R11, R11
                 MOVE    SCR$OSM_O_DX, R8
@@ -175,6 +178,8 @@ _HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
                 MOVE    VDRIVES_NUM, R9
                 MOVE    @R9, R9                 ; R9: amount of virtual drives
                 ADD     R11, R9                 ; add amount of submenus
+                MOVE    CRTROM_MAN_NUM, R11     ; add amount of CRT/ROM items
+                ADD     @R11, R9
                 SYSCALL(mulu, 1)                ; R10 = result lo word of mulu
                 MOVE    OPTM_HEAP_LAST, R8      ; clc. addr. of OPTM_HEAP_LAST
                 MOVE    R10, @R8
@@ -1171,13 +1176,14 @@ _OPTMCB_RET     DECRB
 ; headline - or - one should have used SUBMENU_SUMMARY to define a custom
 ; semantics.
 ;
-; Case (b) Virtual drives:
+; Case (b) Virtual drives and CRT/ROM loading
 ;
 ; "%s" is meant to denote the space where we will either print
-; OPTM_S_MOUNT from config.vhd, which is "<Mount Drive>" by default, if the
-; drive is not mounted, yet, or we print the file name of the disk image,
-; abbreviated to the width of the frame. We also handle the "cache dirty"
-; situation and show OPTM_S_SAVING which defaults to "<Saving>".
+; OPTM_S_MOUNT/OPTM_S_CRTROM from config.vhd, which is "<Mount Drive>" and
+; "<Load ROM>" by default, if the drive is not mounted, yet, or we print the
+; file name of the disk image, abbreviated to the width of the frame. We also
+; handle the "cache dirty" situation and show OPTM_S_SAVING which defaults
+; to "<Saving>".
 ;
 ; Input:
 ;   R8: pointer to the string that includes the "%s"
@@ -1209,7 +1215,6 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 MOVE    M2M$RAMROM_DATA, R6
                 MOVE    OPTM_ICOUNT, R3
                 ADD     @R3, R6                 ; R6: 1 word behind last item
-
 
                 ; ------------------------------------------------------------
                 ; Case (a): Submenus
@@ -1344,14 +1349,14 @@ _OPTM_CBS_I     MOVE    VDRIVES_NUM, R8
                 RBRA    _OPTM_CBS_RET, 1        ; case done; skip other cases
 
                 ; ------------------------------------------------------------
-                ; Case (b): Virtual Drives
+                ; Case (b-1): Virtual Drives
                 ; ------------------------------------------------------------
 
                 ; VD_DRVNO checks if the menu item is associated with a
                 ; virtual drive and returns the virtual drive number in R8
 _OPTM_CBS_VD    MOVE    R1, R8
                 RSUB    VD_DRVNO, 1
-                RBRA    _OPTM_CBS_RET, !C
+                RBRA    _OPTM_CBS_CTRM, !C
 
                 ; the position of the string for each virtual drive number
                 ; equals virtual drive number times @SCR$OSM_O_DX, because
@@ -1478,6 +1483,58 @@ _OPTM_CBS_4     MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 SUB     1, R8
                 ADD     R0, R8
                 MOVE    1, @R8
+
+                ; ------------------------------------------------------------
+                ; Case (b-2): CRTs/ROMs
+                ; ------------------------------------------------------------
+
+                ; CRTROM_M_NO checks if the menu item is associated with a
+                ; manual loadable CRT/ROM and returns the CRT/ROM number in R8
+_OPTM_CBS_CTRM  MOVE    R1, R8
+                RSUB    CRTROM_M_NO, 1
+                RBRA    _OPTM_CBS_RET, !C
+                MOVE    ERR_FATAL_INST6, R9
+                RSUB    CRTROM_CHK_NO, 1        ; double-check sys. stability
+
+                ; Calculate the address on the heap that we can use as a
+                ; scratch buffer for our string: (Amount of vdrives plus
+                ; amount of submenus) times @SCR$OSM_O_DX
+                MOVE    VDRIVES_NUM, R8
+                MOVE    @R8, R8
+                MOVE    OPTM_SCOUNT, R2
+                ADD     @R2, R8
+                MOVE    SCR$OSM_O_DX, R9
+                MOVE    @R9, R9
+                MOVE    R9, R5                  ; R5: @SCR$OSM_O_DX
+                SYSCALL(mulu, 1)                ; R10: result
+                MOVE    R10, R0
+                ADD     OPTM_HEAP, R0           ; R0: target address on heap
+
+                ; Has any CRT/ROM for the current line item been loaded
+                ; already? Yes: Then we replace the %s by the filename,
+                ; otherwise we replace it by the default string OPTM_S_CRTROM
+                ; from config.vhd
+                MOVE    CRTROM_MAN_LDF, R2
+                ADD     R8, R2
+                CMP     1, @R2
+                RBRA    _OPTM_CBS_CTRML, Z      ; yes: replace by filename
+
+                ; Replace %s by default value
+                MOVE    M2M$RAMROM_DEV, R3      ; replace %s w. OPTM_S_CRTROM
+                MOVE    M2M$CONFIG, @R3
+                MOVE    M2M$RAMROM_4KWIN, R3
+                MOVE    M2M$CFG_OPTM_CRSTR, @R3
+                MOVE    M2M$RAMROM_DATA, R8
+                RSUB    _OPTM_CBS_REPL, 1
+                MOVE    SCR$OSM_O_DX, R3        ; clear "%s is replaced" flag
+                MOVE    @R3, R3
+                SUB     1, R3
+                ADD     R0, R3
+                MOVE    0, @R8
+                RBRA    _OPTM_CBS_RET, 1
+
+                ; Replace %s 
+_OPTM_CBS_CTRML SYSCALL(exit, 1)
 
 _OPTM_CBS_RET   MOVE    R0, @--SP               ; lift R0 over the leave hump
                 SYSCALL(leave, 1)

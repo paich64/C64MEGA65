@@ -34,6 +34,12 @@ CRTROM_INIT     SYSCALL(enter, 1)
                 MOVE    R0, R9
                 RBRA    FATAL, 1
 
+                ; initialize "loaded" flags
+                MOVE    CRTROM_MAN_LDF, R8
+                MOVE    CRTROM_MAN_MAX, R9
+                XOR     R10, R10
+                SYSCALL(memset, 1)
+
 CRTROM_INIT_1   SYSCALL(leave, 1)
                 RET
 
@@ -118,6 +124,23 @@ _CRMN_C1        OR      0x0004, SR              ; set Carry
 _CRMN_RET       DECRB
                 RET
 
+
+; Check if the CRT/ROM item number in R8 is valid: Goes fatal if yes and
+; uses the error code in R9 in this case
+CRTROM_CHK_NO   INCRB
+
+                ; Unstable system state: R8 is larger than the amount of
+                ; available CRT/ROM menu items in config.vhd
+                MOVE    CRTROM_MAN_NUM, R0
+                MOVE    @R0, R0
+                CMP     R8, R0
+                RBRA    _CRRMCN_RET, !N
+                MOVE    ERR_FATAL_INST, R8
+                RBRA    FATAL, 1
+
+_CRRMCN_RET     DECRB
+                RET
+
 ; ----------------------------------------------------------------------------
 ; Handle manual CRT/ROM loading
 ; R8: CRT/ROM number
@@ -125,8 +148,16 @@ _CRMN_RET       DECRB
 
 HANDLE_CRTROM_M SYSCALL(enter, 1)
 
-                ; DEBUG
-                SYSCALL(exit, 1)
+                MOVE    ERR_FATAL_INST5, R9
+                RSUB    CRTROM_CHK_NO, 1
+
+                ; Remember which CRT/ROM has already been loaded so that we
+                ; can for example distinguish between showing the default
+                ; %s replacement or the filename when showing the OSM
+_HCR_1          MOVE    CRTROM_MAN_LDF, R0
+                ADD     R8, R0
+                MOVE    1, @R0                  ; 1=loaded
+
 
                 SYSCALL(leave, 1)
                 RET

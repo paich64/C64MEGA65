@@ -371,7 +371,7 @@ constant OPTM_ITEMS        : string :=
    " Use hardware slot\n"     &
    " Sim. 1750 REU 512KB\n"   &
    " Simulated cartridge:\n"  &
-   " %s\n"                    &
+   " %s\n"                    &  -- %s will be replaced by OPTM_S_CRTROM when no cartridge is loaded, otherwise by the filename of the cartridge 
    "\n"                       &
    " C64 Configuration\n"     &
    "\n"                       &
