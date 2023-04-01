@@ -14,27 +14,10 @@
 
 #include "menu_vars.asm"
 
-; ----------------------------------------------------------------------------
-; DEV-SUPPORT: QND CART LOADER
-; ----------------------------------------------------------------------------
-
-CRT_FILE        .BLOCK  FAT32$FDH_STRUCT_SIZE   ; file handle for .crt file
-
-; We use the QNICE cycle counter to update the screen every 1 second
-DBG_CYC_MID     .BLOCK 1
-DBG_CYC_HI      .BLOCK 1
-DBG_WAIT        .EQU   0x02FB                   ; 1 second
-DBG_TIMEOUT_VAR .BLOCK 1                        ; dbg win vanishes after tmout
-DBG_TIMEOUT_DEF .EQU   15                       ; 15 seconds
-DBG_SHOW        .BLOCK 1                        ; boolean: show debug window?
-
-; ----------------------------------------------------------------------------
-; Normal code / no debug
-; ----------------------------------------------------------------------------
-
 ; reset handling
 WELCOME_SHOWN   .BLOCK 1                        ; we need to trust that this
                                                 ; is 0 on system coldstart
+
 ; option menu
 OPTM_ICOUNT     .BLOCK 1                        ; amount of menu items
 OPTM_SCOUNT     .BLOCK 1                        ; amount of submenus

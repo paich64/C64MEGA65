@@ -191,14 +191,8 @@ _HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
                 MOVE    ERR_FATAL_HEAP2, R8     ; R9 contains the overrun
                 RSUB    FATAL, 1 
 
-                ; DEV-SUPPORT: QND CART LOADER
-                ; Make sure we have the original main screen coords for
-                ; example to be able to show the drive mount screen
-_HLP_HEAP2_OK   RSUB    SCR$OSM_OFF, 1
-                RSUB    RESTORE_COORDS, 1
-
                 ; run the menu
-                RSUB    ROSM_REM_OLD, 1         ; remember current settings
+_HLP_HEAP2_OK   RSUB    ROSM_REM_OLD, 1         ; remember current settings
                 RSUB    OPTM_SHOW, 1            ; fill VRAM
                 RSUB    SCR$OSM_O_ON, 1         ; make overlay visible
                 MOVE    OPTM_SELECTED, R9       ; use recently selected line

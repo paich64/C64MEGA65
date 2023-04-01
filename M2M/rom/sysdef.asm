@@ -200,7 +200,6 @@ M2M$VRAM_DATA       .EQU 0x0000     ; Device for VRAM: Data
 M2M$VRAM_ATTR       .EQU 0x0001     ; Device for VRAM: Attributes
 M2M$CONFIG          .EQU 0x0002     ; Static Shell config data (config.vhd)
 M2M$ASCAL_PPHASE    .EQU 0x0003     ; ascal.vhd Polyphase filter RAM
-M2M$HYPERRAM        .EQU 0x0004     ; Device for the built-in 8MB of HyperRAM
 
 M2M$SYS_INFO        .EQU 0x00FF     ; Device for System Info
 
