@@ -18,7 +18,7 @@
 ; debug mode so that the firmware runs in RAM and can be changed/loaded using
 ; the standard QNICE Monitor mechanisms such as "M/L" or QTransfer.
 
-#define RELEASE
+#undef RELEASE
 
 ; ----------------------------------------------------------------------------
 ; Firmware: M2M system
@@ -70,9 +70,11 @@ SUBMENU_SUMMARY XOR     R8, R8                  ; R8 = 0 = no custom string
 ; Called by the file- and directory browser. Used to make sure that the 
 ; browser is only showing valid files and directories.
 ;
+;
 ; Input:
 ;   R8: Name of the file in capital letters
 ;   R9: 0=file, 1=directory
+;  R10: Context (CTX_* constants in sysdef.asm)
 ; Output:
 ;   R8: 0=do not filter file, i.e. show file
 FILTER_FILES    INCRB
@@ -81,15 +83,28 @@ FILTER_FILES    INCRB
                 CMP     1, R9                   ; do not filter directories
                 RBRA    _FFILES_RET_0, Z
 
+                ; Context: Mount virtual drive
+                CMP     CTX_MOUNT_DISKIMG, R10
+                RBRA    _FFILES_1, !Z
+
                 ; does this file have the ".D64" file extension?
                 MOVE    C64_IMGFILE_D64, R9
                 RSUB    M2M$CHK_EXT, 1
                 RBRA    _FFILES_RET_0, C        ; yes: do not filter it
 
-                MOVE    1, R8                   ; no: filter it
+_FFILES_DOFLT   MOVE    1, R8                   ; no: filter it
                 RBRA    _FFILES_RET, 1
 
-_FFILES_RET_0   XOR     R8, R8
+                ; Context: Load cartridge ROM file
+_FFILES_1       CMP     CTX_LOAD_ROM, R10
+                RBRA    _FFILES_RET_0, !Z       ; do not filter in other CTXs
+
+                ; does this file have the ".CRT" file extension
+                MOVE    C64_CRTFILE, R9
+                RSUB    M2M$CHK_EXT, 1
+                RBRA    _FFILES_DOFLT, !C       ; no: filter it
+
+_FFILES_RET_0   XOR     R8, R8                  ; do not filter
 
 _FFILES_RET     MOVE    R0, R9
                 DECRB
@@ -198,9 +213,9 @@ WRN_NO_D64      .ASCII_P "This core uses D64 disk images.\n\n"
                 .ASCII_W "Press Space to continue."
 
 ; Disk image file extensions (need to be upper case)
-C64_IMGFILE_D64  .ASCII_W ".D64"
-C64_IMGFILE_G64  .ASCII_W ".G64"
-C64_IMGFILE_D81  .ASCII_W ".D81"
+C64_IMGFILE_D64 .ASCII_W ".D64"
+C64_IMGFILE_G64 .ASCII_W ".G64"
+C64_IMGFILE_D81 .ASCII_W ".D81"
 
 ; C64 disk image types
 C64_IMGTYPE_D64 .EQU    0x0000  ; 1541 emulated GCR: D64
@@ -214,6 +229,9 @@ C64_IMGTYPE_D81 .EQU    0x0002  ; 1581: D81
 D64_VARIANT_CNT .EQU    2
 D64_STDSIZE_L   .DW     0xAB00, 0x0000
 D64_STDSIZE_H   .DW     0x0002, 0x0003
+
+; Cartridge ROM image extension
+C64_CRTFILE     .ASCII_W ".CRT"
 
 ; ----------------------------------------------------------------------------
 ; Variables: Need to be located in RAM

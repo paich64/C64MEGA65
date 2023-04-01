@@ -3,7 +3,14 @@
 ;
 ; Directory Browser (with sorted output)
 ;
-; done by sy2002 in 2022 and licensed under GPL v3
+; Change in 2023: While this was originally made to be reusable also outside
+; of the context of the Shell, from now on dirbrowse.asm is dependent on the
+; global variable SF_CONTEXT in shell_vars.asm which will be handed over as a
+; parameter R10 to the filter function in _DIRBR_FILTWRAP. To undo this
+; change, delete this comment and everything tagged with SF_CONTEXT in
+; _DIRBR_FILTWRAP.
+;
+; done by sy2002 in 2022, 2023 and licensed under GPL v3
 ; ****************************************************************************
 
 #include "llist.asm"
@@ -361,6 +368,7 @@ _DIRBR_IAN_RET  DECRB
 ; that does not need to be aware of the SLL semantics
 _DIRBR_FILTWRAP INCRB
                 MOVE    R9, R0
+                MOVE    R10, R6                 ; SF_CONTEXT
         
                 ; copy the string to the stack and make it upper case
                 ADD     SLL$DATA, R8            ; R8: pointer to string
@@ -380,13 +388,19 @@ _DIRBR_FILTWRAP INCRB
 
                 MOVE    R3, R9
 
+                ; SF_CONTEXT
+                MOVE    SF_CONTEXT, R10
+                MOVE    @R10, R10
+
                 ; call filter function (callback function)
                 ; R8: filename in upper-case
                 ; R9: 0=file/1=directory
+                ; R10: SF_CONTEXT
                 MOVE    _DIRBR_FILTERFN, R1
                 ASUB    @R1, 1
 
                 ADD     R2, SP                  ; restore stack
                 MOVE    R0, R9
+                MOVE    R6, R10                 ; SF_CONTEXT
                 DECRB
                 RET

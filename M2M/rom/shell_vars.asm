@@ -132,3 +132,6 @@ VDRIVES_FLUSH_L .BLOCK  VDRIVES_MAX
 VDRIVES_ITERSIZ .BLOCK  VDRIVES_MAX
 VDRIVES_FL_4K   .BLOCK  VDRIVES_MAX
 VDRIVES_FL_OFS  .BLOCK  VDRIVES_MAX
+
+; System to handle manually and automatically loaded cartridges and ROMs
+CRTROM_MAN_NUM  .BLOCK 1                        ; amount of manual CRTs/ROMs

@@ -315,6 +315,8 @@ constant SEL_OPTM_MOUNT_STR   : std_logic_vector(15 downto 0) := x"0308";
 constant SEL_OPTM_DIMENSIONS  : std_logic_vector(15 downto 0) := x"0309";
 constant SEL_OPTM_SAVING_STR  : std_logic_vector(15 downto 0) := x"030A";
 constant SEL_OPTM_HELP        : std_logic_vector(15 downto 0) := x"0310";
+constant SEL_OPTM_CRTROM      : std_logic_vector(15 downto 0) := x"0311";
+constant SEL_OPTM_CRTROM_STR  : std_logic_vector(15 downto 0) := x"0312";
 
 -- !!! DO NOT TOUCH !!! Configuration constants for OPTM_GROUPS (shell.asm and menu.asm expect them to be like this)
 constant OPTM_G_TEXT       : integer := 0;                 -- text that cannot be selected
@@ -329,8 +331,8 @@ constant OPTM_G_HEADLINE   : integer := 16#01000#;         -- like OPTM_G_TEXT b
 constant OPTM_G_SINGLESEL  : integer := 16#08000#;         -- single select item
 constant OPTM_G_MOUNT_DRV  : integer := 16#08800#;         -- line item means: mount drive; first occurance = drive 0, second = drive 1, ...
 constant OPTM_G_HELP       : integer := 16#0A000#;         -- line item means: help screen; first occurance = WHS(1), second = WHS(2), ...
-constant OPTM_G_SUBMENU    : integer := 16#0C000#;        -- starts/ends a section that is treated as submenu
-constant OPTM_G_LOAD_ROM   : integer := 16#18000#;        -- line item means: load ROM; first occurance = rom 0, second = rom 1, ...
+constant OPTM_G_SUBMENU    : integer := 16#0C000#;         -- starts/ends a section that is treated as submenu
+constant OPTM_G_LOAD_ROM   : integer := 16#18000#;         -- line item means: load ROM; first occurance = rom 0, second = rom 1, ...
 -- @TODO/REMINDER: As soon as we extend the OSM system so that we support loading ROMs and other things that need to be ignored
 -- when saving settings: Make sure to extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly:
 --     OPTM_G_SUBMENU
@@ -339,8 +341,9 @@ constant OPTM_G_LOAD_ROM   : integer := 16#18000#;        -- line item means: lo
 -- START YOUR CONFIGURATION BELOW THIS LINE:
 
 -- Strings with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
-constant OPTM_S_MOUNT      : string := "<Mount Drive>";  -- no disk image mounted, yet
-constant OPTM_S_SAVING     : string := "<Saving>";       -- the internal write cache is dirty and not yet written back to the SD card
+constant OPTM_S_MOUNT      : string := "<Mount Drive>";     -- no disk image mounted, yet
+constant OPTM_S_CRTROM     : string := "<Load Cartridge>";  -- no cartridge loaded, yet
+constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal write cache is dirty and not yet written back to the SD card
 
 -- Size of menu and menu items
 -- CAUTION: 1. End each line (also the last one) with a \n and make sure empty lines / separator lines are only consisting of a "\n"
@@ -368,7 +371,7 @@ constant OPTM_ITEMS        : string :=
    " Use hardware slot\n"     &
    " Sim. 1750 REU 512KB\n"   &
    " Simulated cartridge:\n"  &
-   " <Load Cartridge>\n"      &
+   " %s\n"                    &
    "\n"                       &
    " C64 Configuration\n"     &
    "\n"                       &
@@ -444,8 +447,8 @@ constant OPTM_G_VGA_RETRO     : integer := 15;
 constant OPTM_G_ABOUT_HELP    : integer := 16;
 
 -- !!! DO NOT TOUCH !!!
-constant OPTM_GTC          : natural := 16;
-type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC- 1;
+constant OPTM_GTC          : natural := 17;
+type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC - 1;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
@@ -456,7 +459,7 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_EXP_PORT      + OPTM_G_STDSEL,
                                              OPTM_G_EXP_PORT,
                                              OPTM_G_EXP_PORT,
-                                             OPTM_G_MOUNT_CRT     + OPTM_G_SINGLESEL,
+                                             OPTM_G_MOUNT_CRT     + OPTM_G_LOAD_ROM,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
@@ -626,6 +629,7 @@ begin
             when SEL_CFG_FILE          => data_o <= str2data(CFG_FILE);
             when SEL_OPTM_ITEMS        => data_o <= str2data(OPTM_ITEMS);
             when SEL_OPTM_MOUNT_STR    => data_o <= str2data(OPTM_S_MOUNT);
+            when SEL_OPTM_CRTROM_STR   => data_o <= str2data(OPTM_S_CRTROM);
             when SEL_OPTM_SAVING_STR   => data_o <= str2data(OPTM_S_SAVING);
             when SEL_OPTM_GROUPS       => data_o <= std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(15)) & 
                                                     std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(14)) & "0" & 
@@ -637,6 +641,7 @@ begin
             when SEL_OPTM_MOUNT_DRV    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(11));
             when SEL_OPTM_HELP         => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(13));
             when SEL_OPTM_SINGLESEL    => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(15));
+            when SEL_OPTM_CRTROM       => data_o <= x"000" & "000" & std_logic(to_unsigned(OPTM_GROUPS(index), OPTM_GTC)(16));
             when SEL_OPTM_ICOUNT       => data_o <= x"00" & std_logic_vector(to_unsigned(OPTM_SIZE, 8));
             when SEL_OPTM_DIMENSIONS   => data_o <= getDXDY(OPTM_DX, OPTM_DY, index);
 

@@ -223,7 +223,7 @@ _VDDTY_RET      MOVE    R0, R8
 ;
 ; Returns: Carry=1 if active, else Carry=0
 ;          R8: Amount of vdrives
-VD_ACTIVE       INCRB                           ; TEMP XYZ
+VD_ACTIVE       INCRB
 
                 MOVE    VDRIVES_NUM, R8
                 MOVE    @R8, R8

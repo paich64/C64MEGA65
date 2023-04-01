@@ -105,6 +105,7 @@ _SS_INITFH_L    MOVE    @R8++, R0
                 RSUB    SCR$INIT, 1             ; retrieve VHDL generics
                 RSUB    FRAME_FULLSCR, 1        ; draw fullscreen frame
                 RSUB    VD_INIT, 1              ; virtual drive system
+                RSUB    CRTROM_INIT, 1          ; CRT/ROM loader system
                 RSUB    KEYB$INIT, 1            ; keyboard library
                 RSUB    HELP_MENU_INIT, 1       ; menu library
 
@@ -177,21 +178,30 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
 ; needs to be in line with VDRIVES_MAX (see shell_vars.asm)
 HANDLES_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
 
-; Handle mounting:
+; Handle mounting of virtual drives and manual loading of CRTs/ROMs
 ;
 ; Input:
-;   R8 contains the drive number
+;   R8 contains the drive or CRT/ROM number
+;   R9 is for virtual drives only:
 ;   R9=OPTM_KEY_SELECT:
 ;      Just replace the disk image, if it has been mounted
 ;      before without unmounting the drive (aka without
 ;      resetting the drive/"switching the drive on/off")
 ;   R9=OPTM_KEY_SELALT:
 ;      Unmount the drive (aka "switch the drive off")
+;  R10=Mode selector:
+;      0: Virtual drives
+;      1: Manually loadable CRTs/ROMs
 HANDLE_MOUNTING SYSCALL(enter, 1)
 
                 MOVE    R8, R7                  ; R7: drive number
-                MOVE    R9, R6                  ; R6: mount mode
+                MOVE    R9, R6                  ; R6: key to trigger mounting
+                MOVE    R10, R5                 ; R5: mount mode
 
+                CMP     1, R5                   ; CRT/ROM mode?
+                RBRA    _HM_START_MOUNT, Z      ; yes
+
+                ; we treat already mounted drives differently
                 RSUB    VD_MOUNTED, 1           ; C=1: the given drive in R8..
                 RBRA    _HM_MOUNTED, C          ; ..is already mounted
 
@@ -266,8 +276,12 @@ _HM_SDMOUNTED1  MOVE    SD_CHANGED, R0
                 ; currently are not supporting yet any other type of mounting
                 ; such as modules, ROM images, etc.
 _HM_SDMOUNTED2  MOVE    SF_CONTEXT, R8
+                CMP     0, R5                   ; virtual drive mode?
+                RBRA    _HM_SDMOUNTEDX1, !Z
                 MOVE    CTX_MOUNT_DISKIMG, @R8
-                RSUB    SELECT_FILE, 1
+                RBRA    _HM_SDMOUNTEDX2, 1
+_HM_SDMOUNTEDX1 MOVE    CTX_LOAD_ROM, @R8 
+_HM_SDMOUNTEDX2 RSUB    SELECT_FILE, 1
 
                 ; No error and no special status
                 CMP     0, R9
@@ -1204,6 +1218,7 @@ FRAME_FULLSCR   SYSCALL(enter, 1)
 #include "selectfile.asm"
 #include "strings.asm"
 #include "vdrives.asm"
+#include "crts-and-roms.asm"
 #include "whs.asm"
 
 ; framework libraries

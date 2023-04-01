@@ -1071,32 +1071,43 @@ OPTM_CB_SEL     INCRB
                 RSUB    HANDLE_HELP, 1
                 RBRA    _OPTMC_NOMNT_1, C       ; if help then no drive mount
 
-                ; Special treatment for drive-mount items: Drive-mount items
-                ; are per definition also single-select items
+                ; Special treatment for drive-mount items and for manual
+                ; CRT and ROM load items: These type of items are per
+                ; definition also single-select items
                 MOVE    R8, R0                  ; R8: selected menu group
                 MOVE    R0, R1                  ; R1: save selected group
                 MOVE    R9, R2                  ; R2: save select item in grp
                 AND     OPTM_SINGLESEL, R0      ; single-select item?
                 RBRA    _OPTMC_NOMNT_1, Z       ; no: proceed to std. beh.
+
+                ; Virtual drive mounting?
                 RSUB    VD_ACTIVE, 1            ; are there any vdrives?
-                RBRA    _OPTMC_NOMNT_0, !C      ; no: proceed to std. beh.
+                RBRA    _OPTMC_CHKCR, !C        ; no: proceed to CRT/ROM chk
                 MOVE    R1, R8                  ; restore R8
                 RSUB    VD_DRVNO, 1             ; is menu item a mount item?
-                RBRA    _OPTMC_NOMNT_0, !C      ; no: : proceed to std. beh.
+                RBRA    _OPTMC_CHKCR, !C        ; no: proceed to CRT/ROM chk
 
-                ; Handle mounting
-                ; Input:
-                ;   R8 contains the drive number at this point
-                ;   R9=OPTM_KEY_SELECT:
-                ;      Just replace the disk image, if it has been mounted
-                ;      before without unmounting the drive (aka without
-                ;      resetting the drive/"switching the drive on/off")
-                ;   R9=OPTM_KEY_SELALT:
-                ;      Unmount the drive (aka "switch the drive off")
-                ;
+                ; Handle virtual drive mounting
                 ; It is important that the standard behavior runs after the
                 ; mounting is done, this is why we do RSUB and not RBRA
-                MOVE    R10, R9
+_OPTMC_MOUNT    MOVE    R10, R9                 ; selection mode
+                XOR     R10, R10                ; virtual drive mode
+                RSUB    HANDLE_MOUNTING, 1
+                RBRA    _OPTMC_NOMNT_0, 1       ; standard behavior
+
+                ; Manual CRT or ROM loading?
+_OPTMC_CHKCR    RSUB    CRTROM_ACTIVE, 1        ; any manual CRTs/ROMs avail.?
+                RBRA    _OPTMC_NOMNT_0, !C      ; no: proceed to std. behvr.
+                MOVE    R1, R8                  ; restore R8
+                RSUB    CRTROM_M_NO, 1          ; is menu item man. CRT/ROM?
+                RBRA    _OPTMC_NOMNT_0, !C      ; no: proceed to std. behvr.
+
+                ; Handle manual CRT/ROM loading
+                ; R8 contains the CRT/ROM number at this point
+                ; It is important that the standard behavior runs after the
+                ; loading is done
+                MOVE    R10, R9                 ; selection mode
+                MOVE    1, R10                  ; CRT/ROM load mode
                 RSUB    HANDLE_MOUNTING, 1
 
 _OPTMC_NOMNT_0  MOVE    R1, R8                  ; restore R8

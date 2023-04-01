@@ -114,6 +114,8 @@ ERR_F_NEWLINE   .ASCII_P "config.vhd: Each line in OPTM_ITEMS needs\n"
                 .ASCII_W "to be terminated by a newline character.\n"
 ERR_F_NO_S      .ASCII_W "M2M$RPL_S: No %s found in source string.\n"
 
+ERR_F_CR_M_CNT  .ASCII_W "globals.vhd: C_CRTROM_MAN_NUM greater 16\n"
+
 ; ------------------------------------------------------------------|
 ; @TODO: Adjust strings so that every string ends at the |
 ; Only this guarantees that everything fits correctly on the screen

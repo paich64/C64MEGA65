@@ -200,6 +200,7 @@ M2M$VRAM_DATA       .EQU 0x0000     ; Device for VRAM: Data
 M2M$VRAM_ATTR       .EQU 0x0001     ; Device for VRAM: Attributes
 M2M$CONFIG          .EQU 0x0002     ; Static Shell config data (config.vhd)
 M2M$ASCAL_PPHASE    .EQU 0x0003     ; ascal.vhd Polyphase filter RAM
+M2M$HYPERRAM        .EQU 0x0004     ; Device for the built-in 8MB of HyperRAM
 
 M2M$SYS_INFO        .EQU 0x00FF     ; Device for System Info
 
@@ -211,9 +212,10 @@ M2M$RAMROM_DATA     .EQU 0x7000     ; 4k MMIO window to read/write
 ; ----------------------------------------------------------------------------
 
 ; Selectors (4k windows)
-M2M$SYS_VDRIVES     .EQU 0x0000     ; vdrives constants
+M2M$SYS_VDRIVES     .EQU 0x0000     ; vdrives constants (globals.vhd)
 M2M$SYS_VGA         .EQU 0x0010     ; gfx adaptor 0: VGA
 M2M$SYS_HDMI        .EQU 0x0011     ; gfx adaptor 1: HDMI
+M2M$SYS_CRTSANDROMS .EQU 0x0020     ; sim. CRTs. & ROMs (globals.vhd)
 
 ; The following read-only registers are meant to be used by the QNICE
 ; firmware. They enable the ability to specify the hardware screen resolution
@@ -247,6 +249,8 @@ M2M$CFG_OPTM_MSTR   .EQU 0x0308     ; Mount string to display instead of %s
 M2M$CFG_OPTM_DIM    .EQU 0x0309     ; DX and DY of Options/Help menu
 M2M$CFG_OPTM_SSTR   .EQU 0x030A     ; Saving string to display instead of %s
 M2M$CFG_OPTM_HELP   .EQU 0x0310     ; Menu item = show a help menu
+M2M$CFG_OPTM_CRTROM .EQU 0x0311     ; Menu item = manually load CRT/ROM
+M2M$CFG_OPTM_CRSTR  .EQU 0x0312     ; CRT/ROM load str. to show instead of %s
 
 ; M2M$CFG_WHS
 
@@ -292,7 +296,7 @@ M2M$CFG_AUSE_AUTO   .EQU 0x0002     ; auto-sync via M2M$CFG_ASCAL_USAGE
 ; Virtual Drives Device for MiSTer "SD" interface (vdrives.vhd)
 ; ----------------------------------------------------------------------------
 
-; sysinfo addresses
+; sysinfo addresses (data is configured by the user in globals.vhd)
 VD_NUM              .EQU 0x7000     ; amount of virtual drives
 VD_DEVICE           .EQU 0x7001     ; address of the vdrives.vhd device
 VD_RAM_BUFFERS      .EQU 0x7100     ; array of RAM buffers to store dsk images
@@ -333,6 +337,14 @@ VD_CACHE_FLUSH_ST   .EQU 0x700E     ; cache flushing can start now
 VD_CACHE_FLUSH_DE   .EQU 0x700F     ; delay in ms between VD_WR and FLUSH_ST
 
 ; ----------------------------------------------------------------------------
+; Automatically and manually loadable cartridges and ROMs
+; ----------------------------------------------------------------------------
+
+; sysinfo addresses (data is configured by the user in globals.vhd)
+CRTROM_MAN_NUM_A    .EQU 0x7000     ; amount of manually loadable CRTs/ROMs
+CRTROM_MAN_BUFFERS  .EQU 0x7100     ; array of records with buffer infos
+
+; ----------------------------------------------------------------------------
 ; Situation and context identifiers for custom messages
 ; ----------------------------------------------------------------------------
 
@@ -344,7 +356,6 @@ CTX_MASK_PARAM      .EQU 0x00FF     ; used to mask out the higher byte
 ; to filter for the right types and to output context-sensitive messages
 CTX_MOUNT_DISKIMG   .EQU 0x0100     ; trying to mount a disk image
 CTX_LOAD_ROM        .EQU 0x0200     ; trying to mount a rom image
-
 
 ; The filter function returned an empty linked list. This happens when there
 ; is no file that fits the criteria in the root folder and additionally the

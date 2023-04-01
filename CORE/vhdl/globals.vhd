@@ -30,7 +30,7 @@ constant QNICE_FIRMWARE_MONITOR   : string  := "../../../M2M/QNICE/monitor/monit
 constant QNICE_FIRMWARE_M2M       : string  := "../../../CORE/m2m-rom/m2m-rom.rom";         -- release
 
 -- Select firmware here
-constant QNICE_FIRMWARE           : string  := QNICE_FIRMWARE_M2M;
+constant QNICE_FIRMWARE           : string  := QNICE_FIRMWARE_MONITOR;
 
 ----------------------------------------------------------------------------------------------------------
 -- Clock Speed(s)
@@ -87,6 +87,12 @@ constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     --
 constant C_DEV_C64_CRT        : std_logic_vector(15 downto 0) := x"0103";     -- SW cartridges (*.CRT)
 
 ----------------------------------------------------------------------------------------------------------
+-- Commodore 64 specific RAM addresses
+----------------------------------------------------------------------------------------------------------
+
+constant C_HR_C64_CRT         : std_logic_vector(15 downto 0) := x"0200";     -- 4k window 0x0200 equals HyperRAM start address 0x00200000 (words) 
+
+----------------------------------------------------------------------------------------------------------
 -- Virtual Drive Management System
 ----------------------------------------------------------------------------------------------------------
 
@@ -102,6 +108,39 @@ constant C_VDNUM              : natural := 1;                                   
 constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := C_DEV_C64_VDRIVES;    -- device number of vdrives.vhd device
 constant C_VD_BUFFER          : vd_buf_array := (  C_DEV_C64_MOUNT,
                                                    x"EEEE");                           -- Always finish the array using x"EEEE"
+
+----------------------------------------------------------------------------------------------------------
+-- System for handling simulated cartridges and ROM loaders
+----------------------------------------------------------------------------------------------------------
+
+type crtrom_buf_array is array(natural range<>) of std_logic_vector;
+
+-- Cartridges and ROMs can be stored into QNICE devices, HyperRAM and SDRAM
+constant C_CRTROMTYPE_DEVICE     : std_logic_vector(15 downto 0) := x"0000";
+constant C_CRTROMTYPE_HYPERRAM   : std_logic_vector(15 downto 0) := x"0001";
+constant C_CRTROMTYPE_SDRAM      : std_logic_vector(15 downto 0) := x"0002";           -- @TODO/RESERVED for future R4 boards
+
+-- Manually loadable ROMs and cartridges as defined in config.vhd
+-- If you are not using this, then make sure that:
+--    C_CRTROMNUM    is 0
+--    C_CRTROMS      is (x"EEEE", x"EEEE", x"EEEE")
+-- Each entry of the array consists of two constants:
+--    1) Type of CRT or ROM: Load to a QNICE device, load into HyperRAM, load into SDRAM
+--    2) If (1) = QNICE device, then this is the device ID
+--       else it is a 4k window in HyperRAM or in SDRAM
+constant C_CRTROM_MAN_NUM        : natural := 1;                                       -- amount of manually loadable ROMs and carts. Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_HYPERRAM, C_HR_C64_CRT,
+                                                         x"EEEE");                     -- Always finish the array using x"EEEE"
+
+-- @TODO: See MiSTer2MEGA65/doc/temp/romloading.md: At this moment, we are only supporting
+-- manually loaded ROMs and cartridges, so we would need a second array that is accessed via
+-- a different address (see framework.vhd section "when C_CRTSANDROMS") and more Shell code to
+-- support automatically loaded mandatory and optional ROMs.
+-- The array will be something along these lines (to be fine-tuned):
+-- Entry 1) Storage type to load to (device, HyperRAM, SDRAM)
+-- Entry 2) device ID or 4k window
+-- Entry 3) Flags, such as mandatory or not, how to treat the situation of a mandatory ROM is not found, etc.
+-- Entry 4) Error message(s) for mandatory but not found situations (?)
 
 ----------------------------------------------------------------------------------------------------------
 -- Audio filters

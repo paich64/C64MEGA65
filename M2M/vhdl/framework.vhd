@@ -198,6 +198,7 @@ constant C_DEV_SYS_INFO       : std_logic_vector(15 downto 0) := x"00FF";
 constant C_SYS_DRIVES         : std_logic_vector(15 downto 0) := x"0000";
 constant C_SYS_VGA            : std_logic_vector(15 downto 0) := x"0010";
 constant C_SYS_HDMI           : std_logic_vector(15 downto 0) := x"0011";
+constant C_CRTSANDROMS        : std_logic_vector(15 downto 0) := x"0020";
 
 ---------------------------------------------------------------------------------------------
 -- Clocks and active high reset signals for each clock domain
@@ -712,6 +713,14 @@ begin
                               qnice_ramrom_data_in <= C_VD_BUFFER(to_integer(unsigned(qnice_ramrom_addr_o(3 downto 0))));
                            end if;
                      end case;
+                     
+                  -- Simulated cartridges and ROMs
+                  when C_CRTSANDROMS =>
+                     if qnice_ramrom_addr_o(11 downto 0) = x"000" then
+                        qnice_ramrom_data_in <= std_logic_vector(to_unsigned(C_CRTROM_MAN_NUM, 16));
+                     elsif qnice_ramrom_addr_o(11 downto 4) = x"10" then
+                        qnice_ramrom_data_in <= C_CRTROMS_MAN(to_integer(unsigned(qnice_ramrom_addr_o(3 downto 0))));
+                     end if;
 
                   -- Graphics card VGA
                   when C_SYS_VGA =>
