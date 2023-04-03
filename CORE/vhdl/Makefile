@@ -1,9 +1,9 @@
-SRC += crt2hyperram.vhd
+SRC += crt_loader.vhd
 SRC += ../../M2M/vhdl/memory/avm_decrease.vhd
 SRC += ../../M2M/vhdl/memory/avm_rom.vhd
 
 
-DUT ?= crt2hyperram
+DUT ?= crt_loader
 GENERIC ?= -gG_INIT_FILE=../../../test.crt
 
 

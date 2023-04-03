@@ -333,14 +333,14 @@ signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
-signal qnice_crt_status  : std_logic_vector(15 downto 0);
-signal qnice_crt_fs_lo   : std_logic_vector(15 downto 0);
-signal qnice_crt_fs_hi   : std_logic_vector(15 downto 0);
-signal qnice_crt_hrs_lo  : std_logic_vector(15 downto 0);
-signal qnice_crt_hrs_hi  : std_logic_vector(15 downto 0);
-signal qnice_crt_parsest : std_logic_vector(15 downto 0);
-signal qnice_crt_parsee1 : std_logic_vector(15 downto 0);
-signal qnice_crt_parsee2 : std_logic_vector(15 downto 0);
+signal qnice_req_status   : std_logic_vector(15 downto 0);
+signal qnice_req_fs_lo    : std_logic_vector(15 downto 0);
+signal qnice_req_fs_hi    : std_logic_vector(15 downto 0);
+signal qnice_req_hrs_lo   : std_logic_vector(15 downto 0);
+signal qnice_req_hrs_hi   : std_logic_vector(15 downto 0);
+signal qnice_resp_parsest : std_logic_vector(15 downto 0);
+signal qnice_resp_parsee1 : std_logic_vector(15 downto 0);
+signal qnice_resp_parsee2 : std_logic_vector(15 downto 0);
 
 begin
 
@@ -627,9 +627,9 @@ begin
          when C_DEV_C64_CRT =>
             if qnice_dev_ce_i = '1' and qnice_dev_we_i = '0' and qnice_dev_addr_i(27 downto 12) = C_CRT_CASREG then
                case qnice_dev_addr_i(11 downto 0) is
-                  when C_CRT_PARSEST => qnice_dev_data_o <= qnice_crt_parsest;
-                  when C_CRT_PARSEE1 => qnice_dev_data_o <= qnice_crt_parsee1;
-                  when C_CRT_PARSEE2 => qnice_dev_data_o <= qnice_crt_parsee2;
+                  when C_CRT_PARSEST => qnice_dev_data_o <= qnice_resp_parsest;
+                  when C_CRT_PARSEE1 => qnice_dev_data_o <= qnice_resp_parsee1;
+                  when C_CRT_PARSEE2 => qnice_dev_data_o <= qnice_resp_parsee2;
                   when others => null;
                end case;
             end if;
@@ -647,21 +647,21 @@ begin
             qnice_dev_addr_i(27 downto 12) = C_CRT_CASREG
          then
             case qnice_dev_addr_i(11 downto 0) is
-               when C_CRT_STATUS => qnice_crt_status <= qnice_dev_data_i;
-               when C_CRT_FS_LO  => qnice_crt_fs_lo  <= qnice_dev_data_i;
-               when C_CRT_FS_HI  => qnice_crt_fs_hi  <= qnice_dev_data_i;
-               when C_CRT_HRS_LO => qnice_crt_hrs_lo <= qnice_dev_data_i;
-               when C_CRT_HRS_HI => qnice_crt_hrs_hi <= qnice_dev_data_i;
+               when C_CRT_STATUS => qnice_req_status <= qnice_dev_data_i;
+               when C_CRT_FS_LO  => qnice_req_fs_lo  <= qnice_dev_data_i;
+               when C_CRT_FS_HI  => qnice_req_fs_hi  <= qnice_dev_data_i;
+               when C_CRT_HRS_LO => qnice_req_hrs_lo <= qnice_dev_data_i;
+               when C_CRT_HRS_HI => qnice_req_hrs_hi <= qnice_dev_data_i;
                when others => null;
             end case;
          end if;
 
          if RESET_M2M_N = '0' then
-            qnice_crt_status <= (others => '0');
-            qnice_crt_fs_lo  <= (others => '0');
-            qnice_crt_fs_hi  <= (others => '0');
-            qnice_crt_hrs_lo <= (others => '0');
-            qnice_crt_hrs_hi <= (others => '0');
+            qnice_req_status <= (others => '0');
+            qnice_req_fs_lo  <= (others => '0');
+            qnice_req_fs_hi  <= (others => '0');
+            qnice_req_hrs_lo <= (others => '0');
+            qnice_req_hrs_hi <= (others => '0');
          end if;
       end if;
    end process;
@@ -731,44 +731,44 @@ begin
 
    i_sw_cartridge_wrapper : entity work.sw_cartridge_wrapper
    port map (
-      qnice_clk_i            => qnice_clk_i,
-      qnice_rst_i            => qnice_rst_i,
-      qnice_crt_status_i     => qnice_crt_status,
-      qnice_crt_fs_lo_i      => qnice_crt_fs_lo,
-      qnice_crt_fs_hi_i      => qnice_crt_fs_hi,
-      qnice_crt_hrs_lo_i     => qnice_crt_hrs_lo,
-      qnice_crt_hrs_hi_i     => qnice_crt_hrs_hi,
-      qnice_crt_parsest_o    => qnice_crt_parsest,
-      qnice_crt_parsee1_o    => qnice_crt_parsee1,
-      qnice_crt_parsee2_o    => qnice_crt_parsee2,
-      main_clk_i             => main_clk,
-      main_rst_i             => main_rst,
-      main_crt_loading_o     => main_crt_loading,
-      main_crt_id_o          => main_crt_id,
-      main_crt_exrom_o       => main_crt_exrom,
-      main_crt_game_o        => main_crt_game,
-      main_crt_bank_laddr_o  => main_crt_bank_laddr,
-      main_crt_bank_size_o   => main_crt_bank_size,
-      main_crt_bank_num_o    => main_crt_bank_num,
-      main_crt_bank_type_o   => main_crt_bank_type,
-      main_crt_bank_raddr_o  => main_crt_bank_raddr,
-      main_crt_bank_wr_o     => main_crt_bank_wr,
-      main_crt_bank_lo_i     => main_crt_bank_lo,
-      main_crt_bank_hi_i     => main_crt_bank_hi,
-      main_ram_addr_i        => std_logic_vector(main_ram_addr),
-      main_crt_lo_ram_data_o => main_crt_lo_ram_data,
-      main_crt_hi_ram_data_o => main_crt_hi_ram_data,
-      hr_clk_i               => hr_clk_i,
-      hr_rst_i               => hr_rst_i,
-      hr_crt_write_o         => hr_crt_write,
-      hr_crt_read_o          => hr_crt_read,
-      hr_crt_address_o       => hr_crt_address,
-      hr_crt_writedata_o     => hr_crt_writedata,
-      hr_crt_byteenable_o    => hr_crt_byteenable,
-      hr_crt_burstcount_o    => hr_crt_burstcount,
-      hr_crt_readdata_i      => hr_crt_readdata,
-      hr_crt_readdatavalid_i => hr_crt_readdatavalid,
-      hr_crt_waitrequest_i   => hr_crt_waitrequest
+      qnice_clk_i          => qnice_clk_i,
+      qnice_rst_i          => qnice_rst_i,
+      qnice_req_status_i   => qnice_req_status,
+      qnice_req_fs_lo_i    => qnice_req_fs_lo,
+      qnice_req_fs_hi_i    => qnice_req_fs_hi,
+      qnice_req_hrs_lo_i   => qnice_req_hrs_lo,
+      qnice_req_hrs_hi_i   => qnice_req_hrs_hi,
+      qnice_resp_parsest_o => qnice_resp_parsest,
+      qnice_resp_parsee1_o => qnice_resp_parsee1,
+      qnice_resp_parsee2_o => qnice_resp_parsee2,
+      main_clk_i           => main_clk,
+      main_rst_i           => main_rst,
+      main_loading_o       => main_crt_loading,
+      main_id_o            => main_crt_id,
+      main_exrom_o         => main_crt_exrom,
+      main_game_o          => main_crt_game,
+      main_bank_laddr_o    => main_crt_bank_laddr,
+      main_bank_size_o     => main_crt_bank_size,
+      main_bank_num_o      => main_crt_bank_num,
+      main_bank_type_o     => main_crt_bank_type,
+      main_bank_raddr_o    => main_crt_bank_raddr,
+      main_bank_wr_o       => main_crt_bank_wr,
+      main_bank_lo_i       => main_crt_bank_lo,
+      main_bank_hi_i       => main_crt_bank_hi,
+      main_ram_addr_i      => std_logic_vector(main_ram_addr),
+      main_lo_ram_data_o   => main_crt_lo_ram_data,
+      main_hi_ram_data_o   => main_crt_hi_ram_data,
+      hr_clk_i             => hr_clk_i,
+      hr_rst_i             => hr_rst_i,
+      hr_write_o           => hr_crt_write,
+      hr_read_o            => hr_crt_read,
+      hr_address_o         => hr_crt_address,
+      hr_writedata_o       => hr_crt_writedata,
+      hr_byteenable_o      => hr_crt_byteenable,
+      hr_burstcount_o      => hr_crt_burstcount,
+      hr_readdata_i        => hr_crt_readdata,
+      hr_readdatavalid_i   => hr_crt_readdatavalid,
+      hr_waitrequest_i     => hr_crt_waitrequest
    ); -- i_sw_cartridge_wrapper
 
    main_ram_data_to_c64 <= main_crt_lo_ram_data(15 downto 8) when main_crt_roml_n = '0' and main_ram_addr(0) = '1' else
