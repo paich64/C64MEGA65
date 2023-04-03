@@ -18,6 +18,8 @@ port (
    qnice_resp_parsee1_o : out std_logic_vector(15 downto 0);
    qnice_resp_addr_lo_o : out std_logic_vector(15 downto 0);
    qnice_resp_addr_hi_o : out std_logic_vector(15 downto 0);
+   qnice_stat_addr_i    : in  std_logic_vector( 7 downto 0);
+   qnice_stat_data_o    : out std_logic_vector( 7 downto 0);
 
    main_clk_i           : in  std_logic;
    main_rst_i           : in  std_logic;
@@ -52,6 +54,8 @@ port (
 end entity sw_cartridge_wrapper;
 
 architecture synthesis of sw_cartridge_wrapper is
+
+   constant C_ERR_OK           : string := "OK\n";
 
    -- Status reporting from the QNICE
    constant C_CRT_ST_IDLE      : std_logic_vector(15 downto 0) := X"0000";
@@ -106,6 +110,8 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of qnice_resp_parsee1_o : signal is "true";
    attribute mark_debug of qnice_resp_addr_lo_o : signal is "true";
    attribute mark_debug of qnice_resp_addr_hi_o : signal is "true";
+   attribute mark_debug of qnice_stat_addr_i    : signal is "true";
+   attribute mark_debug of qnice_stat_data_o    : signal is "true";
    attribute mark_debug of main_rst_i           : signal is "true";
    attribute mark_debug of main_loading_o       : signal is "true";
    attribute mark_debug of main_id_o            : signal is "true";
@@ -146,6 +152,22 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of hr_bank_hi           : signal is "true";
 
 begin
+
+   -----------------------------------------
+   -- Generate error status string to QNICE
+   -----------------------------------------
+
+   process (all)
+      variable index_v : natural range 0 to 255;
+   begin
+      index_v := to_integer(unsigned(qnice_stat_addr_i));
+      if index_v < C_ERR_OK'length then
+         qnice_stat_data_o <= std_logic_vector(to_unsigned(character'pos(C_ERR_OK(index_v+1)), 8));
+      else
+         qnice_stat_data_o <= X"00"; -- zero-terminated strings
+      end if;
+   end process;
+
 
    ----------------------------------------
    -- Decode information from and to QNICE
