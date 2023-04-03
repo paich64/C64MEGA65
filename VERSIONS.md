@@ -64,7 +64,10 @@ just make the interface of FATAL public because is available everywhere).
   by running the two different SID models 6581 and 8050 at the same (one left
   and one right) while they play the same mono tune.
 
-
+WIP IEC Hardware port: @TODO: Idea: Drive #8 stays hardwired as it is but
+you can plug other IEC devices (such as drives with #9 onwards) and printers
+into the MEGA6's IEC port. Can be as simple as a single-select item:
+"Enable hardware IEC port".
 
 WIP 15khz RGB + csync:
 https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500
