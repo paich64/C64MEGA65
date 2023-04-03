@@ -69,7 +69,7 @@ architecture synthesis of sw_cartridge_wrapper is
    signal qnice_req_valid      : std_logic;
    signal qnice_resp_status    : std_logic_vector( 3 downto 0);
    signal qnice_resp_error     : std_logic_vector( 3 downto 0);
-   signal qnice_resp_address   : std_logic_vector(21 downto 0);
+   signal qnice_resp_address   : std_logic_vector(22 downto 0);
 
    -- Request and response
    signal hr_req_address       : std_logic_vector(21 downto 0);
@@ -77,7 +77,7 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_req_valid         : std_logic;
    signal hr_resp_status       : std_logic_vector( 3 downto 0);
    signal hr_resp_error        : std_logic_vector( 3 downto 0);
-   signal hr_resp_address      : std_logic_vector(21 downto 0);
+   signal hr_resp_address      : std_logic_vector(22 downto 0);
 
    -- Writing to BRAM
    signal hr_bram_address      : std_logic_vector(11 downto 0);
@@ -194,7 +194,7 @@ begin
          qnice_resp_parsest_o <= X"000" & qnice_resp_status;
          qnice_resp_parsee1_o <= X"000" & qnice_resp_error;
          qnice_resp_addr_lo_o <= qnice_resp_address(15 downto 0);
-         qnice_resp_addr_hi_o <= "0000000000" & qnice_resp_address(21 downto 16);
+         qnice_resp_addr_hi_o <= "000000000" & qnice_resp_address(22 downto 16);
       end if;
    end process;
 
@@ -225,17 +225,17 @@ begin
 
    i_cdc_hr2qnice : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 30
+         G_DATA_SIZE => 31
       )
       port map (
          src_clk_i               => hr_clk_i,
          src_data_i( 3 downto 0) => hr_resp_status,
          src_data_i( 7 downto 4) => hr_resp_error,
-         src_data_i(29 downto 8) => hr_resp_address,
+         src_data_i(30 downto 8) => hr_resp_address,
          dst_clk_i               => qnice_clk_i,
          dst_data_o( 3 downto 0) => qnice_resp_status,
          dst_data_o( 7 downto 4) => qnice_resp_error,
-         dst_data_o(29 downto 8) => qnice_resp_address
+         dst_data_o(30 downto 8) => qnice_resp_address
       ); -- i_cdc_hr2qnice
 
 
