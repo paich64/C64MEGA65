@@ -320,7 +320,8 @@ constant C_CRT_HRS_LO  : std_logic_vector(11 downto 0) := X"003";
 constant C_CRT_HRS_HI  : std_logic_vector(11 downto 0) := X"004";
 constant C_CRT_PARSEST : std_logic_vector(11 downto 0) := X"010";
 constant C_CRT_PARSEE1 : std_logic_vector(11 downto 0) := X"011";
-constant C_CRT_PARSEE2 : std_logic_vector(11 downto 0) := X"012";
+constant C_CRT_ADDR_LO : std_logic_vector(11 downto 0) := X"012";
+constant C_CRT_ADDR_HI : std_logic_vector(11 downto 0) := X"013";
 
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
@@ -340,7 +341,8 @@ signal qnice_req_hrs_lo   : std_logic_vector(15 downto 0);
 signal qnice_req_hrs_hi   : std_logic_vector(15 downto 0);
 signal qnice_resp_parsest : std_logic_vector(15 downto 0);
 signal qnice_resp_parsee1 : std_logic_vector(15 downto 0);
-signal qnice_resp_parsee2 : std_logic_vector(15 downto 0);
+signal qnice_resp_addr_lo : std_logic_vector(15 downto 0);
+signal qnice_resp_addr_hi : std_logic_vector(15 downto 0);
 
 begin
 
@@ -626,10 +628,12 @@ begin
          -- SW cartridges (*.CRT)
          when C_DEV_C64_CRT =>
             if qnice_dev_ce_i = '1' and qnice_dev_we_i = '0' and qnice_dev_addr_i(27 downto 12) = C_CRT_CASREG then
+               qnice_dev_data_o <= x"0000"; -- By default read back zeros.
                case qnice_dev_addr_i(11 downto 0) is
                   when C_CRT_PARSEST => qnice_dev_data_o <= qnice_resp_parsest;
                   when C_CRT_PARSEE1 => qnice_dev_data_o <= qnice_resp_parsee1;
-                  when C_CRT_PARSEE2 => qnice_dev_data_o <= qnice_resp_parsee2;
+                  when C_CRT_ADDR_LO => qnice_dev_data_o <= qnice_resp_addr_lo;
+                  when C_CRT_ADDR_HI => qnice_dev_data_o <= qnice_resp_addr_hi;
                   when others => null;
                end case;
             end if;
@@ -740,7 +744,8 @@ begin
       qnice_req_hrs_hi_i   => qnice_req_hrs_hi,
       qnice_resp_parsest_o => qnice_resp_parsest,
       qnice_resp_parsee1_o => qnice_resp_parsee1,
-      qnice_resp_parsee2_o => qnice_resp_parsee2,
+      qnice_resp_addr_lo_o => qnice_resp_addr_lo,
+      qnice_resp_addr_hi_o => qnice_resp_addr_hi,
       main_clk_i           => main_clk,
       main_rst_i           => main_rst,
       main_loading_o       => main_crt_loading,

@@ -4,12 +4,23 @@ use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
 
 -- This module reads and parses the CRT file that is loaded into the HyperRAM device.
--- It stores header information and chip contents into various tables and BRAM.
+-- It stores decoded header information in variours tables.
+-- Furthermore, it loads and caches the active banks into BRAM.
 
 -- This module runs entirely in the HyperRAM clock domain, and therefore the BRAM
 -- is placed outside this module.
 
 -- It acts as a master towards both the HyperRAM and the BRAM.
+-- The maximum amount of addressable HyperRAM is 22 address bits @ 16 data bits, i.e. 8 MB of memory.
+-- Not all this memory will be available to the CRT file, though.
+-- The CRT file is stored in little-endian format, i.e. even address bytes are in bits 7-0 and
+-- odd address bytes are in bits 15-8.
+
+-- req_start_i   : Asserted when the entire CRT file has been loaded verbatim into HyperRAM.
+-- req_address_i : The start address in HyperRAM (in units of 16-bit words).
+-- req_length_i  : The length of the CRT file (in units of bytes).
+
+-- bank_lo_i and bank_hi_i are in units of 8kB.
 
 entity crt_loader is
    port (
@@ -17,12 +28,12 @@ entity crt_loader is
       rst_i               : in  std_logic;
 
       -- Control interface (QNICE)
-      start_i             : in  std_logic;
-      address_i           : in  std_logic_vector(21 downto 0);     -- Address in HyperRAM of start of CRT file
-      length_i            : in  std_logic_vector(22 downto 0);     -- Length of CRT file in HyperRAM
-      status_o            : out std_logic_vector( 3 downto 0);
-      error_o             : out std_logic_vector( 3 downto 0);
-      address_o           : out std_logic_vector(15 downto 0);
+      req_start_i         : in  std_logic;
+      req_address_i       : in  std_logic_vector(21 downto 0);     -- Address in HyperRAM of start of CRT file
+      req_length_i        : in  std_logic_vector(22 downto 0);     -- Length of CRT file in HyperRAM
+      resp_status_o       : out std_logic_vector( 3 downto 0);
+      resp_error_o        : out std_logic_vector( 3 downto 0);
+      resp_address_o      : out std_logic_vector(21 downto 0);
 
       -- Control interface (CORE)
       bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
@@ -43,7 +54,7 @@ entity crt_loader is
       cart_bank_laddr_o   : out std_logic_vector(15 downto 0);     -- bank loading address
       cart_bank_size_o    : out std_logic_vector(15 downto 0);     -- length of each bank
       cart_bank_num_o     : out std_logic_vector(15 downto 0);
-      cart_bank_raddr_o   : out std_logic_vector(24 downto 0);     -- chip packet address
+      cart_bank_raddr_o   : out std_logic_vector(24 downto 0);     -- chip packet address (low 13 bits are ignored)
       cart_bank_wr_o      : out std_logic;
       cart_loading_o      : out std_logic;
       cart_id_o           : out std_logic_vector(15 downto 0);     -- cart ID or cart type
@@ -93,12 +104,15 @@ architecture synthesis of crt_loader is
                     READ_HI_ST,
                     READ_LO_ST,
                     ERROR_ST);
-   signal base_address  : std_logic_vector(21 downto 0);
-   signal end_address   : std_logic_vector(21 downto 0);
    signal state         : t_state := IDLE_ST;
-   signal read_pos      : integer range 0 to 7;
+
+   -- 16-byte of data in little-endian format
    signal wide_readdata : std_logic_vector(127 downto 0);
    signal wide_readdata_valid : std_logic;
+   signal read_pos      : integer range 0 to 7;
+
+   signal base_address  : std_logic_vector(21 downto 0);
+   signal end_address   : std_logic_vector(21 downto 0);
 
    signal bank_lo_d     : std_logic_vector(6 downto 0);
    signal bank_hi_d     : std_logic_vector(6 downto 0);
@@ -107,7 +121,7 @@ architecture synthesis of crt_loader is
    signal lo_load       : std_logic;
    signal lo_load_done  : std_logic;
 
-   -- Convert an ASCII string to std_logic_vector
+   -- Convert an ASCII string to std_logic_vector (little-endian format)
    pure function str2slv(s : string) return std_logic_vector is
       variable res : std_logic_vector(s'length*8-1 downto 0);
    begin
@@ -169,8 +183,9 @@ architecture synthesis of crt_loader is
 
 begin
 
-   address_o <= avm_address_o(21 downto 6);
+   resp_address_o <= avm_address_o; -- TBD. Only update in case of error
 
+   -- Signal to the CORE when the CRT file is successfully parsed and ready.
    cart_loading_o <= '0' when state = IDLE_ST or
                               state = ERROR_ST or
                              (state = READY_ST and lo_load = '0' and hi_load = '0') else
@@ -202,7 +217,7 @@ begin
             wide_readdata(16*read_pos + 15 downto 16*read_pos) <= avm_readdata_i;
 
             if read_pos = 7 then
-               wide_readdata_valid <= '1';
+               wide_readdata_valid <= '1'; -- 16 bytes are now ready
                read_pos <= 0;
             else
                read_pos <= read_pos + 1;
@@ -211,20 +226,20 @@ begin
 
          case state is
             when IDLE_ST =>
-               if start_i = '1' then
+               if req_start_i = '1' then
                   -- As a minimum, the file must contain a complete CRT header.
-                  if length_i >= X"00040" then
+                  if req_length_i >= X"00040" then
                      -- Read first 0x20 bytes of CRT header.
-                     avm_address_o    <= address_i;
+                     avm_address_o    <= req_address_i;
                      avm_read_o       <= '1';
                      avm_burstcount_o <= X"10";
-                     end_address      <= address_i + length_i(22 downto 1);
-                     status_o         <= C_STAT_PARSING;
+                     end_address      <= req_address_i + req_length_i(22 downto 1);
+                     resp_status_o    <= C_STAT_PARSING;
                      state            <= WAIT_FOR_CRT_HEADER_00_ST;
                   else
-                     status_o <= C_STAT_ERR_LENGTH;
-                     error_o  <= C_ERROR_LEN_SMALL;
-                     state    <= ERROR_ST;
+                     resp_status_o <= C_STAT_ERR_LENGTH;
+                     resp_error_o  <= C_ERROR_LEN_SMALL;
+                     state         <= ERROR_ST;
                   end if;
                end if;
 
@@ -233,8 +248,8 @@ begin
                   if wide_readdata = str2slv("C64 CARTRIDGE   ") then
                      state <= WAIT_FOR_CRT_HEADER_10_ST;
                   else
-                     status_o <= C_STAT_ERR_CRT_HDR;
-                     state    <= ERROR_ST;
+                     resp_status_o <= C_STAT_ERR_CRT_HDR;
+                     state         <= ERROR_ST;
                   end if;
                end if;
 
@@ -245,7 +260,7 @@ begin
                   cart_game_o  <= wide_readdata(R_CRT_GAME);
                   file_header_length_v := bswap(wide_readdata(R_CRT_FILE_HEADER_LENGTH));
 
-                  if length_i >= file_header_length_v(22 downto 1) + X"10" then
+                  if req_length_i >= file_header_length_v(22 downto 1) + X"10" then
                      -- Read 0x10 bytes from CHIP header
                      avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
                      avm_read_o       <= '1';
@@ -253,16 +268,16 @@ begin
                      base_address     <= avm_address_o + file_header_length_v(22 downto 1) + X"08";
                      state <= WAIT_FOR_CHIP_HEADER_ST;
                   else
-                     status_o <= C_STAT_ERR_LENGTH;
-                     state    <= ERROR_ST;
+                     resp_status_o <= C_STAT_ERR_LENGTH;
+                     state         <= ERROR_ST;
                   end if;
                end if;
 
             when WAIT_FOR_CHIP_HEADER_ST =>
                if wide_readdata_valid = '1' then
                   -- For now, assume error
-                  status_o <= C_STAT_ERR_CHIP_HDR;
-                  state    <= ERROR_ST;
+                  resp_status_o <= C_STAT_ERR_CHIP_HDR;
+                  state         <= ERROR_ST;
 
                   if wide_readdata(R_CHIP_SIGNATURE) = str2slv("CHIP") then
                      cart_bank_laddr_o <= bswap(wide_readdata(R_CHIP_LOAD_ADDRESS));
@@ -274,7 +289,7 @@ begin
                      cart_bank_wr_o    <= '1';
 
                      -- OK, assume we're done now
-                     status_o         <= C_STAT_READY;
+                     resp_status_o    <= C_STAT_READY;
                      state            <= READY_ST;
 
                      image_size_v := bswap(wide_readdata(R_CHIP_IMAGE_SIZE));
@@ -283,7 +298,7 @@ begin
                         avm_address_o    <= avm_address_o + X"08" + image_size_v(15 downto 1);
                         avm_read_o       <= '1';
                         avm_burstcount_o <= X"08";
-                        status_o         <= C_STAT_PARSING;
+                        resp_status_o    <= C_STAT_PARSING;
                         state            <= WAIT_FOR_CHIP_HEADER_ST;
                      end if;
                   end if;
@@ -343,9 +358,9 @@ begin
                end if;
 
             when ERROR_ST =>
-               if start_i = '0' then
-                  status_o <= C_STAT_IDLE;
-                  state    <= IDLE_ST;
+               if req_start_i = '0' then
+                  resp_status_o <= C_STAT_IDLE;
+                  state         <= IDLE_ST;
                end if;
 
             when others =>
@@ -368,8 +383,8 @@ begin
             cart_id_o           <= (others => '0');
             cart_exrom_o        <= (others => '1');
             cart_game_o         <= (others => '1');
-            status_o            <= C_STAT_IDLE;
-            error_o             <= C_ERROR_NONE;
+            resp_status_o       <= C_STAT_IDLE;
+            resp_error_o        <= C_ERROR_NONE;
             state               <= IDLE_ST;
             read_pos            <= 0;
             wide_readdata_valid <= '0';
@@ -398,6 +413,7 @@ begin
             hi_load <= '1';
          end if;
 
+         -- Force cache of the LO bank immediately after parsing CRT file.
          if state = WAIT_FOR_CHIP_HEADER_ST then
             lo_load <= '1';
          end if;

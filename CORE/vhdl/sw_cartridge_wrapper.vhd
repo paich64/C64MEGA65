@@ -16,7 +16,8 @@ port (
    qnice_req_hrs_hi_i   : in  std_logic_vector(15 downto 0);
    qnice_resp_parsest_o : out std_logic_vector(15 downto 0);
    qnice_resp_parsee1_o : out std_logic_vector(15 downto 0);
-   qnice_resp_parsee2_o : out std_logic_vector(15 downto 0);
+   qnice_resp_addr_lo_o : out std_logic_vector(15 downto 0);
+   qnice_resp_addr_hi_o : out std_logic_vector(15 downto 0);
 
    main_clk_i           : in  std_logic;
    main_rst_i           : in  std_logic;
@@ -64,7 +65,7 @@ architecture synthesis of sw_cartridge_wrapper is
    signal qnice_req_valid      : std_logic;
    signal qnice_resp_status    : std_logic_vector( 3 downto 0);
    signal qnice_resp_error     : std_logic_vector( 3 downto 0);
-   signal qnice_resp_address   : std_logic_vector(15 downto 0);
+   signal qnice_resp_address   : std_logic_vector(21 downto 0);
 
    -- Request and response
    signal hr_req_address       : std_logic_vector(21 downto 0);
@@ -72,7 +73,7 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_req_valid         : std_logic;
    signal hr_resp_status       : std_logic_vector( 3 downto 0);
    signal hr_resp_error        : std_logic_vector( 3 downto 0);
-   signal hr_resp_address      : std_logic_vector(15 downto 0);
+   signal hr_resp_address      : std_logic_vector(21 downto 0);
 
    -- Writing to BRAM
    signal hr_bram_address      : std_logic_vector(11 downto 0);
@@ -103,7 +104,8 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of qnice_req_hrs_hi_i   : signal is "true";
    attribute mark_debug of qnice_resp_parsest_o : signal is "true";
    attribute mark_debug of qnice_resp_parsee1_o : signal is "true";
-   attribute mark_debug of qnice_resp_parsee2_o : signal is "true";
+   attribute mark_debug of qnice_resp_addr_lo_o : signal is "true";
+   attribute mark_debug of qnice_resp_addr_hi_o : signal is "true";
    attribute mark_debug of main_rst_i           : signal is "true";
    attribute mark_debug of main_loading_o       : signal is "true";
    attribute mark_debug of main_id_o            : signal is "true";
@@ -167,13 +169,10 @@ begin
    process (qnice_clk_i)
    begin
       if rising_edge(qnice_clk_i) then
-         qnice_resp_parsest_o <= (others => '0');
-         qnice_resp_parsee1_o <= (others => '0');
-         qnice_resp_parsee2_o <= (others => '0');
-
-         qnice_resp_parsest_o(3 downto 0) <= qnice_resp_status;
-         qnice_resp_parsee1_o(3 downto 0) <= qnice_resp_error;
-         qnice_resp_parsee2_o             <= qnice_resp_address;
+         qnice_resp_parsest_o <= X"000" & qnice_resp_status;
+         qnice_resp_parsee1_o <= X"000" & qnice_resp_error;
+         qnice_resp_addr_lo_o <= qnice_resp_address(15 downto 0);
+         qnice_resp_addr_hi_o <= "0000000000" & qnice_resp_address(21 downto 16);
       end if;
    end process;
 
@@ -204,17 +203,17 @@ begin
 
    i_cdc_hr2qnice : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 24
+         G_DATA_SIZE => 30
       )
       port map (
          src_clk_i               => hr_clk_i,
          src_data_i( 3 downto 0) => hr_resp_status,
          src_data_i( 7 downto 4) => hr_resp_error,
-         src_data_i(23 downto 8) => hr_resp_address,
+         src_data_i(29 downto 8) => hr_resp_address,
          dst_clk_i               => qnice_clk_i,
          dst_data_o( 3 downto 0) => qnice_resp_status,
          dst_data_o( 7 downto 4) => qnice_resp_error,
-         dst_data_o(23 downto 8) => qnice_resp_address
+         dst_data_o(29 downto 8) => qnice_resp_address
       ); -- i_cdc_hr2qnice
 
 
@@ -245,12 +244,12 @@ begin
       port map (
          clk_i               => hr_clk_i,
          rst_i               => hr_rst_i,
-         address_i           => hr_req_address,
-         length_i            => hr_req_length,
-         start_i             => hr_req_valid,
-         status_o            => hr_resp_status,
-         error_o             => hr_resp_error,
-         address_o           => hr_resp_address,
+         req_address_i       => hr_req_address,
+         req_length_i        => hr_req_length,
+         req_start_i         => hr_req_valid,
+         resp_status_o       => hr_resp_status,
+         resp_error_o        => hr_resp_error,
+         resp_address_o      => hr_resp_address,
          bank_lo_i           => hr_bank_lo,
          bank_hi_i           => hr_bank_hi,
          avm_write_o         => hr_write_o,

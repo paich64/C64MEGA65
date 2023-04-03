@@ -25,14 +25,14 @@ architecture simulation of tb_crt_loader is
 
    signal clk               : std_logic := '0';
    signal rst               : std_logic := '1';
-   signal start             : std_logic;
-   signal address           : std_logic_vector(21 downto 0);
-   signal length            : std_logic_vector(22 downto 0);
+   signal req_start         : std_logic;
+   signal req_address       : std_logic_vector(21 downto 0);
+   signal req_length        : std_logic_vector(22 downto 0);
+   signal resp_status       : std_logic_vector( 3 downto 0);
+   signal resp_error        : std_logic_vector( 3 downto 0);
+   signal resp_address      : std_logic_vector(21 downto 0);
    signal bank_lo           : std_logic_vector( 6 downto 0);
    signal bank_hi           : std_logic_vector( 6 downto 0);
-   signal crt_status        : std_logic_vector( 3 downto 0);
-   signal crt_error         : std_logic_vector( 3 downto 0);
-   signal crt_address       : std_logic_vector(15 downto 0);
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
    signal avm_address       : std_logic_vector(21 downto 0);
@@ -67,14 +67,14 @@ begin
       port map (
          clk_i               => clk,
          rst_i               => rst,
-         start_i             => start,
-         length_i            => length,
-         address_i           => address,
+         req_start_i         => req_start,
+         req_length_i        => req_length,
+         req_address_i       => req_address,
+         resp_status_o       => resp_status,
+         resp_error_o        => resp_error,
+         resp_address_o      => resp_address,
          bank_lo_i           => bank_lo,
          bank_hi_i           => bank_hi,
-         status_o            => crt_status,
-         error_o             => crt_error,
-         address_o           => crt_address,
          avm_write_o         => avm_write,
          avm_read_o          => avm_read,
          avm_address_o       => avm_address,
@@ -142,12 +142,12 @@ begin
 
    process
    begin
-      start   <= '0';
+      req_start   <= '0';
       wait until rst = '0';
       wait until rising_edge(clk);
-      address <= (others => '0');
-      length  <= "00" & X"08060" & "0";
-      start   <= '1';
+      req_address <= (others => '0');
+      req_length  <= "00" & X"08060" & "0";
+      req_start   <= '1';
       wait until rising_edge(clk);
       wait;
    end process;
