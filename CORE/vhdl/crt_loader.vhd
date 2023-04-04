@@ -78,10 +78,12 @@ architecture synthesis of crt_loader is
    constant C_STAT_READY        : std_logic_vector(3 downto 0) := "0010"; -- Successfully parsed CRT file
    constant C_STAT_ERROR        : std_logic_vector(3 downto 0) := "0011"; -- Error parsing CRT file
 
-   constant C_ERROR_NONE        : std_logic_vector(3 downto 0) := "0000";
-   constant C_ERROR_LEN_SMALL   : std_logic_vector(3 downto 0) := "0001"; -- Length is too small
-   constant C_ERROR_CRT_HDR     : std_logic_vector(3 downto 0) := "0010"; -- Missing CRT header
-   constant C_ERROR_CHIP_HDR    : std_logic_vector(3 downto 0) := "0011"; -- Missing CHIP header
+   constant C_ERROR_NONE           : std_logic_vector(3 downto 0) := "0000";
+   constant C_ERROR_NO_CRT_HDR     : std_logic_vector(3 downto 0) := "0001"; -- Missing CRT header
+   constant C_ERROR_NO_CHIP_HDR    : std_logic_vector(3 downto 0) := "0010"; -- Missing CHIP header
+   constant C_ERROR_WRONG_CRT_HDR  : std_logic_vector(3 downto 0) := "0011"; -- Wrong CRT header
+   constant C_ERROR_WRONG_CHIP_HDR : std_logic_vector(3 downto 0) := "0100"; -- Wrong CHIP header
+   constant C_ERROR_TRUNCATED_CHIP : std_logic_vector(3 downto 0) := "0101"; -- Truncated CHIP
 
    subtype R_CRT_FILE_HEADER_LENGTH is natural range  4*8-1 downto  0*8;
    subtype R_CRT_CARTRIDGE_VERSION  is natural range  6*8-1 downto  4*8;
@@ -233,12 +235,12 @@ begin
                      avm_address_o    <= req_address_i;
                      avm_read_o       <= '1';
                      avm_burstcount_o <= X"10";
-                     end_address      <= req_address_i + req_length_i(22 downto 1);
                      resp_status_o    <= C_STAT_PARSING;
+                     end_address      <= req_address_i + req_length_i(22 downto 1);
                      state            <= WAIT_FOR_CRT_HEADER_00_ST;
                   else
                      resp_status_o  <= C_STAT_ERROR;
-                     resp_error_o   <= C_ERROR_LEN_SMALL;
+                     resp_error_o   <= C_ERROR_NO_CRT_HDR;
                      resp_address_o <= (others => '0');
                      state          <= ERROR_ST;
                   end if;
@@ -250,7 +252,7 @@ begin
                      state <= WAIT_FOR_CRT_HEADER_10_ST;
                   else
                      resp_status_o  <= C_STAT_ERROR;
-                     resp_error_o   <= C_ERROR_CRT_HDR;
+                     resp_error_o   <= C_ERROR_WRONG_CRT_HDR;
                      resp_address_o(22 downto 1) <= avm_address_o - req_address;
                      state          <= ERROR_ST;
                   end if;
@@ -263,7 +265,7 @@ begin
                   cart_game_o  <= wide_readdata(R_CRT_GAME);
                   file_header_length_v := bswap(wide_readdata(R_CRT_FILE_HEADER_LENGTH));
 
-                  if req_length_i >= file_header_length_v(22 downto 1) + X"10" then
+                  if end_address >= avm_address_o + file_header_length_v(22 downto 1) + X"08" then
                      -- Read 0x10 bytes from CHIP header
                      avm_address_o    <= avm_address_o + file_header_length_v(22 downto 1);
                      avm_read_o       <= '1';
@@ -272,7 +274,7 @@ begin
                      state <= WAIT_FOR_CHIP_HEADER_ST;
                   else
                      resp_status_o  <= C_STAT_ERROR;
-                     resp_error_o   <= C_ERROR_LEN_SMALL;
+                     resp_error_o   <= C_ERROR_NO_CHIP_HDR;
                      resp_address_o(22 downto 1) <= avm_address_o - req_address;
                      state          <= ERROR_ST;
                   end if;
@@ -289,22 +291,26 @@ begin
                      cart_bank_raddr_o(22 downto 1) <= read_addr_v - base_address;
                      cart_bank_wr_o    <= '1';
 
-                     -- OK, assume we're done now
-                     resp_status_o    <= C_STAT_READY;
-                     state            <= READY_ST;
-
                      image_size_v := bswap(wide_readdata(R_CHIP_IMAGE_SIZE));
-                     if end_address >= avm_address_o + X"08" + image_size_v(15 downto 1) + X"08" then
+                     if end_address = avm_address_o + X"08" + image_size_v(15 downto 1) then
+                        resp_status_o    <= C_STAT_READY;
+                        state            <= READY_ST;
+                     elsif end_address >= avm_address_o + X"08" + image_size_v(15 downto 1) + X"08" then
                         -- Oh, there's more ...
                         avm_address_o    <= avm_address_o + X"08" + image_size_v(15 downto 1);
                         avm_read_o       <= '1';
                         avm_burstcount_o <= X"08";
                         resp_status_o    <= C_STAT_PARSING;
                         state            <= WAIT_FOR_CHIP_HEADER_ST;
+                     else
+                        resp_status_o  <= C_STAT_ERROR;
+                        resp_error_o   <= C_ERROR_TRUNCATED_CHIP;
+                        resp_address_o(22 downto 1) <= avm_address_o - req_address;
+                        state          <= ERROR_ST;
                      end if;
                   else
                      resp_status_o  <= C_STAT_ERROR;
-                     resp_error_o   <= C_ERROR_LEN_SMALL;
+                     resp_error_o   <= C_ERROR_WRONG_CHIP_HDR;
                      resp_address_o(22 downto 1) <= avm_address_o - req_address;
                      state          <= ERROR_ST;
                   end if;

@@ -19,7 +19,7 @@ architecture simulation of tb_crt_loader is
    type word_vector is array (natural range <>) of std_logic_vector(15 downto 0);
 
    type test_type is record
-      name        : string(1 to 64);
+      name        : string(1 to 44);
       data        : word_vector(0 to 255);
       length      : integer;
       exp_status  : integer;
@@ -42,36 +42,43 @@ architecture simulation of tb_crt_loader is
    end;
 
    constant C_TESTS : test_vector := (
-      (pad("Testing file too short (incomplete CRT header)", 64),
+      (pad("Testing missing CRT header", 44),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045",
          others => X"0000"),
         14, 3, 1, 0),
 
-      (pad("Testing unrecognized CRT header", 64),
+      (pad("Testing unrecognized CRT header", 44),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2120",
          X"0000", X"4000", X"0001", X"1300",
          others => X"0000"),
-        64, 3, 2, 0),
+        64, 3, 3, 0),
 
-      (pad("Testing file too short (despite complete CRT header)", 64),
+      (pad("Testing missing CRT header", 44),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300",
          others => X"0000"),
         62, 3, 1, 0),
 
-      (pad("Testing file too short (missing CHIP header)", 64),
+      (pad("Testing missing CHIP header", 44),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300",
          others => X"0000"),
-        64, 3, 1, 64),
+        64, 3, 2, 0),
 
-      (pad("Testing file header length too long", 64),
+      (pad("Testing missing CHIP header", 44),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4001", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
          others => X"0000"),
-        80, 3, 1, 0),
+        80, 3, 2, 0),
 
-      (pad("Testing no errors", 64),
+      (pad("Testing unrecognized CHIP header", 44),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
+         X"4956", X"4545", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
+         others => X"0000"),
+        96, 3, 4, 64),
+
+      (pad("Testing truncated CHIP data", 44),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
          X"4956", X"4543", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
@@ -79,7 +86,17 @@ architecture simulation of tb_crt_loader is
          X"4843", X"5049", X"0000", X"1020", X"0000", X"0000", X"0080", X"0020",
          X"8009", X"8009", X"c2c3", X"38cd", X"8e30", X"d016", X"2078", X"fda3",
          others => X"0000"),
-        80, 2, 0, 0)
+        96, 3, 5, 64),
+
+      (pad("Testing no errors", 44),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
+         X"4956", X"4543", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
+         X"0000", X"0000", X"0000", X"0000", X"0000", X"0000", X"0000", X"0000",
+         X"4843", X"5049", X"0000", X"1020", X"0000", X"0000", X"0080", X"0020",
+         X"8009", X"8009", X"c2c3", X"38cd", X"8e30", X"d016", X"2078", X"fda3",
+         others => X"0000"),
+        80+8192, 2, 0, 0)
    ); -- C_TESTS
 
    type bank_t is array (natural range 0 to 255) of std_logic_vector(6 downto 0);
