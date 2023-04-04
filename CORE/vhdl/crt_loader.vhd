@@ -365,8 +365,10 @@ begin
 
             when ERROR_ST =>
                if req_start_i = '0' then
-                  resp_status_o <= C_STAT_IDLE;
-                  state         <= IDLE_ST;
+                  resp_status_o  <= C_STAT_IDLE;
+                  resp_error_o   <= C_ERROR_NONE;
+                  resp_address_o <= (others => '0');
+                  state          <= IDLE_ST;
                end if;
 
             when others =>
@@ -391,6 +393,7 @@ begin
             cart_game_o         <= (others => '1');
             resp_status_o       <= C_STAT_IDLE;
             resp_error_o        <= C_ERROR_NONE;
+            resp_address_o      <= (others => '0');
             state               <= IDLE_ST;
             read_pos            <= 0;
             wide_readdata_valid <= '0';

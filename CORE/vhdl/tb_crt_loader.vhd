@@ -18,31 +18,9 @@ architecture simulation of tb_crt_loader is
 
    type word_vector is array (natural range <>) of std_logic_vector(15 downto 0);
 
-   -- Expected result : File too short (incomplete CRT header)
-   constant C_TEST0 : word_vector(0 to 255) := (
-      X"3643", X"2034", X"4143", X"5452",
-      X"4952", X"4744", X"2045", others => X"0000");
-
-   -- Expected result : Invalid CRT header
-   constant C_TEST1 : word_vector(0 to 255) := (
-      X"3643", X"2034", X"4143", X"5452",
-      X"4952", X"4744", X"2045", X"2120",
-      X"0000", X"4000", X"0001", X"1300", others => X"0000");
-
-   -- Expected result : File too short (despite complete CRT header)
-   constant C_TEST2 : word_vector(0 to 255) := (
-      X"3643", X"2034", X"4143", X"5452",
-      X"4952", X"4744", X"2045", X"2020",
-      X"0000", X"4000", X"0001", X"1300", others => X"0000");
-
-   -- Expected result : File too short
-   constant C_TEST3 : word_vector(0 to 255) := (
-      X"3643", X"2034", X"4143", X"5452",
-      X"4952", X"4744", X"2045", X"2020",
-      X"0000", X"4000", X"0001", X"1300", others => X"0000");
-
    type test_type is record
-      data        : word_vector;
+      name        : string(1 to 64);
+      data        : word_vector(0 to 255);
       length      : integer;
       exp_status  : integer;
       exp_error   : integer;
@@ -50,11 +28,59 @@ architecture simulation of tb_crt_loader is
    end record;
 
    type test_vector is array (natural range <>) of test_type;
+
+   function pad(s: string; n: positive) return string is
+      variable ps: string(1 to n) := (others => ' ');
+   begin
+      if s'length >= n then
+         ps := s(1 to n); --- truncate the source string
+      else
+         ps(1 to s'length) := s;
+         ps(s'length+1 to n) := (others => ' ');
+      end if;
+      return ps;
+   end;
+
    constant C_TESTS : test_vector := (
-      (C_TEST0, 14, 3, 1, 0),
-      (C_TEST1, 64, 3, 2, 0),
-      (C_TEST2, 62, 3, 1, 0),
-      (C_TEST3, 64, 3, 1, 64));
+      (pad("Testing file too short (incomplete CRT header)", 64),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045",
+         others => X"0000"),
+        14, 3, 1, 0),
+
+      (pad("Testing unrecognized CRT header", 64),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2120",
+         X"0000", X"4000", X"0001", X"1300",
+         others => X"0000"),
+        64, 3, 2, 0),
+
+      (pad("Testing file too short (despite complete CRT header)", 64),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4000", X"0001", X"1300",
+         others => X"0000"),
+        62, 3, 1, 0),
+
+      (pad("Testing file too short (missing CHIP header)", 64),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4000", X"0001", X"1300",
+         others => X"0000"),
+        64, 3, 1, 64),
+
+      (pad("Testing file header length too long", 64),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4001", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
+         others => X"0000"),
+        80, 3, 1, 0),
+
+      (pad("Testing no errors", 64),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
+         X"4956", X"4543", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
+         X"0000", X"0000", X"0000", X"0000", X"0000", X"0000", X"0000", X"0000",
+         X"4843", X"5049", X"0000", X"1020", X"0000", X"0000", X"0080", X"0020",
+         X"8009", X"8009", X"c2c3", X"38cd", X"8e30", X"d016", X"2078", X"fda3",
+         others => X"0000"),
+        80, 2, 0, 0)
+   ); -- C_TESTS
 
    type bank_t is array (natural range 0 to 255) of std_logic_vector(6 downto 0);
    signal lobank : bank_t := (others => (others => '0'));
@@ -186,7 +212,7 @@ begin
       wait until rising_edge(clk);
 
       for i in 0 to C_TESTS'length-1 loop
-         report "Test #" & to_string(i);
+         report "Test #" & to_string(i) & ": " & C_TESTS(i).name;
          test_num    <= i;
          req_address <= "01" & X"00000";
          req_length  <= std_logic_vector(to_unsigned(C_TESTS(i).length, 23));
@@ -194,19 +220,22 @@ begin
          wait until rising_edge(clk);
          wait until cart_loading = '0' or resp_status(1) = '1';
          if resp_status /= C_TESTS(test_num).exp_status then
-            report "Status is " & to_string(resp_status) & ", but expected " & to_string(C_TESTS(test_num).exp_status);
+            report "Status is " & to_string(resp_status) & ", but expected " &
+               to_string(C_TESTS(test_num).exp_status);
             wait until rising_edge(clk);
             running <= '0';
          end if;
 
          if resp_error /= C_TESTS(test_num).exp_error then
-            report "Error is " & to_string(resp_error) & ", but expected " & to_string(C_TESTS(test_num).exp_error);
+            report "Error is " & to_string(resp_error) & ", but expected " &
+               to_string(C_TESTS(test_num).exp_error);
             wait until rising_edge(clk);
             running <= '0';
          end if;
 
          if resp_address /= C_TESTS(test_num).exp_address then
-            report "Address is " & to_hstring(resp_address) & ", but expected " & to_hstring(to_unsigned(C_TESTS(test_num).exp_address, 22));
+            report "Address is " & to_hstring(resp_address) & ", but expected " &
+               to_hstring(to_unsigned(C_TESTS(test_num).exp_address, 22));
             wait until rising_edge(clk);
             running <= '0';
          end if;
