@@ -55,7 +55,18 @@ end entity sw_cartridge_wrapper;
 
 architecture synthesis of sw_cartridge_wrapper is
 
-   constant C_ERR_OK           : string := "OK\n";
+   constant C_ERROR_STRING_LENGTH : integer := 21;
+   type string_vector is array (natural range <>) of string(1 to C_ERROR_STRING_LENGTH);
+   constant C_ERROR_STRINGS : string_vector(0 to 7) := (
+     "OK\n                 ",
+     "Missing CRT header\n ",
+     "Missing CHIP header\n",
+     "Wrong CRT header\n   ",
+     "Wrong CHIP header\n  ",
+     "Truncated CHIP\n     ",
+     "OK\n                 ",
+     "OK\n                 ");
+
 
    -- Status reporting from the QNICE
    constant C_CRT_ST_IDLE      : std_logic_vector(15 downto 0) := X"0000";
@@ -158,11 +169,15 @@ begin
    -----------------------------------------
 
    process (all)
-      variable index_v : natural range 0 to 255;
+      variable error_index_v : natural range 0 to 7;
+      variable char_index_v  : natural range 1 to 32;
+      variable char_v        : character;
    begin
-      index_v := to_integer(unsigned(qnice_stat_addr_i));
-      if index_v < C_ERR_OK'length then
-         qnice_stat_data_o <= std_logic_vector(to_unsigned(character'pos(C_ERR_OK(index_v+1)), 8));
+      error_index_v := to_integer(unsigned(qnice_resp_error(2 downto 0)));
+      char_index_v  := to_integer(unsigned(qnice_stat_addr_i(4 downto 0))) + 1;
+      if char_index_v <= C_ERROR_STRING_LENGTH then
+         char_v := C_ERROR_STRINGS(error_index_v)(char_index_v);
+         qnice_stat_data_o <= std_logic_vector(to_unsigned(character'pos(char_v), 8));
       else
          qnice_stat_data_o <= X"00"; -- zero-terminated strings
       end if;
