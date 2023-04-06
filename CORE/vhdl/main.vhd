@@ -399,6 +399,9 @@ begin
          c64_ram_data <= c64_ram_data_i;
       end if;               
    end process;
+   
+   -- RAM write enable also needs to check for chip enable and we must not write to RAM when writing to the cartridge
+   c64_ram_we_o <= c64_ram_ce and c64_ram_we and cart_roml_n and cart_romh_n;  
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
@@ -527,9 +530,6 @@ begin
          cass_sense  => '1',              -- low active
          cass_read   => '1'               -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
-
-   -- RAM write enable also needs to check for chip enable
-   c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
    --------------------------------------------------------------------------------------------------
    -- Expansion Port (aka Cartridge Port) handling:
