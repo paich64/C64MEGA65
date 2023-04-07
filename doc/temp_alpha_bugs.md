@@ -17,6 +17,10 @@
 
 ### System
 
+* Black screen on startup (while the OSD is still working) when no SD card
+  is inserted (neither internal nor external) - OR - when no SD card is
+  readable for the system.
+
 * Black screen from time to time on startup (independent if a cartridge is
   inserted or not). Might have to do with wrongly initialized
   $8000 content selection upon boot-up. Will be tested with this:

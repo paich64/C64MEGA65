@@ -18,19 +18,13 @@ also software cartridges.
 * More clearly arranged menu using submenus
 
 * Hardware cartridges can be used in the MEGA65's expansion port. Most game
-  cartridges ("passive" cartridges) are supported.
+  cartridges are supported, including Ultimax game cartridges.
 
-@TODO: What s not supported: Not supported yet are any
-  kind of "active" cartridges that act as busmaster. This includes Freezer
-  cartridges, Disk Speeders, RAM Expansion Units (REUs), etc.
-
-@TODO: EF 1CR?
+* The following more sophisticated cartridges are supported:
+  EasyFlash 1CR
 
 @TODO: Check, if we can support at least REUs and other cartridges that are
 not relying on the missing R3 signals (RESET, NMI and IRQ)
-
-@TODO: Either support Commodore MAX Machine modules (such as "Pinball
-Spectacular") or describe them as not supported.
 
 WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
 all cartridge types, add constraints here
