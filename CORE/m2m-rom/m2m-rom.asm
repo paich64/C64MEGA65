@@ -75,11 +75,13 @@ SUBMENU_SUMMARY XOR     R8, R8                  ; R8 = 0 = no custom string
 ;   R8: Name of the file in capital letters
 ;   R9: 0=file, 1=directory
 ;  R10: Context (CTX_* constants in sysdef.asm)
+;  R11: Menu group id (see config.vhd) of the menu item that is responsible
+;       for triggering FILTER_FILES
 ; Output:
 ;   R8: 0=do not filter file, i.e. show file
 FILTER_FILES    INCRB
                 MOVE    R9, R0
-                
+        
                 CMP     1, R9                   ; do not filter directories
                 RBRA    _FFILES_RET_0, Z
 
@@ -99,9 +101,16 @@ _FFILES_DOFLT   MOVE    1, R8                   ; no: filter it
 _FFILES_1       CMP     CTX_LOAD_ROM, R10
                 RBRA    _FFILES_RET_0, !Z       ; do not filter in other CTXs
 
-                ; does this file have the ".CRT" file extension
+                CMP     OPTM_G_LOAD_PRG, R11    ; menu item "PRG:<Load>"
+                RBRA    _FFILES_2, !Z
+                MOVE    C64_PRGFILE, R9
+                RBRA    _FFILES_3, 1
+_FFILES_2       CMP     OPTM_G_MOUNT_CRT, R11   ; menu item "CRT:<Load>"
+                RBRA    _FFILES_RET_0, !Z
                 MOVE    C64_CRTFILE, R9
-                RSUB    M2M$CHK_EXT, 1
+
+                ; does this file have the right file extension?
+_FFILES_3       RSUB    M2M$CHK_EXT, 1
                 RBRA    _FFILES_DOFLT, !C       ; no: filter it
 
 _FFILES_RET_0   XOR     R8, R8                  ; do not filter
@@ -122,6 +131,8 @@ _FFILES_RET     MOVE    R0, R9
 ; Input:
 ;   R8: File handle: You are allowed to modify the read pointer of the handle
 ;   R9: Context (CTX_* constants in sysdef.asm)
+;  R10: Menu group id (see config.vhd) of the menu item that is responsible
+;       for triggering PREP_LOAD_IMAGE
 ; Output:
 ;   R8: 0=OK, error code otherwise
 ;   R9: image type if R8=0, otherwise 0 or optional ptr to error msg string
@@ -222,10 +233,12 @@ WRN_NO_D64      .ASCII_P "This core uses D64 disk images.\n\n"
                 .ASCII_P "Nothing to browse.\n\n"
                 .ASCII_W "Press Space to continue."
 
-; Disk image file extensions (need to be upper case)
+; C64 specific file extensions (need to be upper case)
 C64_IMGFILE_D64 .ASCII_W ".D64"
 C64_IMGFILE_G64 .ASCII_W ".G64"
 C64_IMGFILE_D81 .ASCII_W ".D81"
+C64_CRTFILE     .ASCII_W ".CRT"
+C64_PRGFILE     .ASCII_W ".PRG"
 
 ; C64 disk image types
 C64_IMGTYPE_D64 .EQU    0x0000  ; 1541 emulated GCR: D64
@@ -240,8 +253,9 @@ D64_VARIANT_CNT .EQU    2
 D64_STDSIZE_L   .DW     0xAB00, 0x0000
 D64_STDSIZE_H   .DW     0x0002, 0x0003
 
-; Cartridge ROM image extension
-C64_CRTFILE     .ASCII_W ".CRT"
+; Menu group/item ids (see config.vhd)
+OPTM_G_LOAD_PRG  .EQU    3
+OPTM_G_MOUNT_CRT .EQU    5
 
 ; ----------------------------------------------------------------------------
 ; Variables: Need to be located in RAM

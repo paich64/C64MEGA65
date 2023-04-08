@@ -94,6 +94,7 @@ FB_HEAD         .BLOCK 1                        ; lnkd list: curr. disp. head
 
 ; context variables (see CTX_* constants in sysdef.asm)
 SF_CONTEXT      .BLOCK 1                        ; context for SELECT_FILE
+SF_CONTEXT_DATA .BLOCK 1                        ; optional add. data for ctx
 
 ; Virtual drive system (aka mounting disk/module/tape images):
 ; VDRIVES_NUM:      Amount of virtual, mountable drives; needs to correlate

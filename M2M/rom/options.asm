@@ -1095,6 +1095,16 @@ _OPTM_GK_MNT_R  SYSCALL(leave, 1)
 
 OPTM_CB_SEL     INCRB
 
+                ; Remember selected menu group as Context Data so that the
+                ; user of the framework can implement specialized behaviors
+                ; for certain menu items
+                MOVE    SF_CONTEXT_DATA, R1
+                MOVE    @R1, R0
+                MOVE    R8, @R1
+                AND     0x00FF, @R1             ; only the actual ID
+
+                INCRB
+
                 ; Special treatment for help menu items
                 RSUB    HANDLE_HELP, 1
                 RBRA    _OPTMC_NOMNT_1, C       ; if help then no drive mount
@@ -1181,6 +1191,11 @@ _OPTMCB_E       SUB     1, R0
                 RBRA    _OPTMCB_A, !Z
 
 _OPTMCB_RET     DECRB
+
+                MOVE    SF_CONTEXT_DATA, R1
+                MOVE    R0, @R1                 ; restore context
+
+                DECRB
                 RET
 
 

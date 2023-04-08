@@ -21,6 +21,12 @@
 START_SHELL     MOVE    LOG_M2M, R8
                 SYSCALL(puts, 1)
 
+                ; default = no context
+                MOVE    SF_CONTEXT, R8
+                MOVE    0, @R8
+                MOVE    SF_CONTEXT_DATA, R8
+                MOVE    0, @R8
+
                 ; ------------------------------------------------------------
                 ; More robust SD card reading
                 ; ------------------------------------------------------------
@@ -596,6 +602,8 @@ LOAD_IMAGE      SYSCALL(enter, 1)
 _LI_FOPEN_OK    MOVE    R5, R8
                 MOVE    SF_CONTEXT, R9
                 MOVE    @R9, R9
+                MOVE    SF_CONTEXT_DATA, R10
+                MOVE    @R10, R10
                 RSUB    PREP_LOAD_IMAGE, 1
                 MOVE    R8, R6                  ; R6: error code=0 (means OK)
                 MOVE    R9, R7                  ; R7: img type or error msg

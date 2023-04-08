@@ -367,8 +367,10 @@ _DIRBR_IAN_RET  DECRB
 ; DIRBROWSE_READ just expects a filter function that compares strings and
 ; that does not need to be aware of the SLL semantics
 _DIRBR_FILTWRAP INCRB
-                MOVE    R9, R0
+
+                MOVE    R9, R0                  ; backup R9, R10 & R11
                 MOVE    R10, R6                 ; SF_CONTEXT
+                MOVE    R11, R7                 ; SF_CONTEXT
         
                 ; copy the string to the stack and make it upper case
                 ADD     SLL$DATA, R8            ; R8: pointer to string
@@ -391,6 +393,8 @@ _DIRBR_FILTWRAP INCRB
                 ; SF_CONTEXT
                 MOVE    SF_CONTEXT, R10
                 MOVE    @R10, R10
+                MOVE    SF_CONTEXT_DATA, R11
+                MOVE    @R11, R11
 
                 ; call filter function (callback function)
                 ; R8: filename in upper-case
@@ -400,7 +404,8 @@ _DIRBR_FILTWRAP INCRB
                 ASUB    @R1, 1
 
                 ADD     R2, SP                  ; restore stack
-                MOVE    R0, R9
+                MOVE    R0, R9                  ; restore R9, R10 & R11
                 MOVE    R6, R10                 ; SF_CONTEXT
+                MOVE    R7, R11                 ; SF_CONTEXT
                 DECRB
                 RET
