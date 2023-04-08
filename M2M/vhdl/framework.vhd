@@ -718,7 +718,7 @@ begin
                   when C_CRTSANDROMS =>
                      if qnice_ramrom_addr_o(11 downto 0) = x"000" then
                         qnice_ramrom_data_in <= std_logic_vector(to_unsigned(C_CRTROM_MAN_NUM, 16));
-                     elsif qnice_ramrom_addr_o(11 downto 4) = x"10" then
+                     elsif qnice_ramrom_addr_o(11 downto 8) = x"1" then
                         qnice_ramrom_data_in <= C_CRTROMS_MAN(to_integer(unsigned(qnice_ramrom_addr_o(3 downto 0))));
                      end if;
 

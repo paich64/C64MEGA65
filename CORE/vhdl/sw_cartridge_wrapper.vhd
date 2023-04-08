@@ -190,7 +190,7 @@ begin
 
    process (qnice_clk_i)
    begin
-      if rising_edge(qnice_clk_i) then
+      if falling_edge(qnice_clk_i) then
          if qnice_req_status_i = C_CRT_ST_OK then
             -- Address is in units of 16-bit words.
             qnice_req_address <= qnice_req_hrs_hi_i(5 downto 0) & qnice_req_hrs_lo_i;
@@ -205,7 +205,7 @@ begin
 
    process (qnice_clk_i)
    begin
-      if rising_edge(qnice_clk_i) then
+      if falling_edge(qnice_clk_i) then
          qnice_resp_parsest_o <= X"000" & qnice_resp_status;
          qnice_resp_parsee1_o <= X"000" & qnice_resp_error;
          qnice_resp_addr_lo_o <= qnice_resp_address(15 downto 0);

@@ -85,12 +85,7 @@ constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";     --
 constant C_DEV_C64_VDRIVES    : std_logic_vector(15 downto 0) := x"0101";     -- Virtual Device Management System
 constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
 constant C_DEV_C64_CRT        : std_logic_vector(15 downto 0) := x"0103";     -- SW cartridges (*.CRT)
-
-----------------------------------------------------------------------------------------------------------
--- Commodore 64 specific RAM addresses
-----------------------------------------------------------------------------------------------------------
-
-constant C_HR_C64_CRT         : std_logic_vector(15 downto 0) := x"0200";     -- 4k window 0x0200 equals HyperRAM start address 0x00200000 (words) 
+constant C_DEV_C64_PRG        : std_logic_vector(15 downto 0) := x"0104";     -- PRG loader
 
 ----------------------------------------------------------------------------------------------------------
 -- Virtual Drive Management System
@@ -128,8 +123,11 @@ constant C_CRTROMTYPE_SDRAM      : std_logic_vector(15 downto 0) := x"0002";    
 --    1) Type of CRT or ROM: Load to a QNICE device, load into HyperRAM, load into SDRAM
 --    2) If (1) = QNICE device, then this is the device ID
 --       else it is a 4k window in HyperRAM or in SDRAM
-constant C_CRTROM_MAN_NUM        : natural := 1;                                       -- amount of manually loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
-constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_HYPERRAM, C_HR_C64_CRT,
+-- In case we are loading to a QNICE device, then the control and status register is located at the 4k window 0xFFFF.
+-- @TODO: See @TODO for more details about the control and status register
+constant C_CRTROM_MAN_NUM        : natural := 2;                                       -- amount of manually loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_DEVICE,   C_DEV_C64_PRG,
+                                                         C_CRTROMTYPE_DEVICE,   C_DEV_C64_CRT,
                                                          x"EEEE");                     -- Always finish the array using x"EEEE"
 
 -- @TODO: See MiSTer2MEGA65/doc/temp/romloading.md: At this moment, we are only supporting

@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A14]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A15]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A14]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A15]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A14]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A15]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A14]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A15]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -299,7 +299,7 @@ constant VD_ITERATION_SIZE       : natural := 100;
 -- !!! CAUTION: CURRENTLY NOT YET SUPPORTED BY THE FIRMWARE !!!
 
 --------------------------------------------------------------------------------------------------------------------
--- "Help" menu / Options menu  (Selectors 0x0300 .. 0x0307) 
+-- "Help" menu / Options menu  (Selectors 0x0300 .. 0x0312): DO NOT TOUCH 
 --------------------------------------------------------------------------------------------------------------------
 
 -- !!! DO NOT TOUCH !!! Selectors for accessing the menu configuration data
@@ -333,16 +333,23 @@ constant OPTM_G_MOUNT_DRV  : integer := 16#08800#;         -- line item means: m
 constant OPTM_G_HELP       : integer := 16#0A000#;         -- line item means: help screen; first occurance = WHS(1), second = WHS(2), ...
 constant OPTM_G_SUBMENU    : integer := 16#0C000#;         -- starts/ends a section that is treated as submenu
 constant OPTM_G_LOAD_ROM   : integer := 16#18000#;         -- line item means: load ROM; first occurance = rom 0, second = rom 1, ...
--- @TODO/REMINDER: As soon as we extend the OSM system so that we support loading ROMs and other things that need to be ignored
--- when saving settings: Make sure to extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly:
---     OPTM_G_SUBMENU
---     OPTM_G_LOAD_ROM
 
--- START YOUR CONFIGURATION BELOW THIS LINE:
+constant OPTM_GTC          : natural := 17;                -- Amount of significant bits in OPTM_G_* constants
+
+-- @TODO/REMINDER: If we added in future more configuration constants that are not meant to be saved in the
+-- configuration file, such as OPTM_G_MOUNT_DRV and OPTM_G_LOAD_ROM, then we need to make sure that we
+-- also extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly.
+-- Also: Right now OPTM_G_SUBMENU cannot have a "selected" state (and therefore cannot be saved in the config file)
+-- and this _ROSMS_4A and _ROSMC_NEXTBIT are not yet handling the situation. If we decided to change that in future,
+-- we would need to define the right semantics everywhere.
+
+--------------------------------------------------------------------------------------------------------------------
+-- "Help" menu / Options menu: START YOUR CONFIGURATION BELOW THIS LINE
+--------------------------------------------------------------------------------------------------------------------
 
 -- Strings with which %s will be replaced in case the menu item is of type OPTM_G_MOUNT_DRV
 constant OPTM_S_MOUNT      : string := "<Mount Drive>";     -- no disk image mounted, yet
-constant OPTM_S_CRTROM     : string := "<Load Cartridge>";  -- no cartridge loaded, yet
+constant OPTM_S_CRTROM     : string := "<Load>";            -- no ROM/CRT loaded, yet
 constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal write cache is dirty and not yet written back to the SD card
 
 -- Size of menu and menu items
@@ -350,109 +357,113 @@ constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal writ
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 62;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 63;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
-constant OPTM_DX           : natural := 23;
-constant OPTM_DY           : natural := 29;
-                                             
+constant OPTM_DX           : natural := 25;
+constant OPTM_DY           : natural := 30;
+
+-- !!! DO NOT TOUCH THE TYPE DEFINITION IN THE NEXT LINE AND CONTINUE YOUR CONFIGURATION ONE LINE LATER                                              
+type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC - 1;
+
+-- CONTINUE YOUR CONFIGURATION FROM HERE ON
+
 constant OPTM_ITEMS        : string :=
 
-   " C64 for MEGA65\n"        &
-   "\n"                       & 
-   " 8:%s\n"                  &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
-   "\n"                       &
-   " Expansion Port\n"        &
-   "\n"                       &
-   " Use hardware slot\n"     &
-   " Sim. 1750 REU 512KB\n"   &
-   " Simulated cartridge:\n"  &
-   " %s\n"                    &  -- %s will be replaced by OPTM_S_CRTROM when no cartridge is loaded, otherwise by the filename of the cartridge 
-   "\n"                       &
-   " C64 Configuration\n"     &
-   "\n"                       &
-   " Flip joystick ports\n"   &
+   " C64 for MEGA65\n"          &
+   "\n"                         & 
+   " 8:%s\n"                    &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
+   " PRG:%s\n"                  &
+   "\n"                         &
+   " Expansion Port\n"          &
+   "\n"                         &
+   " Use hardware slot\n"       &
+   " Simulate 1750 REU 512KB\n" &
+   " Simulate cartridge:\n"     &
+   " CRT:%s\n"                  &  -- %s will be replaced by OPTM_S_CRTROM when no cartridge is loaded, otherwise by the filename of the cartridge 
+   "\n"                         &
+   " C64 Configuration\n"       &
+   "\n"                         &
+   " Flip joystick ports\n"     &
       
-   " SID: %s\n"               &  -- SID submenu
-   " SID Settings\n"          &
-   "\n"                       &
-   " Mono SID\n"              &
-   "\n"                       &
-   " 6581\n"                  &
-   " 8580\n"                  &
-   "\n"                       &
-   " Stereo SID\n"            &
-   "\n"                       &
-   " L: 6581 R: 6581\n"       &
-   " L: 6581 R: 8580\n"       &
-   " L: 8580 R: 6581\n"       &
-   " L: 8580 R: 8580\n"       &
-   "\n"                       &
-   " Right SID Port\n"        &
-   "\n"                       &
-   " D420\n"                  &
-   " D500\n"                  &
-   " DE00\n"                  &
-   " DF00\n"                  &
-   " Same as left SID port\n" &
-   "\n"                       &
-   " Audio improvements\n"    &   
-   "\n"                       &
-   " Back to main menu\n"     &
+   " SID: %s\n"                 &  -- SID submenu
+   " SID Settings\n"            &
+   "\n"                         &
+   " Mono SID\n"                &
+   "\n"                         &
+   " 6581\n"                    &
+   " 8580\n"                    &
+   "\n"                         &
+   " Stereo SID\n"              &
+   "\n"                         &
+   " L: 6581 R: 6581\n"         &
+   " L: 6581 R: 8580\n"         &
+   " L: 8580 R: 6581\n"         &
+   " L: 8580 R: 8580\n"         &
+   "\n"                         &
+   " Right SID Port\n"          &
+   "\n"                         &
+   " D420\n"                    &
+   " D500\n"                    &
+   " DE00\n"                    &
+   " DF00\n"                    &
+   " Same as left SID port\n"   &
+   "\n"                         &
+   " Audio improvements\n"      &   
+   "\n"                         &
+   " Back to main menu\n"       &
    
-   " CIA: Use 8521 (C64C)\n"  &
-   "\n"                       &
-   " Display Settings\n"      &
-   "\n"                       &
+   " CIA: Use 8521 (C64C)\n"    &
+   "\n"                         &
+   " Display Settings\n"        &
+   "\n"                         &
 
-   " HDMI: %s\n"              &  -- HDMI submenu
-   " HDMI Display Mode\n"     &
-   "\n"                       &
-   " 16:9 720p 50 Hz\n"       &
-   " 16:9 720p 60 Hz\n"       & 
-   " 4:3  576p 50 Hz\n"       &
-   " 5:4  576p 50 Hz\n"       &
-   "\n"                       &
-   " Back to main menu\n"     &
+   " HDMI: %s\n"                &  -- HDMI submenu
+   " HDMI Display Mode\n"       &
+   "\n"                         &
+   " 16:9 720p 50 Hz\n"         &
+   " 16:9 720p 60 Hz\n"         &
+   " 4:3  576p 50 Hz\n"         &
+   " 5:4  576p 50 Hz\n"         &
+   "\n"                         &
+   " Back to main menu\n"       &
    
-   " HDMI: CRT emulation\n"   &
-   " HDMI: Zoom-in\n"         &
-   " HDMI: Flicker-free\n"    &
-   " HDMI: DVI (no sound)\n"  &
-   " VGA: Retro 15 kHz RGB\n" &
-   "\n"                       &
-   " About & Help\n"          &
-   "\n"                       &
+   " HDMI: CRT emulation\n"     &
+   " HDMI: Zoom-in\n"           &
+   " HDMI: Flicker-free\n"      &
+   " HDMI: DVI (no sound)\n"    &
+   " VGA: Retro 15 kHz RGB\n"   &
+   "\n"                         &
+   " About & Help\n"            &
+   "\n"                         &
    " Close Menu\n";
         
 constant OPTM_G_MOUNT_8       : integer := 1;
 constant OPTM_G_MOUNT_9       : integer := 2;   -- not used, yet; each drive needs a unique group ID
-constant OPTM_G_EXP_PORT      : integer := 3;
-constant OPTM_G_MOUNT_CRT     : integer := 4;
-constant OPTM_G_FLIP_JOYS     : integer := 5;
-constant OPTM_G_SID_SETUP     : integer := 6;
-constant OPTM_G_SID_PORT      : integer := 7;
-constant OPTM_G_IMPROVE_AUDIO : integer := 8;
-constant OPTM_G_CIA_8521      : integer := 9;
-constant OPTM_G_HDMI_MODES    : integer := 10;
-constant OPTM_G_CRT_EMULATION : integer := 11;
-constant OPTM_G_HDMI_ZOOM     : integer := 12;
-constant OPTM_G_HDMI_FF       : integer := 13;
-constant OPTM_G_HDMI_DVI      : integer := 14;
-constant OPTM_G_VGA_RETRO     : integer := 15;
-constant OPTM_G_ABOUT_HELP    : integer := 16;
-
--- !!! DO NOT TOUCH !!!
-constant OPTM_GTC          : natural := 17;
-type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC - 1;
+constant OPTM_G_LOAD_PRG      : integer := 3;
+constant OPTM_G_EXP_PORT      : integer := 4;
+constant OPTM_G_MOUNT_CRT     : integer := 5;
+constant OPTM_G_FLIP_JOYS     : integer := 6;
+constant OPTM_G_SID_SETUP     : integer := 7;
+constant OPTM_G_SID_PORT      : integer := 8;
+constant OPTM_G_IMPROVE_AUDIO : integer := 9;
+constant OPTM_G_CIA_8521      : integer := 10;
+constant OPTM_G_HDMI_MODES    : integer := 11;
+constant OPTM_G_CRT_EMULATION : integer := 12;
+constant OPTM_G_HDMI_ZOOM     : integer := 13;
+constant OPTM_G_HDMI_FF       : integer := 14;
+constant OPTM_G_HDMI_DVI      : integer := 15;
+constant OPTM_G_VGA_RETRO     : integer := 16;
+constant OPTM_G_ABOUT_HELP    : integer := 17;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_MOUNT_8       + OPTM_G_MOUNT_DRV   + OPTM_G_START,
+                                             OPTM_G_LOAD_PRG      + OPTM_G_LOAD_ROM,
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,

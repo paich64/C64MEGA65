@@ -632,6 +632,8 @@ _ROSMC_LOOP     MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
 
 _ROSMC_NEXTBIT  MOVE    M2M$RAMROM_DEV, R6      ; do we need to ignore the..
                 MOVE    M2M$CONFIG, @R6         ; current bit?
+
+                ; exclude OPTM_G_MOUNT_DRV items
                 MOVE    M2M$RAMROM_4KWIN, R6
                 MOVE    M2M$CFG_OPTM_MOUNT, @R6 ; yes we need to ignore, if..
                 MOVE    M2M$RAMROM_DATA, R6     ; ..the menu item is about..
@@ -639,6 +641,15 @@ _ROSMC_NEXTBIT  MOVE    M2M$RAMROM_DEV, R6      ; do we need to ignore the..
                 CMP     1, @R6
                 RBRA    _ROSMC_INCBIT, Z        ; ignore
 
+                ; exclude OPTM_G_LOAD_ROM items
+                MOVE    M2M$RAMROM_4KWIN, R6
+                MOVE    M2M$CFG_OPTM_CRTROM, @R6
+                MOVE    M2M$RAMROM_DATA, R6
+                ADD     R4, R6
+                CMP     1, @R6
+                RBRA    _ROSMC_INCBIT, Z
+
+                ; do not exclude
                 MOVE    @R2, R8
                 AND     R7, R8
                 MOVE    @R3, R9
@@ -713,6 +724,8 @@ _ROSMS_3        MOVE    R0, @R1                 ; new M2M$CFM_DATA "window"
 
 _ROSMS_4A       MOVE    M2M$RAMROM_DEV, R4      ; do we need to ignore the..
                 MOVE    M2M$CONFIG, @R4         ; current bit?
+
+                ; exclude OPTM_G_MOUNT_DRV items
                 MOVE    M2M$RAMROM_4KWIN, R4
                 MOVE    M2M$CFG_OPTM_MOUNT, @R4 ; yes we need to ignore, if..
                 MOVE    M2M$RAMROM_DATA, R4     ; ..the menu item is about..
@@ -722,7 +735,17 @@ _ROSMS_4A       MOVE    M2M$RAMROM_DEV, R4      ; do we need to ignore the..
                 XOR     R9, R9                  ; ignoring means writing a 0
                 RBRA    _ROSMS_5, 1
 
-_ROSMS_4B       XOR     R9, R9
+                ; exclude OPTM_G_LOAD_ROM items
+_ROSMS_4B       MOVE    M2M$RAMROM_4KWIN, R4
+                MOVE    M2M$CFG_OPTM_CRTROM, @R4
+                MOVE    M2M$RAMROM_DATA, R4
+                ADD     R3, R4
+                CMP     1, @R4
+                RBRA    _ROSMS_4C, !Z
+                XOR     R9, R9
+                RBRA    _ROSMS_5, 1
+
+_ROSMS_4C       XOR     R9, R9
                 MOVE    R7, R6
                 AND     @R2, R6                 ; current bit set?
                 RBRA    _ROSMS_5, Z             ; no: write R9, which is 0
@@ -1180,7 +1203,7 @@ _OPTMCB_RET     DECRB
 ;
 ; "%s" is meant to denote the space where we will either print
 ; OPTM_S_MOUNT/OPTM_S_CRTROM from config.vhd, which is "<Mount Drive>" and
-; "<Load ROM>" by default, if the drive is not mounted, yet, or we print the
+; "<Load>" by default, if the drive is not mounted, yet, or we print the
 ; file name of the disk image, abbreviated to the width of the frame. We also
 ; handle the "cache dirty" situation and show OPTM_S_SAVING which defaults
 ; to "<Saving>".
@@ -1498,17 +1521,18 @@ _OPTM_CBS_CTRM  MOVE    R1, R8
 
                 ; Calculate the address on the heap that we can use as a
                 ; scratch buffer for our string: (Amount of vdrives plus
-                ; amount of submenus) times @SCR$OSM_O_DX
-                MOVE    VDRIVES_NUM, R8
-                MOVE    @R8, R8
+                ; amount of submenus + CRT/ROM id (in R8)) times @SCR$OSM_O_DX
+                MOVE    VDRIVES_NUM, R2
+                ADD     @R2, R8
                 MOVE    OPTM_SCOUNT, R2
                 ADD     @R2, R8
                 MOVE    SCR$OSM_O_DX, R9
                 MOVE    @R9, R9
                 MOVE    R9, R5                  ; R5: @SCR$OSM_O_DX
                 SYSCALL(mulu, 1)                ; R10: result
-                MOVE    R10, R0
-                ADD     OPTM_HEAP, R0           ; R0: target address on heap
+                MOVE    OPTM_HEAP, R0           ; R0: target address on heap
+                MOVE    @R0, R0
+                ADD     R10, R0
 
                 ; Has any CRT/ROM for the current line item been loaded
                 ; already? Yes: Then we replace the %s by the filename,
@@ -1533,7 +1557,8 @@ _OPTM_CBS_CTRM  MOVE    R1, R8
                 MOVE    0, @R8
                 RBRA    _OPTM_CBS_RET, 1
 
-                ; Replace %s 
+                ; Replace %s
+                ; @TODO
 _OPTM_CBS_CTRML SYSCALL(exit, 1)
 
 _OPTM_CBS_RET   MOVE    R0, @--SP               ; lift R0 over the leave hump

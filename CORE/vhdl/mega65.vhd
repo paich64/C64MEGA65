@@ -286,31 +286,31 @@ signal hr_crt_waitrequest         : std_logic;
 ---------------------------------------------------------------------------------------------
 
 -- OSM selections within qnice_osm_control_i
-constant C_MENU_EXP_PORT_HW   : natural := 6;
-constant C_MENU_EXP_PORT_REU  : natural := 7;
-constant C_MENU_EXP_PORT_CRT  : natural := 8;
-constant C_MENU_FLIP_JOYS     : natural := 13;
-constant C_MENU_MONO_6581     : natural := 19;
-constant C_MENU_MONO_8580     : natural := 20;
-constant C_MENU_STEREO_L6R6   : natural := 24;
-constant C_MENU_STEREO_L6R8   : natural := 25;
-constant C_MENU_STEREO_L8R6   : natural := 26;
-constant C_MENU_STEREO_L8R8   : natural := 27;
-constant C_MENU_STEREO_R_D420 : natural := 31;
-constant C_MENU_STEREO_R_D500 : natural := 32;
-constant C_MENU_STEREO_R_DE00 : natural := 33;
-constant C_MENU_STEREO_R_DF00 : natural := 34;
-constant C_MENU_IMPROVE_AUDIO : natural := 37;
-constant C_MENU_8521          : natural := 40;
-constant C_MENU_HDMI_16_9_50  : natural := 47;
-constant C_MENU_HDMI_16_9_60  : natural := 48;
-constant C_MENU_HDMI_4_3_50   : natural := 49;
-constant C_MENU_HDMI_5_4_50   : natural := 50;
-constant C_MENU_CRT_EMULATION : natural := 53;
-constant C_MENU_HDMI_ZOOM     : natural := 54;          
-constant C_MENU_HDMI_FF       : natural := 55;
-constant C_MENU_HDMI_DVI      : natural := 56;
-constant C_MENU_VGA_RETRO     : natural := 57;
+constant C_MENU_EXP_PORT_HW   : natural := 7;
+constant C_MENU_EXP_PORT_REU  : natural := 8;
+constant C_MENU_EXP_PORT_CRT  : natural := 9;
+constant C_MENU_FLIP_JOYS     : natural := 14;
+constant C_MENU_MONO_6581     : natural := 20;
+constant C_MENU_MONO_8580     : natural := 21;
+constant C_MENU_STEREO_L6R6   : natural := 25;
+constant C_MENU_STEREO_L6R8   : natural := 26;
+constant C_MENU_STEREO_L8R6   : natural := 27;
+constant C_MENU_STEREO_L8R8   : natural := 28;
+constant C_MENU_STEREO_R_D420 : natural := 32;
+constant C_MENU_STEREO_R_D500 : natural := 33;
+constant C_MENU_STEREO_R_DE00 : natural := 34;
+constant C_MENU_STEREO_R_DF00 : natural := 35;
+constant C_MENU_IMPROVE_AUDIO : natural := 38;
+constant C_MENU_8521          : natural := 41;
+constant C_MENU_HDMI_16_9_50  : natural := 48;
+constant C_MENU_HDMI_16_9_60  : natural := 49;
+constant C_MENU_HDMI_4_3_50   : natural := 50;
+constant C_MENU_HDMI_5_4_50   : natural := 51;
+constant C_MENU_CRT_EMULATION : natural := 54;
+constant C_MENU_HDMI_ZOOM     : natural := 55;          
+constant C_MENU_HDMI_FF       : natural := 56;
+constant C_MENU_HDMI_DVI      : natural := 57;
+constant C_MENU_VGA_RETRO     : natural := 58;
 
 constant C_CRT_CASREG    : unsigned(15 downto 0) := X"FFFF";
 constant C_CRT_STATUS    : unsigned(11 downto 0) := X"000";
@@ -659,7 +659,7 @@ begin
 
    process (qnice_clk_i)
    begin
-      if rising_edge(qnice_clk_i) then
+      if falling_edge(qnice_clk_i) then
          if qnice_dev_id_i = C_DEV_C64_CRT and
             qnice_dev_ce_i = '1' and
             qnice_dev_we_i = '1' and
