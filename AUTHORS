@@ -8,12 +8,14 @@ done in 2022 by
 C64MEGA65 is licensed under the terms of GNU/GPL v3, for more information please read the file LICENSE.
 Parts of C64MEGA65 are licensed under other Free-software licenses as described in the source code.
 
-Special thanks for countless hours of testing, sparring, advise and other
-valuable support (in alphabetical order): adtbm, deft & lydon
-
 Very special thanks to AmzokPhase101 for very patiently and with great thoroughness performing
 a lot of tests plus the most intense "demo marathon" series regression tests.
 The results of the "demo marathon" tests are documented in tests/demos.md.
+
+Special thanks for countless hours of testing, sparring, advise and other
+valuable support (in alphabetical order): adtbm, deft & lydon
+
+Special thanks to Daniel Mantione for helping us to support the EasyFlash 1CR
 
 C64MEGA65:
 ----------

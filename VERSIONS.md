@@ -18,15 +18,13 @@ also software cartridges.
 * More clearly arranged menu using submenus
 
 * Hardware cartridges can be used in the MEGA65's expansion port. Most game
-  cartridges ("passive" cartridges) are supported. Not supported yet are any
-  kind of "active" cartridges that act as busmaster. This includes Freezer
-  cartridges, Disk Speeders, RAM Expansion Units (REUs), etc.
+  cartridges are supported, including Ultimax game cartridges.
+
+* The following more sophisticated cartridges are supported:
+  EasyFlash 1CR
 
 @TODO: Check, if we can support at least REUs and other cartridges that are
 not relying on the missing R3 signals (RESET, NMI and IRQ)
-
-@TODO: Either support Commodore MAX Machine modules (such as "Pinball
-Spectacular") or describe them as not supported.
 
 WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
 all cartridge types, add constraints here
@@ -60,7 +58,10 @@ just make the interface of FATAL public because is available everywhere).
   by running the two different SID models 6581 and 8050 at the same (one left
   and one right) while they play the same mono tune.
 
-
+WIP IEC Hardware port: @TODO: Idea: Drive #8 stays hardwired as it is but
+you can plug other IEC devices (such as drives with #9 onwards) and printers
+into the MEGA6's IEC port. Can be as simple as a single-select item:
+"Enable hardware IEC port".
 
 WIP 15khz RGB + csync:
 https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500

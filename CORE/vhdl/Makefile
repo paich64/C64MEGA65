@@ -1,10 +1,8 @@
-SRC += crt2hyperram.vhd
-SRC += ../../M2M/vhdl/memory/avm_decrease.vhd
-SRC += ../../M2M/vhdl/memory/avm_rom.vhd
+SRC += crt_loader.vhd
 
 
-DUT ?= crt2hyperram
-GENERIC ?= -gG_INIT_FILE=../../../test.crt
+DUT ?= crt_loader
+GENERIC ?=
 
 
 TB = tb_$(DUT)
@@ -15,7 +13,7 @@ SAVE = $(TB).gtkw
 sim: $(SRC)
 	ghdl -i --std=08 --work=work $(SRC)
 	ghdl -m --std=08 -fexplicit $(TB)
-	ghdl -r --std=08 $(TB) $(GENERIC) --assert-level=error --wave=$(WAVE) --max-stack-alloc=1024 --stop-time=50us
+	ghdl -r --std=08 $(TB) $(GENERIC) --assert-level=error --wave=$(WAVE) --stop-time=50us
 
 questa: $(SRC)
 	vcom -2008 $(SRC)
