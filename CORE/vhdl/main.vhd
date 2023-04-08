@@ -494,6 +494,9 @@ begin
          c64_ram_data <= c64_ram_data_i;
       end if;
    end process;
+   
+   -- RAM write enable also needs to check for chip enable
+   c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer Commodore 64 core / main machine
@@ -623,9 +626,6 @@ begin
          cass_read   => '1'               -- default is '1' according to MiSTer's c1530.vhd
       ); -- i_fpga64_sid_iec
 
-   -- RAM write enable also needs to check for chip enable
-   c64_ram_we_o <= c64_ram_ce and c64_ram_we;
-
    --------------------------------------------------------------------------------------------------
    -- Expansion Port (aka Cartridge Port) handling:
    --    * MEGA65's hardware expansion port
@@ -713,12 +713,12 @@ begin
          -- Switch the data lines bi-directionally so that the CPU can also
          -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
-         if c64_ram_we='0' and (cart_roml_n = '0' or cart_romh_n = '0') then
+         if c64_ram_we = '0' and (cart_roml_n = '0' or cart_romh_n = '0' or cart_io1_n = '0' or cart_io2_n = '0') then
             cart_data_dir_o   <= '0';
             data_from_cart    <= cart_d_io;
          else
             cart_data_dir_o   <= '1';
-            if c64_ram_we='0' then
+            if c64_ram_we = '0' then
                cart_d_io         <= c64_ram_data_i;
             else
                cart_d_io         <= c64_ram_data_o;
@@ -749,7 +749,9 @@ begin
             core_exrom_n   <= cart_exrom_n;
             core_irq_n     <= cart_irq_n;
             core_nmi_n     <= cart_nmi_n and restore_key_n;
-
+            core_io_ext    <= core_ioe or core_iof;
+            core_io_data   <= data_from_cart;
+            
          -- Simulate 1750 REU 512KB
          when 1 =>
             core_io_ext    <= reu_oe;

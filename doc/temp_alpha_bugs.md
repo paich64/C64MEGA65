@@ -17,6 +17,10 @@
 
 ### System
 
+* Black screen on startup (while the OSD is still working) when no SD card
+  is inserted (neither internal nor external) - OR - when no SD card is
+  readable for the system.
+
 * Black screen from time to time on startup (independent if a cartridge is
   inserted or not). Might have to do with wrongly initialized
   $8000 content selection upon boot-up. Will be tested with this:
@@ -40,3 +44,10 @@
 
 * But @muse still has glitches with V5A9
   https://discord.com/channels/@me/1034779919802191882/1088000630611791893
+
+* HyperRAM Rev D: @muse and @mpryon having CRASHING TreuLove when using the
+  Alpha 10 core versus the Alpha 9 core (?!). Alpha 10 actually did not
+  change anything significant versus Alpha 9. We ruled out simple reasons
+  such as "wrong config file":
+  https://discord.com/channels/@me/1034779919802191882/1089138523912802344
+  https://discord.com/channels/@me/1034779919802191882/1089989286092361838
