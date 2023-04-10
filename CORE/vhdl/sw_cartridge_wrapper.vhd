@@ -6,20 +6,17 @@ use ieee.numeric_std.all;
 -- It contains interfaces to the QNICE, to the C64 core, and to the HyperRAM.
 
 entity sw_cartridge_wrapper is
+generic (
+   G_BASE_ADDRESS : std_logic_vector(21 downto 0)
+);
 port (
    qnice_clk_i          : in  std_logic;
    qnice_rst_i          : in  std_logic;
-   qnice_req_status_i   : in  std_logic_vector(15 downto 0);
-   qnice_req_fs_lo_i    : in  std_logic_vector(15 downto 0);
-   qnice_req_fs_hi_i    : in  std_logic_vector(15 downto 0);
-   qnice_req_hrs_lo_i   : in  std_logic_vector(15 downto 0);
-   qnice_req_hrs_hi_i   : in  std_logic_vector(15 downto 0);
-   qnice_resp_parsest_o : out std_logic_vector(15 downto 0);
-   qnice_resp_parsee1_o : out std_logic_vector(15 downto 0);
-   qnice_resp_addr_lo_o : out std_logic_vector(15 downto 0);
-   qnice_resp_addr_hi_o : out std_logic_vector(15 downto 0);
-   qnice_stat_addr_i    : in  std_logic_vector( 7 downto 0);
-   qnice_stat_data_o    : out std_logic_vector( 7 downto 0);
+   qnice_addr_i         : in  std_logic_vector(27 downto 0);
+   qnice_data_i         : in  std_logic_vector(15 downto 0);
+   qnice_ce_i           : in  std_logic;
+   qnice_we_i           : in  std_logic;
+   qnice_data_o         : out std_logic_vector(15 downto 0);
 
    main_clk_i           : in  std_logic;
    main_rst_i           : in  std_logic;
@@ -74,16 +71,28 @@ architecture synthesis of sw_cartridge_wrapper is
    constant C_CRT_ST_ERR       : std_logic_vector(15 downto 0) := X"0002";
    constant C_CRT_ST_OK        : std_logic_vector(15 downto 0) := X"0003";
 
+   constant C_CRT_CASREG       : unsigned(15 downto 0) := X"FFFF";
+   constant C_CRT_STATUS       : unsigned(11 downto 0) := X"000";
+   constant C_CRT_FS_LO        : unsigned(11 downto 0) := X"001";
+   constant C_CRT_FS_HI        : unsigned(11 downto 0) := X"002";
+   constant C_CRT_PARSEST      : unsigned(11 downto 0) := X"010";
+   constant C_CRT_PARSEE1      : unsigned(11 downto 0) := X"011";
+   constant C_CRT_ADDR_LO      : unsigned(11 downto 0) := X"012";
+   constant C_CRT_ADDR_HI      : unsigned(11 downto 0) := X"013";
+   constant C_CRT_ERR_START    : unsigned(11 downto 0) := X"100";
+   constant C_CRT_ERR_END      : unsigned(11 downto 0) := X"1FF";
+
+
    -- Request and response
-   signal qnice_req_address    : std_logic_vector(21 downto 0);
+   signal qnice_req_status     : std_logic_vector(15 downto 0);
    signal qnice_req_length     : std_logic_vector(22 downto 0);
    signal qnice_req_valid      : std_logic;
    signal qnice_resp_status    : std_logic_vector( 3 downto 0);
    signal qnice_resp_error     : std_logic_vector( 3 downto 0);
    signal qnice_resp_address   : std_logic_vector(22 downto 0);
+   signal qnice_stat_data      : std_logic_vector( 7 downto 0);
 
    -- Request and response
-   signal hr_req_address       : std_logic_vector(21 downto 0);
    signal hr_req_length        : std_logic_vector(22 downto 0);
    signal hr_req_valid         : std_logic;
    signal hr_resp_status       : std_logic_vector( 3 downto 0);
@@ -110,59 +119,36 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_bank_raddr        : std_logic_vector(24 downto 0);
    signal hr_bank_wr           : std_logic;
 
-   attribute mark_debug : string;
-   attribute mark_debug of qnice_rst_i          : signal is "true";
-   attribute mark_debug of qnice_req_status_i   : signal is "true";
-   attribute mark_debug of qnice_req_fs_lo_i    : signal is "true";
-   attribute mark_debug of qnice_req_fs_hi_i    : signal is "true";
-   attribute mark_debug of qnice_req_hrs_lo_i   : signal is "true";
-   attribute mark_debug of qnice_req_hrs_hi_i   : signal is "true";
-   attribute mark_debug of qnice_resp_parsest_o : signal is "true";
-   attribute mark_debug of qnice_resp_parsee1_o : signal is "true";
-   attribute mark_debug of qnice_resp_addr_lo_o : signal is "true";
-   attribute mark_debug of qnice_resp_addr_hi_o : signal is "true";
-   attribute mark_debug of qnice_stat_addr_i    : signal is "true";
-   attribute mark_debug of qnice_stat_data_o    : signal is "true";
-   attribute mark_debug of main_rst_i           : signal is "true";
-   attribute mark_debug of main_loading_o       : signal is "true";
-   attribute mark_debug of main_id_o            : signal is "true";
-   attribute mark_debug of main_exrom_o         : signal is "true";
-   attribute mark_debug of main_game_o          : signal is "true";
-   attribute mark_debug of main_bank_laddr_o    : signal is "true";
-   attribute mark_debug of main_bank_size_o     : signal is "true";
-   attribute mark_debug of main_bank_num_o      : signal is "true";
-   attribute mark_debug of main_bank_type_o     : signal is "true";
-   attribute mark_debug of main_bank_raddr_o    : signal is "true";
-   attribute mark_debug of main_bank_wr_o       : signal is "true";
-   attribute mark_debug of main_bank_lo_i       : signal is "true";
-   attribute mark_debug of main_bank_hi_i       : signal is "true";
-   attribute mark_debug of main_ram_addr_i      : signal is "true";
-   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
-   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
-   attribute mark_debug of hr_rst_i             : signal is "true";
-   attribute mark_debug of hr_write_o           : signal is "true";
-   attribute mark_debug of hr_read_o            : signal is "true";
-   attribute mark_debug of hr_address_o         : signal is "true";
-   attribute mark_debug of hr_writedata_o       : signal is "true";
-   attribute mark_debug of hr_byteenable_o      : signal is "true";
-   attribute mark_debug of hr_burstcount_o      : signal is "true";
-   attribute mark_debug of hr_readdata_i        : signal is "true";
-   attribute mark_debug of hr_readdatavalid_i   : signal is "true";
-   attribute mark_debug of hr_waitrequest_i     : signal is "true";
-   attribute mark_debug of hr_bram_address      : signal is "true";
-   attribute mark_debug of hr_bram_data         : signal is "true";
-   attribute mark_debug of hr_bram_lo_wren      : signal is "true";
-   attribute mark_debug of hr_bram_hi_wren      : signal is "true";
-   attribute mark_debug of hr_req_address       : signal is "true";
-   attribute mark_debug of hr_req_length        : signal is "true";
-   attribute mark_debug of hr_req_valid         : signal is "true";
-   attribute mark_debug of hr_resp_status       : signal is "true";
-   attribute mark_debug of hr_resp_error        : signal is "true";
-   attribute mark_debug of hr_resp_address      : signal is "true";
-   attribute mark_debug of hr_bank_lo           : signal is "true";
-   attribute mark_debug of hr_bank_hi           : signal is "true";
-
 begin
+
+   ----------------------------------------
+   -- Decode information from and to QNICE
+   ----------------------------------------
+
+   qnice_req_valid <= '1' when qnice_req_status = C_CRT_ST_OK else '0';
+
+   process (qnice_clk_i)
+   begin
+      if rising_edge(qnice_clk_i) then
+         if qnice_ce_i = '1' and
+            qnice_we_i = '1' and
+            unsigned(qnice_addr_i(27 downto 12)) = C_CRT_CASREG
+         then
+            case unsigned(qnice_addr_i(11 downto 0)) is
+               when C_CRT_STATUS => qnice_req_status                <= qnice_data_i;
+               when C_CRT_FS_LO  => qnice_req_length(15 downto  0)  <= qnice_data_i;
+               when C_CRT_FS_HI  => qnice_req_length(22 downto 16)  <= qnice_data_i(6 downto 0);
+               when others => null;
+            end case;
+         end if;
+
+         if qnice_rst_i = '1' then
+            qnice_req_status  <= (others => '0');
+            qnice_req_length  <= (others => '0');
+         end if;
+      end if;
+   end process;
+
 
    -----------------------------------------
    -- Generate error status string to QNICE
@@ -174,44 +160,37 @@ begin
       variable char_v        : character;
    begin
       error_index_v := to_integer(unsigned(qnice_resp_error(2 downto 0)));
-      char_index_v  := to_integer(unsigned(qnice_stat_addr_i(4 downto 0))) + 1;
+      char_index_v  := to_integer(unsigned(qnice_addr_i(4 downto 0))) + 1;
       if char_index_v <= C_ERROR_STRING_LENGTH then
          char_v := C_ERROR_STRINGS(error_index_v)(char_index_v);
-         qnice_stat_data_o <= std_logic_vector(to_unsigned(character'pos(char_v), 8));
+         qnice_stat_data <= std_logic_vector(to_unsigned(character'pos(char_v), 8));
       else
-         qnice_stat_data_o <= X"00"; -- zero-terminated strings
+         qnice_stat_data <= X"00"; -- zero-terminated strings
       end if;
    end process;
 
-
-   ----------------------------------------
-   -- Decode information from and to QNICE
-   ----------------------------------------
-
-   process (qnice_clk_i)
+   process (all)
    begin
-      if rising_edge(qnice_clk_i) then
-         if qnice_req_status_i = C_CRT_ST_OK then
-            -- Address is in units of 16-bit words.
-            qnice_req_address <= qnice_req_hrs_hi_i(5 downto 0) & qnice_req_hrs_lo_i;
-            -- Length is in units of bytes.
-            qnice_req_length  <= qnice_req_fs_hi_i (6 downto 0) & qnice_req_fs_lo_i;
-            qnice_req_valid   <= '1';
-         else
-            qnice_req_valid   <= '0';
-         end if;
+      if qnice_ce_i = '1' and
+         qnice_we_i = '0' and
+         unsigned(qnice_addr_i(27 downto 12)) = C_CRT_CASREG
+      then
+         qnice_data_o <= x"0000"; -- By default read back zeros.
+         case to_integer(unsigned(qnice_addr_i(11 downto 0))) is
+            when to_integer(C_CRT_STATUS)  => qnice_data_o <= qnice_req_status;
+            when to_integer(C_CRT_FS_LO)   => qnice_data_o <= qnice_req_length(15 downto  0);
+            when to_integer(C_CRT_FS_HI)   => qnice_data_o(6 downto 0) <= qnice_req_length(22 downto 16);
+            when to_integer(C_CRT_PARSEST) => qnice_data_o <= X"000" & qnice_resp_status;
+            when to_integer(C_CRT_PARSEE1) => qnice_data_o <= X"000" & qnice_resp_error;
+            when to_integer(C_CRT_ADDR_LO) => qnice_data_o <= qnice_resp_address(15 downto 0);
+            when to_integer(C_CRT_ADDR_HI) => qnice_data_o <= "000000000" & qnice_resp_address(22 downto 16);
+            when to_integer(C_CRT_ERR_START)
+              to to_integer(C_CRT_ERR_END) => qnice_data_o <= X"00" & qnice_stat_data;
+            when others => null;
+         end case;
       end if;
    end process;
 
-   process (qnice_clk_i)
-   begin
-      if rising_edge(qnice_clk_i) then
-         qnice_resp_parsest_o <= X"000" & qnice_resp_status;
-         qnice_resp_parsee1_o <= X"000" & qnice_resp_error;
-         qnice_resp_addr_lo_o <= qnice_resp_address(15 downto 0);
-         qnice_resp_addr_hi_o <= "000000000" & qnice_resp_address(22 downto 16);
-      end if;
-   end process;
 
 
    --------------------------------------------
@@ -220,17 +199,15 @@ begin
 
    i_cdc_qnice2hr : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 46
+         G_DATA_SIZE => 24
       )
       port map (
          src_clk_i                => qnice_clk_i,
-         src_data_i(21 downto  0) => qnice_req_address,
-         src_data_i(44 downto 22) => qnice_req_length,
-         src_data_i(45)           => qnice_req_valid,
+         src_data_i(22 downto  0) => qnice_req_length,
+         src_data_i(23)           => qnice_req_valid,
          dst_clk_i                => hr_clk_i,
-         dst_data_o(21 downto  0) => hr_req_address,
-         dst_data_o(44 downto 22) => hr_req_length,
-         dst_data_o(45)           => hr_req_valid
+         dst_data_o(22 downto  0) => hr_req_length,
+         dst_data_o(23)           => hr_req_valid
       ); -- i_cdc_qnice2hr
 
 
@@ -281,7 +258,7 @@ begin
       port map (
          clk_i               => hr_clk_i,
          rst_i               => hr_rst_i,
-         req_address_i       => hr_req_address,
+         req_address_i       => G_BASE_ADDRESS,
          req_length_i        => hr_req_length,
          req_start_i         => hr_req_valid,
          resp_status_o       => hr_resp_status,

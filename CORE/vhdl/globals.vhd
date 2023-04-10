@@ -87,6 +87,13 @@ constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     --
 constant C_DEV_C64_CRT        : std_logic_vector(15 downto 0) := x"0103";     -- SW cartridges (*.CRT)
 
 ----------------------------------------------------------------------------------------------------------
+-- HyperRAM memory map (in units of 4kW)
+----------------------------------------------------------------------------------------------------------
+
+constant C_HMAP_M2M           : std_logic_vector(15 downto 0) := x"0000";     -- Reserved for the M2M framework
+constant C_HMAP_CRT           : std_logic_vector(15 downto 0) := x"0200";     -- Contains CRT files
+
+----------------------------------------------------------------------------------------------------------
 -- Virtual Drive Management System
 ----------------------------------------------------------------------------------------------------------
 
