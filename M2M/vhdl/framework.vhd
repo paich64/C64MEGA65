@@ -173,7 +173,8 @@ port (
    qnice_ramrom_data_out_o : out std_logic_vector(15 downto 0);
    qnice_ramrom_data_in_i  : in  std_logic_vector(15 downto 0);
    qnice_ramrom_ce_o       : out std_logic;
-   qnice_ramrom_we_o       : out std_logic
+   qnice_ramrom_we_o       : out std_logic;
+   qnice_ramrom_wait_i     : in  std_logic
 );
 end entity framework;
 
@@ -753,6 +754,7 @@ begin
       -----------------------------------
       else
          qnice_ramrom_data_in <= qnice_ramrom_data_in_i;
+         qnice_ramrom_wait    <= qnice_ramrom_wait_i;
       end if;
    end process qnice_ramrom_devices;
 

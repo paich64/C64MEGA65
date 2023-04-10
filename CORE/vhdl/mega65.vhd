@@ -63,6 +63,7 @@ port (
    qnice_dev_data_o         : out std_logic_vector(15 downto 0);
    qnice_dev_ce_i           : in  std_logic;
    qnice_dev_we_i           : in  std_logic;
+   qnice_dev_wait_o         : out std_logic;
 
    --------------------------------------------------------------------------------------------------------
    -- Core Clock Domain
@@ -328,6 +329,7 @@ signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 signal qnice_crt_qnice_ce     : std_logic;
 signal qnice_crt_qnice_we     : std_logic;
 signal qnice_crt_qnice_data   : std_logic_vector(15 downto 0);
+signal qnice_crt_qnice_wait   : std_logic;
 
 begin
 
@@ -592,6 +594,7 @@ begin
       qnice_c64_qnice_ce         <= '0';
       qnice_c64_qnice_we         <= '0';
       qnice_c64_mount_buf_ram_we <= '0';
+      qnice_dev_wait_o           <= '0';
 
       case qnice_dev_id_i is
          -- C64 RAM
@@ -615,6 +618,7 @@ begin
             qnice_crt_qnice_ce         <= qnice_dev_ce_i;
             qnice_crt_qnice_we         <= qnice_dev_we_i;
             qnice_dev_data_o           <= qnice_crt_qnice_data;
+            qnice_dev_wait_o           <= qnice_crt_qnice_wait;
 
          when others => null;
       end case;
@@ -696,6 +700,7 @@ begin
       qnice_ce_i           => qnice_crt_qnice_ce,
       qnice_we_i           => qnice_crt_qnice_we,
       qnice_data_o         => qnice_crt_qnice_data,
+      qnice_wait_o         => qnice_crt_qnice_wait,
       main_clk_i           => main_clk,
       main_rst_i           => main_rst,
       main_loading_o       => main_crt_loading,

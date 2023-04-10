@@ -17,6 +17,7 @@ port (
    qnice_ce_i           : in  std_logic;
    qnice_we_i           : in  std_logic;
    qnice_data_o         : out std_logic_vector(15 downto 0);
+   qnice_wait_o         : out std_logic;
 
    main_clk_i           : in  std_logic;
    main_rst_i           : in  std_logic;
@@ -66,58 +67,93 @@ architecture synthesis of sw_cartridge_wrapper is
 
 
    -- Status reporting from the QNICE
-   constant C_CRT_ST_IDLE      : std_logic_vector(15 downto 0) := X"0000";
-   constant C_CRT_ST_LDNG      : std_logic_vector(15 downto 0) := X"0001";
-   constant C_CRT_ST_ERR       : std_logic_vector(15 downto 0) := X"0002";
-   constant C_CRT_ST_OK        : std_logic_vector(15 downto 0) := X"0003";
+   constant C_CRT_ST_IDLE         : std_logic_vector(15 downto 0) := X"0000";
+   constant C_CRT_ST_LDNG         : std_logic_vector(15 downto 0) := X"0001";
+   constant C_CRT_ST_ERR          : std_logic_vector(15 downto 0) := X"0002";
+   constant C_CRT_ST_OK           : std_logic_vector(15 downto 0) := X"0003";
 
-   constant C_CRT_CASREG       : unsigned(15 downto 0) := X"FFFF";
-   constant C_CRT_STATUS       : unsigned(11 downto 0) := X"000";
-   constant C_CRT_FS_LO        : unsigned(11 downto 0) := X"001";
-   constant C_CRT_FS_HI        : unsigned(11 downto 0) := X"002";
-   constant C_CRT_PARSEST      : unsigned(11 downto 0) := X"010";
-   constant C_CRT_PARSEE1      : unsigned(11 downto 0) := X"011";
-   constant C_CRT_ADDR_LO      : unsigned(11 downto 0) := X"012";
-   constant C_CRT_ADDR_HI      : unsigned(11 downto 0) := X"013";
-   constant C_CRT_ERR_START    : unsigned(11 downto 0) := X"100";
-   constant C_CRT_ERR_END      : unsigned(11 downto 0) := X"1FF";
+   constant C_CRT_CASREG          : unsigned(15 downto 0) := X"FFFF";
+   constant C_CRT_STATUS          : unsigned(11 downto 0) := X"000";
+   constant C_CRT_FS_LO           : unsigned(11 downto 0) := X"001";
+   constant C_CRT_FS_HI           : unsigned(11 downto 0) := X"002";
+   constant C_CRT_PARSEST         : unsigned(11 downto 0) := X"010";
+   constant C_CRT_PARSEE1         : unsigned(11 downto 0) := X"011";
+   constant C_CRT_ADDR_LO         : unsigned(11 downto 0) := X"012";
+   constant C_CRT_ADDR_HI         : unsigned(11 downto 0) := X"013";
+   constant C_CRT_ERR_START       : unsigned(11 downto 0) := X"100";
+   constant C_CRT_ERR_END         : unsigned(11 downto 0) := X"1FF";
 
-
-   -- Request and response
-   signal qnice_req_status     : std_logic_vector(15 downto 0);
-   signal qnice_req_length     : std_logic_vector(22 downto 0);
-   signal qnice_req_valid      : std_logic;
-   signal qnice_resp_status    : std_logic_vector( 3 downto 0);
-   signal qnice_resp_error     : std_logic_vector( 3 downto 0);
-   signal qnice_resp_address   : std_logic_vector(22 downto 0);
-   signal qnice_stat_data      : std_logic_vector( 7 downto 0);
 
    -- Request and response
-   signal hr_req_length        : std_logic_vector(22 downto 0);
-   signal hr_req_valid         : std_logic;
-   signal hr_resp_status       : std_logic_vector( 3 downto 0);
-   signal hr_resp_error        : std_logic_vector( 3 downto 0);
-   signal hr_resp_address      : std_logic_vector(22 downto 0);
+   signal qnice_req_status        : std_logic_vector(15 downto 0);
+   signal qnice_req_length        : std_logic_vector(22 downto 0);
+   signal qnice_req_valid         : std_logic;
+   signal qnice_resp_status       : std_logic_vector( 3 downto 0);
+   signal qnice_resp_error        : std_logic_vector( 3 downto 0);
+   signal qnice_resp_address      : std_logic_vector(22 downto 0);
+   signal qnice_stat_data         : std_logic_vector( 7 downto 0);
+
+   signal qnice_hr_ce             : std_logic;
+   signal qnice_hr_addr           : std_logic_vector(31 downto 0);
+   signal qnice_hr_wait           : std_logic;
+   signal qnice_hr_data           : std_logic_vector(15 downto 0);
+
+   signal qnice_avm_write         : std_logic;
+   signal qnice_avm_read          : std_logic;
+   signal qnice_avm_address       : std_logic_vector(31 downto 0);
+   signal qnice_avm_writedata     : std_logic_vector(15 downto 0);
+   signal qnice_avm_byteenable    : std_logic_vector(1 downto 0);
+   signal qnice_avm_burstcount    : std_logic_vector(7 downto 0);
+   signal qnice_avm_readdata      : std_logic_vector(15 downto 0);
+   signal qnice_avm_readdatavalid : std_logic;
+   signal qnice_avm_waitrequest   : std_logic;
+
+   -- Request and response
+   signal hr_req_length           : std_logic_vector(22 downto 0);
+   signal hr_req_valid            : std_logic;
+   signal hr_resp_status          : std_logic_vector( 3 downto 0);
+   signal hr_resp_error           : std_logic_vector( 3 downto 0);
+   signal hr_resp_address         : std_logic_vector(22 downto 0);
+
+   signal hr_qnice_write          : std_logic;
+   signal hr_qnice_read           : std_logic;
+   signal hr_qnice_address        : std_logic_vector(31 downto 0);
+   signal hr_qnice_writedata      : std_logic_vector(15 downto 0);
+   signal hr_qnice_byteenable     : std_logic_vector(1 downto 0);
+   signal hr_qnice_burstcount     : std_logic_vector(7 downto 0);
+   signal hr_qnice_readdata       : std_logic_vector(15 downto 0);
+   signal hr_qnice_readdatavalid  : std_logic;
+   signal hr_qnice_waitrequest    : std_logic;
+
+   signal hr_crt_write            : std_logic;
+   signal hr_crt_read             : std_logic;
+   signal hr_crt_address          : std_logic_vector(31 downto 0) := (others => '0');
+   signal hr_crt_writedata        : std_logic_vector(15 downto 0);
+   signal hr_crt_byteenable       : std_logic_vector(1 downto 0);
+   signal hr_crt_burstcount       : std_logic_vector(7 downto 0);
+   signal hr_crt_readdata         : std_logic_vector(15 downto 0);
+   signal hr_crt_readdatavalid    : std_logic;
+   signal hr_crt_waitrequest      : std_logic;
 
    -- Writing to BRAM
-   signal hr_bram_address      : std_logic_vector(11 downto 0);
-   signal hr_bram_data         : std_logic_vector(15 downto 0);
-   signal hr_bram_lo_wren      : std_logic;
-   signal hr_bram_hi_wren      : std_logic;
+   signal hr_bram_address         : std_logic_vector(11 downto 0);
+   signal hr_bram_data            : std_logic_vector(15 downto 0);
+   signal hr_bram_lo_wren         : std_logic;
+   signal hr_bram_hi_wren         : std_logic;
 
    -- Connect to CORE
-   signal hr_bank_lo           : std_logic_vector( 6 downto 0);
-   signal hr_bank_hi           : std_logic_vector( 6 downto 0);
-   signal hr_loading           : std_logic;
-   signal hr_id                : std_logic_vector(15 downto 0);
-   signal hr_exrom             : std_logic_vector( 7 downto 0);
-   signal hr_game              : std_logic_vector( 7 downto 0);
-   signal hr_bank_laddr        : std_logic_vector(15 downto 0);
-   signal hr_bank_size         : std_logic_vector(15 downto 0);
-   signal hr_bank_num          : std_logic_vector(15 downto 0);
-   signal hr_bank_type         : std_logic_vector( 7 downto 0);
-   signal hr_bank_raddr        : std_logic_vector(24 downto 0);
-   signal hr_bank_wr           : std_logic;
+   signal hr_bank_lo              : std_logic_vector( 6 downto 0);
+   signal hr_bank_hi              : std_logic_vector( 6 downto 0);
+   signal hr_loading              : std_logic;
+   signal hr_id                   : std_logic_vector(15 downto 0);
+   signal hr_exrom                : std_logic_vector( 7 downto 0);
+   signal hr_game                 : std_logic_vector( 7 downto 0);
+   signal hr_bank_laddr           : std_logic_vector(15 downto 0);
+   signal hr_bank_size            : std_logic_vector(15 downto 0);
+   signal hr_bank_num             : std_logic_vector(15 downto 0);
+   signal hr_bank_type            : std_logic_vector( 7 downto 0);
+   signal hr_bank_raddr           : std_logic_vector(24 downto 0);
+   signal hr_bank_wr              : std_logic;
 
 begin
 
@@ -171,11 +207,13 @@ begin
 
    process (all)
    begin
+      qnice_data_o <= x"0000"; -- By default read back zeros.
+      qnice_wait_o <= '0';
+
       if qnice_ce_i = '1' and
          qnice_we_i = '0' and
          unsigned(qnice_addr_i(27 downto 12)) = C_CRT_CASREG
       then
-         qnice_data_o <= x"0000"; -- By default read back zeros.
          case to_integer(unsigned(qnice_addr_i(11 downto 0))) is
             when to_integer(C_CRT_STATUS)  => qnice_data_o <= qnice_req_status;
             when to_integer(C_CRT_FS_LO)   => qnice_data_o <= qnice_req_length(15 downto  0);
@@ -189,8 +227,38 @@ begin
             when others => null;
          end case;
       end if;
+
+      if qnice_ce_i = '1' and unsigned(qnice_addr_i(27 downto 12)) /= C_CRT_CASREG then
+         qnice_wait_o <= qnice_hr_wait;
+         qnice_data_o <= qnice_hr_data;
+      end if;
    end process;
 
+   qnice_hr_ce <= qnice_ce_i when unsigned(qnice_addr_i(27 downto 12)) /= C_CRT_CASREG
+             else '0';
+   qnice_hr_addr <= std_logic_vector(("0000" & unsigned(qnice_addr_i)) +
+                                     ("0000000000" & unsigned(G_BASE_ADDRESS)));
+
+   i_qnice2hyperram : entity work.qnice2hyperram
+      port map (
+         clk_i                 => qnice_clk_i,
+         rst_i                 => qnice_rst_i,
+         s_qnice_wait_o        => qnice_hr_wait,
+         s_qnice_address_i     => qnice_hr_addr,
+         s_qnice_cs_i          => qnice_hr_ce,
+         s_qnice_write_i       => qnice_we_i,
+         s_qnice_writedata_i   => qnice_data_i,
+         s_qnice_readdata_o    => qnice_hr_data,
+         m_avm_write_o         => qnice_avm_write,
+         m_avm_read_o          => qnice_avm_read,
+         m_avm_address_o       => qnice_avm_address,
+         m_avm_writedata_o     => qnice_avm_writedata,
+         m_avm_byteenable_o    => qnice_avm_byteenable,
+         m_avm_burstcount_o    => qnice_avm_burstcount,
+         m_avm_readdata_i      => qnice_avm_readdata,
+         m_avm_readdatavalid_i => qnice_avm_readdatavalid,
+         m_avm_waitrequest_i   => qnice_avm_waitrequest
+      ); -- i_qnice2hyperram
 
 
    --------------------------------------------
@@ -209,6 +277,39 @@ begin
          dst_data_o(22 downto  0) => hr_req_length,
          dst_data_o(23)           => hr_req_valid
       ); -- i_cdc_qnice2hr
+
+   avm_fifo_qnice : entity work.avm_fifo
+      generic map (
+         G_WR_DEPTH     => 16,
+         G_RD_DEPTH     => 16,
+         G_FILL_SIZE    => 1,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         s_clk_i               => qnice_clk_i,
+         s_rst_i               => qnice_rst_i,
+         s_avm_waitrequest_o   => qnice_avm_waitrequest,
+         s_avm_write_i         => qnice_avm_write,
+         s_avm_read_i          => qnice_avm_read,
+         s_avm_address_i       => qnice_avm_address,
+         s_avm_writedata_i     => qnice_avm_writedata,
+         s_avm_byteenable_i    => qnice_avm_byteenable,
+         s_avm_burstcount_i    => qnice_avm_burstcount,
+         s_avm_readdata_o      => qnice_avm_readdata,
+         s_avm_readdatavalid_o => qnice_avm_readdatavalid,
+         m_clk_i               => hr_clk_i,
+         m_rst_i               => hr_rst_i,
+         m_avm_waitrequest_i   => hr_qnice_waitrequest,
+         m_avm_write_o         => hr_qnice_write,
+         m_avm_read_o          => hr_qnice_read,
+         m_avm_address_o       => hr_qnice_address,
+         m_avm_writedata_o     => hr_qnice_writedata,
+         m_avm_byteenable_o    => hr_qnice_byteenable,
+         m_avm_burstcount_o    => hr_qnice_burstcount,
+         m_avm_readdata_i      => hr_qnice_readdata,
+         m_avm_readdatavalid_i => hr_qnice_readdatavalid
+      ); -- avm_fifo_qnice
 
 
    --------------------------------------------
@@ -266,15 +367,15 @@ begin
          resp_address_o      => hr_resp_address,
          bank_lo_i           => hr_bank_lo,
          bank_hi_i           => hr_bank_hi,
-         avm_write_o         => hr_write_o,
-         avm_read_o          => hr_read_o,
-         avm_address_o       => hr_address_o(21 downto 0),
-         avm_writedata_o     => hr_writedata_o,
-         avm_byteenable_o    => hr_byteenable_o,
-         avm_burstcount_o    => hr_burstcount_o,
-         avm_readdata_i      => hr_readdata_i,
-         avm_readdatavalid_i => hr_readdatavalid_i,
-         avm_waitrequest_i   => hr_waitrequest_i,
+         avm_write_o         => hr_crt_write,
+         avm_read_o          => hr_crt_read,
+         avm_address_o       => hr_crt_address(21 downto 0),
+         avm_writedata_o     => hr_crt_writedata,
+         avm_byteenable_o    => hr_crt_byteenable,
+         avm_burstcount_o    => hr_crt_burstcount,
+         avm_readdata_i      => hr_crt_readdata,
+         avm_readdatavalid_i => hr_crt_readdatavalid,
+         avm_waitrequest_i   => hr_crt_waitrequest,
          cart_bank_laddr_o   => hr_bank_laddr,
          cart_bank_size_o    => hr_bank_size,
          cart_bank_num_o     => hr_bank_num,
@@ -291,6 +392,43 @@ begin
          bram_hi_wren_o      => hr_bram_hi_wren,
          bram_hi_q_i         => (others => '0')
       ); -- i_crt2hyperram
+
+   i_avm_arbit : entity work.avm_arbit
+      generic map (
+         G_ADDRESS_SIZE  => 32,
+         G_DATA_SIZE     => 16
+      )
+      port map (
+         clk_i                  => hr_clk_i,
+         rst_i                  => hr_rst_i,
+         s0_avm_write_i         => hr_qnice_write,
+         s0_avm_read_i          => hr_qnice_read,
+         s0_avm_address_i       => hr_qnice_address,
+         s0_avm_writedata_i     => hr_qnice_writedata,
+         s0_avm_byteenable_i    => hr_qnice_byteenable,
+         s0_avm_burstcount_i    => hr_qnice_burstcount,
+         s0_avm_readdata_o      => hr_qnice_readdata,
+         s0_avm_readdatavalid_o => hr_qnice_readdatavalid,
+         s0_avm_waitrequest_o   => hr_qnice_waitrequest,
+         s1_avm_write_i         => hr_crt_write,
+         s1_avm_read_i          => hr_crt_read,
+         s1_avm_address_i       => hr_crt_address,
+         s1_avm_writedata_i     => hr_crt_writedata,
+         s1_avm_byteenable_i    => hr_crt_byteenable,
+         s1_avm_burstcount_i    => hr_crt_burstcount,
+         s1_avm_readdata_o      => hr_crt_readdata,
+         s1_avm_readdatavalid_o => hr_crt_readdatavalid,
+         s1_avm_waitrequest_o   => hr_crt_waitrequest,
+         m_avm_write_o          => hr_write_o,
+         m_avm_read_o           => hr_read_o,
+         m_avm_address_o        => hr_address_o,
+         m_avm_writedata_o      => hr_writedata_o,
+         m_avm_byteenable_o     => hr_byteenable_o,
+         m_avm_burstcount_o     => hr_burstcount_o,
+         m_avm_readdata_i       => hr_readdata_i,
+         m_avm_readdatavalid_i  => hr_readdatavalid_i,
+         m_avm_waitrequest_i    => hr_waitrequest_i
+      ); -- i_avm_arbit
 
 
    --------------------------------------------
