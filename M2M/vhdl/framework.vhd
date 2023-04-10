@@ -770,6 +770,7 @@ begin
          s_qnice_cs_i          => qnice_ramrom_ce_hyperram,
          s_qnice_write_i       => qnice_ramrom_we_o,
          s_qnice_writedata_i   => qnice_ramrom_data_out_o,
+         s_qnice_byteenable_i  => "11",
          s_qnice_readdata_o    => qnice_ramrom_data_in_hyperram,
          m_avm_write_o         => qnice_avm_write,
          m_avm_read_o          => qnice_avm_read,

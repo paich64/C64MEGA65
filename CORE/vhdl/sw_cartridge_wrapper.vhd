@@ -97,13 +97,14 @@ architecture synthesis of sw_cartridge_wrapper is
    signal qnice_hr_addr           : std_logic_vector(31 downto 0);
    signal qnice_hr_wait           : std_logic;
    signal qnice_hr_data           : std_logic_vector(15 downto 0);
+   signal qnice_hr_byteenable     : std_logic_vector( 1 downto 0);
 
    signal qnice_avm_write         : std_logic;
    signal qnice_avm_read          : std_logic;
    signal qnice_avm_address       : std_logic_vector(31 downto 0);
    signal qnice_avm_writedata     : std_logic_vector(15 downto 0);
-   signal qnice_avm_byteenable    : std_logic_vector(1 downto 0);
-   signal qnice_avm_burstcount    : std_logic_vector(7 downto 0);
+   signal qnice_avm_byteenable    : std_logic_vector( 1 downto 0);
+   signal qnice_avm_burstcount    : std_logic_vector( 7 downto 0);
    signal qnice_avm_readdata      : std_logic_vector(15 downto 0);
    signal qnice_avm_readdatavalid : std_logic;
    signal qnice_avm_waitrequest   : std_logic;
@@ -230,14 +231,20 @@ begin
 
       if qnice_ce_i = '1' and unsigned(qnice_addr_i(27 downto 12)) /= C_CRT_CASREG then
          qnice_wait_o <= qnice_hr_wait;
-         qnice_data_o <= qnice_hr_data;
+         if qnice_addr_i(0) = '1' then
+            qnice_data_o <= X"00" & qnice_hr_data(15 downto 8);
+         else
+            qnice_data_o <= X"00" & qnice_hr_data(7 downto 0);
+         end if;
       end if;
    end process;
 
    qnice_hr_ce <= qnice_ce_i when unsigned(qnice_addr_i(27 downto 12)) /= C_CRT_CASREG
              else '0';
-   qnice_hr_addr <= std_logic_vector(("0000" & unsigned(qnice_addr_i)) +
+   qnice_hr_addr <= std_logic_vector(("00000" & unsigned(qnice_addr_i(27 downto 1))) +
                                      ("0000000000" & unsigned(G_BASE_ADDRESS)));
+   qnice_hr_byteenable <= "10" when qnice_addr_i(0) = '1'
+                     else "01";
 
    i_qnice2hyperram : entity work.qnice2hyperram
       port map (
@@ -247,7 +254,8 @@ begin
          s_qnice_address_i     => qnice_hr_addr,
          s_qnice_cs_i          => qnice_hr_ce,
          s_qnice_write_i       => qnice_we_i,
-         s_qnice_writedata_i   => qnice_data_i,
+         s_qnice_writedata_i   => qnice_data_i(7 downto 0) & qnice_data_i(7 downto 0),
+         s_qnice_byteenable_i  => qnice_hr_byteenable,
          s_qnice_readdata_o    => qnice_hr_data,
          m_avm_write_o         => qnice_avm_write,
          m_avm_read_o          => qnice_avm_read,

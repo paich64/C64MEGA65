@@ -20,6 +20,7 @@ entity qnice2hyperram is
       s_qnice_cs_i          : in  std_logic;
       s_qnice_write_i       : in  std_logic;
       s_qnice_writedata_i   : in  std_logic_vector(15 downto 0);
+      s_qnice_byteenable_i  : in  std_logic_vector( 1 downto 0);
       s_qnice_readdata_o    : out std_logic_vector(15 downto 0);
 
       -- Connect to HyperRAM (via avm_fifo)
@@ -28,8 +29,8 @@ entity qnice2hyperram is
       m_avm_read_o          : out std_logic;
       m_avm_address_o       : out std_logic_vector(31 downto 0);
       m_avm_writedata_o     : out std_logic_vector(15 downto 0);
-      m_avm_byteenable_o    : out std_logic_vector(1 downto 0);
-      m_avm_burstcount_o    : out std_logic_vector(7 downto 0);
+      m_avm_byteenable_o    : out std_logic_vector( 1 downto 0);
+      m_avm_burstcount_o    : out std_logic_vector( 7 downto 0);
       m_avm_readdata_i      : in  std_logic_vector(15 downto 0);
       m_avm_readdatavalid_i : in  std_logic;
       m_avm_waitrequest_i   : in  std_logic
@@ -60,7 +61,7 @@ begin
             m_avm_read_o       <= not s_qnice_write_i;
             m_avm_address_o    <= s_qnice_address_i;
             m_avm_writedata_o  <= s_qnice_writedata_i;
-            m_avm_byteenable_o <= "11";
+            m_avm_byteenable_o <= s_qnice_byteenable_i;
             m_avm_burstcount_o <= X"01";
 
             reading <= not s_qnice_write_i;
