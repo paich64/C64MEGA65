@@ -235,6 +235,7 @@ signal qnice_ramrom_data_o    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_data_i    : std_logic_vector(15 downto 0);
 signal qnice_ramrom_ce        : std_logic;
 signal qnice_ramrom_we        : std_logic;
+signal qnice_ramrom_wait      : std_logic;
 
 begin
 
@@ -366,7 +367,8 @@ begin
       qnice_ramrom_data_out_o => qnice_ramrom_data_o,
       qnice_ramrom_data_in_i  => qnice_ramrom_data_i,
       qnice_ramrom_ce_o       => qnice_ramrom_ce,
-      qnice_ramrom_we_o       => qnice_ramrom_we
+      qnice_ramrom_we_o       => qnice_ramrom_we,
+      qnice_ramrom_wait_i     => qnice_ramrom_wait
    ); -- i_framework
 
 
@@ -418,6 +420,7 @@ begin
          qnice_dev_data_o        => qnice_ramrom_data_i,
          qnice_dev_ce_i          => qnice_ramrom_ce,
          qnice_dev_we_i          => qnice_ramrom_we,
+         qnice_dev_wait_o        => qnice_ramrom_wait,
 
          --------------------------------------------------------------------------------------------------------
          -- Core Clock Domain

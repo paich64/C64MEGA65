@@ -63,6 +63,7 @@ port (
    qnice_dev_data_o         : out std_logic_vector(15 downto 0);
    qnice_dev_ce_i           : in  std_logic;
    qnice_dev_we_i           : in  std_logic;
+   qnice_dev_wait_o         : out std_logic;
 
    --------------------------------------------------------------------------------------------------------
    -- Core Clock Domain
@@ -313,18 +314,6 @@ constant C_MENU_HDMI_FF       : natural := 57;
 constant C_MENU_HDMI_DVI      : natural := 58;
 constant C_MENU_VGA_RETRO     : natural := 59;
 
-constant C_CRT_CASREG    : unsigned(15 downto 0) := X"FFFF";
-constant C_CRT_STATUS    : unsigned(11 downto 0) := X"000";
-constant C_CRT_FS_LO     : unsigned(11 downto 0) := X"001";
-constant C_CRT_FS_HI     : unsigned(11 downto 0) := X"002";
-constant C_CRT_HRS_LO    : unsigned(11 downto 0) := X"003";
-constant C_CRT_HRS_HI    : unsigned(11 downto 0) := X"004";
-constant C_CRT_PARSEST   : unsigned(11 downto 0) := X"010";
-constant C_CRT_PARSEE1   : unsigned(11 downto 0) := X"011";
-constant C_CRT_ADDR_LO   : unsigned(11 downto 0) := X"012";
-constant C_CRT_ADDR_HI   : unsigned(11 downto 0) := X"013";
-constant C_CRT_ERR_START : unsigned(11 downto 0) := X"100";
-constant C_CRT_ERR_END   : unsigned(11 downto 0) := X"1FF";
 
 -- RAMs for the C64
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
@@ -337,17 +326,11 @@ signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
 
-signal qnice_req_status   : std_logic_vector(15 downto 0);
-signal qnice_req_fs_lo    : std_logic_vector(15 downto 0);
-signal qnice_req_fs_hi    : std_logic_vector(15 downto 0);
-signal qnice_req_hrs_lo   : std_logic_vector(15 downto 0);
-signal qnice_req_hrs_hi   : std_logic_vector(15 downto 0);
-signal qnice_resp_parsest : std_logic_vector(15 downto 0);
-signal qnice_resp_parsee1 : std_logic_vector(15 downto 0);
-signal qnice_resp_addr_lo : std_logic_vector(15 downto 0);
-signal qnice_resp_addr_hi : std_logic_vector(15 downto 0);
-signal qnice_stat_addr    : std_logic_vector( 7 downto 0);
-signal qnice_stat_data    : std_logic_vector( 7 downto 0);
+-- QNICE signals passed down to sw_cartridge_wrapper.vhd to handle CRT files
+signal qnice_crt_qnice_ce     : std_logic;
+signal qnice_crt_qnice_we     : std_logic;
+signal qnice_crt_qnice_data   : std_logic_vector(15 downto 0);
+signal qnice_crt_qnice_wait   : std_logic;
 
 begin
 
@@ -612,6 +595,7 @@ begin
       qnice_c64_qnice_ce         <= '0';
       qnice_c64_qnice_we         <= '0';
       qnice_c64_mount_buf_ram_we <= '0';
+      qnice_dev_wait_o           <= '0';
 
       case qnice_dev_id_i is
          -- C64 RAM
@@ -632,59 +616,14 @@ begin
 
          -- SW cartridges (*.CRT)
          when C_DEV_C64_CRT =>
-            if qnice_dev_ce_i = '1' and
-               qnice_dev_we_i = '0' and
-               unsigned(qnice_dev_addr_i(27 downto 12)) = C_CRT_CASREG
-            then
-               qnice_dev_data_o <= x"0000"; -- By default read back zeros.
-               case to_integer(unsigned(qnice_dev_addr_i(11 downto 0))) is
-                  when to_integer(C_CRT_STATUS)  => qnice_dev_data_o <= qnice_req_status;
-                  when to_integer(C_CRT_FS_LO)   => qnice_dev_data_o <= qnice_req_fs_lo;
-                  when to_integer(C_CRT_FS_HI)   => qnice_dev_data_o <= qnice_req_fs_hi;
-                  when to_integer(C_CRT_HRS_LO)  => qnice_dev_data_o <= qnice_req_hrs_lo;
-                  when to_integer(C_CRT_HRS_HI)  => qnice_dev_data_o <= qnice_req_hrs_hi;
-                  when to_integer(C_CRT_PARSEST) => qnice_dev_data_o <= qnice_resp_parsest;
-                  when to_integer(C_CRT_PARSEE1) => qnice_dev_data_o <= qnice_resp_parsee1;
-                  when to_integer(C_CRT_ADDR_LO) => qnice_dev_data_o <= qnice_resp_addr_lo;
-                  when to_integer(C_CRT_ADDR_HI) => qnice_dev_data_o <= qnice_resp_addr_hi;
-                  when to_integer(C_CRT_ERR_START)
-                    to to_integer(C_CRT_ERR_END) => qnice_dev_data_o <= X"00" & qnice_stat_data;
-                  when others => null;
-               end case;
-            end if;
+            qnice_crt_qnice_ce         <= qnice_dev_ce_i;
+            qnice_crt_qnice_we         <= qnice_dev_we_i;
+            qnice_dev_data_o           <= qnice_crt_qnice_data;
+            qnice_dev_wait_o           <= qnice_crt_qnice_wait;
+
          when others => null;
       end case;
    end process core_specific_devices;
-
-   qnice_stat_addr <= qnice_dev_addr_i(7 downto 0);
-
-   process (qnice_clk_i)
-   begin
-      if falling_edge(qnice_clk_i) then
-         if qnice_dev_id_i = C_DEV_C64_CRT and
-            qnice_dev_ce_i = '1' and
-            qnice_dev_we_i = '1' and
-            unsigned(qnice_dev_addr_i(27 downto 12)) = C_CRT_CASREG
-         then
-            case unsigned(qnice_dev_addr_i(11 downto 0)) is
-               when C_CRT_STATUS => qnice_req_status <= qnice_dev_data_i;
-               when C_CRT_FS_LO  => qnice_req_fs_lo  <= qnice_dev_data_i;
-               when C_CRT_FS_HI  => qnice_req_fs_hi  <= qnice_dev_data_i;
-               when C_CRT_HRS_LO => qnice_req_hrs_lo <= qnice_dev_data_i;
-               when C_CRT_HRS_HI => qnice_req_hrs_hi <= qnice_dev_data_i;
-               when others => null;
-            end case;
-         end if;
-
-         if RESET_M2M_N = '0' then
-            qnice_req_status <= (others => '0');
-            qnice_req_fs_lo  <= (others => '0');
-            qnice_req_fs_hi  <= (others => '0');
-            qnice_req_hrs_lo <= (others => '0');
-            qnice_req_hrs_hi <= (others => '0');
-         end if;
-      end if;
-   end process;
 
    ---------------------------------------------------------------------------------------------
    -- Dual Clocks
@@ -749,21 +688,20 @@ begin
          q_a               => qnice_c64_mount_buf_ram_data
       ); -- mount_buf_ram
 
+   -- Handle SW based cartridges, aka *.CRT files
    i_sw_cartridge_wrapper : entity work.sw_cartridge_wrapper
+   generic map (
+      G_BASE_ADDRESS => C_HMAP_CRT(9 downto 0) & X"000"
+   )
    port map (
       qnice_clk_i          => qnice_clk_i,
       qnice_rst_i          => qnice_rst_i,
-      qnice_req_status_i   => qnice_req_status,
-      qnice_req_fs_lo_i    => qnice_req_fs_lo,
-      qnice_req_fs_hi_i    => qnice_req_fs_hi,
-      qnice_req_hrs_lo_i   => qnice_req_hrs_lo,
-      qnice_req_hrs_hi_i   => qnice_req_hrs_hi,
-      qnice_resp_parsest_o => qnice_resp_parsest,
-      qnice_resp_parsee1_o => qnice_resp_parsee1,
-      qnice_resp_addr_lo_o => qnice_resp_addr_lo,
-      qnice_resp_addr_hi_o => qnice_resp_addr_hi,
-      qnice_stat_addr_i    => qnice_stat_addr,
-      qnice_stat_data_o    => qnice_stat_data,
+      qnice_addr_i         => qnice_dev_addr_i,
+      qnice_data_i         => qnice_dev_data_i,
+      qnice_ce_i           => qnice_crt_qnice_ce,
+      qnice_we_i           => qnice_crt_qnice_we,
+      qnice_data_o         => qnice_crt_qnice_data,
+      qnice_wait_o         => qnice_crt_qnice_wait,
       main_clk_i           => main_clk,
       main_rst_i           => main_rst,
       main_loading_o       => main_crt_loading,

@@ -173,7 +173,8 @@ port (
    qnice_ramrom_data_out_o : out std_logic_vector(15 downto 0);
    qnice_ramrom_data_in_i  : in  std_logic_vector(15 downto 0);
    qnice_ramrom_ce_o       : out std_logic;
-   qnice_ramrom_we_o       : out std_logic
+   qnice_ramrom_we_o       : out std_logic;
+   qnice_ramrom_wait_i     : in  std_logic
 );
 end entity framework;
 
@@ -762,6 +763,7 @@ begin
       -----------------------------------
       else
          qnice_ramrom_data_in <= qnice_ramrom_data_in_i;
+         qnice_ramrom_wait    <= qnice_ramrom_wait_i;
       end if;
    end process qnice_ramrom_devices;
 
@@ -777,6 +779,7 @@ begin
          s_qnice_cs_i          => qnice_ramrom_ce_hyperram,
          s_qnice_write_i       => qnice_ramrom_we_o,
          s_qnice_writedata_i   => qnice_ramrom_data_out_o,
+         s_qnice_byteenable_i  => "11",
          s_qnice_readdata_o    => qnice_ramrom_data_in_hyperram,
          m_avm_write_o         => qnice_avm_write,
          m_avm_read_o          => qnice_avm_read,
