@@ -275,7 +275,7 @@ OPTM_G_MOUNT_CRT .EQU    5
 ; The On-Screen-Menu uses the heap for several data structures. This heap
 ; is located before the main system heap in memory.
 ; You need to deduct MENU_HEAP_SIZE from the actual heap size below.
-; Example: If your HEAP_SIZE would be 29696, then you write 29696-1024=28672
+; Example: If your HEAP_SIZE would be 29696, then you write 29696-1536=28160
 ; instead, but when doing the sanity check calculations, you use 29696
 MENU_HEAP_SIZE  .EQU 1536
 
@@ -305,7 +305,7 @@ HEAP            .BLOCK 1
 ; currently a stack size of 2329, which is more than 1.5k words, and therefore
 ; sufficient for this program.
 
-                .ORG    0xFEE0                  ; TODO: automate calculation
+                .ORG    0xFEE0                  ; @TODO: automate calculation
 #endif
 
 ; STACK_SIZE: Size of the global stack and should be a minimum of 768 words

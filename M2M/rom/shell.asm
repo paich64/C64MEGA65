@@ -21,12 +21,6 @@
 START_SHELL     MOVE    LOG_M2M, R8
                 SYSCALL(puts, 1)
 
-                ; default = no context
-                MOVE    SF_CONTEXT, R8
-                MOVE    0, @R8
-                MOVE    SF_CONTEXT_DATA, R8
-                MOVE    0, @R8
-
                 ; ------------------------------------------------------------
                 ; More robust SD card reading
                 ; ------------------------------------------------------------
@@ -60,8 +54,8 @@ START_SHELL     MOVE    LOG_M2M, R8
                 MOVE    0, @R8
                 MOVE    HANDLES_FILES, R8
                 MOVE    VDRIVES_MAX, R9
-_SS_INITFH_L    MOVE    @R8++, R0
-                MOVE    0, @R0
+_SS_INITFH_L    MOVE    @R8++, R0               ; double indirection leads..
+                MOVE    0, @R0                  ; to the data of the file hdl
                 SUB     1, R9
                 RBRA    _SS_INITFH_L, !Z
                 MOVE    CONFIG_DEVH, R8
@@ -98,17 +92,16 @@ _SS_INITFH_L    MOVE    @R8++, R0
                 MOVE    SP, @R8                
                 SUB     B_STACK_SIZE, SP        ; reserve memory on the stack
 
-                ; make sure OPTM_HEAP is initialized to zero, as it will be
-                ; calculated and activated inside HELP_MENU
-                MOVE    OPTM_HEAP, R8
+                ; default = no context
+                MOVE    SF_CONTEXT, R8
                 MOVE    0, @R8
-                MOVE    OPTM_HEAP_SIZE, R8
+                MOVE    SF_CONTEXT_DATA, R8
                 MOVE    0, @R8
 
                 ; Initialize libraries: The order in which these libraries are
                 ; initialized matters and the initialization needs to happen
                 ; before RP_SYSTEM_START is called.
-                RSUB    SCR$INIT, 1             ; retrieve VHDL generics
+                RSUB    SCR$INIT, 1             ; retrieve visual constants
                 RSUB    FRAME_FULLSCR, 1        ; draw fullscreen frame
                 RSUB    VD_INIT, 1              ; virtual drive system
                 RSUB    CRTROM_INIT, 1          ; CRT/ROM loader system
@@ -155,11 +148,12 @@ START_CONNECT   RSUB    WAIT333MS, 1
                 ; The core is running and QNICE is waiting for triggers to
                 ; react. Such triggers could be for example the "Help" button
                 ; which is meant to open the options menu but also triggers
-                ; from the core such as data requests from disk drives.
+                ; from the core such as data requests from the IO subsystem
+                ; (for example from virtual disk drives).
                 ;
                 ; The latter one could also be done via interrupts, but we
-                ; will try to keep it simple in the first iteration and only
-                ; increase complexity by using interrupts if neccessary.
+                ; will try to keep it simple and only increase complexity by
+                ; using interrupts if neccessary.
                 ; ------------------------------------------------------------
 
 MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
@@ -350,14 +344,29 @@ _HM_SDMOUNTED3  MOVE    R8, R0                  ; R8: selected file name
                 SYSCALL(puts, 1)
                 SYSCALL(crlf, 1)
 
-                ; remember the file name for displaying it in the OSM
+                ; remember the file name for displaying it in the OSM in R2
+                ;
                 ; the convention for the position in the @OPTM_HEAP is:
-                ; virtual drive number times @SCR$OSM_O_DX
+                ; a) for vdrives: vdrive number times @SCR$OSM_O_DX
+                ; b) for CRTs/ROMs: (#vdrives+#submenus+crt/rom id)
+                ;    times @SCR$OSM_O_DX
                 MOVE    R8, R2                  ; R2: file name
                 MOVE    OPTM_HEAP, R0
                 MOVE    @R0, R0
-                RBRA    _HM_SDMOUNTED5, Z       ; OPTM_HEAP not ready, yet
-                MOVE    R7, R8
+                RBRA    _HM_SDMOUNTED3A, !Z     ; OPTM_HEAP is ready
+                MOVE    ERR_FATAL_INST, R8
+                MOVE    ERR_FATAL_INST7, R9
+                RBRA    FATAL, 1
+
+_HM_SDMOUNTED3A XOR     R8, R8
+                CMP     1, R5                   ; case (b)?
+                RBRA    _HM_SDMOUNTED3B, !Z     ; no, case (a)
+                MOVE    VDRIVES_NUM, R9
+                ADD     @R9, R8
+                MOVE    OPTM_SCOUNT, R9
+                ADD     @R9, R8
+
+_HM_SDMOUNTED3B ADD     R7, R8
                 MOVE    SCR$OSM_O_DX, R9
                 MOVE    @R9, R9
                 SYSCALL(mulu, 1)
@@ -395,7 +404,7 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
 
                 ; load the disk image to the mount buffer
                 MOVE    R7, R8                  ; R8: drive ID to be mounted
-                MOVE    R2, R9                  ; R9: file name of disk image                
+                MOVE    R2, R9                  ; R9: file name of disk image
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
                 CMP     0, R8                   ; everything OK?
                 RBRA    _HM_SDMOUNTED6, Z       ; yes

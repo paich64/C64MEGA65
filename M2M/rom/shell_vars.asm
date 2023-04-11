@@ -31,7 +31,15 @@ OPTM_DTY_STATUS .BLOCK 1                        ; cache dirty status; all drvs
 ; "..." if they are too long. See also HELP_MENU and HANDLE_MOUNTING.
 ;
 ; OPTM_HEAP also stores the replacement strings for %s within submenu
-; headlines / entry points.
+; headlines/entry points and the replacem. strings for %s for CRT/ROM loading
+;
+; Each reserved memory block for one string is @SCR$OSM_O_DX in size.
+;
+; Memory map:
+;
+; VDrive strings:   <amount of virtual drives> x @SCR$OSM_O_DX
+; Submenu strings:  <amount of submenus> x @SCR$OSM_O_DX
+; CRT/ROM strings:  <amount of manual loadable CRTs/ROMs> x @SCR$OSM_O_DX
 ;
 ; OPTM_HEAP_LAST points to a scratch buffer that can hold a modified filename
 ; for saving/restoring while the cache dirty "Saving" message is shown.
@@ -39,10 +47,6 @@ OPTM_DTY_STATUS .BLOCK 1                        ; cache dirty status; all drvs
 OPTM_HEAP       .BLOCK 1
 OPTM_HEAP_LAST  .BLOCK 1
 OPTM_HEAP_SIZE  .BLOCK 1                        ; size of this scratch buffer
-
-; Static variable used by the callback function OPTM_CB_SHOW to keep track
-; of the instance of submenu that is currently being processed
-OPTM_SUBMENINST .BLOCK 1
 
 SCRATCH_HEX     .BLOCK 5
 

@@ -7,14 +7,6 @@
 * Strange (no reproduction steps yet) "dual selection" in some menu 
   close/reopen/maybe reset inbetween cases
 
-* There is a known bug in the file selector: From time to time you might see
-  totally scrambled file names. It can for example happen, when a game or demo
-  asks you to insert the next disk. If this happens: Here is a workaround:
-  Just go up one directory level in the file browser by choosing ".." and then
-  go back into the folder where you originally were and continue with mounting
-  More details from AmokPhaze:
-  https://discord.com/channels/@me/1034779919802191882/1081253026242777118
-
 ### System
 
 * Black screen on startup (while the OSD is still working) when no SD card

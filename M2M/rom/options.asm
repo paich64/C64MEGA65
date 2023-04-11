@@ -30,10 +30,6 @@ HELP_MENU       SYSCALL(enter, 1)
                 ; are not passed along to the core
                 RSUB    RP_OPTM_START, 1
 
-                ; Init instance counter for submenus in OPTM_CB_SHOW
-                MOVE    OPTM_SUBMENINST, R0
-                MOVE    0, @R0
-
                 ; Copy menu items from config.vhd to heap
                 MOVE    M2M$RAMROM_DEV, R0
                 MOVE    M2M$CONFIG, @R0
@@ -239,6 +235,14 @@ _HLP_RET_DIRECT SYSCALL(leave, 1)
 
 HELP_MENU_INIT  SYSCALL(enter, 1)
 
+                ; make sure OPTM_HEAP is initialized to zero, as it will be
+                ; calculated and activated inside HELP_MENU
+                MOVE    OPTM_HEAP, R8
+                MOVE    0, @R8
+                MOVE    OPTM_HEAP_SIZE, R8
+                MOVE    0, @R8
+
+                ; fill menu data structure (see menu.asm)
                 MOVE    HEAP, R8
                 MOVE    SCR$OSM_O_X, R9
                 MOVE    @R9, R9
@@ -1217,8 +1221,8 @@ _OPTMCB_RET     DECRB
 ; Case (b) Virtual drives and CRT/ROM loading
 ;
 ; "%s" is meant to denote the space where we will either print
-; OPTM_S_MOUNT/OPTM_S_CRTROM from config.vhd, which is "<Mount Drive>" and
-; "<Load>" by default, if the drive is not mounted, yet, or we print the
+; OPTM_S_MOUNT/OPTM_S_CRTROM from config.vhd, which is "<Mount>" and "<Load>"
+; by default, if the drive/rom is not mounted/loaded, yet, or we print the
 ; file name of the disk image, abbreviated to the width of the frame. We also
 ; handle the "cache dirty" situation and show OPTM_S_SAVING which defaults
 ; to "<Saving>".
@@ -1259,6 +1263,7 @@ OPTM_CB_SHOW    SYSCALL(enter, 1)
                 ; ------------------------------------------------------------
 
                 MOVE    R1, R2
+                MOVE    R5, R4                  ; remember R5: menu index
                 AND     OPTM_SUBMENU, R2        ; is this group id a submenu?
                 RBRA    _OPTM_CBS_VD, Z         ; no: go on with case (b)
 
@@ -1357,20 +1362,75 @@ _OPTM_CBS_H     CMP     0x0020, @R1
                 ; string replacement: The space that can be used for 
                 ; the headline/label strings of submenus is directly after the
                 ; abbreviated filenames of the vdrives.
-                ; The variable OPTM_SUBMENINST is a static variable of this
-                ; very callback function and counts (from 0) which instance
-                ; of submenu we are currently working on.
-                ; So the formula to calculate the position on the heap is:
-                ; (Amount of vdrives + OPTM_SUBMENINST) * @SCR$OSM_O_DX
-_OPTM_CBS_I     MOVE    VDRIVES_NUM, R8
+                ;
+                ; We need to calculate which submenu is currently being
+                ; processed by OPTM_CB_SHOW. Since submenus do not have any
+                ; unique ID, we need to find out by counting: We walk through
+                ; M2M$CFG_OPTM_GROUPS until we reach the index of the
+                ; currently processed menu item (which is stored in R5) and
+                ; while doing so, we count the index of the current submenu.
+                ;
+                ; Then we take this result and calculate the position on the
+                ; heap which is:
+                ; (Amount of vdrives + current submenu index) * @SCR$OSM_O_DX
+
+                ; Calculate such submenu is currently being processed
+_OPTM_CBS_I     MOVE    SCRATCH_HEX, R8         ; save cur. device selection
+                RSUB    SAVE_DEVSEL, 1
+                MOVE    R4, R8                  ; R8: index of menu item
+                INCRB
+
+                MOVE    OPTM_ICOUNT, R0         ; check: valid menu index?
+                MOVE    @R0, R0
+                SUB     1, R0                   ; we count from zero
+                CMP     R8, R0                  ; illegal index?
+                RBRA    _OPTM_CBS_I1, !N        ; no
+                MOVE    ERR_FATAL_INST, R8      ; yes: fatal
+                MOVE    ERR_FATAL_INST8, R9
+                RBRA    FATAL, 1
+
+_OPTM_CBS_I1    MOVE    M2M$RAMROM_DEV, R0
+                MOVE    M2M$CONFIG, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0
+                MOVE    M2M$CFG_OPTM_GROUPS, @R0
+                MOVE    M2M$RAMROM_DATA, R0
+
+                MOVE    -1, R9                  ; submenu index
+
+_OPTM_CBS_I2    MOVE    @R0++, R1               ; is current item a submenu?
+                MOVE    R1, R2
+                AND     OPTM_SUBMENU, R1
+                RBRA    _OPTM_CBS_I3, Z         ; no
+                AND     0x00FF, R2              ; yes, but is it a close flag?
+                CMP     OPTM_CLOSE, R2
+                RBRA    _OPTM_CBS_I3, Z         ; yes: so do not count it
+                ADD     1, R9                   ; no: increase submenu index
+
+_OPTM_CBS_I3    CMP     0, R8                   ; done?
+                RBRA    _OPTM_CBS_I4, Z         ; yes
+                SUB     1, R8                   ; one less menu item
+                RBRA    _OPTM_CBS_I2, 1         ; no
+_OPTM_CBS_I4    DECRB
+                MOVE    SCRATCH_HEX, R8         ; restore cur. dev. selection
+                RSUB    RESTORE_DEVSEL, 1
+                CMP     0, R9                   ; illegal submenu index?
+                RBRA    _OPTM_CBS_I5, !V        ; no: proceed
+                MOVE    ERR_FATAL_INST, R8      ; yes: fatal
+                MOVE    ERR_FATAL_INST9, R9
+                RBRA    FATAL, 1
+
+                ; Calculate OPTM_HEAP position we can use for str. replacement
+                ; R9 contains the submenu index:
+                ; (Amount of vdrives + current submenu index) * @SCR$OSM_O_DX                
+_OPTM_CBS_I5    MOVE    VDRIVES_NUM, R8
                 MOVE    @R8, R8
-                MOVE    OPTM_SUBMENINST, R2
-                ADD     @R2, R8
+                ADD     R9, R8
                 MOVE    SCR$OSM_O_DX, R9
                 MOVE    @R9, R9
                 MOVE    R9, R5                  ; R5: @SCR$OSM_O_DX
                 SYSCALL(mulu, 1)                ; R10: result
 
+                ; Perform the string replacement
                 MOVE    R0, R8                  ; R8: source string
                 MOVE    OPTM_HEAP, R9           ; R9: target string
                 MOVE    @R9, R9
