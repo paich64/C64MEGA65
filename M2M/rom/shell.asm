@@ -171,7 +171,7 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 ; stack pointer.
 
 ; ----------------------------------------------------------------------------
-; SD card & virtual drive mount handling
+; SD card, virtual drive mount handling & CRT/ROM loading
 ; ----------------------------------------------------------------------------
 
 ; array of pointers to all the file handles for the virtual drives
@@ -194,7 +194,7 @@ HANDLES_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
 ;      1: Manually loadable CRTs/ROMs
 HANDLE_MOUNTING SYSCALL(enter, 1)
 
-                MOVE    R8, R7                  ; R7: drive number
+                MOVE    R8, R7                  ; R7: drive or CRT/ROM number
                 MOVE    R9, R6                  ; R6: key to trigger mounting
                 MOVE    R10, R5                 ; R5: mount mode
 
@@ -402,8 +402,16 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 ADD     R0, R8
                 MOVE    0, @R8
 
+                ; DEBUG: In case of a CRT/ROM: Act as if it was loaded
+                CMP     1, R5
+                RBRA    _DEBUG1, !Z
+                MOVE    CRTROM_MAN_LDF, R8
+                ADD     R7, R8
+                MOVE    1, @R8
+                RBRA    _HM_SDMOUNTED6, 1
+
                 ; load the disk image to the mount buffer
-                MOVE    R7, R8                  ; R8: drive ID to be mounted
+_DEBUG1         MOVE    R7, R8                  ; R8: drive ID to be mounted
                 MOVE    R2, R9                  ; R9: file name of disk image
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
                 CMP     0, R8                   ; everything OK?

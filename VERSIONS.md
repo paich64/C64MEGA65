@@ -20,7 +20,7 @@ also software cartridges.
 * Hardware cartridges can be used in the MEGA65's expansion port. Most game
   cartridges are supported, including Ultimax game cartridges.
 
-* The following more sophisticated cartridges are supported:
+* The following more sophisticated hardware cartridges are supported:
   EasyFlash 1CR
 
 @TODO: Check, if we can support at least REUs and other cartridges that are

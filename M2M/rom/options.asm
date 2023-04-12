@@ -1593,6 +1593,7 @@ _OPTM_CBS_CTRM  MOVE    R1, R8
                 RBRA    _OPTM_CBS_RET, !C
                 MOVE    ERR_FATAL_INST6, R9
                 RSUB    CRTROM_CHK_NO, 1        ; double-check sys. stability
+                MOVE    R8, R1                  ; R1: CRT/ROM number
 
                 ; Calculate the address on the heap that we can use as a
                 ; scratch buffer for our string: (Amount of vdrives plus
@@ -1614,9 +1615,9 @@ _OPTM_CBS_CTRM  MOVE    R1, R8
                 ; otherwise we replace it by the default string OPTM_S_CRTROM
                 ; from config.vhd
                 MOVE    CRTROM_MAN_LDF, R2
-                ADD     R8, R2
+                ADD     R1, R2
                 CMP     1, @R2
-                RBRA    _OPTM_CBS_CTRML, Z      ; yes: replace by filename
+                RBRA    _OPTM_CBS_CTRM1, Z      ; yes: replace by filename
 
                 ; Replace %s by default value
                 MOVE    M2M$RAMROM_DEV, R3      ; replace %s w. OPTM_S_CRTROM
@@ -1625,16 +1626,19 @@ _OPTM_CBS_CTRM  MOVE    R1, R8
                 MOVE    M2M$CFG_OPTM_CRSTR, @R3
                 MOVE    M2M$RAMROM_DATA, R8
                 RSUB    _OPTM_CBS_REPL, 1
-                MOVE    SCR$OSM_O_DX, R3        ; clear "%s is replaced" flag
-                MOVE    @R3, R3
-                SUB     1, R3
-                ADD     R0, R3
-                MOVE    0, @R8
                 RBRA    _OPTM_CBS_RET, 1
 
-                ; Replace %s
-                ; @TODO
-_OPTM_CBS_CTRML SYSCALL(exit, 1)
+                ; Replace %s by filename by leveraging the existing
+                ; routine above in _OPTM_CBS_3, but only if not already
+                ; replaced. Within "Case (b-1)" above, see "Case #2b" to learn
+                ; how the mechanism works.
+_OPTM_CBS_CTRM1 MOVE    SCR$OSM_O_DX, R8        ; read "%s is replaced" flag
+                MOVE    @R8, R8
+                SUB     1, R8
+                ADD     R0, R8
+                CMP     1, @R8                  ; did we replace earlier?
+                RBRA    _OPTM_CBS_3, !Z         ; no: do the replacement
+                                                ; yes: return
 
 _OPTM_CBS_RET   MOVE    R0, @--SP               ; lift R0 over the leave hump
                 SYSCALL(leave, 1)

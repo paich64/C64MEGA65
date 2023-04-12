@@ -125,7 +125,7 @@ _CRMN_RET       DECRB
                 RET
 
 
-; Check if the CRT/ROM item number in R8 is valid: Goes fatal if yes and
+; Check if the CRT/ROM item number in R8 is valid: Goes fatal if no and
 ; uses the error code in R9 in this case
 CRTROM_CHK_NO   INCRB
 
