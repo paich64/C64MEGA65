@@ -681,14 +681,29 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
 _LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
                 SYSCALL(puts, 1)
 
-                ; in case of CRT/ROM loading: set CSR status and load flag
+                ; in case of CRT/ROM loading: provide the file size of the
+                ; loaded CRT/ROM via CSR registers, set CSR status to OK
+                ; and set the load flag so that the OSM can show the filename
                 CMP     0, R4                   ; disk image mode?
                 RBRA    _LI_FREAD_RET, Z        ; yes: skip
+                MOVE    HNDL_RM_FILES, R0       ; R0: current file handle
+                ADD     R12, R0                 ; R12: CRT/ROM id
+                MOVE    @R0, R0
                 MOVE    R12, R8
-                MOVE    CRTROM_CSR_STATUS, R9
+                MOVE    CRTROM_CSR_FS_LO, R9    ; transmit filesize: low
+                MOVE    R0, R10
+                ADD     FAT32$DEV_FS_LO, R10
+                MOVE    @R10, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    CRTROM_CSR_FS_HI, R9    ; transmit filesize: high
+                MOVE    R0, R10
+                ADD     FAT32$DEV_FS_HI, R10
+                MOVE    @R10, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    CRTROM_CSR_STATUS, R9   ; transmit status: OK
                 MOVE    CRTROM_CSR_ST_OK, R10
                 RSUB    CRTROM_CSR_W, 1
-                MOVE    CRTROM_MAN_LDF, R8
+                MOVE    CRTROM_MAN_LDF, R8      ; set "loaded" flag
                 ADD     R12, R8
                 MOVE    1, @R8
 
