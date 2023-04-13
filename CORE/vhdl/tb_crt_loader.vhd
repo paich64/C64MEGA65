@@ -16,11 +16,13 @@ end entity tb_crt_loader;
 
 architecture simulation of tb_crt_loader is
 
+   constant C_NAME_LEN : natural :=  44;
+
    type word_vector is array (natural range <>) of std_logic_vector(15 downto 0);
 
    type test_type is record
-      name        : string(1 to 44);
-      data        : word_vector(0 to 255);
+      name        : string(1 to C_NAME_LEN);
+      data        : word_vector(0 to 1023);
       length      : integer;
       exp_status  : integer;
       exp_error   : integer;
@@ -42,43 +44,43 @@ architecture simulation of tb_crt_loader is
    end;
 
    constant C_TESTS : test_vector := (
-      (pad("Testing missing CRT header", 44),
+      (pad("Testing missing CRT header", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045",
          others => X"0000"),
         14, 3, 1, 0),
 
-      (pad("Testing unrecognized CRT header", 44),
+      (pad("Testing unrecognized CRT header", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2120",
          X"0000", X"4000", X"0001", X"1300",
          others => X"0000"),
         64, 3, 3, 0),
 
-      (pad("Testing missing CRT header", 44),
+      (pad("Testing missing CRT header", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300",
          others => X"0000"),
         62, 3, 1, 0),
 
-      (pad("Testing missing CHIP header", 44),
+      (pad("Testing missing CHIP header", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300",
          others => X"0000"),
         64, 3, 2, 0),
 
-      (pad("Testing missing CHIP header", 44),
+      (pad("Testing missing CHIP header", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4001", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
          others => X"0000"),
         80, 3, 2, 0),
 
-      (pad("Testing unrecognized CHIP header", 44),
+      (pad("Testing unrecognized CHIP header", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
          X"4956", X"4545", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
          others => X"0000"),
         96, 3, 4, 64),
 
-      (pad("Testing truncated CHIP data", 44),
+      (pad("Testing truncated CHIP data", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
          X"4956", X"4543", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
@@ -88,7 +90,17 @@ architecture simulation of tb_crt_loader is
          others => X"0000"),
         96, 3, 5, 64),
 
-      (pad("Testing no errors", 44),
+      (pad("Testing 16k CHIP data", C_NAME_LEN),
+        (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
+         X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
+         X"4956", X"4543", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
+         X"0000", X"0000", X"0000", X"0000", X"0000", X"0000", X"0000", X"0000",
+         X"4843", X"5049", X"0000", X"1040", X"0000", X"0000", X"0080", X"0040",
+         X"8009", X"8009", X"c2c3", X"38cd", X"8e30", X"d016", X"2078", X"fda3",
+         others => X"0000"),
+        80+16384, 2, 0, 0),
+
+      (pad("Testing no errors", C_NAME_LEN),
         (X"3643", X"2034", X"4143", X"5452", X"4952", X"4744", X"2045", X"2020",
          X"0000", X"4000", X"0001", X"1300", X"0100", X"0000", X"0000", X"0000",
          X"4956", X"4543", X"4320", X"5241", X"0054", X"0000", X"0000", X"0000",
@@ -145,7 +157,6 @@ architecture simulation of tb_crt_loader is
 begin
 
    clk <= running and not clk after 5 ns;
-   rst <= '1', '0' after 100 ns;
 
    i_crt_loader : entity work.crt_loader
       port map (
@@ -210,10 +221,14 @@ begin
          if cart_bank_wr = '1' then
             if cart_bank_laddr = X"8000" then
                report "Writing " & to_hstring(cart_bank_raddr) & " to LO bank";
-               lobank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 15);
+               lobank(to_integer(cart_bank_num)) <= cart_bank_raddr(19 downto 13);
+               if cart_bank_size > X"2000" then
+                  report "Writing " & to_hstring(cart_bank_raddr+X"2000") & " to HI bank";
+                  hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(19 downto 13)+1;
+               end if;
             else
                report "Writing " & to_hstring(cart_bank_raddr) & " to HI bank";
-               hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(21 downto 15);
+               hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(19 downto 13);
             end if;
          end if;
       end if;
@@ -224,9 +239,11 @@ begin
 
    process
    begin
+      rst <= '1';
       req_start <= '0';
-      wait until rst = '0';
-      wait until rising_edge(clk);
+      wait for 100 ns;
+      rst <= '0';
+      wait until falling_edge(clk);
 
       for i in 0 to C_TESTS'length-1 loop
          report "Test #" & to_string(i) & ": " & C_TESTS(i).name;
@@ -234,33 +251,37 @@ begin
          req_address <= "01" & X"00000";
          req_length  <= std_logic_vector(to_unsigned(C_TESTS(i).length, 23));
          req_start   <= '1';
-         wait until rising_edge(clk);
-         wait until cart_loading = '0' or resp_status(1) = '1';
+         wait until falling_edge(clk);
+         while cart_loading = '1' and resp_status /= 3 loop
+            wait until falling_edge(clk);
+         end loop;
          if resp_status /= C_TESTS(test_num).exp_status then
             report "Status is " & to_string(resp_status) & ", but expected " &
                to_string(C_TESTS(test_num).exp_status);
-            wait until rising_edge(clk);
+            wait until falling_edge(clk);
             running <= '0';
          end if;
 
          if resp_error /= C_TESTS(test_num).exp_error then
             report "Error is " & to_string(resp_error) & ", but expected " &
                to_string(C_TESTS(test_num).exp_error);
-            wait until rising_edge(clk);
+            wait until falling_edge(clk);
             running <= '0';
          end if;
 
          if resp_address /= C_TESTS(test_num).exp_address then
             report "Address is " & to_hstring(resp_address) & ", but expected " &
                to_hstring(to_unsigned(C_TESTS(test_num).exp_address, 22));
-            wait until rising_edge(clk);
+            wait until falling_edge(clk);
             running <= '0';
          end if;
 
          req_start   <= '0';
-         wait until rising_edge(clk);
+         wait until falling_edge(clk);
+         rst <= '1';
          wait for 100 ns;
-         wait until rising_edge(clk);
+         rst <= '0';
+         wait until falling_edge(clk);
       end loop;
 
       running <= '0';
