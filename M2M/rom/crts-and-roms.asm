@@ -18,6 +18,23 @@
 
 CRTROM_INIT     SYSCALL(enter, 1)
 
+                ; initialize the double-indirectly located file handles for
+                ; the CRT/ROM loading system                
+                MOVE    HNDL_RM_FILES, R8
+                MOVE    CRTROM_MAN_MAX, R9
+_CRTRI_L1       MOVE    @R8++, R0
+                MOVE    0, @R0
+                SUB     1, R9
+                RBRA    _CRTRI_L1, !Z
+
+                ; initialize "loaded" flags
+                MOVE    CRTROM_MAN_LDF, R8
+                MOVE    CRTROM_MAN_MAX, R9
+                XOR     R10, R10
+                SYSCALL(memset, 1)                
+
+                ; use the sysinfo device to get the relevant data from
+                ; globals.vhd to initialize the CRT/ROM loading system
                 MOVE    M2M$RAMROM_DEV, R8
                 MOVE    M2M$SYS_INFO, @R8
                 MOVE    M2M$RAMROM_4KWIN, R8
@@ -28,19 +45,73 @@ CRTROM_INIT     SYSCALL(enter, 1)
                 MOVE    @R8, R0
 
                 ; illegal amount of manually loaded CRTs/ROMs
-                CMP     R0, 16
-                RBRA    CRTROM_INIT_1, !N
+                CMP     R0, CRTROM_MAN_MAX
+                RBRA    _CRTRI_L2, !N
                 MOVE    ERR_F_CR_M_CNT, R8
                 MOVE    R0, R9
                 RBRA    FATAL, 1
 
-                ; initialize "loaded" flags
-                MOVE    CRTROM_MAN_LDF, R8
-                MOVE    CRTROM_MAN_MAX, R9
-                XOR     R10, R10
-                SYSCALL(memset, 1)
+                ; skip the rest in case of inactive CRT/ROM system
+_CRTRI_L2       CMP     0, R0
+                RBRA    _CRTRI_RET, Z
 
-CRTROM_INIT_1   SYSCALL(leave, 1)
+                ; ------------------------------------------------------------
+                ; Initializations that are only relevant, if we have at 
+                ; least one CRT/ROM
+                ; ------------------------------------------------------------
+
+                ; retrieve the byte streaming devices, decode their type and
+                ; store their device IDs and 4k window start positions
+                MOVE    CRTROM_MAN_BUFFERS, R1
+                MOVE    CRTROM_MAN_DEV, R6      ; R6: array of device IDs
+                MOVE    CRTROM_MAN_4KS, R7      ; R7: array of 4k windows
+
+_CRTRI_L3       MOVE    @R1++, R2               ; R2: type
+                MOVE    @R1++, R3               ; R3: device id or 4k window
+                XOR     R4, R4                  ; R4: default device is zero
+                XOR     R5, R5                  ; R5: std 4k window is zero            
+
+                CMP     CRTROM_TYPE_DEVICE, R2  ; QNICE device?
+                RBRA    _CRTRI_L4, !Z           ; no
+                MOVE    R3, R4                  ; in this case: R3=device id
+                RBRA    _CRTRI_L7, 1
+
+_CRTRI_L4       CMP     CRTROM_TYPE_HYPRAM, R2  ; HyperRAM device?
+                RBRA    _CRTRI_L5, !Z           ; no
+                MOVE    M2M$HYPERRAM, R4        ; use M2M HyperRAM device
+                MOVE    R3, R5                  ; start address: 4k window
+                RBRA    _CRTRI_L7, 1
+
+_CRTRI_L5       CMP     CRTROM_TYPE_SDRAM, R2   ; SDRAM device?
+                RBRA    _CRTRI_L6, !Z           ; no
+                                                ; @TODO: future R4 boards
+                                                ; for now: fatal
+
+_CRTRI_L6       MOVE    ERR_F_CR_M_TYPE, R8     ; Fatal: Illegal type
+                MOVE    R2, R9
+                RBRA    FATAL, 1
+
+_CRTRI_L7       MOVE    R4, @R6++               ; store device id in array
+                MOVE    R5, @R7++               ; store 4k win in array
+
+                CMP     0xEEEE, R5
+                RBRA    _CRTRI_L8, !Z
+                MOVE    ERR_F_CR_M_TYPE, R8
+                XOR     R9, R9
+                RBRA    FATAL, 1
+
+_CRTRI_L8       SUB     1, R0
+                RBRA    _CRTRI_L3, !Z
+
+                ; DEBUG
+                MOVE    CRTROM_MAN_DEV, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+                MOVE    CRTROM_MAN_4KS, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(exit, 1)
+
+_CRTRI_RET      SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------

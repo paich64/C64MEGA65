@@ -114,7 +114,10 @@ ERR_F_NEWLINE   .ASCII_P "config.vhd: Each line in OPTM_ITEMS needs\n"
                 .ASCII_W "to be terminated by a newline character.\n"
 ERR_F_NO_S      .ASCII_W "M2M$RPL_S: No %s found in source string.\n"
 
-ERR_F_CR_M_CNT  .ASCII_W "globals.vhd: C_CRTROM_MAN_NUM greater 16\n"
+ERR_F_CR_M_CNT  .ASCII_P "globals.vhd: C_CRTROM_MAN_NUM too large.\n"
+                .ASCII_W "Hint: CRTROM_MAN_MAX in shell.vars.asm\n"
+ERR_F_CR_M_TYPE .ASCII_P "globals.vhd: C_CRTROMS_MAN: Illegal type\n"
+                .ASCII_W "or device id or 4k window.\n"
 
 ; ------------------------------------------------------------------|
 ; @TODO: Adjust strings so that every string ends at the |

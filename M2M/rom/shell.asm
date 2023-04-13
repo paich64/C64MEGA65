@@ -49,15 +49,11 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; Initialize stack, heap, variables, libraries and IO
                 ; ------------------------------------------------------------
 
-                ; initialize device (SD card) and file handle
+                ; FAT32 subsystem: initialize SD card device handles for the
+                ; vdrive and CRT/ROM loader (HANDLE_DEV) and for the config
+                ; file (CONFIG_DEVH) and initialize the config file handle
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8
-                MOVE    HANDLES_FILES, R8
-                MOVE    VDRIVES_MAX, R9
-_SS_INITFH_L    MOVE    @R8++, R0               ; double indirection leads..
-                MOVE    0, @R0                  ; to the data of the file hdl
-                SUB     1, R9
-                RBRA    _SS_INITFH_L, !Z
                 MOVE    CONFIG_DEVH, R8
                 MOVE    0, @R8
                 MOVE    CONFIG_FILE, R8
@@ -174,9 +170,11 @@ MAIN_LOOP       RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
 ; SD card, virtual drive mount handling & CRT/ROM loading
 ; ----------------------------------------------------------------------------
 
-; array of pointers to all the file handles for the virtual drives
-; needs to be in line with VDRIVES_MAX (see shell_vars.asm)
-HANDLES_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
+; arrays of pointers to all the file handles for the virtual drives
+; (needs to be in line with VDRIVES_MAX) and for the CRT/ROM loading mechanism
+; (needs to be in line with CRTROM_MAN_MAX, both in shell_vars.asm)
+HNDL_VD_FILES   .DW     HANDLE_FILE1, HANDLE_FILE2, HANDLE_FILE3
+HNDL_RM_FILES   .DW     HANDLE_FILE4, HANDLE_FILE5, HANDLE_FILE6
 
 ; Handle mounting of virtual drives and manual loading of CRTs/ROMs
 ;
@@ -402,17 +400,10 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 ADD     R0, R8
                 MOVE    0, @R8
 
-                ; DEBUG: In case of a CRT/ROM: Act as if it was loaded
-                CMP     1, R5
-                RBRA    _DEBUG1, !Z
-                MOVE    CRTROM_MAN_LDF, R8
-                ADD     R7, R8
-                MOVE    1, @R8
-                RBRA    _HM_SDMOUNTED6, 1
-
                 ; load the disk image to the mount buffer
-_DEBUG1         MOVE    R7, R8                  ; R8: drive ID to be mounted
+                MOVE    R7, R8                  ; R8: drive ID to be mounted
                 MOVE    R2, R9                  ; R9: file name of disk image
+                MOVE    R5, R10                 ; R10: mode: vdrive or CRT/ROM
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
                 CMP     0, R8                   ; everything OK?
                 RBRA    _HM_SDMOUNTED6, Z       ; yes
@@ -446,7 +437,7 @@ _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
 
                 ; Step #5: Notify MiSTer using the "SD" protocol
                 MOVE    R7, R8                  ; R8: drive number
-                MOVE    HANDLES_FILES, R9
+                MOVE    HNDL_VD_FILES, R9
                 ADD     R7, R9
                 MOVE    @R9, R9
                 MOVE    R9, R10
@@ -578,11 +569,12 @@ _HM_SETMENU_1   MOVE    OPTM_X, R9              ; R9: x-pos
                 SYSCALL(leave, 1)
                 RET
 
-; Load disk image to virtual drive buffer (VDRIVES_BUFS)
+; Load a disk or CRT/ROM image to the device as configured in globals.vhd
 ;
 ; Input:
-;   R8: drive number
+;   R8: drive or CRT/ROM number
 ;   R9: file name of disk image
+;  R10: mode selector: 0=virtual drives 1=manually loadable CRTs/ROMs
 ;
 ; And HANDLE_DEV needs to be fully initialized and the status needs to be
 ; such, that the directory where R9 resides is active
@@ -594,6 +586,7 @@ LOAD_IMAGE      SYSCALL(enter, 1)
 
                 MOVE    R8, R1                  ; R1: drive number
                 MOVE    R9, R2                  ; R2: file name
+                MOVE    R10, R4                 ; R4: mode (0=vdrv, 1=crt/rom)
 
                 MOVE    VDRIVES_BUFS, R0
                 ADD     R1, R0
@@ -601,7 +594,7 @@ LOAD_IMAGE      SYSCALL(enter, 1)
 
                 ; Open file
                 MOVE    HANDLE_DEV, R8
-                MOVE    HANDLES_FILES, R9
+                MOVE    HNDL_VD_FILES, R9
                 ADD     R1, R9
                 MOVE    @R9, R9
                 MOVE    R9, R5                  ; R5: remember file handle
@@ -947,7 +940,7 @@ _HDW_RET        SYSCALL(leave, 1)
 FLUSH_CACHE     SYSCALL(enter, 1)
 
                 MOVE    R8, R0                  ; R0: virtual drive number
-                MOVE    HANDLES_FILES, R1
+                MOVE    HNDL_VD_FILES, R1
                 ADD     R0, R1
                 MOVE    @R1, R1                 ; R1: image-file handle
 

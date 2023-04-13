@@ -54,12 +54,16 @@ SCRATCH_HEX     .BLOCK 5
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE
 
 ; Important: Make sure you have as many ".BLOCK FAT32$FDH_STRUCT_SIZE"
-; statements listed one after another as the .EQU VDRIVES_MAX (below) demands
-; and make sure that the HANDLES_FILES array in shell.asm points 
-; to all of them, i.e. you need to edit shell.asm
+; statements listed one after another as the .EQU VDRIVES_MAX (below) plus
+; the .EQU CRTROM_MAN_MAX demands and make sure that the HNDL_VD_FILES
+; and HNDL_RM_FILES arrays in shell.asm point to the right amount of them
+; as well, i.e. you need to edit shell.asm
 HANDLE_FILE1    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE2    .BLOCK  FAT32$FDH_STRUCT_SIZE
 HANDLE_FILE3    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE4    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE5    .BLOCK  FAT32$FDH_STRUCT_SIZE
+HANDLE_FILE6    .BLOCK  FAT32$FDH_STRUCT_SIZE
 
 ; Remember configuration handling:
 ; * We are using a separate device handle because some logic around SD card
@@ -139,6 +143,12 @@ VDRIVES_FL_4K   .BLOCK  VDRIVES_MAX
 VDRIVES_FL_OFS  .BLOCK  VDRIVES_MAX
 
 ; System to handle manually and automatically loaded cartridges and ROMs
+; See also globals.vhd: There are multiple types of "byte streaming devices"
+; that are able to receive the CRT/ROM data. All need to obey to a certain
+; protocol that is: 4K windows 0x0000..0xFFFE can be used to recieve data and
+; the 4K window 0xFFFF is used as a control and status register
 CRTROM_MAN_NUM  .BLOCK 1                        ; amount of manual CRTs/ROMs
 CRTROM_MAN_MAX  .EQU   3                        ; max. amt. of. man. CRTS/ROMs
 CRTROM_MAN_LDF  .BLOCK CRTROM_MAN_MAX           ; flag: has been loaded
+CRTROM_MAN_DEV  .BLOCK CRTROM_MAN_MAX           ; byte streaming device ids
+CRTROM_MAN_4KS  .BLOCK CRTROM_MAN_MAX           ; 4K start address within dev.
