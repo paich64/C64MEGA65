@@ -350,6 +350,24 @@ CRTROM_TYPE_DEVICE  .EQU 0x0000     ; any QNICE compatible device
 CRTROM_TYPE_HYPRAM  .EQU 0x0001     ; HyperRAM
 CRTROM_TYPE_SDRAM   .EQU 0x0002     ; @TODO/RESERVED for future R4 boards
 
+; Control and status registers of a CRT/ROM device
+CRTROM_CSR_4KWIN    .EQU 0xFFFF     ; 4K window in the device addr. space
+   
+CRTROM_CSR_STATUS   .EQU 0x7000     ; QNICE to device: load status (see below)
+CRTROM_CSR_FS_LO    .EQU 0x7001     ; filesize of CRT/ROM: low word
+CRTROM_CSR_FS_HI    .EQU 0x7002     ; filesize of CRT/ROM: high word
+CRTROM_CSR_PARSEST  .EQU 0x7010     ; device to QNICE: parse status
+CRTROM_CSR_PARSEE1  .EQU 0x7011     ; device to QNICE: error code
+CRTROM_CSR_ADDR_LO  .EQU 0x7012     ; device to QNICE: load address low word
+CRTROM_CSR_ADDR_HI  .EQU 0x7013     ; device to QNICE: load address high word
+CRTROM_CSR_ERR_STRT .EQU 0x7100     ; device to QNICE: status string
+
+; QNICE to device: CRT/ROM load status
+CRTROM_CSR_ST_IDLE  .EQU 0x0000     ; device is initialized, no loading
+CRTROM_CSR_ST_LDNG  .EQU 0x0001     ; loading takes place
+CRTROM_CSR_ST_ERR   .EQU 0x0002     ; loading failed
+CRTROM_CSR_ST_OK    .EQU 0x0003     ; loading successful
+
 ; ----------------------------------------------------------------------------
 ; Situation and context identifiers for custom messages
 ; ----------------------------------------------------------------------------

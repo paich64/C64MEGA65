@@ -584,26 +584,48 @@ _HM_SETMENU_1   MOVE    OPTM_X, R9              ; R9: x-pos
 ;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
 LOAD_IMAGE      SYSCALL(enter, 1)
 
-                MOVE    R8, R1                  ; R1: drive number
+                MOVE    R8, R1                  ; R1: drive or CRT/ROM number
+                MOVE    R8, R12                 ; R12: dito
                 MOVE    R9, R2                  ; R2: file name
                 MOVE    R10, R4                 ; R4: mode (0=vdrv, 1=crt/rom)
 
+                CMP     0, R4                   ; mode = vdrives?
+                RBRA    _LI_CRTROM, !Z          ; no
+
+                ; Case 0: virtual drives
                 MOVE    VDRIVES_BUFS, R0
                 ADD     R1, R0
-                MOVE    @R0, R0                 ; R0: device number of buffer
+                MOVE    @R0, R0                 ; R0: device number            
+                MOVE    HNDL_VD_FILES, R9
+                RBRA    _LI_OPENFILE, 1
+
+                ; Case 1: CRTs/ROMs
+_LI_CRTROM      MOVE    CRTROM_MAN_DEV, R0
+                ADD     R1, R0
+                MOVE    @R0, R0                 ; R0: device number
+                MOVE    R0, R8
+                MOVE    CRTROM_CSR_STATUS, R9   ; set CSR to "loading"
+                MOVE    CRTROM_CSR_ST_LDNG, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    HNDL_RM_FILES, R9
 
                 ; Open file
-                MOVE    HANDLE_DEV, R8
-                MOVE    HNDL_VD_FILES, R9
+_LI_OPENFILE    MOVE    HANDLE_DEV, R8          ; R8: sd card device handle
                 ADD     R1, R9
-                MOVE    @R9, R9
+                MOVE    @R9, R9                 ; R9: file handle
                 MOVE    R9, R5                  ; R5: remember file handle
                 MOVE    R2, R10
                 XOR     R11, R11
                 SYSCALL(f32_fopen, 1)
                 CMP     0, R10                  ; R10=error code; 0=OK
                 RBRA    _LI_FOPEN_OK, Z
-                MOVE    ERR_FATAL_FNF, R8
+                CMP     0, R4
+                RBRA    _LI_OPENFATAL, Z
+                MOVE    R0, R8
+                MOVE    CRTROM_CSR_STATUS, R9
+                MOVE    CRTROM_CSR_ST_ERR, R10
+                RSUB    CRTROM_CSR_W, 1
+_LI_OPENFATAL   MOVE    ERR_FATAL_FNF, R8
                 MOVE    R10, R9
                 RBRA    FATAL, 1
 
@@ -622,7 +644,13 @@ _LI_FOPEN_OK    MOVE    R5, R8
 
                 ; load disk image into buffer RAM
                 XOR     R1, R1                  ; R1=window: start from 0
-                XOR     R2, R2                  ; R2=start address in window
+                CMP     0, R4                   ; mode=disk image?
+                RBRA    _LI_FREAD_S, Z          ; yes
+                MOVE    CRTROM_MAN_4KS, R1      ; no: 4k win frpm globals.vhd
+                ADD     R12, R1
+                MOVE    @R1, R1
+
+_LI_FREAD_S     XOR     R2, R2                  ; R2=start address in window
                 ADD     M2M$RAMROM_DATA, R2
                 MOVE    M2M$RAMROM_DATA, R3     ; R3=end of 4k page reached
                 ADD     0x1000, R3
@@ -652,6 +680,17 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
 
 _LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
                 SYSCALL(puts, 1)
+
+                ; in case of CRT/ROM loading: set CSR status and load flag
+                CMP     0, R4                   ; disk image mode?
+                RBRA    _LI_FREAD_RET, Z        ; yes: skip
+                MOVE    R12, R8
+                MOVE    CRTROM_CSR_STATUS, R9
+                MOVE    CRTROM_CSR_ST_OK, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    CRTROM_MAN_LDF, R8
+                ADD     R12, R8
+                MOVE    1, @R8
 
 _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
                 MOVE    R7, @--SP               ; the "leave hump"

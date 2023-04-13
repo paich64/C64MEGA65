@@ -103,13 +103,16 @@ _CRTRI_L7       MOVE    R4, @R6++               ; store device id in array
 _CRTRI_L8       SUB     1, R0
                 RBRA    _CRTRI_L3, !Z
 
-                ; DEBUG
-                MOVE    CRTROM_MAN_DEV, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(crlf, 1)
-                MOVE    CRTROM_MAN_4KS, R8
-                SYSCALL(puthex, 1)
-                SYSCALL(exit, 1)
+                ; set all CSRs of all CRT/ROM devices to "idle"
+                MOVE    CRTROM_MAN_NUM, R0
+                MOVE    @R0, R0
+                MOVE    CRTROM_MAN_DEV, R1
+                MOVE    CRTROM_CSR_STATUS, R9
+                MOVE    CRTROM_CSR_ST_IDLE, R10            
+_CRTRI_L9       MOVE    @R1++, R8
+                RSUB    CRTROM_CSR_W, 1
+                SUB     1, R0
+                RBRA    _CRTRI_L9, !Z
 
 _CRTRI_RET      SYSCALL(leave, 1)
                 RET
@@ -210,6 +213,41 @@ CRTROM_CHK_NO   INCRB
                 RBRA    FATAL, 1
 
 _CRRMCN_RET     DECRB
+                RET
+
+; Write to the control and status register of a CRT/ROM device
+; Input:
+;   R8: device id
+;   R9: CSR register
+;   R10: value
+; Output: none, all registers remain unchanged
+CRTROM_CSR_W    INCRB
+
+                MOVE    M2M$RAMROM_DEV, R0
+                MOVE    R8, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0
+                MOVE    CRTROM_CSR_4KWIN, @R0
+                MOVE    R10, @R9
+
+                DECRB
+                RET
+
+; Read from the control and status register of a CRT/ROM device
+; Input:
+;   R8: device id
+;   R9: CSR register
+; Output:
+;   R8/R9: unchanged
+;   R10: value
+CRTROM_CSR_R    INCRB
+
+                MOVE    M2M$RAMROM_DEV, R0
+                MOVE    R8, @R0
+                MOVE    M2M$RAMROM_4KWIN, R0
+                MOVE    CRTROM_CSR_4KWIN, @R0
+                MOVE    @R9, R10
+
+                DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
