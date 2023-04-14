@@ -686,21 +686,21 @@ _LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
                 ; and set the load flag so that the OSM can show the filename
                 CMP     0, R4                   ; disk image mode?
                 RBRA    _LI_FREAD_RET, Z        ; yes: skip
-                MOVE    HNDL_RM_FILES, R0       ; R0: current file handle
-                ADD     R12, R0                 ; R12: CRT/ROM id
-                MOVE    @R0, R0
-                MOVE    R12, R8
+                MOVE    HNDL_RM_FILES, R1       ; R1: current file handle
+                ADD     R12, R1                 ; R12: CRT/ROM id
+                MOVE    @R1, R1
+                MOVE    R0, R8                  ; R0: CRT/ROM device id
                 MOVE    CRTROM_CSR_FS_LO, R9    ; transmit filesize: low
-                MOVE    R0, R10
-                ADD     FAT32$DEV_FS_LO, R10
+                MOVE    R1, R10
+                ADD     FAT32$FDH_SIZE_LO, R10
                 MOVE    @R10, R10
                 RSUB    CRTROM_CSR_W, 1
                 MOVE    CRTROM_CSR_FS_HI, R9    ; transmit filesize: high
-                MOVE    R0, R10
-                ADD     FAT32$DEV_FS_HI, R10
+                MOVE    R1, R10
+                ADD     FAT32$FDH_SIZE_HI, R10
                 MOVE    @R10, R10
                 RSUB    CRTROM_CSR_W, 1
-                MOVE    CRTROM_CSR_STATUS, R9   ; transmit status: OK
+                MOVE    CRTROM_CSR_STATUS, R9   ; start cartridge parser
                 MOVE    CRTROM_CSR_ST_OK, R10
                 RSUB    CRTROM_CSR_W, 1
                 MOVE    CRTROM_MAN_LDF, R8      ; set "loaded" flag
