@@ -105,6 +105,7 @@ M2M$DIR_L           .EQU 17     ; left char for displaying a directory
 M2M$DIR_R           .EQU 16     ; right char for displaying a directory
 M2M$OPT_SEL_MULTI   .EQU 7      ; selection char for options menu: multi-sel.
 M2M$OPT_SEL_SINGLE  .EQU 61     ; ditto for single select
+M2M$OPT_PROGRESS    .EQU 254    ; character used for progress bar
 
 ; ----------------------------------------------------------------------------
 ; HDMI: Avalon Scaler (ascal.vhd)
@@ -367,6 +368,12 @@ CRTROM_CSR_ST_IDLE  .EQU 0x0000     ; device is initialized, no loading
 CRTROM_CSR_ST_LDNG  .EQU 0x0001     ; loading takes place
 CRTROM_CSR_ST_ERR   .EQU 0x0002     ; loading failed
 CRTROM_CSR_ST_OK    .EQU 0x0003     ; loading successful
+
+; Device to QNICE: Parsing status
+CRTROM_CSR_PT_IDLE  .EQU 0x0000     ; parser is idle
+CRTROM_CSR_PT_PRSNG .EQU 0x0001     ; parser is parsing
+CRTROM_CSR_PT_OK    .EQU 0x0002     ; parsing successful
+CRTROM_CSR_PT_ERR   .EQU 0x0003     ; parsing error
 
 ; ----------------------------------------------------------------------------
 ; Situation and context identifiers for custom messages

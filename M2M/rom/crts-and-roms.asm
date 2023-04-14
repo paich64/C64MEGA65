@@ -252,21 +252,84 @@ CRTROM_CSR_R    INCRB
 
 ; ----------------------------------------------------------------------------
 ; Handle manual CRT/ROM loading
-; R8: CRT/ROM number
+; Input:
+;    R8: CRT/ROM device
+;    R9: CRT/ROM id
+;   R10: File handle
+; Output:
+;    R8: 0=OK, otherwise error code
+;    R9: 0=OK, otherwise pointer to error string that is only readable,
+;              if the correct CRT/ROM device is being set
+;   R10: unchanged
 ; ----------------------------------------------------------------------------
 
-HANDLE_CRTROM_M SYSCALL(enter, 1)
+HANDLE_CRTROM_M INCRB
 
+                MOVE    R8, R0                  ; R0: CRT/ROM device
+                MOVE    R9, R1                  ; R1: CRT/ROM id
+                MOVE    R10, R2                 ; R2: file handle
+
+                ; sanity check the CRT/ROM id
+                MOVE    R1, R8
                 MOVE    ERR_FATAL_INST5, R9
                 RSUB    CRTROM_CHK_NO, 1
 
-                ; Remember which CRT/ROM has already been loaded so that we
-                ; can for example distinguish between showing the default
-                ; %s replacement or the filename when showing the OSM
-_HCR_1          MOVE    CRTROM_MAN_LDF, R0
-                ADD     R8, R0
-                MOVE    1, @R0                  ; 1=loaded
+                ; log to serial terminal
+                MOVE    LOG_STR_ROMPRS, R8
+                SYSCALL(puts, 1)
 
+                ; start the parsing of the CRT/ROM by providing the file size
+                ; of the loaded CRT/ROM via CSR registers, set CSR status to
+                ; OK and set the load flag so that the filename can be shown
+                MOVE    R0, R8                  ; R0: CRT/ROM device id
+                MOVE    CRTROM_CSR_FS_LO, R9    ; transmit filesize: low
+                MOVE    R2, R10
+                ADD     FAT32$FDH_SIZE_LO, R10
+                MOVE    @R10, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    CRTROM_CSR_FS_HI, R9    ; transmit filesize: high
+                MOVE    R2, R10
+                ADD     FAT32$FDH_SIZE_HI, R10
+                MOVE    @R10, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    CRTROM_CSR_STATUS, R9   ; start cartridge parser
+                MOVE    CRTROM_CSR_ST_OK, R10
+                RSUB    CRTROM_CSR_W, 1
+                MOVE    CRTROM_MAN_LDF, R8      ; set "loaded" flag
+                ADD     R1, R8
+                MOVE    1, @R8
 
-                SYSCALL(leave, 1)
+                ; wait until parsing is done and retrieve status
+                MOVE    R0, R8
+                MOVE    CRTROM_CSR_PARSEST, R9
+_HNDLCRTROM_1   RSUB    CRTROM_CSR_R, 1
+                CMP     CRTROM_CSR_PT_OK, R10
+                RBRA    _HNDLCRTROM_2, Z
+                CMP     CRTROM_CSR_PT_ERR, R10
+                RBRA    _HNDLCRTROM_3, Z
+                RBRA    _HNDLCRTROM_1, 1
+
+_HNDLCRTROM_2   MOVE    LOG_STR_ROMPRSO, R8     ; log OK to serial terminal
+                SYSCALL(puts, 1)
+                XOR     R8, R8                  ; everything OK, no error
+                XOR     R9, R9
+                RBRA    _HNDLCRTROM_R, 1
+
+_HNDLCRTROM_3   MOVE    CRTROM_CSR_PARSEE1, R9  ; retrieve error code
+                RSUB    CRTROM_CSR_R, 1
+                MOVE    R10, R0                 ; R0: error code
+                MOVE    CRTROM_CSR_ERR_STRT, R1 ; R1: ptr. to error string
+                MOVE    LOG_STR_ROMPRSE, R8     ; log error to serial terminal
+                SYSCALL(puts, 1)
+                MOVE    R0, R8                  ; log error code
+                SYSCALL(puthex, 1)
+                MOVE    LOG_STR_ROMPRSC, R8
+                SYSCALL(puts, 1)
+                MOVE    R1, R8                  ; log error string
+                RSUB    LOG_STR, 1
+                MOVE    R0, R8                  ; return error code and
+                MOVE    R1, R9                  ; error string
+
+_HNDLCRTROM_R   MOVE    R2, R10                 ; R10: unchanged
+                DECRB
                 RET

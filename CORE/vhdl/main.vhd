@@ -705,7 +705,7 @@ begin
             cart_a_io         <= c64_ram_addr_o;            
          -- Ultimax mode and VIC accesses the bus
          else
-            -- According to "The PLA Dissected", zhe address lines A12 to A15 of the C64 address bus are pulled up by
+            -- According to "The PLA Dissected", the address lines A12 to A15 of the C64 address bus are pulled up by
             -- RP4 whenever the VIC-II has the bus, so they are %1111 usually.
             cart_a_io         <= "11" & c64_ram_addr_o(13 downto 0);
          end if;  

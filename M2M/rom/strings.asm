@@ -66,11 +66,18 @@ LOG_STR_CFG_SDC .ASCII_P "Configuration: Remember settings: OFF  "
 LOG_STR_CFG_REM .ASCII_P "Configuration: New settings successfully stored to "
                 .ASCII_W "SD card.\n"
 
+LOG_STR_ROMOK   .ASCII_W "Successfully loaded CRT/ROM image to buffer RAM.\n"
+LOG_STR_ROMPRS  .ASCII_W "Parsing CRT/ROM image: "
+LOG_STR_ROMPRSO .ASCII_W "OK\n"
+LOG_STR_ROMPRSE .ASCII_W "ERROR #"
+LOG_STR_ROMPRSC .ASCII_W ": "
+
 ; ----------------------------------------------------------------------------
 ; Infos
 ; ----------------------------------------------------------------------------
 
 STR_INITWAIT    .ASCII_W "Initializing. Please wait..."
+STR_SPACE       .ASCII_W "Press Space to continue."
 
 ; ----------------------------------------------------------------------------
 ; Warnings

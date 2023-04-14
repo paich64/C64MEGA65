@@ -401,6 +401,7 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 MOVE    0, @R8
 
                 ; load the disk image to the mount buffer
+                MOVE    SP, R6                  ; remember stack pointer
                 MOVE    R7, R8                  ; R8: drive ID to be mounted
                 MOVE    R2, R9                  ; R9: file name of disk image
                 MOVE    R5, R10                 ; R10: mode: vdrive or CRT/ROM
@@ -422,8 +423,46 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 RSUB    WORD2HEXSTR, 1
                 MOVE    R9, R8
                 RSUB    SCR$PRINTSTR, 1
-                MOVE    R1, R8
+                CMP     0, R1
+                RBRA    _HM_SDMOUNTED5A, Z
+                MOVE    NEWLINE, R8
                 RSUB    SCR$PRINTSTR, 1
+                
+                ; retrieve error string from CRT/ROM device and put it
+                ; temporarily on the stack so that we can print the
+                ; error message on screen
+                CMP     1, R5                   ; CRT/ROM: switch device..
+                RBRA    _HM_SDMOUNTED5S, !Z     ; ..to make string visible
+
+                MOVE    SCRATCH_HEX, R8         ; save screen device
+                RSUB    SAVE_DEVSEL, 1
+                MOVE    M2M$RAMROM_DEV, R12     ; switch to CRT/ROM device
+                MOVE    CRTROM_MAN_DEV, R11
+                ADD     R7, R11
+                MOVE    @R11, @R12
+                MOVE    M2M$RAMROM_4KWIN, R12
+                MOVE    CRTROM_CSR_4KWIN, @R12
+
+                MOVE    R1, R8                  ; R12: string length
+                SYSCALL(strlen, 1)
+                SUB     R9, SP                  ; reserve space on stack
+                SUB     1, SP                   ; incl zero terminator
+                MOVE    SP, R9                  ; R9: strcpy target
+                MOVE    R1, R8                  ; R8: strcpy source
+                SYSCALL(strcpy, 1)
+                MOVE    R9, R1
+
+                MOVE    SCRATCH_HEX, R8         ; restore screen device
+                RSUB    RESTORE_DEVSEL, 1
+
+_HM_SDMOUNTED5S MOVE    R1, R8                  ; output optional error string
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    NEWLINE, R8
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    STR_SPACE, R8
+                RSUB    SCR$PRINTSTR, 1
+                MOVE    R6, SP                  ; restore SP
+
 _HM_SDMOUNTED5A RSUB    HANDLE_IO, 1            ; wait for Space to be pressed
                 RSUB    KEYB$SCAN, 1
                 RSUB    KEYB$GETKEY, 1
@@ -435,8 +474,11 @@ _HM_SDMOUNTED5A RSUB    HANDLE_IO, 1            ; wait for Space to be pressed
 _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
                 RSUB    SCR$OSM_OFF, 1          ; hide the big window
 
-                ; Step #5: Notify MiSTer using the "SD" protocol
-                MOVE    R7, R8                  ; R8: drive number
+                ; Step #5: Notify MiSTer using the "SD" protocol, if we
+                ; are in virtual drive mode, otherwise skip
+                CMP     0, R5                   ; vdrive mode?
+                RBRA    _HM_SDMOUNTED7, !Z      ; no
+                MOVE    R7, R8                  ; yes: R8: drive number
                 MOVE    HNDL_VD_FILES, R9
                 ADD     R7, R9
                 MOVE    @R9, R9
@@ -678,34 +720,24 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
                 MOVE    M2M$RAMROM_DATA, R2     ; start at beginning of window
                 RBRA    _LI_FREAD_NXTWN, 1      ; set next window
 
-_LI_FREAD_EOF   MOVE    LOG_STR_LOADOK, R8
+_LI_FREAD_EOF   CMP     0, R4                   ; disk image mode?
+                RBRA    _LI_FREAD_PM, !Z        ; no
+                MOVE    LOG_STR_LOADOK, R8      ; yes
                 SYSCALL(puts, 1)
+                RBRA    _LI_FREAD_RET, 1
 
-                ; in case of CRT/ROM loading: provide the file size of the
-                ; loaded CRT/ROM via CSR registers, set CSR status to OK
-                ; and set the load flag so that the OSM can show the filename
-                CMP     0, R4                   ; disk image mode?
-                RBRA    _LI_FREAD_RET, Z        ; yes: skip
-                MOVE    HNDL_RM_FILES, R1       ; R1: current file handle
-                ADD     R12, R1                 ; R12: CRT/ROM id
-                MOVE    @R1, R1
-                MOVE    R0, R8                  ; R0: CRT/ROM device id
-                MOVE    CRTROM_CSR_FS_LO, R9    ; transmit filesize: low
-                MOVE    R1, R10
-                ADD     FAT32$FDH_SIZE_LO, R10
+                ; parse cartridge
+_LI_FREAD_PM    MOVE    LOG_STR_ROMOK, R8
+                SYSCALL(puts, 1)
+                MOVE    R0, R8                  ; R8: CRT/ROM device id
+                MOVE    R12, R9                 ; R9: CRT/ROM id
+                MOVE    HNDL_RM_FILES, R10      ; R10: file handle
+                ADD     R12, R10
                 MOVE    @R10, R10
-                RSUB    CRTROM_CSR_W, 1
-                MOVE    CRTROM_CSR_FS_HI, R9    ; transmit filesize: high
-                MOVE    R1, R10
-                ADD     FAT32$FDH_SIZE_HI, R10
-                MOVE    @R10, R10
-                RSUB    CRTROM_CSR_W, 1
-                MOVE    CRTROM_CSR_STATUS, R9   ; start cartridge parser
-                MOVE    CRTROM_CSR_ST_OK, R10
-                RSUB    CRTROM_CSR_W, 1
-                MOVE    CRTROM_MAN_LDF, R8      ; set "loaded" flag
-                ADD     R12, R8
-                MOVE    1, @R8
+                RSUB    HANDLE_CRTROM_M, 1
+                MOVE    R8, R6                  ; R6: 0=ok, else error code
+                MOVE    R9, R7                  ; R7: error string: only valid
+                                                ; if correct device is active
 
 _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
                 MOVE    R7, @--SP               ; the "leave hump"

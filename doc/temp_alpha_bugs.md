@@ -14,13 +14,8 @@
   readable for the system.
 
 * Black screen from time to time on startup (independent if a cartridge is
-  inserted or not). Might have to do with wrongly initialized
-  $8000 content selection upon boot-up. Will be tested with this:
-  https://discord.com/channels/@me/1034779919802191882/1088021558204846132
-  A reset is currently the workaround.
-  I reckon that we might not always have well initialized signals in the
-  realm of the cartridge and/or due to us switching on the transcievers
-  by default (chipenable) - so might be a simple initialization issue.
+  inserted or not): HDMI-only: VGA shows a normal blinking cursor. But on
+  HDMI be can see the OSM.
 
 ### REU and signal routing
 
