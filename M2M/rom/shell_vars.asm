@@ -48,7 +48,9 @@ OPTM_HEAP       .BLOCK 1
 OPTM_HEAP_LAST  .BLOCK 1
 OPTM_HEAP_SIZE  .BLOCK 1                        ; size of this scratch buffer
 
+; Temporary variables (only to be used in a very narrow local scope)
 SCRATCH_HEX     .BLOCK 5
+SCRATCH_DWORD   .BLOCK 2
 
 ; SD card device handle and array of pointers to file handles for disk images
 HANDLE_DEV      .BLOCK  FAT32$DEV_STRUCT_SIZE

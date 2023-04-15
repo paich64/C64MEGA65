@@ -613,6 +613,9 @@ _HM_SETMENU_1   MOVE    OPTM_X, R9              ; R9: x-pos
 
 ; Load a disk or CRT/ROM image to the device as configured in globals.vhd
 ;
+; Shows a progress bar while doing so, i.e. it is expected that the large
+; window is open before LOAD_IMAGE is called.
+;
 ; Input:
 ;   R8: drive or CRT/ROM number
 ;   R9: file name of disk image
@@ -684,7 +687,83 @@ _LI_FOPEN_OK    MOVE    R5, R8
                 CMP     0, R6                   ; everything OK?
                 RBRA    _LI_FREAD_RET, !Z       ; no
 
-                ; load disk image into buffer RAM
+                ; For showing a progress bar: Take the remaining size of the
+                ; file, which is filesize minus current read position after
+                ; PREP_LOAD_IMAGE and divide it by the amount of printable
+                ; "progress bar characters" to obtain the target of a counter
+                ; that equals one progress step in the progress bar
+                MOVE    SCRATCH_HEX, R8
+                MOVE    R5, R1
+                ADD     FAT32$FDH_ACCESS_LO, R1
+                MOVE    @R1, @R8++
+                MOVE    R5, R1
+                ADD     FAT32$FDH_ACCESS_HI, R1
+                MOVE    @R1, @R8++
+                MOVE    R5, R1
+                ADD     FAT32$FDH_SIZE_LO, R1
+                MOVE    @R1, @R8++
+                MOVE    R5, R1
+                ADD     FAT32$FDH_SIZE_HI, R1
+                MOVE    @R1, @R8++
+                MOVE    SCRATCH_HEX, R8
+                MOVE    R8, R9
+                ADD     2, R9
+                SUB     @R8++, @R9++            ; lo/hi of remaining file size
+                SUBC    @R8, @R9
+
+                MOVE    SCR$OSM_M_DX, R10       ; R10: width of progress bar
+                MOVE    @R10, R10
+                SUB     6, R10
+                XOR     R11, R11                ; R11: high word of width
+                MOVE    SCRATCH_HEX, R1
+                ADD     2, R1
+                MOVE    @R1++, R8               ; R8: low of remaining file sz
+                MOVE    @R1, R9                 ; R9: ditto high
+                SYSCALL(divu32, 1)
+                MOVE    R8, R6                  ; R6: progress counter low
+                MOVE    R9, R7                  ; R7: ditto high
+                MOVE    SCRATCH_DWORD, R1
+                MOVE    R6, @R1++
+                MOVE    R7, @R1
+
+                ; Build a string that represents the space in the main window
+                ; where we will print the progress bar
+                MOVE    SP, R2                  ; save SP
+                MOVE    SCR$OSM_M_DX, R10       ; reserve space on the stack
+                MOVE    @R10, R10
+                SUB     R10, SP
+                MOVE    SP, R11
+                SUB     6, R10
+                MOVE    R11, R8
+                MOVE    M2M$FC_HE_LEFT, @R8++
+                MOVE    R10, R9
+                MOVE    M2M$LD_SPACE, R10
+                SYSCALL(memset, 1)
+                ADD     R9, R8
+                MOVE    M2M$FC_HE_RIGHT, @R8++
+                MOVE    0, @R8
+                MOVE    R11, R8
+                MOVE    2, R9
+                MOVE    SCR$OSM_M_DY, R10
+                MOVE    @R10, R10
+                SUB     1, R10
+                MOVE    M2M$RAMROM_DEV, R1      ; activate the video ram
+                MOVE    M2M$VRAM_DATA, @R1
+                MOVE    M2M$RAMROM_4KWIN, R1
+                MOVE    0, @R1           
+                RSUB    SCR$PRINTSTRXY, 1
+                MOVE    3, R8
+                MOVE    R10, R9
+                RSUB    SCR$GOTOXY, 1
+                MOVE    R2, SP                  ; restore SP
+                MOVE    SCRATCH_HEX, R8         ; SCRATCH_HEX: progress char..
+                MOVE    M2M$LD_PROGRESS, @R8++  ; ..plus zero terminator
+                MOVE    0, @R8
+
+                ; ------------------------------------------------------------
+                ; Load disk image into buffer RAM
+                ; ------------------------------------------------------------
+
                 XOR     R1, R1                  ; R1=window: start from 0
                 CMP     0, R4                   ; mode=disk image?
                 RBRA    _LI_FREAD_S, Z          ; yes
@@ -714,19 +793,52 @@ _LI_FREAD_NXTB  MOVE    R5, R8                  ; read next byte to R9
 
 _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
 
-                CMP     R3, R2                  ; end of 4k page reached?
+                MOVE    SCRATCH_DWORD, R8       ; next progress char?
+                MOVE    @R8++, R9
+                MOVE    @R8, R8
+                SUB     1, R9                   ; 16-bit decremebt by 1
+                SUBC    0, R8
+                MOVE    SCRATCH_DWORD, R11      ; remember new value
+                MOVE    R9, @R11++
+                MOVE    R8, @R11
+                CMP     0, R8                   ; if not zero: continue
+                RBRA    _LI_FREAD_CONT2, !Z
+                CMP     0, R9
+                RBRA    _LI_FREAD_CONT2, !Z
+                MOVE    SCRATCH_DWORD, R11      ; if zero: progress
+                MOVE    R6, @R11++              ; restore original value
+                MOVE    R7, @R11
+                MOVE    SCRATCH_HEX, R8         ; behind the progress char..
+                ADD     2, R8                   ; .. is memory we can use
+                RSUB    SAVE_DEVSEL, 1
+                MOVE    M2M$RAMROM_DEV, R8      ; activate the video ram
+                MOVE    M2M$VRAM_DATA, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    0, @R8
+                MOVE    SCRATCH_HEX, R8
+                RSUB    SCR$PRINTSTR, 1         ; print next progress char
+                MOVE    SCRATCH_HEX, R8
+                ADD     2, R8
+                RSUB    RESTORE_DEVSEL, 1
+
+_LI_FREAD_CONT2 CMP     R3, R2                  ; end of 4k page reached?
                 RBRA    _LI_FREAD_NXTB, !Z      ; no: read next byte
                 ADD     1, R1                   ; inc. window counter
                 MOVE    M2M$RAMROM_DATA, R2     ; start at beginning of window
                 RBRA    _LI_FREAD_NXTWN, 1      ; set next window
 
-_LI_FREAD_EOF   CMP     0, R4                   ; disk image mode?
+_LI_FREAD_EOF   XOR     R6, R6                  ; R6 and R7 are status flags
+                XOR     R7, R7                  ; 0 means all good
+                CMP     0, R4                   ; disk image mode?
                 RBRA    _LI_FREAD_PM, !Z        ; no
                 MOVE    LOG_STR_LOADOK, R8      ; yes
                 SYSCALL(puts, 1)
                 RBRA    _LI_FREAD_RET, 1
 
-                ; parse cartridge
+                ; ------------------------------------------------------------
+                ; Parse cartridge
+                ; ------------------------------------------------------------
+
 _LI_FREAD_PM    MOVE    LOG_STR_ROMOK, R8
                 SYSCALL(puts, 1)
                 MOVE    R0, R8                  ; R8: CRT/ROM device id
@@ -738,6 +850,9 @@ _LI_FREAD_PM    MOVE    LOG_STR_ROMOK, R8
                 MOVE    R8, R6                  ; R6: 0=ok, else error code
                 MOVE    R9, R7                  ; R7: error string: only valid
                                                 ; if correct device is active
+
+                CMP     0, R6                   ; in case of errors: redraw..
+                RSUB    FRAME_FULLSCR, !Z       ; ..the frame: del. prgrs bar
 
 _LI_FREAD_RET   MOVE    R6, @--SP               ; lift return codes over ...
                 MOVE    R7, @--SP               ; the "leave hump"
@@ -1298,6 +1413,7 @@ _FATAL_END      MOVE    NEWLINE, R8
 ; Screen handling
 ; ----------------------------------------------------------------------------
 
+; Fill the whole screen with the main window
 FRAME_FULLSCR   SYSCALL(enter, 1)
                 RSUB    SCR$CLR, 1              ; clear screen                                
                 MOVE    SCR$OSM_M_X, R8         ; retrieve frame coordinates

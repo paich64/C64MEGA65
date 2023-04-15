@@ -105,7 +105,8 @@ M2M$DIR_L           .EQU 17     ; left char for displaying a directory
 M2M$DIR_R           .EQU 16     ; right char for displaying a directory
 M2M$OPT_SEL_MULTI   .EQU 7      ; selection char for options menu: multi-sel.
 M2M$OPT_SEL_SINGLE  .EQU 61     ; ditto for single select
-M2M$OPT_PROGRESS    .EQU 254    ; character used for progress bar
+M2M$LD_PROGRESS     .EQU 254    ; character used for progress bar
+M2M$LD_SPACE        .EQU 32     ; space character
 
 ; ----------------------------------------------------------------------------
 ; HDMI: Avalon Scaler (ascal.vhd)

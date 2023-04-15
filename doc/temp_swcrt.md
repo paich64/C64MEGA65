@@ -8,3 +8,6 @@
 
 * Parsing "hangs" in case of REU mode. Works fine in HW mode and in SW mode.
 
+* It seems that Ultimax mode cartridges do not work
+
+* It seems that EasyFlash cartridges do not work
