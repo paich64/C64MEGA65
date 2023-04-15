@@ -69,6 +69,8 @@ START_SHELL     MOVE    LOG_M2M, R8
                 MOVE    0, @R9
                 MOVE    INITIAL_SD, R9
                 MOVE    R8, @R9
+                MOVE    FB_LASTCALLER, R8
+                MOVE    0xFFFF, @R8
                 RSUB    FB_INIT, 1              ; init persistence variables
                 MOVE    FB_HEAP, R8             ; heap for file browsing
                 MOVE    HEAP, @R8                 
@@ -270,10 +272,34 @@ _HM_SDMOUNTED1  MOVE    SD_CHANGED, R0
                 ; subdirectory that has been selected so that a subsequent
                 ; file open can be directly done.
                 ;
-                ; We are hard-coding the context "disk image mounting" as we
-                ; currently are not supporting yet any other type of mounting
-                ; such as modules, ROM images, etc.
-_HM_SDMOUNTED2  MOVE    SF_CONTEXT, R8
+                ; The idea of FB_LASTCALLER is all about ensuring that
+                ; when the user switches between potentially different file
+                ; types (for example disk images and different types of
+                ; manually loadbale CRTs/ROMs), the file browser is being 
+                ; reset so that the directory can be reloaded with the new
+                ; file filters.
+_HM_SDMOUNTED2  XOR     R8, R8                  ; remember last caller by..
+                MOVE    R7, R9                  ; combining the ID of the..
+                AND     0x00FF, R9              ; vdrive or CRT/ROM with the..
+                OR      R9, R8                  ; mode
+                SWAP    R8, R8
+                MOVE    R5, R9
+                AND     0x00FF, R9
+                OR      R9, R8
+                MOVE    R8, R9
+
+                MOVE    FB_LASTCALLER, R8       ; first call?
+                CMP     0xFFFF, @R8
+                RBRA    _HM_SDMOUNTEDXA, !Z     ; no
+                MOVE    R9, @R8                 ; yes: remember last caller..
+                RBRA    _HM_SDMOUNTEDXS, 1      ; ..begin browsing
+
+_HM_SDMOUNTEDXA CMP     R9, @R8                 ; same caller als last time?
+                RBRA    _HM_SDMOUNTEDXS, Z      ; yes; browse where we were
+                MOVE    R9, @R8                 ; no: remember last caller..
+                RSUB    FB_RE_INIT, 1           ; ..and reset file browser
+
+_HM_SDMOUNTEDXS MOVE    SF_CONTEXT, R8
                 CMP     0, R5                   ; virtual drive mode?
                 RBRA    _HM_SDMOUNTEDX1, !Z
                 MOVE    CTX_MOUNT_DISKIMG, @R8
