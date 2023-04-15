@@ -166,7 +166,7 @@ begin
 
    process (qnice_clk_i)
    begin
-      if rising_edge(qnice_clk_i) then
+      if falling_edge(qnice_clk_i) then
          if qnice_ce_i = '1' and
             qnice_we_i = '1' and
             unsigned(qnice_addr_i(27 downto 12)) = C_CRT_CASREG

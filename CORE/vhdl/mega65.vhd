@@ -281,7 +281,6 @@ signal hr_crt_readdata            : std_logic_vector(15 downto 0);
 signal hr_crt_readdatavalid       : std_logic;
 signal hr_crt_waitrequest         : std_logic;
 
-
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -314,17 +313,31 @@ constant C_MENU_HDMI_FF       : natural := 57;
 constant C_MENU_HDMI_DVI      : natural := 58;
 constant C_MENU_VGA_RETRO     : natural := 59;
 
-
 -- RAMs for the C64
-signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- C64's actual 64kB of RAM
 signal qnice_c64_ram_we             : std_logic;
-signal qnice_c64_mount_buf_ram_data : std_logic_vector(7 downto 0);  -- Disk mount buffer
+signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- The actual RAM of the C64
 signal qnice_c64_mount_buf_ram_we   : std_logic;
+signal qnice_c64_mount_buf_ram_data : std_logic_vector(7 downto 0);  -- Disk mount buffer
+
+-- Signals for multiplexing the C64's RAM between C_DEV_C64_RAM and C_DEV_C64_PRG
+signal qnice_c64_ramx_we      : std_logic;
+signal qnice_c64_ramx_addr    : std_logic_vector(15 downto 0);
+signal qnice_c64_ramx_d_to    : std_logic_vector(7 downto 0);
+signal qnice_c64_ramx_d_from  : std_logic_vector(7 downto 0);
 
 -- QNICE signals passed down to main.vhd to handle IEC drives using vdrives.vhd
 signal qnice_c64_qnice_ce     : std_logic;
 signal qnice_c64_qnice_we     : std_logic;
 signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
+
+-- QNICE signals for the PRG loader
+signal qnice_prg_qnice_ce     : std_logic;
+signal qnice_prg_qnice_we     : std_logic;
+signal qnice_prg_qnice_data   : std_logic_vector(15 downto 0);
+signal qnice_prg_c64ram_we    : std_logic;
+signal qnice_prg_c64ram_addr  : std_logic_vector(15 downto 0);
+signal qnice_prg_c64ram_d_to  : std_logic_vector(7 downto 0);
+signal qnice_prg_c64ram_d_frm : std_logic_vector(7 downto 0);
 
 -- QNICE signals passed down to sw_cartridge_wrapper.vhd to handle CRT files
 signal qnice_crt_qnice_ce     : std_logic;
@@ -591,17 +604,27 @@ begin
    begin
       -- avoid latches
       qnice_dev_data_o           <= x"EEEE";
+      qnice_dev_wait_o           <= '0';     
       qnice_c64_ram_we           <= '0';
       qnice_c64_qnice_ce         <= '0';
       qnice_c64_qnice_we         <= '0';
       qnice_c64_mount_buf_ram_we <= '0';
-      qnice_dev_wait_o           <= '0';
+      qnice_prg_qnice_ce         <= '0';
+      qnice_prg_qnice_we         <= '0';
+      qnice_prg_c64ram_d_frm     <= (others => '0');     
+      qnice_crt_qnice_ce         <= '0';
+      qnice_crt_qnice_we         <= '0';
+      qnice_c64_ramx_addr        <= (others => '0');
+      qnice_c64_ramx_d_to        <= (others => '0');
+      qnice_c64_ramx_we          <= '0';
 
       case qnice_dev_id_i is
          -- C64 RAM
          when C_DEV_C64_RAM =>
-            qnice_c64_ram_we           <= qnice_dev_we_i;
-            qnice_dev_data_o           <= x"00" & qnice_c64_ram_data;
+            qnice_c64_ramx_addr        <= qnice_dev_addr_i(15 downto 0);
+            qnice_c64_ramx_we          <= qnice_dev_we_i;
+            qnice_c64_ramx_d_to        <= qnice_dev_data_i(7 downto 0);
+            qnice_dev_data_o           <= x"00" & qnice_c64_ramx_d_from;
 
          -- C64 IEC drives
          when C_VD_DEVICE =>
@@ -613,6 +636,16 @@ begin
          when C_DEV_C64_MOUNT =>
             qnice_c64_mount_buf_ram_we <= qnice_dev_we_i;
             qnice_dev_data_o           <= x"00" & qnice_c64_mount_buf_ram_data;
+
+         -- PRG file loader (*.PRG)
+         when C_DEV_C64_PRG =>
+            qnice_c64_ramx_addr        <= qnice_prg_c64ram_addr;
+            qnice_c64_ramx_we          <= qnice_prg_c64ram_we;
+            qnice_c64_ramx_d_to        <= qnice_prg_c64ram_d_to;
+            qnice_prg_c64ram_d_frm     <= qnice_c64_ramx_d_from;
+            qnice_prg_qnice_ce         <= qnice_dev_ce_i;
+            qnice_prg_qnice_we         <= qnice_dev_we_i;
+            qnice_dev_data_o           <= qnice_prg_qnice_data;           
 
          -- SW cartridges (*.CRT)
          when C_DEV_C64_CRT =>
@@ -663,12 +696,12 @@ begin
 
          -- QNICE
          clock_b           => qnice_clk_i,
-         address_b         => qnice_dev_addr_i(15 downto 0),
-         data_b            => qnice_dev_data_i(7 downto 0),
-         wren_b            => qnice_c64_ram_we,
-         q_b               => qnice_c64_ram_data
+         address_b         => qnice_c64_ramx_addr,
+         data_b            => qnice_c64_ramx_d_to,
+         wren_b            => qnice_c64_ramx_we,
+         q_b               => qnice_c64_ramx_d_from
       ); -- c64_ram
-
+      
    -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
    -- the disks that we are mounting. This will work for D64 only.
    -- @TODO: Switch to HyperRAM at a later stage
@@ -687,6 +720,23 @@ begin
          wren_a            => qnice_c64_mount_buf_ram_we,
          q_a               => qnice_c64_mount_buf_ram_data
       ); -- mount_buf_ram
+
+   -- PRG file loader
+   i_prg_loader : entity work.prg_loader
+      port map(
+         qnice_clk_i       => qnice_clk_i,
+         qnice_rst_i       => qnice_rst_i,
+         qnice_addr_i      => qnice_dev_addr_i,
+         qnice_data_i      => qnice_dev_data_i,
+         qnice_ce_i        => qnice_prg_qnice_ce,
+         qnice_we_i        => qnice_prg_qnice_we,
+         qnice_data_o      => qnice_prg_qnice_data,
+      
+         c64ram_we_o       => qnice_prg_c64ram_we,
+         c64ram_addr_o     => qnice_prg_c64ram_addr,
+         c64ram_data_i     => qnice_prg_c64ram_d_frm,
+         c64ram_data_o     => qnice_prg_c64ram_d_to
+      );
 
    -- Handle SW based cartridges, aka *.CRT files
    i_sw_cartridge_wrapper : entity work.sw_cartridge_wrapper

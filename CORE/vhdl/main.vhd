@@ -809,6 +809,10 @@ begin
 
    reu_oe <= reu_iof;
 
+   --------------------------------------------------------------------------------------------------
+   -- Simulated Cartridge
+   --------------------------------------------------------------------------------------------------
+
    -- This component is part of the MiSTer core, and provides
    -- support for software emulated cartridges (aka *.CRT files).
    -- This module does 3 things:
@@ -856,8 +860,7 @@ begin
          nmi             => crt_nmi,                           -- output (TBD: inverted of cart_nmi_n)
          nmi_ack         => core_nmi_ack                       -- input
       ); -- i_cartridge
-
-
+  
    --------------------------------------------------------------------------------------------------
    -- Generate video output for the M2M framework
    --------------------------------------------------------------------------------------------------

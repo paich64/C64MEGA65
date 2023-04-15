@@ -11,3 +11,5 @@
 * It seems that Ultimax mode cartridges do not work
 
 * It seems that EasyFlash cartridges do not work
+
+* Can we put CORE/vhdl/Makefile and the testbenches in a subdirectory?
