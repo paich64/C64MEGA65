@@ -301,12 +301,18 @@ _HM_SDCHANGED   MOVE    LOG_STR_SD, R8
 _HM_SDMOUNTED2A CMP     2, R9                   ; Run/Stop?
                 RBRA    _HM_SDMOUNTED2C, !Z     ; no            
 _HM_SDMOUNTED2E RSUB    SCR$OSM_OFF, 1          ; hide the big window
+                MOVE    R7, R8                  ; vdrive or CRT/ROM number
+                CMP     1, R5                   ; CRT/ROM mode?
+                RBRA    _HM_SDMOUNTED2F, Z      ; yes
 
-                MOVE    R7, R8                  ; R7: virtual drive number
-                RSUB    VD_MENGRP, 1            ; get index of menu item
-                RBRA    _HM_SDMOUNTED2B, C
+                RSUB    VD_MENGRP, 1            ; get index of vdrive in R9
+                RBRA    _HM_SDMOUNTED2B, C      ; success: continue
+                RBRA    _HM_SDMOUNTED2G, 1      ; failure: fatal
 
-                MOVE    ERR_FATAL_INST, R8
+_HM_SDMOUNTED2F RSUB    CRTROM_M_GI, 1          ; get index of CRT/ROM in R9
+                RBRA    _HM_SDMOUNTED2B, C      ; success: continue
+
+_HM_SDMOUNTED2G MOVE    ERR_FATAL_INST, R8
                 MOVE    ERR_FATAL_INST3, R9
                 RBRA    FATAL, 1 
 
@@ -781,6 +787,7 @@ _LI_FREAD_S     XOR     R2, R2                  ; R2=start address in window
 _LI_FREAD_NXTWN MOVE    M2M$RAMROM_4KWIN, R8    ; set 4k window
                 MOVE    R1, @R8
 
+                ; Read next byte
 _LI_FREAD_NXTB  MOVE    R5, R8                  ; read next byte to R9
                 SYSCALL(f32_fread, 1)
                 CMP     FAT32$EOF, R10
@@ -791,8 +798,10 @@ _LI_FREAD_NXTB  MOVE    R5, R8                  ; read next byte to R9
                 MOVE    R10, R9
                 RBRA    FATAL, 1
 
-_LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
+                ; Write byte to mount buffer
+_LI_FREAD_CONT  MOVE    R9, @R2++
 
+                ; Progress bar handling
                 MOVE    SCRATCH_DWORD, R8       ; next progress char?
                 MOVE    @R8++, R9
                 MOVE    @R8, R8
@@ -810,7 +819,7 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
                 MOVE    R7, @R11
                 MOVE    SCRATCH_HEX, R8         ; behind the progress char..
                 ADD     2, R8                   ; .. is memory we can use
-                RSUB    SAVE_DEVSEL, 1
+                RSUB    SAVE_DEVSEL, 1          ; save target device selection
                 MOVE    M2M$RAMROM_DEV, R8      ; activate the video ram
                 MOVE    M2M$VRAM_DATA, @R8
                 MOVE    M2M$RAMROM_4KWIN, R8
@@ -819,14 +828,16 @@ _LI_FREAD_CONT  MOVE    R9, @R2++               ; write byte to mount buffer
                 RSUB    SCR$PRINTSTR, 1         ; print next progress char
                 MOVE    SCRATCH_HEX, R8
                 ADD     2, R8
-                RSUB    RESTORE_DEVSEL, 1
+                RSUB    RESTORE_DEVSEL, 1       ; restore target dev. sel.
 
+                ; 4k page handling
 _LI_FREAD_CONT2 CMP     R3, R2                  ; end of 4k page reached?
                 RBRA    _LI_FREAD_NXTB, !Z      ; no: read next byte
                 ADD     1, R1                   ; inc. window counter
                 MOVE    M2M$RAMROM_DATA, R2     ; start at beginning of window
                 RBRA    _LI_FREAD_NXTWN, 1      ; set next window
 
+                ; End of file reached
 _LI_FREAD_EOF   XOR     R6, R6                  ; R6 and R7 are status flags
                 XOR     R7, R7                  ; 0 means all good
                 CMP     0, R4                   ; disk image mode?

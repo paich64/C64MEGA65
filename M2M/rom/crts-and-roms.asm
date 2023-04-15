@@ -215,6 +215,58 @@ CRTROM_CHK_NO   INCRB
 _CRRMCN_RET     DECRB
                 RET
 
+; Return the menu group ID and the index within the menu of the manually
+; loadable ROM or CRT with a given CRT/ROM id.
+;
+; The first menu item in config.vhd with a OPTM_G_LOAD_ROM flag is ROM/CRT 0,
+; the next one ROM/CRT 1, etc.
+;
+; Input:   R8: CRT/ROM id
+; Returns: Carry=1 if any menu item is associated with this CRT/ROM ID
+;                  else Carry=0
+;          Only valid if Carry=1:
+;          R8: menu group ID
+;          R9: menu index
+CRTROM_M_GI     INCRB
+
+                XOR     R0, R0                  ; R0: current menu item index
+                MOVE    -1, R1                  ; R1: CRT/ROM counter
+                MOVE    OPTM_ICOUNT, R2         ; R2: amount of menu items
+                MOVE    @R2, R2
+                
+                MOVE    M2M$RAMROM_DEV, R3      ; select configuration device
+                MOVE    M2M$CONFIG, @R3
+                MOVE    M2M$RAMROM_4KWIN, R3    ; select CRT/ROM menu items
+                MOVE    M2M$CFG_OPTM_CRTROM, @R3
+                MOVE    M2M$RAMROM_DATA, R3     ; R3: CRT/ROM items
+
+_CRTRMGI_1      CMP     1, @R3                  ; current item a CRT/ROM?
+                RBRA    _CRTRMGI_2, !Z          ; no
+                ADD     1, R1                   ; yes: inc. CRT/ROM counter
+                CMP     R8, R1                  ; found CRT/ROM we look for?
+                RBRA    _CRTRMGI_3, Z
+
+_CRTRMGI_2      ADD     1, R3                   ; next item in vdrive array
+                ADD     1, R0                   ; next menu item index
+                CMP     R0, R2                  ; R0=R2 means one itm too much
+                RBRA    _CRTRMGI_4, Z
+                RBRA    _CRTRMGI_1, 1
+
+                ; success
+_CRTRMGI_3      MOVE    M2M$RAMROM_4KWIN, R4    ; select drv. mount items
+                MOVE    M2M$CFG_OPTM_GROUPS, @R4
+                MOVE    @R3, R8                 ; R8: group ID
+                MOVE    R0, R9                  ; R9: index
+                RBRA    _CRMN_C1, 1             ; set Carry and return
+
+                ; failure
+_CRTRMGI_4      MOVE    0xEEEE, R8
+                MOVE    0xEEEE, R9
+                RBRA    _CRMN_C0, 1             ; clear Carry and return
+
+                ; DECRB and 
+                ; RET done via _CRMN_C0 and _CRMN_C1
+
 ; Write to the control and status register of a CRT/ROM device
 ; Input:
 ;   R8: device id
