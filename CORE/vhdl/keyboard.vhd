@@ -28,23 +28,27 @@ use IEEE.NUMERIC_STD.ALL;
 entity keyboard is
    port (
       clk_main_i           : in std_logic;               -- core clock
+      reset_i              : in std_logic;
+      
+      -- Trigger the sequence RUN<Return> to autostart PRG files
+      trigger_run_i        : in std_logic;
          
       -- Interface to the MEGA65 keyboard
       key_num_i            : in integer range 0 to 79;   -- cycles through all MEGA65 keys
       key_pressed_n_i      : in std_logic;               -- low active: debounced feedback: is kb_key_num_i pressed right now?
       
       -- Interface to the MEGA65 joysticks
-      joy_1_up_n             : in std_logic;
-      joy_1_down_n           : in std_logic;
-      joy_1_left_n           : in std_logic;
-      joy_1_right_n          : in std_logic;
-      joy_1_fire_n           : in std_logic;
+      joy_1_up_n           : in std_logic;
+      joy_1_down_n         : in std_logic;
+      joy_1_left_n         : in std_logic;
+      joy_1_right_n        : in std_logic;
+      joy_1_fire_n         : in std_logic;
 
-      joy_2_up_n             : in std_logic;
-      joy_2_down_n           : in std_logic;
-      joy_2_left_n           : in std_logic;
-      joy_2_right_n          : in std_logic;
-      joy_2_fire_n           : in std_logic;      
+      joy_2_up_n           : in std_logic;
+      joy_2_down_n         : in std_logic;
+      joy_2_left_n         : in std_logic;
+      joy_2_right_n        : in std_logic;
+      joy_2_fire_n         : in std_logic;      
       
       -- Interface to the C64's CIA1         
       cia1_pai_o           : out std_logic_vector(7 downto 0);
@@ -140,13 +144,76 @@ constant m65_restore       : integer := 75;
 
 signal key_pressed_n : std_logic_vector(79 downto 0);
 
+constant C_AK_DELAY : natural := 5_250_000; -- about 1/6 of a second
+type t_autokey_state is (IDLE_ST,
+                         KEYPRESS_ST,
+                         TYPE_R_ST,
+                         TYPE_U_ST,
+                         TYPE_N_ST,
+                         TYPE_RETURN_ST);
+signal autokey_state : t_autokey_state := IDLE_ST;
+signal autokey_next  : t_autokey_state := IDLE_ST;
+signal autokey_key   : natural range 0 to 79;
+signal autokey_delay : natural range 0 to C_AK_DELAY;
+
 begin
    restore_n   <= key_pressed_n(m65_restore);
    
    keyboard_state : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
+         -- store currently pressed key in register
          key_pressed_n(key_num_i) <= key_pressed_n_i;
+     
+         if reset_i = '1' then
+            autokey_state <= IDLE_ST;
+            autokey_next  <= IDLE_ST;
+            autokey_delay <= C_AK_DELAY;
+            autokey_key   <= 1;
+         end if;
+         
+         -- state machine to automatically type run<Return> for autostarting PRG files
+         case autokey_state is
+            when IDLE_ST =>
+               if trigger_run_i = '1' then
+                  autokey_state <= TYPE_R_ST;
+               else
+                  autokey_state <= IDLE_ST;
+               end if;
+
+            when KEYPRESS_ST =>
+               if autokey_delay = 0 then
+                  autokey_state <= autokey_next;
+                  autokey_next  <= IDLE_ST;
+                  autokey_delay <= C_AK_DELAY;
+               else
+                  key_pressed_n(autokey_key) <= '0';
+                  autokey_delay <= autokey_delay - 1;
+               end if;
+
+            when TYPE_R_ST =>
+               autokey_key    <= m65_r;
+               autokey_next   <= TYPE_U_ST;
+               autokey_state  <= KEYPRESS_ST;
+
+            when TYPE_U_ST =>
+               autokey_key    <= m65_u;
+               autokey_next   <= TYPE_N_ST;
+               autokey_state  <= KEYPRESS_ST;
+
+            when TYPE_N_ST =>
+               autokey_key    <= m65_n;
+               autokey_next   <= TYPE_RETURN_ST;
+               autokey_state  <= KEYPRESS_ST;
+
+            when TYPE_RETURN_ST =>
+               autokey_key    <= m65_return;
+               autokey_next   <= IDLE_ST;
+               autokey_state  <= KEYPRESS_ST;
+
+            when others =>
+               null;
+         end case;
       end if;
    end process;
 

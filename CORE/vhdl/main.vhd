@@ -25,6 +25,9 @@ entity main is
       reset_hard_i           : in  std_logic;              -- Pulse once for a hard reset
       pause_i                : in  std_logic;              -- Pull high to pause the core
 
+      -- Trigger the sequence RUN<Return> to autostart PRG files
+      trigger_run_i           : in std_logic;
+
       ---------------------------
       -- Configuration options
       ---------------------------
@@ -47,7 +50,6 @@ entity main is
       -- 1: Simulate a 1750 REU with 512KB
       -- 2: Simulate a cartridge by using a cartridge from from the SD card (.crt file)
       c64_exp_port_mode_i    : in  natural range 0 to 2;
-
 
       ---------------------------
       -- Commodore 64 I/O ports
@@ -236,7 +238,7 @@ architecture synthesis of main is
    signal video_ce           : std_logic_vector(1 downto 0);
 
    -- Hard reset handling
-   constant hard_rst_delay    : natural := 100_000; -- roundabout 1/3 of a second
+   constant hard_rst_delay    : natural := 100_000; -- roundabout 1/30 of a second
    signal reset_core_n        : std_logic;
    signal hard_reset_n        : std_logic;
    signal hard_rst_counter    : natural := 0;
@@ -906,6 +908,10 @@ begin
    i_m65_to_c64 : entity work.keyboard
       port map (
          clk_main_i           => clk_main_i,
+         reset_i              => not reset_core_n,
+         
+         -- Trigger the sequence RUN<Return> to autostart PRG files
+         trigger_run_i        => trigger_run_i,
 
          -- Interface to the MEGA65 keyboard
          key_num_i            => kb_key_num_i,
