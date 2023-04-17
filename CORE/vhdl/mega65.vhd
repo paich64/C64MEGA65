@@ -185,7 +185,6 @@ architecture synthesis of MEGA65_Core is
 ---------------------------------------------------------------------------------------------
 
 signal main_clk                   : std_logic;               -- Core main clock
-signal main_rst                   : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -369,12 +368,11 @@ begin
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-free, 2=NTSC
 
          main_clk_o        => main_clk,        -- core's clock
-         main_rst_o        => main_rst         -- core's reset, synchronized
+         main_rst_o        => main_rst_o       -- core's reset, synchronized
       ); -- clk_gen
 
    -- share core's clock with the framework
    main_clk_o <= main_clk;
-   main_rst_o <= main_rst;
 
    ---------------------------------------------------------------------------------------------
    -- Global switches for the core
@@ -781,7 +779,7 @@ begin
       qnice_data_o         => qnice_crt_qnice_data,
       qnice_wait_o         => qnice_crt_qnice_wait,
       main_clk_i           => main_clk,
-      main_rst_i           => main_rst,
+      main_rst_i           => main_reset_m2m_i,
       main_loading_o       => main_crt_loading,
       main_id_o            => main_crt_id,
       main_exrom_o         => main_crt_exrom,
@@ -890,7 +888,7 @@ begin
       )
       port map (
          s_clk_i               => main_clk,
-         s_rst_i               => main_rst,
+         s_rst_i               => main_reset_m2m_i,
          s_avm_waitrequest_o   => main_avm_reu_waitrequest,
          s_avm_write_i         => main_avm_reu_write,
          s_avm_read_i          => main_avm_reu_read,
@@ -913,52 +911,42 @@ begin
          m_avm_readdatavalid_i => hr_reu_readdatavalid
       ); -- avm_fifo
 
-
-   -- Multiplex the HyperRAM access between the REU and the Software Cartridge (CRT)
-   hyperram_mux_proc : process (all)
-   begin
-      -- Default values to avoid latches
-      hr_reu_waitrequest   <= '0';
-      hr_reu_readdata      <= (others => '0');
-      hr_reu_readdatavalid <= '0';
-
-      hr_crt_waitrequest   <= '0';
-      hr_crt_readdata      <= (others => '0');
-      hr_crt_readdatavalid <= '0';
-
-      hr_core_write_o      <= '0';
-      hr_core_read_o       <= '0';
-      hr_core_address_o    <= (others => '0');
-      hr_core_writedata_o  <= (others => '0');
-      hr_core_byteenable_o <= (others => '0');
-      hr_core_burstcount_o <= (others => '0');
-
-      case to_integer(unsigned(hr_c64_exp_port_mode)) is
-         when 1 =>
-            -- Simulate a 1750 REU with 512KB
-            hr_core_write_o      <= hr_reu_write;
-            hr_core_read_o       <= hr_reu_read;
-            hr_core_address_o    <= hr_reu_address;
-            hr_core_writedata_o  <= hr_reu_writedata;
-            hr_core_byteenable_o <= hr_reu_byteenable;
-            hr_core_burstcount_o <= hr_reu_burstcount;
-            hr_reu_waitrequest   <= hr_core_waitrequest_i;
-            hr_reu_readdata      <= hr_core_readdata_i;
-            hr_reu_readdatavalid <= hr_core_readdatavalid_i;
-
-         when others =>
-            -- Simulate a cartridge by using a cartridge from the SD card (.CRT file)
-            hr_core_write_o      <= hr_crt_write;
-            hr_core_read_o       <= hr_crt_read;
-            hr_core_address_o    <= hr_crt_address;
-            hr_core_writedata_o  <= hr_crt_writedata;
-            hr_core_byteenable_o <= hr_crt_byteenable;
-            hr_core_burstcount_o <= hr_crt_burstcount;
-            hr_crt_waitrequest   <= hr_core_waitrequest_i;
-            hr_crt_readdata      <= hr_core_readdata_i;
-            hr_crt_readdatavalid <= hr_core_readdatavalid_i;
-      end case;
-   end process hyperram_mux_proc;
+   i_avm_arbit : entity work.avm_arbit
+      generic map (
+         G_ADDRESS_SIZE  => 32,
+         G_DATA_SIZE     => 16
+      )
+      port map (
+         clk_i                  => hr_clk_i,
+         rst_i                  => hr_rst_i,
+         s0_avm_write_i         => hr_reu_write,
+         s0_avm_read_i          => hr_reu_read,
+         s0_avm_address_i       => hr_reu_address,
+         s0_avm_writedata_i     => hr_reu_writedata,
+         s0_avm_byteenable_i    => hr_reu_byteenable,
+         s0_avm_burstcount_i    => hr_reu_burstcount,
+         s0_avm_readdata_o      => hr_reu_readdata,
+         s0_avm_readdatavalid_o => hr_reu_readdatavalid,
+         s0_avm_waitrequest_o   => hr_reu_waitrequest,
+         s1_avm_write_i         => hr_crt_write,
+         s1_avm_read_i          => hr_crt_read,
+         s1_avm_address_i       => hr_crt_address,
+         s1_avm_writedata_i     => hr_crt_writedata,
+         s1_avm_byteenable_i    => hr_crt_byteenable,
+         s1_avm_burstcount_i    => hr_crt_burstcount,
+         s1_avm_readdata_o      => hr_crt_readdata,
+         s1_avm_readdatavalid_o => hr_crt_readdatavalid,
+         s1_avm_waitrequest_o   => hr_crt_waitrequest,
+         m_avm_write_o          => hr_core_write_o,
+         m_avm_read_o           => hr_core_read_o,
+         m_avm_address_o        => hr_core_address_o,
+         m_avm_writedata_o      => hr_core_writedata_o,
+         m_avm_byteenable_o     => hr_core_byteenable_o,
+         m_avm_burstcount_o     => hr_core_burstcount_o,
+         m_avm_readdata_i       => hr_core_readdata_i,
+         m_avm_readdatavalid_i  => hr_core_readdatavalid_i,
+         m_avm_waitrequest_i    => hr_core_waitrequest_i
+      ); -- i_avm_arbit
 
 end architecture synthesis;
 

@@ -57,14 +57,14 @@ architecture synthesis of sw_cartridge_wrapper is
    constant C_ERROR_STRING_LENGTH : integer := 21;
    type string_vector is array (natural range <>) of string(1 to C_ERROR_STRING_LENGTH);
    constant C_ERROR_STRINGS : string_vector(0 to 7) := (
-     "OK\n                 ",
-     "Missing CRT header\n ",
+     "OK                 \n",
+     "Missing CRT header \n",
      "Missing CHIP header\n",
-     "Wrong CRT header\n   ",
-     "Wrong CHIP header\n  ",
-     "Truncated CHIP\n     ",
-     "OK\n                 ",
-     "OK\n                 ");
+     "Wrong CRT header   \n",
+     "Wrong CHIP header  \n",
+     "Truncated CHIP     \n",
+     "OK                 \n",
+     "OK                 \n");
 
 
    -- Status reporting from the QNICE
@@ -438,7 +438,7 @@ begin
          bram_lo_q_i         => (others => '0'),
          bram_hi_wren_o      => hr_bram_hi_wren,
          bram_hi_q_i         => (others => '0')
-      ); -- i_crt2hyperram
+      ); -- i_crt_loader
 
    i_avm_arbit : entity work.avm_arbit
       generic map (
