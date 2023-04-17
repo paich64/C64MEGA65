@@ -1,0 +1,1101 @@
+ca65 V2.19 - Git 62da869e4
+Main file   : platest.s
+Current file: platest.s
+
+000000r 1               .include "cbm_kernal.inc"
+000000r 2               ;
+000000r 2               ; Olli Savia <ops@iki.fi>
+000000r 2               ; Greg King
+000000r 2               ;
+000000r 2               ; Commodore-compatibles Kernal functions
+000000r 2               ;
+000000r 2               
+000000r 2               .if .def(__CX16__)
+000000r 2                 ; CX16 extended jump table
+000000r 2                 ENTROPY_GET                   := $FECF
+000000r 2                 KEYBRD_BUF_PUT                := $FED2
+000000r 2                 CONSOLE_SET_PAGE_MSG          := $FED5
+000000r 2                 CONSOLE_PUT_IMAGE             := $FED8
+000000r 2                 CONSOLE_INIT                  := $FEDB
+000000r 2                 CONSOLE_PUT_CHAR              := $FEDE
+000000r 2                 CONSOLE_GET_CHAR              := $FEE1
+000000r 2                 MEMORY_FILL                   := $FEE4
+000000r 2                 MEMORY_COPY                   := $FEE7
+000000r 2                 MEMORY_CRC                    := $FEEA
+000000r 2                 MEMORY_DECOMPRESS             := $FEED
+000000r 2                 SPRITE_SET_IMAGE              := $FEF0
+000000r 2                 SPRITE_SET_POSITION           := $FEF3
+000000r 2                 FB_INIT                       := $FEF6
+000000r 2                 FB_GET_INFO                   := $FEF9
+000000r 2                 FB_SET_PALETTE                := $FEFC
+000000r 2                 FB_CURSOR_POSITION            := $FEFF
+000000r 2                 FB_CURSOR_NEXT_LINE           := $FF02
+000000r 2                 FB_GET_PIXEL                  := $FF05
+000000r 2                 FB_GET_PIXELS                 := $FF08
+000000r 2                 FB_SET_PIXEL                  := $FF0B
+000000r 2                 FB_SET_PIXELS                 := $FF0E
+000000r 2                 FB_SET_8_PIXELS               := $FF11
+000000r 2                 FB_SET_8_PIXELS_OPAQUE        := $FF14
+000000r 2                 FB_FILL_PIXELS                := $FF17
+000000r 2                 FB_FILTER_PIXELS              := $FF1A
+000000r 2                 FB_MOVE_PIXELS                := $FF1D
+000000r 2                 GRAPH_INIT                    := $FF20
+000000r 2                 GRAPH_CLEAR                   := $FF23
+000000r 2                 GRAPH_SET_WINDOW              := $FF26
+000000r 2                 GRAPH_SET_COLORS              := $FF29
+000000r 2                 GRAPH_DRAW_LINE               := $FF2C
+000000r 2                 GRAPH_DRAW_RECT               := $FF2F
+000000r 2                 GRAPH_MOVE_RECT               := $FF32
+000000r 2                 GRAPH_DRAW_OVAL               := $FF35
+000000r 2                 GRAPH_DRAW_IMAGE              := $FF38
+000000r 2                 GRAPH_SET_FONT                := $FF3B
+000000r 2                 GRAPH_GET_CHAR_SIZE           := $FF3E
+000000r 2                 GRAPH_PUT_CHAR                := $FF41
+000000r 2                 MULTI_ACPTR                   := $FF44
+000000r 2                 RESTORE_BASIC                 := $FF47
+000000r 2                 CLOCK_SET_DATE_TIME           := $FF4D
+000000r 2                 CLOCK_GET_DATE_TIME           := $FF50
+000000r 2                 JOYSTICK_SCAN                 := $FF53
+000000r 2                 JOYSTICK_GET                  := $FF56
+000000r 2                 SCREEN_SET_MODE               := $FF5F
+000000r 2                 SCREEN_SET_CHARSET            := $FF62
+000000r 2                 MOUSE_CONFIG                  := $FF68
+000000r 2                 MOUSE_GET                     := $FF6B
+000000r 2               .endif
+000000r 2               
+000000r 2               .if .def(__C128__)
+000000r 2                 ; C128 extended jump table
+000000r 2                 C64MODE      := $FF4D
+000000r 2                 SWAPPER      := $FF5F
+000000r 2                 SETBNK       := $FF68
+000000r 2               .endif
+000000r 2               
+000000r 2               .if .def(__C128__) || .def(__CX16__)
+000000r 2                 ; Extended jump table
+000000r 2                 CLSALL       := $FF4A
+000000r 2                 LKUPLA       := $FF59
+000000r 2                 LKUPSA       := $FF5C
+000000r 2                 PFKEY        := $FF65
+000000r 2                 JSRFAR       := $FF6E
+000000r 2                 INDFET       := $FF74
+000000r 2                 INDSTA       := $FF77
+000000r 2                 INDCMP       := $FF7A
+000000r 2                 PRIMM        := $FF7D
+000000r 2               .endif
+000000r 2               
+000000r 2               .if .def(__C64__) || .def(__C128__) || .def(__C16__) || .def(__CX16__)
+000000r 2                 CINT         := $FF81
+000000r 2                 IOINIT       := $FF84
+000000r 2                 RAMTAS       := $FF87
+000000r 2               .elseif .def(__VIC20__)
+000000r 2                 CINT         := $E518         ; No entries are in the Kernal jump table of the VIC-20 for these three (3) functions.
+000000r 2                 IOINIT       := $FDF9         ; The entries for these functions have been set to point directly to the functions
+000000r 2                 RAMTAS       := $FD8D         ; in the Kernal, to maintain compatibility with the other Commodore platforms.
+000000r 2               .elseif .def(__CBM510__) || .def(__CBM610__)
+000000r 2                 IOINIT       := $FF7B
+000000r 2                 CINT         := $FF7E
+000000r 2               .endif
+000000r 2               
+000000r 2               .if .def(__VIC20__) || .def(__C64__) || .def(__C128__) || .def(__C16__) || .def(__CX16__)
+000000r 2                 RESTOR       := $FF8A
+000000r 2                 VECTOR       := $FF8D
+000000r 2               .elseif .def(__CBM510__) || .def(__CBM610__)
+000000r 2                 VECTOR       := $FF84
+000000r 2                 RESTOR       := $FF87
+000000r 2               .endif
+000000r 2               
+000000r 2               .if .def(__CBM510__) || .def(__CBM610__) || .def(__VIC20__) || .def(__C64__) || .def(__C128__) || .def(__C16__) || .def(__CX16__)
+000000r 2                 SETMSG       := $FF90
+000000r 2                 SECOND       := $FF93
+000000r 2                 TKSA         := $FF96
+000000r 2                 MEMTOP       := $FF99
+000000r 2                 MEMBOT       := $FF9C
+000000r 2                 SCNKEY       := $FF9F
+000000r 2                 SETTMO       := $FFA2
+000000r 2                 ACPTR        := $FFA5
+000000r 2                 CIOUT        := $FFA8
+000000r 2                 UNTLK        := $FFAB
+000000r 2                 UNLSN        := $FFAE
+000000r 2                 LISTEN       := $FFB1
+000000r 2                 TALK         := $FFB4
+000000r 2                 READST       := $FFB7
+000000r 2                 SETLFS       := $FFBA
+000000r 2                 SETNAM       := $FFBD
+000000r 2                 OPEN         := $FFC0
+000000r 2                 CLOSE        := $FFC3
+000000r 2               .endif
+000000r 2               
+000000r 2               ; Available on all platforms including PET
+000000r 2               CHKIN          := $FFC6
+000000r 2               CKOUT          := $FFC9
+000000r 2               CHKOUT         := $FFC9
+000000r 2               CLRCH          := $FFCC
+000000r 2               CLRCHN         := $FFCC
+000000r 2               BASIN          := $FFCF
+000000r 2               CHRIN          := $FFCF
+000000r 2               BSOUT          := $FFD2
+000000r 2               CHROUT         := $FFD2
+000000r 2               
+000000r 2               .if .def(__CBM510__) || .def(__CBM610__) || .def(__VIC20__) || .def(__C64__) || .def(__C128__) || .def(__C16__) || .def(__CX16__)
+000000r 2                 LOAD         := $FFD5
+000000r 2                 SAVE         := $FFD8
+000000r 2                 SETTIM       := $FFDB
+000000r 2                 RDTIM        := $FFDE
+000000r 2               .endif
+000000r 2               
+000000r 2               ; Available on all platforms including PET
+000000r 2               STOP           := $FFE1
+000000r 2               GETIN          := $FFE4
+000000r 2               CLALL          := $FFE7
+000000r 2               UDTIM          := $FFEA
+000000r 2               
+000000r 2               .if .def(__CBM510__) || .def(__CBM610__) || .def(__VIC20__) || .def(__C64__) || .def(__C128__) || .def(__C16__) || .def(__CX16__)
+000000r 2                 SCREEN       := $FFED
+000000r 2                 PLOT         := $FFF0
+000000r 2                 IOBASE       := $FFF3
+000000r 2               .endif
+000000r 2               
+000000r 2               ; ---------------------------------------------------------------------------
+000000r 2               ; Kernal routines, direct entries
+000000r 2               ;
+000000r 2               ; Unlike the above, these are not standard functions with entries in the jump
+000000r 2               ; table. They do not exist in all Kernals, and where they do the entry point is
+000000r 2               ; specific to that particular machine and possibly even Kernal version.
+000000r 2               ;
+000000r 2               ; This list is not comprehensive: missing items for particular machines
+000000r 2               ; should be added as needed.
+000000r 2               ;
+000000r 2               ; UPDCRAMPTR: Updates the color RAM pointer to match the screen RAM pointer.
+000000r 2               ;
+000000r 2               
+000000r 2               .if .def(__VIC20__)
+000000r 2                 CLRSCR       := $E55F
+000000r 2                 KBDREAD      := $E5CF
+000000r 2                 UPDCRAMPTR   := $EAB2
+000000r 2               .elseif .def(__C64__)
+000000r 2                 CLRSCR       := $E544
+000000r 2                 KBDREAD      := $E5B4
+000000r 2                 NMIEXIT      := $FEBC
+000000r 2                 UPDCRAMPTR   := $EA24
+000000r 2               .elseif .def(__C128__)
+000000r 2                 CLRSCR       := $C142
+000000r 2                 KBDREAD      := $C006
+000000r 2                 NMIEXIT      := $FF33
+000000r 2                 NEWLINE      := $C363
+000000r 2                 PRINT        := $C322
+000000r 2                 CURS_SET     := $CD57
+000000r 2                 CURS_ON      := $CD6F
+000000r 2                 CURS_OFF     := $CD9F
+000000r 2               .elseif .def(__C16__)
+000000r 2                 CLRSCR       := $D88B
+000000r 2                 KBDREAD      := $D8C1
+000000r 2               .endif
+000000r 2               
+000000r 1               
+000000r 1               .import __SRAMCODE_LOAD__, __SRAMCODE_RUN__, __SRAMCODE_SIZE__
+000000r 1               
+000000r 1               .SEGMENT "BASICSTUB"
+000000r 1               
+000000r 1  01 08 0B 08  .INCBIN "basic_stub.bin"
+000004r 1  0A 00 9E 32  
+000008r 1  33 30 34 00  
+00000Er 1               
+00000Er 1               .SEGMENT "CODE"
+000000r 1               
+000000r 1               start:
+000000r 1  A2 rr        		ldx #<__SRAMCODE_SIZE__
+000002r 1  BD rr rr     :		lda __SRAMCODE_LOAD__-1,x
+000005r 1  9D rr rr     		sta __SRAMCODE_RUN__-1,x
+000008r 1  CA           		dex
+000009r 1  D0 F7        		bne :-
+00000Br 1               
+00000Br 1               		; Clear screen
+00000Br 1  A9 93        		lda #147
+00000Dr 1  20 D2 FF     		jsr BSOUT
+000010r 1               
+000010r 1  A9 rr        		lda #<intro_txt
+000012r 1  A2 rr        		ldx #>intro_txt
+000014r 1  20 rr rr     		jsr strout
+000017r 1               
+000017r 1  20 rr rr     		jsr wait_return
+00001Ar 1               
+00001Ar 1               		; Clear screen
+00001Ar 1  A9 93        		lda #147
+00001Cr 1  20 D2 FF     		jsr BSOUT
+00001Fr 1               
+00001Fr 1  A9 rr        		lda #<clear_roml_txt
+000021r 1  A2 rr        		ldx #>clear_roml_txt
+000023r 1  20 rr rr     		jsr strout
+000026r 1  20 rr rr     		jsr clear_roml
+000029r 1  A9 rr        		lda #<clear_romh_txt
+00002Br 1  A2 rr        		ldx #>clear_romh_txt
+00002Dr 1  20 rr rr     		jsr strout
+000030r 1  20 rr rr     		jsr clear_romh
+000033r 1  A9 rr        		lda #<clear_kernal_txt
+000035r 1  A2 rr        		ldx #>clear_kernal_txt
+000037r 1  20 rr rr     		jsr strout
+00003Ar 1  20 rr rr     		jsr clear_kernal
+00003Dr 1               
+00003Dr 1  20 rr rr     		jsr test_exrom
+000040r 1  B0 03        		bcs :+
+000042r 1  4C rr rr     		jmp error_abort
+000045r 1  20 rr rr     :		jsr test_game
+000048r 1  B0 03        		bcs :+
+00004Ar 1  4C rr rr     		jmp error_abort
+00004Dr 1               
+00004Dr 1  A9 rr        :		lda #<read_flash_ids_txt
+00004Fr 1  A2 rr        		ldx #>read_flash_ids_txt
+000051r 1  20 rr rr     		jsr strout
+000054r 1  20 rr rr     		jsr read_flashids
+000057r 1  20 rr rr     		jsr print_flashids
+00005Ar 1               
+00005Ar 1  20 rr rr     		jsr test_ramok_after_flashid
+00005Dr 1  B0 03        		bcs :+
+00005Fr 1  4C rr rr     		jmp error_abort
+000062r 1               
+000062r 1  20 rr rr     :		jsr wait_return
+000065r 1  A9 93        		lda #147
+000067r 1  20 D2 FF     		jsr BSOUT
+00006Ar 1  A9 rr        		lda #<crt8k_loram_hiram_txt
+00006Cr 1  A2 rr        		ldx #>crt8k_loram_hiram_txt
+00006Er 1  20 rr rr     		jsr strout
+000071r 1               
+000071r 1  A9 06        		lda #6		; 8K CRT mode
+000073r 1  8D 02 DE     		sta $de02
+000076r 1               
+000076r 1  A9 rr        		lda #<test_8000_rom_txt
+000078r 1  A2 rr        		ldx #>test_8000_rom_txt
+00007Ar 1  20 rr rr     		jsr strout
+00007Dr 1               
+00007Dr 1  20 rr rr     		jsr test_8000_ram
+000080r 1  B0 06        		bcs @1
+000082r 1  A9 rr        		lda #<ok_txt
+000084r 1  A2 rr        		ldx #>ok_txt
+000086r 1  D0 04        		bne @2
+000088r 1  A9 rr        @1:		lda #<error_txt
+00008Ar 1  A2 rr        		ldx #>error_txt
+00008Cr 1  20 rr rr     @2:		jsr strout
+00008Fr 1               
+00008Fr 1  A9 rr        		lda #<test_a000_basic_txt
+000091r 1  A2 rr        		ldx #>test_a000_basic_txt
+000093r 1  20 rr rr     		jsr strout
+000096r 1               
+000096r 1  20 rr rr     		jsr test_a000_ram
+000099r 1  B0 14        		bcs @3
+00009Br 1  A9 94        		lda #$94
+00009Dr 1  CD 00 A0     		cmp $a000
+0000A0r 1  D0 0D        		bne @3
+0000A2r 1  A9 E3        		lda #$e3
+0000A4r 1  CD 01 A0     		cmp $a001
+0000A7r 1  D0 06        		bne @3
+0000A9r 1  A9 rr        		lda #<ok_txt
+0000ABr 1  A2 rr        		ldx #>ok_txt
+0000ADr 1  D0 04        		bne @4
+0000AFr 1  A9 rr        @3:		lda #<error_txt
+0000B1r 1  A2 rr        		ldx #>error_txt
+0000B3r 1  20 rr rr     @4:		jsr strout
+0000B6r 1               
+0000B6r 1  A9 rr        		lda #<flashidromlfailtxt
+0000B8r 1  A2 rr        		ldx #>flashidromlfailtxt
+0000BAr 1  20 rr rr     		jsr strout
+0000BDr 1  20 rr rr     		jsr flash_id_roml_shall_fail
+0000C0r 1  90 06        		bcc @5
+0000C2r 1  A9 rr        		lda #<ok_txt
+0000C4r 1  A2 rr        		ldx #>ok_txt
+0000C6r 1  D0 04        		bne @6
+0000C8r 1  A9 rr        @5:		lda #<error_txt
+0000CAr 1  A2 rr        		ldx #>error_txt
+0000CCr 1  20 rr rr     @6:		jsr strout
+0000CFr 1               
+0000CFr 1  A9 rr        		lda #<crt8k_nloram_hiram_txt
+0000D1r 1  A2 rr        		ldx #>crt8k_nloram_hiram_txt
+0000D3r 1  20 rr rr     		jsr strout
+0000D6r 1               
+0000D6r 1  A9 06        		lda #6
+0000D8r 1  85 01        		sta $01
+0000DAr 1               
+0000DAr 1  A9 rr        		lda #<test_8000_ram_txt
+0000DCr 1  A2 rr        		ldx #>test_8000_ram_txt
+0000DEr 1  20 rr rr     		jsr strout
+0000E1r 1               
+0000E1r 1  20 rr rr     		jsr test_8000_ram
+0000E4r 1  90 06        		bcc @7
+0000E6r 1  A9 rr        		lda #<ok_txt
+0000E8r 1  A2 rr        		ldx #>ok_txt
+0000EAr 1  D0 04        		bne @8
+0000ECr 1  A9 rr        @7:		lda #<error_txt
+0000EEr 1  A2 rr        		ldx #>error_txt
+0000F0r 1  20 rr rr     @8:		jsr strout
+0000F3r 1               
+0000F3r 1  A9 rr        		lda #<test_a000_ram_txt
+0000F5r 1  A2 rr        		ldx #>test_a000_ram_txt
+0000F7r 1  20 rr rr     		jsr strout
+0000FAr 1               
+0000FAr 1  20 rr rr     		jsr test_a000_ram
+0000FDr 1  90 06        		bcc @9
+0000FFr 1  A9 rr        		lda #<ok_txt
+000101r 1  A2 rr        		ldx #>ok_txt
+000103r 1  D0 04        		bne @10
+000105r 1  A9 rr        @9:		lda #<error_txt
+000107r 1  A2 rr        		ldx #>error_txt
+000109r 1  20 rr rr     @10:	jsr strout
+00010Cr 1               
+00010Cr 1  A9 rr        		lda #<flashidromlfailtxt
+00010Er 1  A2 rr        		ldx #>flashidromlfailtxt
+000110r 1  20 rr rr     		jsr strout
+000113r 1  20 rr rr     		jsr flash_id_roml_shall_fail
+000116r 1  90 06        		bcc @11
+000118r 1  A9 rr        		lda #<ok_txt
+00011Ar 1  A2 rr        		ldx #>ok_txt
+00011Cr 1  D0 04        		bne @12
+00011Er 1  A9 rr        @11:	lda #<error_txt
+000120r 1  A2 rr        		ldx #>error_txt
+000122r 1  20 rr rr     @12:	jsr strout
+000125r 1               
+000125r 1  A9 rr        		lda #<crt8k_loram_nhiram_txt
+000127r 1  A2 rr        		ldx #>crt8k_loram_nhiram_txt
+000129r 1  20 rr rr     		jsr strout
+00012Cr 1               
+00012Cr 1  A9 rr        		lda #<test_8000_ram_txt
+00012Er 1  A2 rr        		ldx #>test_8000_ram_txt
+000130r 1  20 rr rr     		jsr strout
+000133r 1               
+000133r 1  A9 05        		lda #5
+000135r 1  85 01        		sta $01
+000137r 1  20 rr rr     		jsr test_8000_ram
+00013Ar 1  90 06        		bcc @13
+00013Cr 1  A9 rr        		lda #<ok_txt
+00013Er 1  A2 rr        		ldx #>ok_txt
+000140r 1  D0 04        		bne @14
+000142r 1  A9 rr        @13:	lda #<error_txt
+000144r 1  A2 rr        		ldx #>error_txt
+000146r 1  A0 07        @14:	ldy #7
+000148r 1  84 01        		sty $01
+00014Ar 1  20 rr rr     		jsr strout
+00014Dr 1               
+00014Dr 1  A9 rr        		lda #<test_a000_ram_txt
+00014Fr 1  A2 rr        		ldx #>test_a000_ram_txt
+000151r 1  20 rr rr     		jsr strout
+000154r 1               
+000154r 1  A9 05        		lda #5
+000156r 1  85 01        		sta $01
+000158r 1  20 rr rr     		jsr test_a000_ram
+00015Br 1  90 06        		bcc @15
+00015Dr 1  A9 rr        		lda #<ok_txt
+00015Fr 1  A2 rr        		ldx #>ok_txt
+000161r 1  D0 04        		bne @16
+000163r 1  A9 rr        @15:	lda #<error_txt
+000165r 1  A2 rr        		ldx #>error_txt
+000167r 1  A0 07        @16:	ldy #7
+000169r 1  84 01        		sty $01
+00016Br 1  20 rr rr     		jsr strout
+00016Er 1               
+00016Er 1               
+00016Er 1  20 rr rr     		jsr wait_return
+000171r 1  A9 93        		lda #147
+000173r 1  20 D2 FF     		jsr BSOUT
+000176r 1               
+000176r 1  A9 rr        		lda #<crt16k_loram_hiram_txt
+000178r 1  A2 rr        		ldx #>crt16k_loram_hiram_txt
+00017Ar 1  20 rr rr     		jsr strout
+00017Dr 1               
+00017Dr 1  A9 07        		lda #7		; 16K CRT mode
+00017Fr 1  8D 02 DE     		sta $de02
+000182r 1               
+000182r 1  A9 rr        		lda #<test_8000_rom_txt
+000184r 1  A2 rr        		ldx #>test_8000_rom_txt
+000186r 1  20 rr rr     		jsr strout
+000189r 1               
+000189r 1  20 rr rr     		jsr test_8000_ram
+00018Cr 1  B0 06        		bcs @17
+00018Er 1  A9 rr        		lda #<ok_txt
+000190r 1  A2 rr        		ldx #>ok_txt
+000192r 1  D0 04        		bne @18
+000194r 1  A9 rr        @17:	lda #<error_txt
+000196r 1  A2 rr        		ldx #>error_txt
+000198r 1  20 rr rr     @18:	jsr strout
+00019Br 1               
+00019Br 1  A9 rr        		lda #<test_a000_rom_txt
+00019Dr 1  A2 rr        		ldx #>test_a000_rom_txt
+00019Fr 1  20 rr rr     		jsr strout
+0001A2r 1               
+0001A2r 1  20 rr rr     		jsr test_a000_ram
+0001A5r 1  B0 0E        		bcs @19
+0001A7r 1  A9 94        		lda #$94
+0001A9r 1  CD 00 A0     		cmp $a000
+0001ACr 1  D0 0D        		bne @20
+0001AEr 1  A9 E3        		lda #$e3
+0001B0r 1  CD 01 A0     		cmp $a001
+0001B3r 1  D0 06        		bne @20
+0001B5r 1  A9 rr        @19:	lda #<error_txt
+0001B7r 1  A2 rr        		ldx #>error_txt
+0001B9r 1  D0 04        		bne @21
+0001BBr 1  A9 rr        @20:	lda #<ok_txt
+0001BDr 1  A2 rr        		ldx #>ok_txt
+0001BFr 1  20 rr rr     @21:	jsr strout
+0001C2r 1               
+0001C2r 1  A9 rr        		lda #<flashidromlfailtxt
+0001C4r 1  A2 rr        		ldx #>flashidromlfailtxt
+0001C6r 1  20 rr rr     		jsr strout
+0001C9r 1  20 rr rr     		jsr flash_id_roml_shall_fail
+0001CCr 1  90 06        		bcc @22
+0001CEr 1  A9 rr        		lda #<ok_txt
+0001D0r 1  A2 rr        		ldx #>ok_txt
+0001D2r 1  D0 04        		bne @23
+0001D4r 1  A9 rr        @22:	lda #<error_txt
+0001D6r 1  A2 rr        		ldx #>error_txt
+0001D8r 1  20 rr rr     @23:	jsr strout
+0001DBr 1               
+0001DBr 1  A9 rr        		lda #<flashidromhfailtxt
+0001DDr 1  A2 rr        		ldx #>flashidromhfailtxt
+0001DFr 1  20 rr rr     		jsr strout
+0001E2r 1  20 rr rr     		jsr flash_id_romh_shall_fail
+0001E5r 1  90 06        		bcc @a1
+0001E7r 1  A9 rr        		lda #<ok_txt
+0001E9r 1  A2 rr        		ldx #>ok_txt
+0001EBr 1  D0 04        		bne @a2
+0001EDr 1  A9 rr        @a1:	lda #<error_txt
+0001EFr 1  A2 rr        		ldx #>error_txt
+0001F1r 1  20 rr rr     @a2:	jsr strout
+0001F4r 1               
+0001F4r 1  A9 rr        		lda #<crt16k_nloram_hiram_txt
+0001F6r 1  A2 rr        		ldx #>crt16k_nloram_hiram_txt
+0001F8r 1  20 rr rr     		jsr strout
+0001FBr 1               
+0001FBr 1  A9 06        		lda #6
+0001FDr 1  85 01        		sta $01
+0001FFr 1               
+0001FFr 1  A9 rr        		lda #<test_8000_ram_txt
+000201r 1  A2 rr        		ldx #>test_8000_ram_txt
+000203r 1  20 rr rr     		jsr strout
+000206r 1               
+000206r 1  20 rr rr     		jsr test_8000_ram
+000209r 1  90 06        		bcc @24
+00020Br 1  A9 rr        		lda #<ok_txt
+00020Dr 1  A2 rr        		ldx #>ok_txt
+00020Fr 1  D0 04        		bne @25
+000211r 1  A9 rr        @24:	lda #<error_txt
+000213r 1  A2 rr        		ldx #>error_txt
+000215r 1  20 rr rr     @25:	jsr strout
+000218r 1               
+000218r 1  A9 rr        		lda #<test_a000_rom_txt
+00021Ar 1  A2 rr        		ldx #>test_a000_rom_txt
+00021Cr 1  20 rr rr     		jsr strout
+00021Fr 1               
+00021Fr 1  20 rr rr     		jsr test_a000_ram
+000222r 1  B0 06        		bcs @26
+000224r 1  A9 rr        		lda #<ok_txt
+000226r 1  A2 rr        		ldx #>ok_txt
+000228r 1  D0 04        		bne @27
+00022Ar 1  A9 rr        @26:	lda #<error_txt
+00022Cr 1  A2 rr        		ldx #>error_txt
+00022Er 1  20 rr rr     @27:	jsr strout
+000231r 1               
+000231r 1  A9 rr        		lda #<flashidromlfailtxt
+000233r 1  A2 rr        		ldx #>flashidromlfailtxt
+000235r 1  20 rr rr     		jsr strout
+000238r 1  20 rr rr     		jsr flash_id_roml_shall_fail
+00023Br 1  90 06        		bcc @28
+00023Dr 1  A9 rr        		lda #<ok_txt
+00023Fr 1  A2 rr        		ldx #>ok_txt
+000241r 1  D0 04        		bne @29
+000243r 1  A9 rr        @28:	lda #<error_txt
+000245r 1  A2 rr        		ldx #>error_txt
+000247r 1  20 rr rr     @29:	jsr strout
+00024Ar 1               
+00024Ar 1  A9 rr        		lda #<flashidromhfailtxt
+00024Cr 1  A2 rr        		ldx #>flashidromhfailtxt
+00024Er 1  20 rr rr     		jsr strout
+000251r 1  20 rr rr     		jsr flash_id_romh_shall_fail
+000254r 1  90 06        		bcc @a3
+000256r 1  A9 rr        		lda #<ok_txt
+000258r 1  A2 rr        		ldx #>ok_txt
+00025Ar 1  D0 04        		bne @a4
+00025Cr 1  A9 rr        @a3:	lda #<error_txt
+00025Er 1  A2 rr        		ldx #>error_txt
+000260r 1  20 rr rr     @a4:	jsr strout
+000263r 1               
+000263r 1  A9 rr        		lda #<crt16k_loram_nhiram_txt
+000265r 1  A2 rr        		ldx #>crt16k_loram_nhiram_txt
+000267r 1  20 rr rr     		jsr strout
+00026Ar 1               
+00026Ar 1  A9 rr        		lda #<test_8000_ram_txt
+00026Cr 1  A2 rr        		ldx #>test_8000_ram_txt
+00026Er 1  20 rr rr     		jsr strout
+000271r 1               
+000271r 1  A9 05        		lda #5
+000273r 1  85 01        		sta $01
+000275r 1  20 rr rr     		jsr test_8000_ram
+000278r 1  90 06        		bcc @30
+00027Ar 1  A9 rr        		lda #<ok_txt
+00027Cr 1  A2 rr        		ldx #>ok_txt
+00027Er 1  D0 04        		bne @31
+000280r 1  A9 rr        @30:	lda #<error_txt
+000282r 1  A2 rr        		ldx #>error_txt
+000284r 1  A0 07        @31:	ldy #7
+000286r 1  84 01        		sty $01
+000288r 1  20 rr rr     		jsr strout
+00028Br 1               
+00028Br 1  A9 rr        		lda #<test_a000_ram_txt
+00028Dr 1  A2 rr        		ldx #>test_a000_ram_txt
+00028Fr 1  20 rr rr     		jsr strout
+000292r 1               
+000292r 1  A9 05        		lda #5
+000294r 1  85 01        		sta $01
+000296r 1  20 rr rr     		jsr test_a000_ram
+000299r 1  90 06        		bcc @32
+00029Br 1  A9 rr        		lda #<ok_txt
+00029Dr 1  A2 rr        		ldx #>ok_txt
+00029Fr 1  D0 04        		bne @33
+0002A1r 1  A9 rr        @32:	lda #<error_txt
+0002A3r 1  A2 rr        		ldx #>error_txt
+0002A5r 1  A0 07        @33:	ldy #7
+0002A7r 1  84 01        		sty $01
+0002A9r 1  20 rr rr     		jsr strout
+0002ACr 1               
+0002ACr 1               
+0002ACr 1               ;		lda #<load_txt
+0002ACr 1               ;		ldx #>load_txt
+0002ACr 1  A9 rr        		lda #<tests_complete_txt
+0002AEr 1  A2 rr        		ldx #>tests_complete_txt
+0002B0r 1  20 rr rr     		jsr strout
+0002B3r 1               
+0002B3r 1  A9 07        		lda #7
+0002B5r 1  85 01        		sta $01
+0002B7r 1  A9 04        		lda #4
+0002B9r 1  8D 02 DE     		sta $de02
+0002BCr 1  60           		rts
+0002BDr 1               
+0002BDr 1               error_abort:
+0002BDr 1  A9 rr        		lda #<error_abort_txt
+0002BFr 1  A2 rr        		ldx #>error_abort_txt
+0002C1r 1  20 rr rr     		jsr strout
+0002C4r 1  A9 07        		lda #7
+0002C6r 1  85 01        		sta $01
+0002C8r 1  A9 04        		lda #4
+0002CAr 1  8D 02 DE     		sta $de02
+0002CDr 1  60           		rts
+0002CEr 1               
+0002CEr 1  54 48 49 53  intro_txt:				.byte "this program tests the functionality of",$0d
+0002D2r 1  20 50 52 4F  
+0002D6r 1  47 52 41 4D  
+0002F6r 1  54 48 45 20  						.byte "the commodore 64 pla. the program uses",$0d
+0002FAr 1  43 4F 4D 4D  
+0002FEr 1  4F 44 4F 52  
+00031Dr 1  48 41 52 44  						.byte "hardware on an easyflash cartridge to",$0d
+000321r 1  57 41 52 45  
+000325r 1  20 4F 4E 20  
+000343r 1  43 4F 4E 54  						.byte "control the cartridge pla signals.",$0d
+000347r 1  52 4F 4C 20  
+00034Br 1  54 48 45 20  
+000366r 1  0D           						.byte $0d
+000367r 1  54 48 49 53  						.byte "this means that an easyflash cartridge",$0d
+00036Br 1  20 4D 45 41  
+00036Fr 1  4E 53 20 54  
+00038Er 1  4E 45 45 44  						.byte "needs to be inserted before running",$0d
+000392r 1  53 20 54 4F  
+000396r 1  20 42 45 20  
+0003B2r 1  54 48 49 53  						.byte "this program. the cartridge can be in",$0d
+0003B6r 1  20 50 52 4F  
+0003BAr 1  47 52 41 4D  
+0003D8r 1  50 52 4F 47  						.byte "programming mode to boot to basic",$0d
+0003DCr 1  52 41 4D 4D  
+0003E0r 1  49 4E 47 20  
+0003FAr 1  52 4F 4D 20  						.byte "rom contents to not matter and won't",$0d
+0003FEr 1  43 4F 4E 54  
+000402r 1  45 4E 54 53  
+00041Fr 1  42 45 20 4D  						.byte "be modified.",$0d,$0d,00
+000423r 1  4F 44 49 46  
+000427r 1  49 45 44 2E  
+00042Er 1  43 4C 45 41  clear_roml_txt:			.byte "clearing ram below roml",$0d,00
+000432r 1  52 49 4E 47  
+000436r 1  20 52 41 4D  
+000447r 1  43 4C 45 41  clear_romh_txt:			.byte "clearing ram below romh",$0d,00
+00044Br 1  52 49 4E 47  
+00044Fr 1  20 52 41 4D  
+000460r 1  43 4C 45 41  clear_kernal_txt:		.byte "clearing ram below kernal",$0d,00
+000464r 1  52 49 4E 47  
+000468r 1  20 52 41 4D  
+00047Br 1  0D 52 45 41  read_flash_ids_txt:		.byte $0d,"reading flash ids:",$0d,00
+00047Fr 1  44 49 4E 47  
+000483r 1  20 46 4C 41  
+000490r 1  0D 4C 4F 41  load_txt:				.byte $0d,"load",$22,"platest.prg",$22,",10",$0d,00
+000494r 1  44 22 50 4C  
+000498r 1  41 54 45 53  
+0004A7r 1  0D 46 41 54  error_abort_txt:		.byte $0d,"fatal error, aborting",$0d,00
+0004ABr 1  41 4C 20 45  
+0004AFr 1  52 52 4F 52  
+0004BFr 1  38 4B 20 43  crt8k_loram_hiram_txt:	.byte "8k crt mode, loram=1, hiram=1",$0d,00
+0004C3r 1  52 54 20 4D  
+0004C7r 1  4F 44 45 2C  
+0004DEr 1  0D 38 4B 20  crt8k_nloram_hiram_txt:	.byte $0d,"8k crt mode, loram=0, hiram=1",$0d,00
+0004E2r 1  43 52 54 20  
+0004E6r 1  4D 4F 44 45  
+0004FEr 1  0D 38 4B 20  crt8k_loram_nhiram_txt:	.byte $0d,"8k crt mode, loram=1, hiram=0",$0d,00
+000502r 1  43 52 54 20  
+000506r 1  4D 4F 44 45  
+00051Er 1  31 36 4B 20  crt16k_loram_hiram_txt:	.byte "16k crt mode, loram=1, hiram=1",$0d,00
+000522r 1  43 52 54 20  
+000526r 1  4D 4F 44 45  
+00053Er 1  0D 31 36 4B  crt16k_nloram_hiram_txt:	.byte $0d,"16k crt mode, loram=0, hiram=1",$0d,00
+000542r 1  20 43 52 54  
+000546r 1  20 4D 4F 44  
+00055Fr 1  0D 31 36 4B  crt16k_loram_nhiram_txt:	.byte $0d,"16k crt mode, loram=1, hiram=0",$0d,00
+000563r 1  20 43 52 54  
+000567r 1  20 4D 4F 44  
+000580r 1  24 38 30 30  test_8000_rom_txt:		.byte "$8000 shall be rom: ",$00
+000584r 1  30 20 53 48  
+000588r 1  41 4C 4C 20  
+000595r 1  24 38 30 30  test_8000_ram_txt:		.byte "$8000 shall be ram: ",$00
+000599r 1  30 20 53 48  
+00059Dr 1  41 4C 4C 20  
+0005AAr 1  24 41 30 30  test_a000_basic_txt:	.byte "$a000 shall be basic: ",$00
+0005AEr 1  30 20 53 48  
+0005B2r 1  41 4C 4C 20  
+0005C1r 1  24 41 30 30  test_a000_ram_txt:		.byte "$a000 shall be ram: ",$00
+0005C5r 1  30 20 53 48  
+0005C9r 1  41 4C 4C 20  
+0005D6r 1  24 41 30 30  test_a000_rom_txt:		.byte "$a000 shall be rom: ",$00
+0005DAr 1  30 20 53 48  
+0005DEr 1  41 4C 4C 20  
+0005EBr 1  43 41 52 54  flashidromlfailtxt:		.byte "cart doesn't receive roml writes: ",$00
+0005EFr 1  20 44 4F 45  
+0005F3r 1  53 4E 27 54  
+00060Er 1  43 41 52 54  flashidromhfailtxt:		.byte "cart doesn't receive romh writes: ",$00
+000612r 1  20 44 4F 45  
+000616r 1  53 4E 27 54  
+000631r 1  0D 54 45 53  tests_complete_txt:		.byte $0d,"tests complete!",$0d,$00
+000635r 1  54 53 20 43  
+000639r 1  4F 4D 50 4C  
+000643r 1               
+000643r 1               .proc print_flashids
+000643r 1  A9 rr        		lda #<romlmanuftxt
+000645r 1  A2 rr        		ldx #>romlmanuftxt
+000647r 1  20 rr rr     		jsr strout
+00064Ar 1  A5 61        		lda $61
+00064Cr 1  20 rr rr     		jsr hexout
+00064Fr 1  A9 0D        		lda #13
+000651r 1  20 D2 FF     		jsr BSOUT
+000654r 1               
+000654r 1  A9 rr        		lda #<romldevicetxt
+000656r 1  A2 rr        		ldx #>romldevicetxt
+000658r 1  20 rr rr     		jsr strout
+00065Br 1  A5 62        		lda $62
+00065Dr 1  20 rr rr     		jsr hexout
+000660r 1  A9 0D        		lda #13
+000662r 1  20 D2 FF     		jsr BSOUT
+000665r 1               
+000665r 1  A9 rr        		lda #<romhmanuftxt
+000667r 1  A2 rr        		ldx #>romhmanuftxt
+000669r 1  20 rr rr     		jsr strout
+00066Cr 1  A5 63        		lda $63
+00066Er 1  20 rr rr     		jsr hexout
+000671r 1  A9 0D        		lda #13
+000673r 1  20 D2 FF     		jsr BSOUT
+000676r 1               
+000676r 1  A9 rr        		lda #<romhdevicetxt
+000678r 1  A2 rr        		ldx #>romhdevicetxt
+00067Ar 1  20 rr rr     		jsr strout
+00067Dr 1  A5 64        		lda $64
+00067Fr 1  20 rr rr     		jsr hexout
+000682r 1  A9 0D        		lda #13
+000684r 1  20 D2 FF     		jsr BSOUT
+000687r 1  60           		rts
+000688r 1               .endproc
+000688r 1               
+000688r 1               
+000688r 1  52 4F 4D 4C  romlmanuftxt:	 .asciiz "roml flash manufacturer id: "
+00068Cr 1  20 46 4C 41  
+000690r 1  53 48 20 4D  
+0006A5r 1  52 4F 4D 4C  romldevicetxt:	 .asciiz "roml flash device id: "
+0006A9r 1  20 46 4C 41  
+0006ADr 1  53 48 20 44  
+0006BCr 1  52 4F 4D 48  romhmanuftxt:	 .asciiz "romh flash manufacturer id: "
+0006C0r 1  20 46 4C 41  
+0006C4r 1  53 48 20 4D  
+0006D9r 1  52 4F 4D 48  romhdevicetxt:	 .asciiz "romh flash device id: "
+0006DDr 1  20 46 4C 41  
+0006E1r 1  53 48 20 44  
+0006F0r 1               
+0006F0r 1               .proc flash_id_roml_shall_fail
+0006F0r 1               		; Send device ID command to both flash ROMs
+0006F0r 1  A9 02        		lda #2
+0006F2r 1  8D 00 DE     		sta $de00
+0006F5r 1  A9 AA        		lda #$aa
+0006F7r 1  8D 55 95     		sta $9555
+0006FAr 1  A9 01        		lda #1
+0006FCr 1  8D 00 DE     		sta $de00
+0006FFr 1  A9 55        		lda #$55
+000701r 1  8D AA 8A     		sta $8aaa
+000704r 1  A9 02        		lda #2
+000706r 1  8D 00 DE     		sta $de00
+000709r 1  A9 90        		lda #$90
+00070Br 1  8D 55 95     		sta $9555
+00070Er 1               
+00070Er 1  A5 61        		lda $61
+000710r 1  CD 00 80     		cmp $8000
+000713r 1  F0 11        		beq @fail
+000715r 1  A5 62        		lda $62
+000717r 1  CD 01 80     		cmp $8001
+00071Ar 1  F0 0A        		beq @fail
+00071Cr 1               
+00071Cr 1  A9 FF        		lda #$ff
+00071Er 1  8D 55 95     		sta $9555
+000721r 1  8D AA 8A     		sta $8aaa
+000724r 1  38           		sec
+000725r 1  60           		rts
+000726r 1               @fail:
+000726r 1  18           		clc
+000727r 1  60           		rts
+000728r 1               .endproc
+000728r 1               
+000728r 1               
+000728r 1               .export flash_id_romh_shall_fail
+000728r 1               .proc flash_id_romh_shall_fail
+000728r 1               		; Send device ID command to both flash ROMs
+000728r 1  A9 02        		lda #2
+00072Ar 1  8D 00 DE     		sta $de00
+00072Dr 1  A9 AA        		lda #$aa
+00072Fr 1  8D 55 B5     		sta $b555
+000732r 1  A9 01        		lda #1
+000734r 1  8D 00 DE     		sta $de00
+000737r 1  A9 55        		lda #$55
+000739r 1  8D AA AA     		sta $aaaa
+00073Cr 1  A9 02        		lda #2
+00073Er 1  8D 00 DE     		sta $de00
+000741r 1  A9 90        		lda #$90
+000743r 1  8D 55 B5     		sta $b555
+000746r 1               
+000746r 1  A5 63        		lda $63
+000748r 1  CD 00 A0     		cmp $a000
+00074Br 1  F0 11        		beq @fail
+00074Dr 1  A5 64        		lda $64
+00074Fr 1  CD 01 A0     		cmp $a001
+000752r 1  F0 0A        		beq @fail
+000754r 1               
+000754r 1  A9 FF        		lda #$ff
+000756r 1  8D 55 B5     		sta $b555
+000759r 1  8D AA AA     		sta $aaaa
+00075Cr 1  38           		sec
+00075Dr 1  60           		rts
+00075Er 1               @fail:
+00075Er 1  18           		clc
+00075Fr 1  60           		rts
+000760r 1               .endproc
+000760r 1               
+000760r 1               
+000760r 1               .export clear_roml
+000760r 1               .proc clear_roml
+000760r 1  A9 80        		lda #$80
+000762r 1  8D rr rr     		sta @1+2
+000765r 1  A9 FF        		lda #$ff
+000767r 1  A0 00        		ldy #0
+000769r 1               @1:
+000769r 1  99 00 80     		sta $8000,y
+00076Cr 1  C8           		iny
+00076Dr 1  D0 FA        		bne @1
+00076Fr 1  EE rr rr     		inc @1+2
+000772r 1  AE rr rr     		ldx @1+2
+000775r 1  E0 A0        		cpx #$a0
+000777r 1  D0 F0        		bne @1
+000779r 1  60           		rts
+00077Ar 1               .endproc
+00077Ar 1               
+00077Ar 1               .export clear_romh
+00077Ar 1               .proc clear_romh
+00077Ar 1  A9 A0        		lda #$a0
+00077Cr 1  8D rr rr     		sta @1+2
+00077Fr 1  A9 FF        		lda #$ff
+000781r 1  A0 00        		ldy #0
+000783r 1               @1:
+000783r 1  99 00 A0     		sta $a000,y
+000786r 1  C8           		iny
+000787r 1  D0 FA        		bne @1
+000789r 1  EE rr rr     		inc @1+2
+00078Cr 1  AE rr rr     		ldx @1+2
+00078Fr 1  E0 C0        		cpx #$c0
+000791r 1  D0 F0        		bne @1
+000793r 1  60           		rts
+000794r 1               .endproc
+000794r 1               
+000794r 1               .export clear_kernal
+000794r 1               .proc clear_kernal
+000794r 1  A9 E0        		lda #$e0
+000796r 1  8D rr rr     		sta @1+2
+000799r 1  A9 FF        		lda #$ff
+00079Br 1  A0 00        		ldy #0
+00079Dr 1               @1:
+00079Dr 1  99 00 E0     		sta $e000,y
+0007A0r 1  C8           		iny
+0007A1r 1  D0 FA        		bne @1
+0007A3r 1  EE rr rr     		inc @1+2
+0007A6r 1  D0 F5        		bne @1
+0007A8r 1  60           		rts
+0007A9r 1               .endproc
+0007A9r 1               
+0007A9r 1               .export test_ramok_after_flashid
+0007A9r 1               .proc test_ramok_after_flashid
+0007A9r 1  A9 rr        		lda #<ramok_after_flashid_txt
+0007ABr 1  A2 rr        		ldx #>ramok_after_flashid_txt
+0007ADr 1  20 rr rr     		jsr strout
+0007B0r 1  78           		sei
+0007B1r 1  A9 04        		lda #4
+0007B3r 1  85 01        		sta $01
+0007B5r 1  A9 FF        		lda #$ff
+0007B7r 1  CD 55 95     		cmp $9555
+0007BAr 1  D0 16        		bne @error
+0007BCr 1  CD AA 8A     		cmp $8aaa
+0007BFr 1  D0 11        		bne @error
+0007C1r 1  CD 55 F5     		cmp $f555
+0007C4r 1  D0 0C        		bne @error
+0007C6r 1  CD AA EA     		cmp $eaaa
+0007C9r 1  D0 07        		bne @error
+0007CBr 1  A9 rr        		lda #<ok_txt
+0007CDr 1  A2 rr        		ldx #>ok_txt
+0007CFr 1  38           		sec
+0007D0r 1  B0 05        		bcs @end
+0007D2r 1               @error:
+0007D2r 1  A9 rr        		lda #<error_txt
+0007D4r 1  A2 rr        		ldx #>error_txt
+0007D6r 1  18           		clc
+0007D7r 1               @end:
+0007D7r 1  08           		php
+0007D8r 1  A0 07        		ldy #7
+0007DAr 1  84 01        		sty $01
+0007DCr 1  58           		cli
+0007DDr 1  20 rr rr     		jsr strout
+0007E0r 1  28           		plp
+0007E1r 1  60           		rts
+0007E2r 1               .endproc
+0007E2r 1               
+0007E2r 1  52 41 4D 20  ramok_after_flashid_txt:	.byte "ram below cart shall be intact: ",$00
+0007E6r 1  42 45 4C 4F  
+0007EAr 1  57 20 43 41  
+000803r 1               
+000803r 1               .proc hexdig
+000803r 1  C9 0A        		cmp #10
+000805r 1  90 02        		bcc :+
+000807r 1  69 06        		adc #6
+000809r 1  69 30        :		adc #$30
+00080Br 1  4C D2 FF     		jmp BSOUT
+00080Er 1               .endproc
+00080Er 1               
+00080Er 1               .proc hexout
+00080Er 1  48           		pha
+00080Fr 1  4A           		lsr a
+000810r 1  4A           		lsr a
+000811r 1  4A           		lsr a
+000812r 1  4A           		lsr a
+000813r 1  20 rr rr     		jsr hexdig
+000816r 1  68           		pla
+000817r 1  29 0F        		and #$0f
+000819r 1  4C rr rr     		jmp hexdig
+00081Cr 1               .endproc
+00081Cr 1               
+00081Cr 1               .proc strout
+00081Cr 1  8D rr rr     		sta L1+1
+00081Fr 1  8E rr rr     		stx L1+2
+000822r 1               L1:
+000822r 1  AD FF FF     		lda $ffff ; address overwritten
+000825r 1  F0 0D        		beq L2
+000827r 1  20 D2 FF     		jsr BSOUT
+00082Ar 1  EE rr rr     		inc L1+1
+00082Dr 1  D0 F3        		bne L1
+00082Fr 1  EE rr rr     		inc L1+2
+000832r 1  D0 EE        		bne L1
+000834r 1               L2:
+000834r 1  60           		rts
+000835r 1               .endproc
+000835r 1               
+000835r 1               .proc wait_return
+000835r 1  A9 rr        		lda #<press_return_txt
+000837r 1  A2 rr        		ldx #>press_return_txt
+000839r 1  20 rr rr     		jsr strout
+00083Cr 1  20 CF FF     :		jsr BASIN
+00083Fr 1  C9 0D        		cmp #$0d
+000841r 1  D0 F9        		bne :-
+000843r 1  60           		rts
+000844r 1               .endproc
+000844r 1               
+000844r 1               .proc test_8000_ram
+000844r 1  A9 00        		lda #$00
+000846r 1  8D 00 80     		sta $8000
+000849r 1  AD 00 80     		lda $8000
+00084Cr 1  C9 00        		cmp #$00
+00084Er 1  D0 0E        		bne @noram
+000850r 1  A9 FF        		lda #$ff
+000852r 1  8D 00 80     		sta $8000
+000855r 1  AD 00 80     		lda $8000
+000858r 1  C9 FF        		cmp #$ff
+00085Ar 1  D0 02        		bne @noram
+00085Cr 1  38           		sec
+00085Dr 1  60           		rts
+00085Er 1               @noram:
+00085Er 1  A9 FF        		lda #$ff
+000860r 1  8D 00 80     		sta $8000
+000863r 1  18           		clc
+000864r 1  60           		rts
+000865r 1               .endproc
+000865r 1               
+000865r 1               .proc test_a000_ram
+000865r 1  A9 00        		lda #$00
+000867r 1  8D 00 A0     		sta $a000
+00086Ar 1  AD 00 A0     		lda $a000
+00086Dr 1  C9 00        		cmp #$00
+00086Fr 1  D0 0E        		bne @noram
+000871r 1  A9 FF        		lda #$ff
+000873r 1  8D 00 A0     		sta $a000
+000876r 1  AD 00 A0     		lda $a000
+000879r 1  C9 FF        		cmp #$ff
+00087Br 1  D0 02        		bne @noram
+00087Dr 1  38           		sec
+00087Er 1  60           		rts
+00087Fr 1               @noram:
+00087Fr 1  A9 FF        		lda #$ff
+000881r 1  8D 00 A0     		sta $a000
+000884r 1  18           		clc
+000885r 1  60           		rts
+000886r 1               .endproc
+000886r 1               
+000886r 1               .export test_exrom
+000886r 1               .proc test_exrom
+000886r 1  A9 rr        		lda #<test_exrom_txt
+000888r 1  A2 rr        		ldx #>test_exrom_txt
+00088Ar 1  20 rr rr     		jsr strout
+00088Dr 1  A9 04        		lda #4
+00088Fr 1  8D 02 DE     		sta $de02
+000892r 1  20 rr rr     		jsr test_8000_ram
+000895r 1  90 12        		bcc @error
+000897r 1  A9 06        		lda #6
+000899r 1  8D 02 DE     		sta $de02
+00089Cr 1  20 rr rr     		jsr test_8000_ram
+00089Fr 1  B0 08        		bcs @error
+0008A1r 1  A9 rr        		lda #<ok_txt
+0008A3r 1  A2 rr        		ldx #>ok_txt
+0008A5r 1  38           		sec
+0008A6r 1  08           		php
+0008A7r 1  B0 06        		bcs @done
+0008A9r 1               @error:
+0008A9r 1  18           		clc
+0008AAr 1  08           		php
+0008ABr 1  A9 rr        		lda #<error_txt
+0008ADr 1  A2 rr        		ldx #>error_txt
+0008AFr 1               @done:
+0008AFr 1  A0 04        		ldy #4
+0008B1r 1  8C 02 DE     		sty $de02
+0008B4r 1  20 rr rr     		jsr strout
+0008B7r 1  28           		plp
+0008B8r 1  60           		rts
+0008B9r 1               .endproc
+0008B9r 1               
+0008B9r 1               .export test_game
+0008B9r 1               .proc test_game
+0008B9r 1  A9 rr        		lda #<test_game_txt
+0008BBr 1  A2 rr        		ldx #>test_game_txt
+0008BDr 1  20 rr rr     		jsr strout
+0008C0r 1  20 rr rr     		jsr test_game_highcode
+0008C3r 1  08           		php
+0008C4r 1  90 06        		bcc @error
+0008C6r 1  A9 rr        		lda #<ok_txt
+0008C8r 1  A2 rr        		ldx #>ok_txt
+0008CAr 1  B0 04        		bcs @done
+0008CCr 1               @error:
+0008CCr 1  A9 rr        		lda #<error_txt
+0008CEr 1  A2 rr        		ldx #>error_txt
+0008D0r 1               @done:
+0008D0r 1  20 rr rr     		jsr strout
+0008D3r 1  28           		plp
+0008D4r 1  60           		rts
+0008D5r 1               .endproc
+0008D5r 1               
+0008D5r 1  54 45 53 54  test_exrom_txt:		.byte "testing exrom function: ",$00
+0008D9r 1  49 4E 47 20  
+0008DDr 1  45 58 52 4F  
+0008EEr 1  54 45 53 54  test_game_txt:		.byte "testing game function: ",$00
+0008F2r 1  49 4E 47 20  
+0008F6r 1  47 41 4D 45  
+000906r 1  4F 4B 0D 00  ok_txt:				.byte "ok",$0d,$00
+00090Ar 1  45 52 52 4F  error_txt:				.byte "error",$0d,$00
+00090Er 1  52 0D 00     
+000911r 1               
+000911r 1               
+000911r 1  0D 50 4C 45  press_return_txt:	.byte $0d,"please press return: ",$00
+000915r 1  41 53 45 20  
+000919r 1  50 52 45 53  
+000928r 1               
+000928r 1               .SEGMENT "SRAMCODE"
+000000r 1               
+000000r 1               read_flashids:
+000000r 1  78           		sei
+000001r 1               		; Enter Ultimax mode
+000001r 1  A9 85        		lda #$85
+000003r 1  8D 02 DE     		sta $de02
+000006r 1               
+000006r 1               		; Send device ID command to both flash ROMs
+000006r 1  A9 02        		lda #2
+000008r 1  8D 00 DE     		sta $de00
+00000Br 1  A9 AA        		lda #$aa
+00000Dr 1  8D 55 95     		sta $9555
+000010r 1  8D 55 F5     		sta $f555
+000013r 1  A9 01        		lda #1
+000015r 1  8D 00 DE     		sta $de00
+000018r 1  A9 55        		lda #$55
+00001Ar 1  8D AA 8A     		sta $8aaa
+00001Dr 1  8D AA EA     		sta $eaaa
+000020r 1  A9 02        		lda #2
+000022r 1  8D 00 DE     		sta $de00
+000025r 1  A9 90        		lda #$90
+000027r 1  8D 55 95     		sta $9555
+00002Ar 1  8D 55 F5     		sta $f555
+00002Dr 1               
+00002Dr 1               		; Read device ID from both flash ROMs and save
+00002Dr 1  AD 00 80     		lda $8000
+000030r 1  85 61        		sta $61
+000032r 1  AD 01 80     		lda $8001
+000035r 1  85 62        		sta $62
+000037r 1  AD 00 E0     		lda $e000
+00003Ar 1  85 63        		sta $63
+00003Cr 1  AD 01 E0     		lda $e001
+00003Fr 1  85 64        		sta $64
+000041r 1               
+000041r 1               		; Exit device ID mode
+000041r 1  A9 F0        		lda #$f0
+000043r 1  8D 00 80     		sta $8000
+000046r 1  8D 00 E0     		sta $e000
+000049r 1               
+000049r 1               		; Exit Ultimax mode
+000049r 1  A9 04        		lda #$04
+00004Br 1  8D 02 DE     		sta $de02
+00004Er 1               
+00004Er 1  58           		cli
+00004Fr 1  60           		rts
+000050r 1               
+000050r 1               test_game_highcode:
+000050r 1  78           		sei
+000051r 1               		; Enter Ultimax mode
+000051r 1               		; RAM should now be unmapped
+000051r 1  A9 05        		lda #$05
+000053r 1  8D 02 DE     		sta $de02
+000056r 1  A9 FF        		lda #$ff
+000058r 1  8D FF 7F     		sta $7fff
+00005Br 1  AD FF 7F     		lda $7fff
+00005Er 1  C9 FF        		cmp #$ff
+000060r 1  D0 14        		bne @ok
+000062r 1  A9 00        		lda #$00
+000064r 1  8D FF 7F     		sta $7fff
+000067r 1  AD FF 7F     		lda $7fff
+00006Ar 1  C9 00        		cmp #$00
+00006Cr 1  D0 08        		bne @ok
+00006Er 1  A9 04        		lda #$04
+000070r 1  8D 02 DE     		sta $de02
+000073r 1  18           		clc
+000074r 1  58           		cli
+000075r 1  60           		rts
+000076r 1               @ok:
+000076r 1  A9 04        		lda #$04
+000078r 1  8D 02 DE     		sta $de02
+00007Br 1  38           		sec
+00007Cr 1  58           		cli
+00007Dr 1  60           		rts
+00007Er 1               
+00007Er 1               

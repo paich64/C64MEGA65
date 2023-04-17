@@ -1,0 +1,10 @@
+al 001228 .__SRAMCODE_LOAD__
+al 00DF00 .__SRAMCODE_RUN__
+al 00007E .__SRAMCODE_SIZE__
+al 001094 .clear_kernal
+al 00107A .clear_romh
+al 001060 .clear_roml
+al 001028 .flash_id_romh_shall_fail
+al 001186 .test_exrom
+al 0011B9 .test_game
+al 0010A9 .test_ramok_after_flashid

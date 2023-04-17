@@ -118,3 +118,9 @@ The following resources and tools were invaluable for developing C64MEGA65:
   * Disassembled, fully commented source code of Commando by Ricardo Quesada:
     Helped to find "the CIA bug"; greatly improved our compatibility
     https://gitlab.com/ricardoquesada/c64-commando-2084/-/tree/orig
+
+  * C64 Emulator Test Suite V2.15 by Wolfram Roemhild
+    http://www.zimmers.net/anonftp/pub/cbm/crossplatform/emulators/msdos/pc64/tsuit215.zip
+
+  * PLA Test using the EasyFlash 1CR by Daniel Mantione
+    https://www.freepascal.org/~daniel/easyflash/

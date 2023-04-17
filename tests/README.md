@@ -15,6 +15,10 @@ Add "Reset and unmount prevention while writing to disk" and
 
 Add tests that stress the new menu system.
 
+@TODO @TODO @TODO @TODO @TODO
+
+Add the PLA test
+
 @@@-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 @REMOVE THIS FROM THE C64 tests documentation when done. This is just an
 internal reminder for making sure that the MiSTer2MEGA65 framework release
