@@ -52,23 +52,24 @@ signal reset_c64_mmcm     : std_logic;
 signal qnice_rst          : std_logic;
 
 -- MMCM signals
-signal sys_9975_fb_mmcm   : std_logic;
-signal main_fb_mmcm       : std_logic;
+signal main_fb_mmcm_orig  : std_logic;
+signal main_clk_mmcm_orig : std_logic;
+signal main_locked_orig   : std_logic;
+
+signal main_fb_mmcm_slow  : std_logic;
+signal main_clk_mmcm_slow : std_logic;
+signal main_locked_slow   : std_logic;
+
 signal main_clk_mmcm      : std_logic;
-
-signal sys_clk_9975_mmcm  : std_logic;
-signal sys_clk_9975_bg    : std_logic;
-
-signal main_locked        : std_logic;
-signal sys_9975_locked    : std_logic;
 
 begin
 
    ---------------------------------------------------------------------------------------
-   -- Generate 0.25% slower system clock for HDMI flicker-fix version of the C64 clock
+   -- Generate as-close-as-possible-to-the-original version of the C64 clock
+   -- This has a frame rate of 50.124 Hz
    ---------------------------------------------------------------------------------------
 
-   i_clk_sys_9975 : MMCME2_ADV
+   i_clk_c64_orig : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
          CLKOUT4_CASCADE      => FALSE,
@@ -76,21 +77,21 @@ begin
          STARTUP_WAIT         => FALSE,
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
-         DIVCLK_DIVIDE        => 5,
-         CLKFBOUT_MULT_F      => 49.875,     -- 997.50 MHz
+         DIVCLK_DIVIDE        => 6,
+         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 10.0,       -- 99.75 MHz
+         CLKOUT0_DIVIDE_F     => 30.000,     -- 31.5277777778 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
          CLKOUT0_USE_FINE_PS  => FALSE
       )
       port map (
          -- Output clocks
-         CLKFBOUT            => sys_9975_fb_mmcm,
-         CLKOUT0             => sys_clk_9975_mmcm,
+         CLKFBOUT            => main_fb_mmcm_orig,
+         CLKOUT0             => main_clk_mmcm_orig,
          -- Input clock control
-         CLKFBIN             => sys_9975_fb_mmcm,
+         CLKFBIN             => main_fb_mmcm_orig,
          CLKIN1              => sys_clk_i,
          CLKIN2              => '0',
          -- Tied to always select the primary input clock
@@ -109,18 +110,20 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => sys_9975_locked,
+         LOCKED              => main_locked_orig,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
-         RST                 => '0'
-      ); -- i_clk_
+         RST                 => reset_c64_mmcm
+      ); -- i_clk_c64_orig
 
    ---------------------------------------------------------------------------------------
-   -- Generate as-close-as-possible-to-the-original version of the C64 clock
+   -- Generate a slightly slower version of the C64 clock
+   -- This has a frame rate of 49.999 Hz
+   -- It's important that this rate is slightly *slower* than 50 Hz.
    ---------------------------------------------------------------------------------------
 
-   i_clk_c64 : MMCME2_ADV
+   i_clk_c64_slow : MMCME2_ADV
       generic map (
          BANDWIDTH            => "OPTIMIZED",
          CLKOUT4_CASCADE      => FALSE,
@@ -128,28 +131,25 @@ begin
          STARTUP_WAIT         => FALSE,
          CLKIN1_PERIOD        => 10.0,       -- INPUT @ 100 MHz
          REF_JITTER1          => 0.010,
-         DIVCLK_DIVIDE        => 6,
-         CLKFBOUT_MULT_F      => 56.750,     -- 945.833 MHz
+         DIVCLK_DIVIDE        => 9,
+         CLKFBOUT_MULT_F      => 60.500,     -- 672.222 MHz
          CLKFBOUT_PHASE       => 0.000,
          CLKFBOUT_USE_FINE_PS => FALSE,
-         CLKOUT0_DIVIDE_F     => 30.000,     -- 31.5277777778 MHz
+         CLKOUT0_DIVIDE_F     => 21.375,     -- 31.449 MHz
          CLKOUT0_PHASE        => 0.000,
          CLKOUT0_DUTY_CYCLE   => 0.500,
-         CLKOUT0_USE_FINE_PS  => FALSE,
-         CLKOUT1_DIVIDE       => 15,         -- 63,0555555556 MHz
-         CLKOUT1_PHASE        => 0.000,
-         CLKOUT1_DUTY_CYCLE   => 0.500,
-         CLKOUT1_USE_FINE_PS  => FALSE
+         CLKOUT0_USE_FINE_PS  => FALSE
       )
       port map (
          -- Output clocks
-         CLKFBOUT            => main_fb_mmcm,
-         CLKOUT0             => main_clk_mmcm,
+         CLKFBOUT            => main_fb_mmcm_slow,
+         CLKOUT0             => main_clk_mmcm_slow,
          -- Input clock control
-         CLKFBIN             => main_fb_mmcm,
+         CLKFBIN             => main_fb_mmcm_slow,
          CLKIN1              => sys_clk_i,
-         CLKIN2              => sys_clk_9975_bg,
-         CLKINSEL            => not core_speed_i(0),
+         CLKIN2              => '0',
+         -- Tied to always select the primary input clock
+         CLKINSEL            => '1',
          -- Ports for dynamic reconfiguration
          DADDR               => (others => '0'),
          DCLK                => '0',
@@ -164,12 +164,21 @@ begin
          PSINCDEC            => '0',
          PSDONE              => open,
          -- Other control and status signals
-         LOCKED              => main_locked,
+         LOCKED              => main_locked_slow,
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
-         RST                 => reset_c64_mmcm or (not sys_9975_locked)
-      ); -- i_clk_c64_org  
+         RST                 => reset_c64_mmcm
+      ); -- i_clk_c64_slow
+
+   -- This is a glitch-free mux switching between the fast and the slow clock.
+   bufgmux_ctrl_inst : bufgmux_ctrl
+      port map (
+         i0 => main_clk_mmcm_orig,  -- 1-bit input: clock input (s=0)
+         i1 => main_clk_mmcm_slow,  -- 1-bit input: clock input (s=1)
+         s  => core_speed_i(0),     -- 1-bit input: clock select
+         o  => main_clk_mmcm        -- 1-bit output: clock output
+      );
 
    p_resetman : process(qnice_clk_i)
    begin
@@ -178,7 +187,7 @@ begin
             old_core_speed <= core_speed_i;
             reset_c64_mmcm <= '1';
          else
-            if core_speed_i /= old_core_speed then
+            if core_speed_i(1) /= old_core_speed(1) then
                reset_c64_mmcm <= '1';
                old_core_speed <= core_speed_i;
             else
@@ -192,17 +201,11 @@ begin
    -- Output buffering
    -------------------------------------------------------------------------------------
 
-   sys_2_bufg : BUFG
-      port map (
-         I => sys_clk_9975_mmcm,
-         O => sys_clk_9975_bg
-      );
-      
    main_clk_bufg : BUFG
       port map (
          I => main_clk_mmcm,
          O => main_clk_o
-      );      
+      );
 
    -------------------------------------
    -- Reset generation
@@ -214,7 +217,7 @@ begin
          DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (main_locked and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
+         src_arst  => not (main_locked_orig and main_locked_slow and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
          dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
          dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                         -- This output is registered.

@@ -20,8 +20,13 @@ create_generated_clock -name tmds_720p_clk [get_pins M2M/i_framework/i_clk_m2m/i
 create_generated_clock -name hdmi_720p_clk [get_pins M2M/i_framework/i_clk_m2m/i_clk_hdmi_720p/CLKOUT1]
 create_generated_clock -name tmds_576p_clk [get_pins M2M/i_framework/i_clk_m2m/i_clk_hdmi_576p/CLKOUT0]
 create_generated_clock -name hdmi_576p_clk [get_pins M2M/i_framework/i_clk_m2m/i_clk_hdmi_576p/CLKOUT1]
-create_generated_clock -name main_clk_0    [get_pins M2M/CORE/clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks CLK]
-create_generated_clock -name main_clk_1    [get_pins M2M/CORE/clk_gen/i_clk_c64/CLKOUT0] -master_clock [get_clocks sys_clk_9975_mmcm]
+create_generated_clock -name main_clk      [get_pins M2M/CORE/clk_gen/i_clk_c64_orig/CLKOUT0]
+
+## Assume the core is running at the original (slightly faster) clock.
+##   qnice_osm_control_i[57] is connected to CORE/clk_gen/bufgmux_ctrl_inst.S
+##   see constant C_MENU_HDMI_FF in CORE/vhdl/mega65.vhd
+## This halves the number of set_false_path needed.
+set_case_analysis 0 [get_nets M2M/CORE/qnice_osm_control_i[57]]
 
 ## Clock divider sdcard_clk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins M2M/i_framework/i_clk_m2m/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins M2M/i_framework/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
@@ -41,20 +46,12 @@ set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks hdmi_720p_clk]
 set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks hdmi_720p_clk]
 set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks hdmi_576p_clk]
 set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks hdmi_576p_clk]
-set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks main_clk_0]
-set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks main_clk_0]
-set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks main_clk_0]
-set_false_path   -to [get_clocks hdmi_720p_clk] -from [get_clocks main_clk_0]
-set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks main_clk_0]
-set_false_path   -to [get_clocks hdmi_576p_clk] -from [get_clocks main_clk_0]
-set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks main_clk_1]
-set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks main_clk_1]
-set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks main_clk_1]
-set_false_path   -to [get_clocks hdmi_720p_clk] -from [get_clocks main_clk_1]
-set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks main_clk_1]
-set_false_path   -to [get_clocks hdmi_576p_clk] -from [get_clocks main_clk_1]
-set_false_path -from [get_clocks qnice_clk]       -to [get_clocks main_clk_0]
-set_false_path -from [get_clocks qnice_clk]       -to [get_clocks main_clk_1]
+set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks main_clk]
+set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks main_clk]
+set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks main_clk]
+set_false_path   -to [get_clocks hdmi_720p_clk] -from [get_clocks main_clk]
+set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks main_clk]
+set_false_path   -to [get_clocks hdmi_576p_clk] -from [get_clocks main_clk]
 set_false_path -from [get_clocks qnice_clk]       -to [get_clocks hdmi_720p_clk]
 set_false_path -from [get_clocks qnice_clk]       -to [get_clocks hdmi_576p_clk]
 
@@ -65,13 +62,7 @@ set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks tmds_576p_clk]
 set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks tmds_720p_clk]
 set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks tmds_576p_clk]
 
-set_false_path -from [get_clocks main_clk_0]      -to [get_clocks main_clk_1]
-set_false_path -to   [get_clocks main_clk_0]    -from [get_clocks main_clk_1]
-
-set_false_path -from [get_clocks main_clk_0]      -to [get_clocks audio_clk]
-set_false_path -to   [get_clocks main_clk_0]    -from [get_clocks audio_clk] 
-set_false_path -from [get_clocks main_clk_1]      -to [get_clocks audio_clk]
-set_false_path -to   [get_clocks main_clk_1]    -from [get_clocks audio_clk] 
+set_false_path -from [get_clocks main_clk]        -to [get_clocks audio_clk]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
