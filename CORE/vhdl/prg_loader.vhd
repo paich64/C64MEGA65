@@ -11,20 +11,27 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
 
+library work;        
+use work.globals.all;
+
 entity prg_loader is
 port (
-   qnice_clk_i    : in  std_logic;
-   qnice_rst_i    : in  std_logic;
-   qnice_addr_i   : in  std_logic_vector(27 downto 0);
-   qnice_data_i   : in  std_logic_vector(15 downto 0);
-   qnice_ce_i     : in  std_logic;
-   qnice_we_i     : in  std_logic;
-   qnice_data_o   : out std_logic_vector(15 downto 0);
+   qnice_clk_i       : in  std_logic;
+   qnice_rst_i       : in  std_logic;
+   qnice_addr_i      : in  std_logic_vector(27 downto 0);
+   qnice_data_i      : in  std_logic_vector(15 downto 0);
+   qnice_ce_i        : in  std_logic;
+   qnice_we_i        : in  std_logic;
+   qnice_data_o      : out std_logic_vector(15 downto 0);
+   qnice_wait_o      : out std_logic;
 
-   c64ram_we_o    : out std_logic;
-   c64ram_addr_o  : out std_logic_vector(15 downto 0);
-   c64ram_data_i  : in std_logic_vector(7 downto 0);
-   c64ram_data_o  : out std_logic_vector(7 downto 0)
+   c64ram_we_o       : out std_logic;
+   c64ram_addr_o     : out std_logic_vector(15 downto 0);
+   c64ram_data_i     : in std_logic_vector(7 downto 0);
+   c64ram_data_o     : out std_logic_vector(7 downto 0);
+   
+   core_reset_o      : out std_logic;  -- reset the core when the PRG loading starts
+   core_triggerrun_o : out std_logic   -- trigger program auto starts after loading finished
 );
 end prg_loader;
 
@@ -63,18 +70,36 @@ architecture beh of prg_loader is
    
    -- PRG load address
    signal prg_start               : unsigned(15 downto 0);
+   
+   -- Communication and reset state machine (see comment directly at the state machine below)
+   constant C_COMM_DELAY          : natural := 50;
+   constant C_RESET_DELAY         : natural := 4 * CORE_CLK_SPEED;  -- 3 seconds
+        
+   type t_comm_state is (IDLE_ST,
+                         RESET_ST,
+                         RESET_POST_ST,
+                         TRIGGER_RUN_ST);
+
+   signal state : t_comm_state := IDLE_ST;                         
+   signal delay : natural range 0 to C_RESET_DELAY;
 
 begin
 
    -- Write to registers
    process (qnice_clk_i)
    begin
-      if falling_edge(qnice_clk_i) then
+      if falling_edge(qnice_clk_i) then    
          if qnice_ce_i = '1' and qnice_we_i = '1' then
             -- control and status register
             if unsigned(qnice_addr_i(27 downto 12)) = C_CRT_CASREG then
                case unsigned(qnice_addr_i(11 downto 0)) is
-                  when C_CRT_STATUS => qnice_req_status                <= qnice_data_i;
+                  when C_CRT_STATUS =>
+                     qnice_req_status <= qnice_data_i;
+                     if qnice_data_i = C_CRT_ST_LDNG then
+                        state <= RESET_ST;
+                     elsif qnice_data_i = C_CRT_ST_OK then
+                        state <= TRIGGER_RUN_ST;
+                     end if;
                   when C_CRT_FS_LO  => qnice_req_length(15 downto  0)  <= qnice_data_i;
                   when C_CRT_FS_HI  => qnice_req_length(31 downto 16)  <= qnice_data_i;
                   when others => null;
@@ -84,14 +109,61 @@ begin
             elsif qnice_addr_i(27 downto 0) = x"000" & "0000" then
                prg_start(7 downto 0) <= unsigned(qnice_data_i(7 downto 0));
             elsif qnice_addr_i(27 downto 0) = x"000" & "0001" then
-               prg_start(15 downto 8) <= unsigned(qnice_data_i(7 downto 0));              
+               prg_start(15 downto 8) <= unsigned(qnice_data_i(7 downto 0));
             end if;
          end if;
+
+         -- Due to the falling_edge nature of QNICE, one QNICE cycle is not enough to ensure that the core
+         -- which runs in another clock domain registers core_reset_o or core_triggerrun_o. Therefore we
+         -- hold the signal C_COMM_DELAY QNICE cycles high.
+         --
+         -- While the C64 resets, it clears some status memory locations so that QNICE needs to wait before
+         -- loading the PRG until the reset is done (C_RESET_DELAY), otherwise we have a race condition.  
+         case state is
+            when IDLE_ST =>
+               qnice_wait_o       <= '0';
+               core_reset_o       <= '0';
+               core_triggerrun_o  <= '0';
+               delay              <= C_COMM_DELAY;
+               
+            when RESET_ST =>
+               qnice_wait_o <= '1';
+               core_reset_o <= '1';
+               if delay = 0 then
+                  state <= RESET_POST_ST;
+                  delay <= C_RESET_DELAY;
+                  core_reset_o <= '0';
+               else
+                  delay <= delay - 1;
+               end if;
+
+            when RESET_POST_ST =>
+               if delay = 0 then
+                  state <= IDLE_ST;
+               else
+                  delay <= delay - 1;
+               end if;
+               
+            when TRIGGER_RUN_ST =>
+               core_triggerrun_o <= '1';
+               if delay = 0 then
+                  state <= IDLE_ST;
+               else
+                  delay <= delay - 1;
+               end if;
+
+            when others =>
+               null;
+         end case;
 
          if qnice_rst_i = '1' then
             qnice_req_status  <= (others => '0');
             qnice_req_length  <= (others => '0');
             prg_start         <= (others => '0');
+            core_reset_o      <= '0';
+            core_triggerrun_o <= '0';
+            qnice_wait_o      <= '0';
+            state             <= IDLE_ST;
          end if;
       end if;
    end process;

@@ -17,6 +17,9 @@ use work.globals.all;
 use work.types_pkg.all;
 use work.qnice_tools.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity MEGA65_Core is
 port (
    CLK                      : in  std_logic;                 -- 100 MHz clock
@@ -256,6 +259,9 @@ signal main_crt_bank_wait         : std_logic;
 signal main_crt_roml_n            : std_logic;
 signal main_crt_romh_n            : std_logic;
 
+signal main_reset_from_prgloader  : std_logic;
+signal main_prg_trigger_run       : std_logic;
+
 ---------------------------------------------------------------------------------------------
 -- hr_clk
 ---------------------------------------------------------------------------------------------
@@ -321,30 +327,33 @@ signal qnice_c64_mount_buf_ram_we   : std_logic;
 signal qnice_c64_mount_buf_ram_data : std_logic_vector(7 downto 0);  -- Disk mount buffer
 
 -- Signals for multiplexing the C64's RAM between C_DEV_C64_RAM and C_DEV_C64_PRG
-signal qnice_c64_ramx_we      : std_logic;
-signal qnice_c64_ramx_addr    : std_logic_vector(15 downto 0);
-signal qnice_c64_ramx_d_to    : std_logic_vector(7 downto 0);
-signal qnice_c64_ramx_d_from  : std_logic_vector(7 downto 0);
+signal qnice_c64_ramx_we            : std_logic;
+signal qnice_c64_ramx_addr          : std_logic_vector(15 downto 0);
+signal qnice_c64_ramx_d_to          : std_logic_vector(7 downto 0);
+signal qnice_c64_ramx_d_from        : std_logic_vector(7 downto 0);
 
 -- QNICE signals passed down to main.vhd to handle IEC drives using vdrives.vhd
-signal qnice_c64_qnice_ce     : std_logic;
-signal qnice_c64_qnice_we     : std_logic;
-signal qnice_c64_qnice_data   : std_logic_vector(15 downto 0);
+signal qnice_c64_qnice_ce           : std_logic;
+signal qnice_c64_qnice_we           : std_logic;
+signal qnice_c64_qnice_data         : std_logic_vector(15 downto 0);
 
 -- QNICE signals for the PRG loader
-signal qnice_prg_qnice_ce     : std_logic;
-signal qnice_prg_qnice_we     : std_logic;
-signal qnice_prg_qnice_data   : std_logic_vector(15 downto 0);
-signal qnice_prg_c64ram_we    : std_logic;
-signal qnice_prg_c64ram_addr  : std_logic_vector(15 downto 0);
-signal qnice_prg_c64ram_d_to  : std_logic_vector(7 downto 0);
-signal qnice_prg_c64ram_d_frm : std_logic_vector(7 downto 0);
+signal qnice_prg_qnice_ce           : std_logic;
+signal qnice_prg_qnice_we           : std_logic;
+signal qnice_prg_qnice_data         : std_logic_vector(15 downto 0);
+signal qnice_prg_wait               : std_logic;
+signal qnice_prg_c64ram_we          : std_logic;
+signal qnice_prg_c64ram_addr        : std_logic_vector(15 downto 0);
+signal qnice_prg_c64ram_d_to        : std_logic_vector(7 downto 0);
+signal qnice_prg_c64ram_d_frm       : std_logic_vector(7 downto 0);
+signal qnice_reset_from_prgloader   : std_logic;
+signal qnice_prg_trigger_run        : std_logic;
 
 -- QNICE signals passed down to sw_cartridge_wrapper.vhd to handle CRT files
-signal qnice_crt_qnice_ce     : std_logic;
-signal qnice_crt_qnice_we     : std_logic;
-signal qnice_crt_qnice_data   : std_logic_vector(15 downto 0);
-signal qnice_crt_qnice_wait   : std_logic;
+signal qnice_crt_qnice_ce           : std_logic;
+signal qnice_crt_qnice_we           : std_logic;
+signal qnice_crt_qnice_data         : std_logic_vector(15 downto 0);
+signal qnice_crt_qnice_wait         : std_logic;
 
 begin
 
@@ -416,8 +425,9 @@ begin
       port map (
          clk_main_i             => main_clk,
          reset_soft_i           => main_reset_core_i,
-         reset_hard_i           => main_reset_m2m_i,
+         reset_hard_i           => main_reset_m2m_i or main_reset_from_prgloader,
          pause_i                => main_pause_core_i,
+         trigger_run_i          => main_prg_trigger_run,         
 
          ---------------------------
          -- Configuration options
@@ -647,7 +657,8 @@ begin
             qnice_prg_c64ram_d_frm     <= qnice_c64_ramx_d_from;
             qnice_prg_qnice_ce         <= qnice_dev_ce_i;
             qnice_prg_qnice_we         <= qnice_dev_we_i;
-            qnice_dev_data_o           <= qnice_prg_qnice_data;           
+            qnice_dev_data_o           <= qnice_prg_qnice_data;
+            qnice_dev_wait_o           <= qnice_prg_wait;          
 
          -- SW cartridges (*.CRT)
          when C_DEV_C64_CRT =>
@@ -664,10 +675,7 @@ begin
    -- Dual Clocks
    ---------------------------------------------------------------------------------------------
 
-   --------------------------------------------
    -- Clock Domain Crossing: CORE -> HyperRAM
-   --------------------------------------------
-
    i_cdc_main2hr : entity work.cdc_stable
       generic map (
          G_DATA_SIZE => 2
@@ -678,6 +686,20 @@ begin
          dst_clk_i              => hr_clk_i,
          dst_data_o(1 downto 0) => hr_c64_exp_port_mode
       ); -- i_cdc_main2hr
+      
+   i_cdc_qnice2main : xpm_cdc_array_single
+      generic map (
+         WIDTH => 2
+      )
+      port map (
+         src_clk           => qnice_clk_i,
+         src_in(0)         => qnice_reset_from_prgloader,
+         src_in(1)         => qnice_prg_trigger_run,
+         dest_clk          => main_clk,
+         dest_out(0)       => main_reset_from_prgloader,
+         dest_out(1)       => main_prg_trigger_run
+      ); -- i_cdc_qnice2main
+    
 
    -- C64's RAM modelled as dual clock & dual port RAM so that the Commodore 64 core
    -- as well as QNICE can access it
@@ -733,11 +755,15 @@ begin
          qnice_ce_i        => qnice_prg_qnice_ce,
          qnice_we_i        => qnice_prg_qnice_we,
          qnice_data_o      => qnice_prg_qnice_data,
+         qnice_wait_o      => qnice_prg_wait,         
       
          c64ram_we_o       => qnice_prg_c64ram_we,
          c64ram_addr_o     => qnice_prg_c64ram_addr,
          c64ram_data_i     => qnice_prg_c64ram_d_frm,
-         c64ram_data_o     => qnice_prg_c64ram_d_to
+         c64ram_data_o     => qnice_prg_c64ram_d_to,
+         
+         core_reset_o      => qnice_reset_from_prgloader,
+         core_triggerrun_o => qnice_prg_trigger_run
       );
 
    -- Handle SW based cartridges, aka *.CRT files
