@@ -33,6 +33,7 @@ port (
    main_bank_wr_o       : out std_logic;
    main_bank_lo_i       : in  std_logic_vector( 6 downto 0);
    main_bank_hi_i       : in  std_logic_vector( 6 downto 0);
+   main_bank_wait_o     : out std_logic;
    main_ram_addr_i      : in  std_logic_vector(15 downto 0);
    main_lo_ram_data_o   : out std_logic_vector(15 downto 0);
    main_hi_ram_data_o   : out std_logic_vector(15 downto 0);
@@ -145,6 +146,7 @@ architecture synthesis of sw_cartridge_wrapper is
    -- Connect to CORE
    signal hr_bank_lo              : std_logic_vector( 6 downto 0);
    signal hr_bank_hi              : std_logic_vector( 6 downto 0);
+   signal hr_bank_wait            : std_logic;
    signal hr_loading              : std_logic;
    signal hr_id                   : std_logic_vector(15 downto 0);
    signal hr_exrom                : std_logic_vector( 7 downto 0);
@@ -155,6 +157,42 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_bank_type            : std_logic_vector( 7 downto 0);
    signal hr_bank_raddr           : std_logic_vector(24 downto 0);
    signal hr_bank_wr              : std_logic;
+
+   attribute mark_debug : string;
+   attribute mark_debug of qnice_rst_i          : signal is "true";
+   attribute mark_debug of qnice_addr_i         : signal is "true";
+   attribute mark_debug of qnice_data_i         : signal is "true";
+   attribute mark_debug of qnice_ce_i           : signal is "true";
+   attribute mark_debug of qnice_we_i           : signal is "true";
+   attribute mark_debug of qnice_data_o         : signal is "true";
+   attribute mark_debug of qnice_wait_o         : signal is "true";
+   attribute mark_debug of main_rst_i           : signal is "true";
+   attribute mark_debug of main_loading_o       : signal is "true";
+   attribute mark_debug of main_id_o            : signal is "true";
+   attribute mark_debug of main_exrom_o         : signal is "true";
+   attribute mark_debug of main_game_o          : signal is "true";
+   attribute mark_debug of main_bank_laddr_o    : signal is "true";
+   attribute mark_debug of main_bank_size_o     : signal is "true";
+   attribute mark_debug of main_bank_num_o      : signal is "true";
+   attribute mark_debug of main_bank_type_o     : signal is "true";
+   attribute mark_debug of main_bank_raddr_o    : signal is "true";
+   attribute mark_debug of main_bank_wr_o       : signal is "true";
+   attribute mark_debug of main_bank_lo_i       : signal is "true";
+   attribute mark_debug of main_bank_hi_i       : signal is "true";
+   attribute mark_debug of main_bank_wait_o     : signal is "true";
+   attribute mark_debug of main_ram_addr_i      : signal is "true";
+   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
+   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
+   attribute mark_debug of hr_rst_i             : signal is "true";
+   attribute mark_debug of hr_write_o           : signal is "true";
+   attribute mark_debug of hr_read_o            : signal is "true";
+   attribute mark_debug of hr_address_o         : signal is "true";
+   attribute mark_debug of hr_writedata_o       : signal is "true";
+   attribute mark_debug of hr_byteenable_o      : signal is "true";
+   attribute mark_debug of hr_burstcount_o      : signal is "true";
+   attribute mark_debug of hr_readdata_i        : signal is "true";
+   attribute mark_debug of hr_readdatavalid_i   : signal is "true";
+   attribute mark_debug of hr_waitrequest_i     : signal is "true";
 
 begin
 
@@ -375,6 +413,7 @@ begin
          resp_address_o      => hr_resp_address,
          bank_lo_i           => hr_bank_lo,
          bank_hi_i           => hr_bank_hi,
+         bank_wait_o         => hr_bank_wait,
          avm_write_o         => hr_crt_write,
          avm_read_o          => hr_crt_read,
          avm_address_o       => hr_crt_address(21 downto 0),
@@ -467,7 +506,7 @@ begin
 
    i_cdc_stable : entity work.cdc_stable
      generic map (
-       G_DATA_SIZE    => 33,
+       G_DATA_SIZE    => 34,
        G_REGISTER_SRC => false
      )
      port map (
@@ -476,11 +515,13 @@ begin
        src_data_i(23 downto 16) => hr_exrom,
        src_data_i(31 downto 24) => hr_game,
        src_data_i(32)           => hr_loading,
+       src_data_i(33)           => hr_bank_wait,
        dst_clk_i                => main_clk_i,
        dst_data_o(15 downto  0) => main_id_o,
        dst_data_o(23 downto 16) => main_exrom_o,
        dst_data_o(31 downto 24) => main_game_o,
-       dst_data_o(32)           => main_loading_o
+       dst_data_o(32)           => main_loading_o,
+       dst_data_o(33)           => main_bank_wait_o
      ); -- i_cdc_stable
 
 

@@ -157,6 +157,7 @@ entity main is
       cartridge_bank_wr_i    : in  std_logic;
       crt_bank_lo_o          : out std_logic_vector(6 downto 0);
       crt_bank_hi_o          : out std_logic_vector(6 downto 0);
+      crt_bank_wait_i        : in  std_logic;
       crt_roml_n_o           : out std_logic;
       crt_romh_n_o           : out std_logic
    );
@@ -380,6 +381,7 @@ architecture synthesis of main is
    attribute mark_debug of c64_ram_ce             : signal is "true";
    attribute mark_debug of c64_ram_data_o         : signal is "true";
    attribute mark_debug of c64_ram_data           : signal is "true";
+   attribute mark_debug of c64_ram_data_i         : signal is "true";
    attribute mark_debug of c64_ram_we             : signal is "true";
    attribute mark_debug of cartridge_bank_laddr_i : signal is "true";
    attribute mark_debug of cartridge_bank_num_i   : signal is "true";
@@ -403,6 +405,7 @@ architecture synthesis of main is
    attribute mark_debug of crt_addr               : signal is "true";
    attribute mark_debug of crt_bank_hi_o          : signal is "true";
    attribute mark_debug of crt_bank_lo_o          : signal is "true";
+   attribute mark_debug of crt_bank_wait_i        : signal is "true";
    attribute mark_debug of crt_cs                 : signal is "true";
    attribute mark_debug of crt_exrom              : signal is "true";
    attribute mark_debug of crt_game               : signal is "true";
@@ -414,6 +417,8 @@ architecture synthesis of main is
    attribute mark_debug of ext_cycle_o            : signal is "true";
    attribute mark_debug of reset_core_n           : signal is "true";
    attribute mark_debug of restore_key_n          : signal is "true";
+   attribute mark_debug of reset_soft_i           : signal is "true";
+   attribute mark_debug of reset_hard_i           : signal is "true";
 
 begin
 
@@ -766,7 +771,7 @@ begin
             core_io_data   <= unsigned(crt_io_data);
             core_game_n    <= crt_game;
             core_exrom_n   <= crt_exrom;
-            core_dma       <= cartridge_loading_i;
+            core_dma       <= cartridge_loading_i or crt_bank_wait_i;
             crt_roml_n_o   <= cart_roml_n;
             crt_romh_n_o   <= cart_romh_n;
 

@@ -252,6 +252,7 @@ signal main_crt_bank_wr           : std_logic;
 
 signal main_crt_bank_lo           : std_logic_vector( 6 downto 0);
 signal main_crt_bank_hi           : std_logic_vector( 6 downto 0);
+signal main_crt_bank_wait         : std_logic;
 signal main_crt_roml_n            : std_logic;
 signal main_crt_romh_n            : std_logic;
 
@@ -550,6 +551,7 @@ begin
          cartridge_bank_wr_i    => main_crt_bank_wr,
          crt_bank_lo_o          => main_crt_bank_lo,
          crt_bank_hi_o          => main_crt_bank_hi,
+         crt_bank_wait_i        => main_crt_bank_wait,
          crt_roml_n_o           => main_crt_roml_n,
          crt_romh_n_o           => main_crt_romh_n
       ); -- i_main
@@ -766,6 +768,7 @@ begin
       main_bank_wr_o       => main_crt_bank_wr,
       main_bank_lo_i       => main_crt_bank_lo,
       main_bank_hi_i       => main_crt_bank_hi,
+      main_bank_wait_o     => main_crt_bank_wait,
       main_ram_addr_i      => std_logic_vector(main_ram_addr),
       main_lo_ram_data_o   => main_crt_lo_ram_data,
       main_hi_ram_data_o   => main_crt_hi_ram_data,
