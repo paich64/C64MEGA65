@@ -14,8 +14,9 @@
   readable for the system.
 
 * Black screen from time to time on startup (independent if a cartridge is
-  inserted or not): HDMI-only: VGA shows a normal blinking cursor. But on
-  HDMI be can see the OSM.
+  inserted or not): HDMI-only: VGA shows a normal C64 start screen including
+  a blinking cursor. But on HDMI the screen stays black but you can use
+  the OSM via the Help key.
 
 ### REU and signal routing
 
