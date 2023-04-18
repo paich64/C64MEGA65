@@ -124,8 +124,8 @@ constant C_CRTROMTYPE_SDRAM      : std_logic_vector(15 downto 0) := x"0002";    
 
 -- Manually loadable ROMs and cartridges as defined in config.vhd
 -- If you are not using this, then make sure that:
---    C_CRTROMNUM    is 0
---    C_CRTROMS      is (x"EEEE", x"EEEE", x"EEEE")
+--    C_CRTROM_MAN_NUM    is 0
+--    C_CRTROMS_MAN       is (x"EEEE", x"EEEE", x"EEEE")
 -- Each entry of the array consists of two constants:
 --    1) Type of CRT or ROM: Load to a QNICE device, load into HyperRAM, load into SDRAM
 --    2) If (1) = QNICE device, then this is the device ID

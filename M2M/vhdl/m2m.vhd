@@ -191,6 +191,10 @@ signal main_pot1_y            : std_logic_vector(7 downto 0);
 signal main_pot2_x            : std_logic_vector(7 downto 0);
 signal main_pot2_y            : std_logic_vector(7 downto 0);
 
+---------------------------------------------------------------------------------------------
+-- HyperRAM clock domain
+---------------------------------------------------------------------------------------------
+
 signal hr_clk                 : std_logic;
 signal hr_rst                 : std_logic;
 signal hr_core_write          : std_logic;

@@ -238,7 +238,7 @@ begin
          dst_clk_i                => hdmi_clk_i,
          dst_data_o(15 downto  0) => hdmi_audio_left,
          dst_data_o(31 downto 16) => hdmi_audio_right
-      );
+      ); -- i_cdc_stable
 
 
    -- Generate PCM sample rate (48 kHz)

@@ -328,7 +328,7 @@ begin
          m_avm_readdatavalid_i => cache_readdatavalid
       ); -- i_avm_cache
 
-   i_avm_hyperram_errata : entity work.avm_hyperram_errata
+   i_hyperram_errata : entity work.hyperram_errata
       port map (
          clk_i                 => clk,
          rst_i                 => rst,
@@ -350,7 +350,7 @@ begin
          m_avm_burstcount_o    => mem_avm_burstcount,
          m_avm_readdata_i      => mem_avm_readdata,
          m_avm_readdatavalid_i => mem_avm_readdatavalid
-      ); -- i_avm_hyperram_errata
+      ); -- i_hyperram_errata
 
    i_avm_memory_pause : entity work.avm_memory_pause
       generic map (
