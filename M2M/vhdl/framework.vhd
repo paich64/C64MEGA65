@@ -543,7 +543,7 @@ begin
          dbnce_joy2_left_n    => main_joy2_left_n_o,
          dbnce_joy2_right_n   => main_joy2_right_n_o,
          dbnce_joy2_fire_n    => main_joy2_fire_n_o
-      );
+      ); -- i_joy_debouncer
 
    -- M2M keyboard driver that outputs two distinct keyboard states: key_* for being used by the core and qnice_* for the firmware/Shell
    i_m2m_keyb : entity work.m2m_keyb
@@ -839,7 +839,7 @@ begin
          pota_y                  => qnice_pot1_y,
          potb_x                  => qnice_pot2_x,
          potb_y                  => qnice_pot2_y
-      );
+      ); -- i_mouse_paddles
       
     -- We need to invert the values that we get from i_mouse_paddles
    correct_and_flip_paddles : process(all)
@@ -965,7 +965,7 @@ begin
          dest_clk                => main_clk_i,
          dest_out(0)             => main_reset_m2m_o,
          dest_out(1)             => main_reset_core_o
-      );
+      ); -- i_board2main
 
    ---------------------------------------------------------------------------------------------------------------
    -- On-Screen-Menu video and attribute RAM: Dual-clock qnice_clk and main_clk_i
@@ -1062,7 +1062,7 @@ begin
             audio_r <= signed(filt_audio_r);
          end if;
       end if;
-   end process;
+   end process select_or_mute_audio;
 
    i_analog_pipeline : entity work.analog_pipeline
       generic map (
@@ -1206,7 +1206,7 @@ begin
          hr_waitrequest_i         => hr_dig_waitrequest
       ); -- i_digital_pipeline
 
-   avm_fifo_qnice : entity work.avm_fifo
+   i_avm_fifo_qnice : entity work.avm_fifo
       generic map (
          G_WR_DEPTH     => 16,
          G_RD_DEPTH     => 16,
@@ -1237,7 +1237,7 @@ begin
          m_avm_burstcount_o    => hr_qnice_burstcount,
          m_avm_readdata_i      => hr_qnice_readdata,
          m_avm_readdatavalid_i => hr_qnice_readdatavalid
-      ); -- avm_fifo_qnice
+      ); -- i_avm_fifo_qnice
 
    --------------------------------------------------------
    -- Instantiate HyperRAM arbiter
@@ -1316,3 +1316,4 @@ begin
    hr_dq_in   <= hr_d;
 
 end architecture synthesis;
+
