@@ -11,10 +11,10 @@ use ieee.numeric_std_unsigned.all;
 
 -- It acts as a master towards both the HyperRAM and the BRAM.
 
-entity tb_crt_loader is
-end entity tb_crt_loader;
+entity tb_crt_parser is
+end entity tb_crt_parser;
 
-architecture simulation of tb_crt_loader is
+architecture simulation of tb_crt_parser is
 
    constant C_NAME_LEN : natural :=  44;
 
@@ -123,8 +123,6 @@ architecture simulation of tb_crt_loader is
    signal resp_status       : std_logic_vector( 3 downto 0);
    signal resp_error        : std_logic_vector( 3 downto 0);
    signal resp_address      : std_logic_vector(22 downto 0);
-   signal bank_lo           : std_logic_vector( 6 downto 0);
-   signal bank_hi           : std_logic_vector( 6 downto 0);
    signal avm_write         : std_logic;
    signal avm_read          : std_logic;
    signal avm_address       : std_logic_vector(21 downto 0);
@@ -143,12 +141,6 @@ architecture simulation of tb_crt_loader is
    signal cart_id           : std_logic_vector(15 downto 0);
    signal cart_exrom        : std_logic_vector( 7 downto 0);
    signal cart_game         : std_logic_vector( 7 downto 0);
-   signal bram_address      : std_logic_vector(11 downto 0);
-   signal bram_data         : std_logic_vector(15 downto 0);
-   signal bram_lo_wren      : std_logic;
-   signal bram_lo_q         : std_logic_vector(15 downto 0);
-   signal bram_hi_wren      : std_logic;
-   signal bram_hi_q         : std_logic_vector(15 downto 0);
    signal test_num          : integer := 0;
    signal running           : std_logic := '1';
    signal burst             : integer;
@@ -158,7 +150,7 @@ begin
 
    clk <= running and not clk after 5 ns;
 
-   i_crt_loader : entity work.crt_loader
+   i_crt_parser : entity work.crt_parser
       port map (
          clk_i               => clk,
          rst_i               => rst,
@@ -168,8 +160,6 @@ begin
          resp_status_o       => resp_status,
          resp_error_o        => resp_error,
          resp_address_o      => resp_address,
-         bank_lo_i           => bank_lo,
-         bank_hi_i           => bank_hi,
          avm_write_o         => avm_write,
          avm_read_o          => avm_read,
          avm_address_o       => avm_address,
@@ -187,14 +177,8 @@ begin
          cart_loading_o      => cart_loading,
          cart_id_o           => cart_id,
          cart_exrom_o        => cart_exrom,
-         cart_game_o         => cart_game,
-         bram_address_o      => bram_address,
-         bram_data_o         => bram_data,
-         bram_lo_wren_o      => bram_lo_wren,
-         bram_lo_q_i         => bram_lo_q,
-         bram_hi_wren_o      => bram_hi_wren,
-         bram_hi_q_i         => bram_hi_q
-      ); -- i_crt_loader
+         cart_game_o         => cart_game
+      ); -- i_crt_parser
 
    process (clk)
    begin
@@ -214,28 +198,6 @@ begin
          end if;
       end if;
    end process;
-
-   process (clk)
-   begin
-      if rising_edge(clk) then
-         if cart_bank_wr = '1' then
-            if cart_bank_laddr = X"8000" then
-               report "Writing " & to_hstring(cart_bank_raddr) & " to LO bank";
-               lobank(to_integer(cart_bank_num)) <= cart_bank_raddr(19 downto 13);
-               if cart_bank_size > X"2000" then
-                  report "Writing " & to_hstring(cart_bank_raddr+X"2000") & " to HI bank";
-                  hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(19 downto 13)+1;
-               end if;
-            else
-               report "Writing " & to_hstring(cart_bank_raddr) & " to HI bank";
-               hibank(to_integer(cart_bank_num)) <= cart_bank_raddr(19 downto 13);
-            end if;
-         end if;
-      end if;
-   end process;
-
-   bank_lo <= lobank(0);
-   bank_hi <= hibank(0);
 
    process
    begin

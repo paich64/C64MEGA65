@@ -1,7 +1,7 @@
-SRC += crt_loader.vhd
+SRC += ../crt_parser.vhd
 
 
-DUT ?= crt_loader
+DUT ?= crt_parser
 GENERIC ?=
 
 
