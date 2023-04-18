@@ -258,6 +258,7 @@ signal main_crt_bank_wait         : std_logic;
 signal main_crt_roml_n            : std_logic;
 signal main_crt_romh_n            : std_logic;
 
+signal main_reset_core            : std_logic;
 signal main_reset_from_prgloader  : std_logic;
 signal main_prg_trigger_run       : std_logic;
 
@@ -314,7 +315,7 @@ constant C_MENU_HDMI_16_9_60  : natural := 50;
 constant C_MENU_HDMI_4_3_50   : natural := 51;
 constant C_MENU_HDMI_5_4_50   : natural := 52;
 constant C_MENU_CRT_EMULATION : natural := 55;
-constant C_MENU_HDMI_ZOOM     : natural := 56;          
+constant C_MENU_HDMI_ZOOM     : natural := 56;
 constant C_MENU_HDMI_FF       : natural := 57;
 constant C_MENU_HDMI_DVI      : natural := 58;
 constant C_MENU_VGA_RETRO     : natural := 59;
@@ -422,10 +423,10 @@ begin
       )
       port map (
          clk_main_i             => main_clk,
-         reset_soft_i           => main_reset_core_i,
+         reset_soft_i           => main_reset_core_i or main_reset_core,
          reset_hard_i           => main_reset_m2m_i or main_reset_from_prgloader,
          pause_i                => main_pause_core_i,
-         trigger_run_i          => main_prg_trigger_run,         
+         trigger_run_i          => main_prg_trigger_run,
 
          ---------------------------
          -- Configuration options
@@ -780,6 +781,7 @@ begin
       qnice_wait_o         => qnice_crt_qnice_wait,
       main_clk_i           => main_clk,
       main_rst_i           => main_reset_m2m_i,
+      main_reset_core_o    => main_reset_core,
       main_loading_o       => main_crt_loading,
       main_id_o            => main_crt_id,
       main_exrom_o         => main_crt_exrom,

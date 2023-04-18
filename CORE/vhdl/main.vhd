@@ -236,7 +236,7 @@ architecture synthesis of main is
    signal vga_blue            : unsigned(7 downto 0);
 
    -- clock enable to derive the C64's pixel clock from the core's main clock: divide by 4
-   signal video_ce           : std_logic_vector(1 downto 0);
+   signal video_ce            : std_logic_vector(1 downto 0);
 
    -- Hard reset handling
    constant hard_rst_delay    : natural := 100_000; -- roundabout 1/30 of a second
@@ -369,8 +369,8 @@ architecture synthesis of main is
          addr_in         : in  std_logic_vector(15 downto 0);
          data_in         : in  std_logic_vector( 7 downto 0);
          addr_out        : out std_logic_vector(24 downto 0);
-         bank_lo         : out std_logic_vector(6 downto 0);
-         bank_hi         : out std_logic_vector(6 downto 0);
+         bank_lo         : out std_logic_vector( 6 downto 0);
+         bank_hi         : out std_logic_vector( 6 downto 0);
          freeze_key      : in  std_logic;
          mod_key         : in  std_logic;
          nmi             : out std_logic;

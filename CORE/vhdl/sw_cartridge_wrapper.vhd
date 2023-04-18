@@ -21,6 +21,7 @@ port (
 
    main_clk_i           : in  std_logic;
    main_rst_i           : in  std_logic;
+   main_reset_core_o    : out std_logic;
    main_loading_o       : out std_logic;
    main_id_o            : out std_logic_vector(15 downto 0);
    main_exrom_o         : out std_logic_vector( 7 downto 0);
@@ -158,6 +159,10 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_bank_raddr           : std_logic_vector(24 downto 0);
    signal hr_bank_wr              : std_logic;
 
+   signal main_resp_status        : std_logic_vector( 3 downto 0);
+   signal main_resp_status_d      : std_logic_vector( 3 downto 0);
+   signal main_reset_core         : std_logic_vector(32 downto 0);
+
    attribute mark_debug : string;
    attribute mark_debug of qnice_rst_i          : signal is "true";
    attribute mark_debug of qnice_addr_i         : signal is "true";
@@ -167,6 +172,7 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of qnice_data_o         : signal is "true";
    attribute mark_debug of qnice_wait_o         : signal is "true";
    attribute mark_debug of main_rst_i           : signal is "true";
+   attribute mark_debug of main_reset_core_o    : signal is "true";
    attribute mark_debug of main_loading_o       : signal is "true";
    attribute mark_debug of main_id_o            : signal is "true";
    attribute mark_debug of main_exrom_o         : signal is "true";
@@ -195,6 +201,23 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of hr_waitrequest_i     : signal is "true";
 
 begin
+
+   ---------------------------------------------------
+   -- Reset core when CRT file is successfully parsed
+   ---------------------------------------------------
+
+   process (main_clk_i)
+      constant C_STAT_READY : std_logic_vector(3 downto 0) := "0010"; -- Successfully parsed CRT file
+   begin
+      if rising_edge(main_clk_i) then
+         main_resp_status_d <= main_resp_status;
+         main_reset_core    <= main_reset_core(31 downto 0) & '0';
+         if main_resp_status = C_STAT_READY and main_resp_status_d /= C_STAT_READY then
+            main_reset_core <= (others => '1');
+         end if;
+         main_reset_core_o <= main_reset_core(32);
+      end if;
+   end process;
 
    ----------------------------------------
    -- Decode information from and to QNICE
@@ -376,6 +399,22 @@ begin
          dst_data_o( 7 downto 4) => qnice_resp_error,
          dst_data_o(30 downto 8) => qnice_resp_address
       ); -- i_cdc_hr2qnice
+
+
+   --------------------------------------------
+   -- Clock Domain Crossing: HyperRAM -> CORE
+   --------------------------------------------
+
+   i_cdc_hr2main : entity work.cdc_stable
+      generic map (
+         G_DATA_SIZE => 4
+      )
+      port map (
+         src_clk_i              => hr_clk_i,
+         src_data_i(3 downto 0) => hr_resp_status,
+         dst_clk_i              => main_clk_i,
+         dst_data_o(3 downto 0) => main_resp_status
+      ); -- i_cdc_hr2main
 
 
    --------------------------------------------
