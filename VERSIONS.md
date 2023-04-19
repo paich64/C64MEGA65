@@ -121,6 +121,9 @@ to achieve flicker-free without the need of slowing down by 0.25%)
   core will benefit from an easier and faster workflow when it comes to
   migrating new framework features to the core.
 
+* Now using glitch-free clock multiplexers: The user can switch the
+  "HDMI: Flicker-free" mode ON/OFF without the system performing a reset.
+
 WIP HyperRAM device support to QNICE: @TODO Describe where this is used;
 for example for the `*.crt` support as these files can become very large
 
