@@ -290,6 +290,8 @@ signal hr_crt_readdata            : std_logic_vector(15 downto 0);
 signal hr_crt_readdatavalid       : std_logic;
 signal hr_crt_waitrequest         : std_logic;
 
+signal hr_hdmi_ff                 : std_logic;
+
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
 ---------------------------------------------------------------------------------------------
@@ -392,6 +394,9 @@ begin
          end if;
          if hr_high_i = '1' then -- the core is too fast ...
             core_speed <= "01";  -- ... switch to PAL slow (49.999 Hz)
+         end if;
+         if hr_hdmi_ff = '0' then
+            core_speed <= "00";
          end if;
       end if;
    end process;
@@ -689,15 +694,17 @@ begin
    -- Clock Domain Crossing: CORE -> HyperRAM
    i_cdc_main2hr : entity work.cdc_stable
       generic map (
-         G_DATA_SIZE => 2
+         G_DATA_SIZE => 3
       )
       port map (
          src_clk_i              => main_clk,
          src_data_i(1 downto 0) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
+         src_data_i(2)          => main_osm_control_i(C_MENU_HDMI_FF),
          dst_clk_i              => hr_clk_i,
-         dst_data_o(1 downto 0) => hr_c64_exp_port_mode
+         dst_data_o(1 downto 0) => hr_c64_exp_port_mode,
+         dst_data_o(2)          => hr_hdmi_ff
       ); -- i_cdc_main2hr
-      
+
    i_cdc_qnice2main : xpm_cdc_array_single
       generic map (
          WIDTH => 2
