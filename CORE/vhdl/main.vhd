@@ -157,11 +157,12 @@ entity main is
       cartridge_bank_type_i  : in  std_logic_vector( 7 downto 0);
       cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i    : in  std_logic;
-      crt_bank_lo_o          : out std_logic_vector(6 downto 0);
-      crt_bank_hi_o          : out std_logic_vector(6 downto 0);
       crt_bank_wait_i        : in  std_logic;
-      crt_roml_n_o           : out std_logic;
-      crt_romh_n_o           : out std_logic
+      crt_lo_ram_data_i      : in  std_logic_vector(15 downto 0);
+      crt_hi_ram_data_i      : in  std_logic_vector(15 downto 0);
+      crt_addr_bus_o         : out unsigned(15 downto 0);
+      crt_bank_lo_o          : out std_logic_vector(6 downto 0);
+      crt_bank_hi_o          : out std_logic_vector(6 downto 0)
    );
 end entity main;
 
@@ -485,6 +486,8 @@ begin
 
    cpu_data_in : process(all)
    begin
+      c64_ram_data <= x"00";
+      
       -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
       -- and avoid that the KERNAL ever sees the CBM80 signature during hard reset reset.
       -- But we cannot do it like on real hardware using the exrom signal because the
@@ -495,10 +498,18 @@ begin
       -- Access the hardware cartridge
       elsif c64_exp_port_mode_i = 0 and (cart_roml_n = '0' or cart_romh_n = '0') then
          c64_ram_data <= data_from_cart;
+         
+      -- Access the simulated cartridge
+      elsif c64_exp_port_mode_i = 2 and (cart_roml_n = '0' or cart_romh_n = '0') then
+         c64_ram_data <= unsigned(crt_lo_ram_data_i(15 downto 8)) when cart_roml_n = '0' and crt_addr_bus_o(0) = '1' else
+                         unsigned(crt_lo_ram_data_i( 7 downto 0)) when cart_roml_n = '0' and crt_addr_bus_o(0) = '0' else
+                         unsigned(crt_hi_ram_data_i(15 downto 8)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '1' else
+                         unsigned(crt_hi_ram_data_i( 7 downto 0)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '0';
 
-      -- Standard access to the C64's RAM and to simulated CRT ROMs which are ingested on-demand in mega65.vhd 
+      -- Standard access to the C64's RAM 
       else
          c64_ram_data <= c64_ram_data_i;
+         
       end if;
    end process;
    
@@ -745,8 +756,7 @@ begin
       core_nmi_n           <= restore_key_n;
       core_dma             <= '0';  -- @TODO: Currently we ignore the HW cartridge's DMA request
       reu_iof              <= '0';
-      crt_roml_n_o         <= '1';  -- needs to be '1' by default to avoid unintended simulated CRT data ingestion in mega65.vhd
-      crt_romh_n_o         <= '1';  -- ditto
+      crt_addr_bus_o       <= c64_ram_addr_o;
 
       case c64_exp_port_mode_i is
 
@@ -774,8 +784,10 @@ begin
             core_game_n    <= crt_game;
             core_exrom_n   <= crt_exrom;
             core_dma       <= cartridge_loading_i or crt_bank_wait_i;
-            crt_roml_n_o   <= cart_roml_n;
-            crt_romh_n_o   <= cart_romh_n;
+            if core_umax_romh = '1' then
+               -- Ultimax mode and VIC accesses the bus: we need to translate the address, see comment about "The PLA Dissected" above 
+               crt_addr_bus_o <= "11" & c64_ram_addr_o(13 downto 0);
+            end if;
 
          when others =>
             null;

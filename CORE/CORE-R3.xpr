@@ -828,7 +828,6 @@
       </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopLib" Val="xil_defaultlib"/>
         <Option Name="TopModule" Val="tb_reu"/>
         <Option Name="TransportPathDelay" Val="0"/>
         <Option Name="TransportIntDelay" Val="0"/>

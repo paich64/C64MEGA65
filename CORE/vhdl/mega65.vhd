@@ -208,7 +208,6 @@ signal main_ram_addr              : unsigned(15 downto 0);         -- C64 addres
 signal main_ram_data_from_c64     : unsigned(7 downto 0);          -- C64 RAM data out
 signal main_ram_we                : std_logic;                     -- C64 RAM write enable
 signal main_ram_data_to_c64       : std_logic_vector( 7 downto 0); -- C64 RAM data in
-signal main_ram_data              : std_logic_vector( 7 downto 0);
 signal main_crt_lo_ram_data       : std_logic_vector(15 downto 0);
 signal main_crt_hi_ram_data       : std_logic_vector(15 downto 0);
 
@@ -252,11 +251,10 @@ signal main_crt_bank_type         : std_logic_vector( 7 downto 0);
 signal main_crt_bank_raddr        : std_logic_vector(24 downto 0);
 signal main_crt_bank_wr           : std_logic;
 
+signal main_crt_addr_bus          : unsigned(15 downto 0);
 signal main_crt_bank_lo           : std_logic_vector( 6 downto 0);
 signal main_crt_bank_hi           : std_logic_vector( 6 downto 0);
 signal main_crt_bank_wait         : std_logic;
-signal main_crt_roml_n            : std_logic;
-signal main_crt_romh_n            : std_logic;
 
 signal main_reset_core            : std_logic;
 signal main_reset_from_prgloader  : std_logic;
@@ -316,7 +314,7 @@ constant C_MENU_HDMI_4_3_50   : natural := 51;
 constant C_MENU_HDMI_5_4_50   : natural := 52;
 constant C_MENU_CRT_EMULATION : natural := 55;
 constant C_MENU_HDMI_ZOOM     : natural := 56;
-constant C_MENU_HDMI_FF       : natural := 57;
+constant C_MENU_HDMI_FF       : natural := 57;  -- Important: If this index changes, you also need to adjust CORE-R3.xdc
 constant C_MENU_HDMI_DVI      : natural := 58;
 constant C_MENU_VGA_RETRO     : natural := 59;
 
@@ -558,11 +556,12 @@ begin
          cartridge_bank_type_i  => main_crt_bank_type,
          cartridge_bank_raddr_i => main_crt_bank_raddr,
          cartridge_bank_wr_i    => main_crt_bank_wr,
-         crt_bank_lo_o          => main_crt_bank_lo,
-         crt_bank_hi_o          => main_crt_bank_hi,
          crt_bank_wait_i        => main_crt_bank_wait,
-         crt_roml_n_o           => main_crt_roml_n,
-         crt_romh_n_o           => main_crt_romh_n
+         crt_lo_ram_data_i      => main_crt_lo_ram_data, 
+         crt_hi_ram_data_i      => main_crt_hi_ram_data,
+         crt_addr_bus_o         => main_crt_addr_bus,
+         crt_bank_lo_o          => main_crt_bank_lo,
+         crt_bank_hi_o          => main_crt_bank_hi 
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------
@@ -715,7 +714,7 @@ begin
          address_a         => std_logic_vector(main_ram_addr),
          data_a            => std_logic_vector(main_ram_data_from_c64),
          wren_a            => main_ram_we,
-         q_a               => main_ram_data,
+         q_a               => main_ram_data_to_c64,
 
          -- QNICE
          clock_b           => qnice_clk_i,
@@ -795,7 +794,7 @@ begin
       main_bank_lo_i       => main_crt_bank_lo,
       main_bank_hi_i       => main_crt_bank_hi,
       main_bank_wait_o     => main_crt_bank_wait,
-      main_ram_addr_i      => std_logic_vector(main_ram_addr),
+      main_ram_addr_i      => std_logic_vector(main_crt_addr_bus),
       main_lo_ram_data_o   => main_crt_lo_ram_data,
       main_hi_ram_data_o   => main_crt_hi_ram_data,
       hr_clk_i             => hr_clk_i,
@@ -810,12 +809,6 @@ begin
       hr_readdatavalid_i   => hr_crt_readdatavalid,
       hr_waitrequest_i     => hr_crt_waitrequest
    ); -- i_sw_cartridge_wrapper
-
-   main_ram_data_to_c64 <= main_crt_lo_ram_data(15 downto 8) when main_crt_roml_n = '0' and main_ram_addr(0) = '1' else
-                           main_crt_lo_ram_data( 7 downto 0) when main_crt_roml_n = '0' and main_ram_addr(0) = '0' else
-                           main_crt_hi_ram_data(15 downto 8) when main_crt_romh_n = '0' and main_ram_addr(0) = '1' else
-                           main_crt_hi_ram_data( 7 downto 0) when main_crt_romh_n = '0' and main_ram_addr(0) = '0' else
-                           main_ram_data;
 
    -- RAM used by the REU inside i_main:
    -- Consists of a three-stage pipeline:
