@@ -206,6 +206,8 @@ signal hr_core_burstcount     : std_logic_vector(7 downto 0);
 signal hr_core_readdata       : std_logic_vector(15 downto 0);
 signal hr_core_readdatavalid  : std_logic;
 signal hr_core_waitrequest    : std_logic;
+signal hr_low                 : std_logic;
+signal hr_high                : std_logic;
 
 ---------------------------------------------------------------------------------------------
 -- qnice_clk
@@ -352,6 +354,8 @@ begin
       hr_core_readdata_o      => hr_core_readdata,
       hr_core_readdatavalid_o => hr_core_readdatavalid,
       hr_core_waitrequest_o   => hr_core_waitrequest,
+      hr_high_o               => hr_high,
+      hr_low_o                => hr_low,
 
       -- Connect to QNICE
       qnice_dvi_i             => qnice_dvi,
@@ -498,6 +502,8 @@ begin
          hr_core_readdata_i      => hr_core_readdata,
          hr_core_readdatavalid_i => hr_core_readdatavalid,
          hr_core_waitrequest_i   => hr_core_waitrequest,
+         hr_high_i               => hr_high,
+         hr_low_i                => hr_low,
          
          --------------------------------------------------------------------
          -- C64 specific ports that are not supported by the M2M framework

@@ -26,7 +26,6 @@ entity clk is
    port (
       sys_clk_i       : in  std_logic;   -- expects 100 MHz
       sys_rstn_i      : in  std_logic;   -- Asynchronous, asserted low
-      qnice_clk_i     : in  std_logic;   -- QNICE clock is needed for p_resetman 
 
       -- switchable clock for the C64 core
       -- 00 = PAL, as close as possuble to the C64's original clock:
@@ -45,11 +44,6 @@ entity clk is
 end entity clk;
 
 architecture rtl of clk is
-
--- reset management (p_resetman)
-signal old_core_speed     : unsigned(1 downto 0);
-signal reset_c64_mmcm     : std_logic;
-signal qnice_rst          : std_logic;
 
 -- MMCM signals
 signal main_fb_mmcm_orig  : std_logic;
@@ -114,7 +108,7 @@ begin
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
-         RST                 => reset_c64_mmcm
+         RST                 => '0'
       ); -- i_clk_c64_orig
 
    ---------------------------------------------------------------------------------------
@@ -168,10 +162,11 @@ begin
          CLKINSTOPPED        => open,
          CLKFBSTOPPED        => open,
          PWRDWN              => '0',
-         RST                 => reset_c64_mmcm
+         RST                 => '0'
       ); -- i_clk_c64_slow
 
    -- This is a glitch-free mux switching between the fast and the slow clock.
+   -- The select signal is treated asynchronuously to the input clocks.
    bufgmux_ctrl_inst : bufgmux_ctrl
       port map (
          i0 => main_clk_mmcm_orig,  -- 1-bit input: clock input (s=0)
@@ -179,23 +174,6 @@ begin
          s  => core_speed_i(0),     -- 1-bit input: clock select
          o  => main_clk_mmcm        -- 1-bit output: clock output
       );
-
-   p_resetman : process(qnice_clk_i)
-   begin
-      if rising_edge(qnice_clk_i) then
-         if qnice_rst then
-            old_core_speed <= core_speed_i;
-            reset_c64_mmcm <= '1';
-         else
-            if core_speed_i(1) /= old_core_speed(1) then
-               reset_c64_mmcm <= '1';
-               old_core_speed <= core_speed_i;
-            else
-               reset_c64_mmcm <= '0';
-            end if;
-         end if;
-      end if;
-   end process p_resetman;
 
    -------------------------------------------------------------------------------------
    -- Output buffering
@@ -217,7 +195,7 @@ begin
          DEST_SYNC_FF    => 10
       )
       port map (
-         src_arst  => not (main_locked_orig and main_locked_slow and sys_rstn_i) or reset_c64_mmcm,   -- 1-bit input: Source reset signal.
+         src_arst  => not (main_locked_orig and main_locked_slow and sys_rstn_i),   -- 1-bit input: Source reset signal.
          dest_clk  => main_clk_o,       -- 1-bit input: Destination clock.
          dest_arst => main_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                         -- This output is registered.

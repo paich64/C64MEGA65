@@ -140,6 +140,8 @@ port (
    hr_core_readdata_i       : in  std_logic_vector(15 downto 0);
    hr_core_readdatavalid_i  : in  std_logic;
    hr_core_waitrequest_i    : in  std_logic;
+   hr_high_i                : in  std_logic; -- Core is too fast
+   hr_low_i                 : in  std_logic; -- Core is too slow
 
    --------------------------------------------------------------------
    -- C64 specific ports that are not supported by the M2M framework
@@ -364,7 +366,6 @@ begin
       port map (
          sys_clk_i         => CLK,             -- expects 100 MHz
          sys_rstn_i        => RESET_M2M_N,     -- Asynchronous, asserted low
-         qnice_clk_i       => qnice_clk_i,
 
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-free, 2=NTSC
 
@@ -381,8 +382,19 @@ begin
 
    c64_ntsc          <= '0'; -- @TODO: For now, we hardcode PAL mode
 
-   -- needs to be in qnice clock domain
-   core_speed        <= "01" when qnice_osm_control_i(C_MENU_HDMI_FF) else "00";
+   -- Switch between two clock rates for the CORE, corresponding to frame rates that
+   -- closely "embrace" the output rate of exactly 50 Hz (determined by the HDMI resolution).
+   process (hr_clk_i)
+   begin
+      if rising_edge(hr_clk_i) then
+         if hr_low_i = '1' then  -- the core is too slow ...
+            core_speed <= "00";  -- ... switch to PAL original (50.124 Hz)
+         end if;
+         if hr_high_i = '1' then -- the core is too fast ...
+            core_speed <= "01";  -- ... switch to PAL slow (49.999 Hz)
+         end if;
+      end if;
+   end process;
 
    -- needs to be in main clock domain
    c64_clock_speed   <= CORE_CLK_SPEED;
