@@ -242,7 +242,7 @@ begin
          cart_bank_size  => main_bank_size,                    -- input
          cart_bank_num   => main_bank_num,                     -- input
          cart_bank_type  => main_bank_type,                    -- input
-         cart_bank_raddr => main_bank_raddr,                   -- input
+         cart_bank_raddr => "000000" & main_bank_num(5 downto 0) & X"000" & "0", -- input
          cart_bank_wr    => main_bank_wr,                      -- input
          exrom           => cart_exrom,                        -- output
          game            => cart_game,                         -- output

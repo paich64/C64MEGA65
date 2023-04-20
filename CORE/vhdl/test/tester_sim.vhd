@@ -135,8 +135,9 @@ begin
 
    begin
 
-      main_rst_o <= '1';
-      qnice_ce_o <= '0';
+      tb_ram_addr_o <= (others => '0');
+      main_rst_o    <= '1';
+      qnice_ce_o    <= '0';
       wait until qnice_rst_i = '0';
       wait until falling_edge(qnice_clk_i);
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_IDLE);
@@ -155,11 +156,8 @@ begin
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_READY);
       wait for 100 ns;
 
-      main_rst_o <= '0';                  -- Now the cartridge.v resets, and this changes bank_hi to 1.
+      main_rst_o <= '0';                  -- Now the cartridge.v resets
       wait for 2 us;
-
-      wait until tb_bank_wait_i = '0';    -- HI bank needs to be reloaded
-      wait for 100 ns;
 
       c64_cpu_verify(X"FFFC", X"00");     -- Incorrect values are read here.
       c64_cpu_verify(X"FFFD", X"E0");     -- Incorrect values are read here.

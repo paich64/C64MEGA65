@@ -853,7 +853,7 @@ begin
          cart_bank_size  => cartridge_bank_size_i,             -- input
          cart_bank_num   => cartridge_bank_num_i,              -- input
          cart_bank_type  => cartridge_bank_type_i,             -- input
-         cart_bank_raddr => cartridge_bank_raddr_i,            -- input
+         cart_bank_raddr => "000000" & cartridge_bank_num_i(5 downto 0) & X"000" & "0", -- input
          cart_bank_wr    => cartridge_bank_wr_i,               -- input
          exrom           => crt_exrom,                         -- output
          game            => crt_game,                          -- output
