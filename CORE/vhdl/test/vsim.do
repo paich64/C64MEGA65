@@ -31,5 +31,5 @@ vlog \
 vsim -voptargs=+acc -t ps -gG_FILE_NAME=/home/mfj/apigquest_1.02_ef.crt tb_sw_cartridge_wrapper glbl
 
 do wave.do
-run 100us
+run 200us
 

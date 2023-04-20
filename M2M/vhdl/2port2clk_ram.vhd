@@ -77,9 +77,9 @@ begin
    end if;
 end;
 
-signal      ram               : memory_t := InitRAM(ROM_FILE);
+shared variable ram           : memory_t := InitRAM(ROM_FILE);
 attribute   ram_style         : string;
-attribute   ram_style of ram  : signal is "block";
+attribute   ram_style of ram  : variable is "block";
 
 signal      address_a_int     : integer;
 signal      address_b_int     : integer;
@@ -134,14 +134,14 @@ begin
       if not FALLING_A then
          if rising_edge(clock_a) then
             if wren_a = '1' then
-               ram(address_a_int) <= data_a;
+               ram(address_a_int) := data_a;
             end if;
             q_a <= ram(address_a_int);         
          end if;
       else
          if falling_edge(clock_a) then
             if wren_a = '1' then
-               ram(address_a_int) <= data_a;
+               ram(address_a_int) := data_a;
             end if;
             q_a <= ram(address_a_int);         
          end if;      
@@ -154,14 +154,14 @@ begin
       if not FALLING_B then
          if rising_edge(clock_b) then
             if wren_b = '1' then
-               ram(address_b_int) <= data_b;
+               ram(address_b_int) := data_b;
             end if;
             q_b <= ram(address_b_int);         
          end if;
       else
          if falling_edge(clock_b) then
             if wren_b = '1' then
-               ram(address_b_int) <= data_b;
+               ram(address_b_int) := data_b;
             end if;
             q_b <= ram(address_b_int);         
          end if;      

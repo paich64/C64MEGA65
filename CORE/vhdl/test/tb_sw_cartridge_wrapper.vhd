@@ -137,7 +137,6 @@ begin
 
    hr_rst    <= '1', '0' after 100 ns;
    qnice_rst <= '1', '0' after 100 ns;
-   main_rst  <= '1', '0' after 100 ns;
 
 
    main_ram_data_to_c64 <= main_lo_ram_data(15 downto 8) when tb_roml = '1' and tb_ram_addr(0) = '1' else
@@ -161,6 +160,8 @@ begin
          qnice_readdata_i  => qnice_readdata,
          qnice_wait_i      => qnice_wait,
          qnice_length_i    => qnice_length,
+         main_clk_i        => main_clk,
+         main_rst_o        => main_rst,
          tb_loading_i      => main_loading,
          tb_bank_wait_i    => main_bank_wait,
          tb_ram_addr_o     => tb_ram_addr,

@@ -14,6 +14,8 @@ entity tester_sim is
       qnice_wait_i      : in  std_logic;
       qnice_length_i    : in  natural;
 
+      main_clk_i        : in  std_logic;
+      main_rst_o        : out std_logic;
       tb_addr_o         : out std_logic_vector(15 downto 0);
       tb_data_o         : out std_logic_vector( 7 downto 0);
       tb_ioe_o          : out std_logic;
@@ -51,12 +53,19 @@ begin
    tb_mod_key_o    <= '0';
    tb_nmi_ack_o    <= '0';
 
+   -- Simplified PLA
+   tb_roml_o <= '1' when tb_ram_addr_o(15 downto 13) = "100"      -- 0x8000 - 0x9FFF
+           else '0';
+   tb_romh_o <= '1' when tb_ram_addr_o(15 downto 13) = "101"      -- 0xA000 - 0xBFFF
+                      or tb_ram_addr_o(15 downto 13) = "111"      -- 0xE000 - 0xFFFF
+           else '0';
+
    tb_length <= std_logic_vector(to_unsigned(2*qnice_length_i, 32));
 
    p_test : process
 
       procedure qnice_cpu_write(addr : std_logic_vector(27 downto 0);
-                          data : std_logic_vector(15 downto 0)) is
+                                data : std_logic_vector(15 downto 0)) is
       begin
          qnice_addr_o      <= addr;
          qnice_writedata_o <= data;
@@ -70,7 +79,7 @@ begin
       end procedure qnice_cpu_write;
 
       procedure qnice_cpu_verify(addr : std_logic_vector(27 downto 0);
-                          data : std_logic_vector(15 downto 0)) is
+                                 data : std_logic_vector(15 downto 0)) is
       begin
          qnice_addr_o      <= addr;
          qnice_we_o        <= '0';
@@ -80,12 +89,27 @@ begin
             wait until falling_edge(qnice_clk_i);
          end loop;
          assert qnice_readdata_i = data
-            report "ERROR: Reading from address " & to_hstring(addr) &
+            report "ERROR: QNICE Reading from address " & to_hstring(addr) &
                " returned " & to_hstring(qnice_readdata_i) & ", but expected " &
                to_hstring(data)
             severity error;
          qnice_ce_o        <= '0';
       end procedure qnice_cpu_verify;
+
+      procedure c64_cpu_verify(addr : std_logic_vector(15 downto 0);
+                               data : std_logic_vector( 7 downto 0)) is
+      begin
+         tb_ram_addr_o <= addr;
+         -- Wait 1 CPU cycle
+         for i in 31 downto 0 loop
+            wait until falling_edge(main_clk_i);
+         end loop;
+         assert tb_ram_data_i = data
+            report "ERROR: C64 Reading from address " & to_hstring(addr) &
+               " returned " & to_hstring(tb_ram_data_i) & ", but expected " &
+               to_hstring(data)
+            severity error;
+      end procedure c64_cpu_verify;
 
       constant C_CRT_STATUS    : std_logic_vector(27 downto 0) := X"FFFF000";
       constant C_CRT_FS_LO     : std_logic_vector(27 downto 0) := X"FFFF001";
@@ -111,6 +135,7 @@ begin
 
    begin
 
+      main_rst_o <= '1';
       qnice_ce_o <= '0';
       wait until qnice_rst_i = '0';
       wait until falling_edge(qnice_clk_i);
@@ -130,14 +155,20 @@ begin
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_READY);
       wait for 100 ns;
 
+      main_rst_o <= '0';                  -- Now the cartridge.v resets, and this changes bank_hi to 1.
+      wait for 2 us;
+
+      wait until tb_bank_wait_i = '0';    -- HI bank needs to be reloaded
+      wait for 100 ns;
+
+      c64_cpu_verify(X"FFFC", X"00");     -- Incorrect values are read here.
+      c64_cpu_verify(X"FFFD", X"E0");     -- Incorrect values are read here.
+      wait for 100 ns;
+
       tb_running_o <= '0';
       report "Test finished";
       wait;
    end process p_test;
-
-   tb_ram_addr_o <= X"0000";
-   tb_roml_o     <= '0';
-   tb_romh_o     <= '0';
 
 end architecture simulation;
 
