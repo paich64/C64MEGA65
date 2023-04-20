@@ -528,6 +528,7 @@ begin
      )
      port map (
        src_clk_i                => hr_clk_i,
+       src_rst_i                => hr_rst_i,
        src_valid_i              => hr_bank_wr,
        src_data_i(15 downto  0) => hr_bank_laddr,
        src_data_i(31 downto 16) => hr_bank_size,

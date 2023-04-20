@@ -28,7 +28,8 @@ vcom -2008 \
 vlog \
    /opt/Xilinx/Vivado/2021.2/data/verilog/src/glbl.v
 
-vsim -voptargs=+acc -t ps -gG_FILE_NAME=/home/mfj/Super_Mario_Bros_64_v1.2_-_Zeropaige.crt tb_sw_cartridge_wrapper glbl
+vsim -voptargs=+acc -t ps -gG_FILE_NAME=/home/mfj/apigquest_1.02_ef.crt tb_sw_cartridge_wrapper glbl
+
 do wave.do
 run 100us
 
