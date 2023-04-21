@@ -74,6 +74,7 @@ architecture synthesis of crt_cacher is
    signal hi_load_done  : std_logic;
    signal lo_load       : std_logic;
    signal lo_load_done  : std_logic;
+   signal restart       : std_logic;
 
    attribute mark_debug : string;
    attribute mark_debug of cart_valid_i        : signal is "true";
@@ -102,10 +103,14 @@ architecture synthesis of crt_cacher is
    attribute mark_debug of hi_load_done        : signal is "true";
    attribute mark_debug of lo_load             : signal is "true";
    attribute mark_debug of lo_load_done        : signal is "true";
+   attribute mark_debug of restart             : signal is "true";
 
 begin
 
-   bank_wait_o <= '1' when state = READ_HI_ST or state = READ_LO_ST
+   bank_wait_o <= '1' when state = READ_HI_ST
+                        or state = READ_LO_ST
+                        or hi_load = '1'
+                        or lo_load = '1'
              else '0';
 
    p_banks : process (clk_i)
@@ -169,10 +174,14 @@ begin
                      hi_load_done <= '1';
                      state        <= IDLE_ST;
                   elsif bram_address_o(6 downto 0) = X"7E" then
-                     avm_write_o      <= '0';
-                     avm_read_o       <= '1';
-                     avm_address_o    <= avm_address_o + X"80";
-                     avm_burstcount_o <= X"80"; -- Read 256 bytes
+                     if restart = '1' then
+                        state <= IDLE_ST;
+                     else
+                        avm_write_o      <= '0';
+                        avm_read_o       <= '1';
+                        avm_address_o    <= avm_address_o + X"80";
+                        avm_burstcount_o <= X"80"; -- Read 256 bytes
+                     end if;
                   end if;
                end if;
 
@@ -185,10 +194,14 @@ begin
                      lo_load_done <= '1';
                      state        <= IDLE_ST;
                   elsif bram_address_o(6 downto 0) = X"7E" then
-                     avm_write_o      <= '0';
-                     avm_read_o       <= '1';
-                     avm_address_o    <= avm_address_o + X"80";
-                     avm_burstcount_o <= X"80"; -- Read 256 bytes
+                     if restart = '1' then
+                        state <= IDLE_ST;
+                     else
+                        avm_write_o      <= '0';
+                        avm_read_o       <= '1';
+                        avm_address_o    <= avm_address_o + X"80";
+                        avm_burstcount_o <= X"80"; -- Read 256 bytes
+                     end if;
                   end if;
                end if;
 
@@ -231,9 +244,11 @@ begin
             -- Detect change in bank addresses
             if bank_lo_d /= bank_lo_i then
                lo_load <= '1';
+               restart <= '1';
             end if;
             if bank_hi_d /= bank_hi_i then
                hi_load <= '1';
+               restart <= '1';
             end if;
          end if;
 
@@ -242,9 +257,14 @@ begin
             hi_load <= '1';
          end if;
 
+         if state = IDLE_ST then
+            restart <= '0';
+         end if;
+
          if rst_i = '1' then
             lo_load <= '0';
             hi_load <= '0';
+            restart <= '0';
          end if;
       end if;
    end process p_crt_load;
