@@ -152,6 +152,8 @@ port (
    hr_core_readdata_o      : out std_logic_vector(15 downto 0);
    hr_core_readdatavalid_o : out std_logic;
    hr_core_waitrequest_o   : out std_logic;
+   hr_high_o               : out std_logic; -- Core is too fast
+   hr_low_o                : out std_logic; -- Core is too slow
 
    -- QNICE control signals
    qnice_dvi_i             : in  std_logic;
@@ -1314,6 +1316,21 @@ begin
    hr_d       <= hr_dq_out   when hr_dq_oe   = '1' else (others => 'Z');
    hr_rwds_in <= hr_rwds;
    hr_dq_in   <= hr_d;
+
+   -- Monitor the read and write accesses to the HyperRAM by the ascaler.
+   i_hdmi_flicker_free : entity work.hdmi_flicker_free
+      generic map (
+         G_THRESHOLD_LOW  => X"0000_1000",  -- @TODO: Optimize these threshold values
+         G_THRESHOLD_HIGH => X"0000_2000"
+      )
+      port map (
+         hr_clk_i       => hr_clk_x1,
+         hr_write_i     => hr_dig_write,
+         hr_read_i      => hr_dig_read,
+         hr_address_i   => hr_dig_address,
+         high_o         => hr_high_o,       -- Core is too fast
+         low_o          => hr_low_o         -- Core is too slow
+      ); -- i_hdmi_flicker_free
 
 end architecture synthesis;
 

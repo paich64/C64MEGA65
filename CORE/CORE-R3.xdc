@@ -23,10 +23,8 @@ create_generated_clock -name hdmi_576p_clk [get_pins M2M/i_framework/i_clk_m2m/i
 create_generated_clock -name main_clk      [get_pins M2M/CORE/clk_gen/i_clk_c64_orig/CLKOUT0]
 
 ## Assume the core is running at the original (slightly faster) clock.
-##   qnice_osm_control_i[57] is connected to CORE/clk_gen/bufgmux_ctrl_inst.S
-##   see constant C_MENU_HDMI_FF in CORE/vhdl/mega65.vhd
 ## This halves the number of set_false_path needed.
-set_case_analysis 0 [get_nets M2M/CORE/qnice_osm_control_i[57]]
+set_case_analysis 0 [get_pins M2M/CORE/core_speed_reg[0]/Q]
 
 ## Clock divider sdcard_clk that creates the 25 MHz used by sd_spi.vhd
 create_generated_clock -name sdcard_clk -source [get_pins M2M/i_framework/i_clk_m2m/i_clk_qnice/CLKOUT0] -divide_by 2 [get_pins M2M/i_framework/QNICE_SOC/sd_card/Slow_Clock_25MHz_reg/Q]
