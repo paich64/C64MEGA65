@@ -15,6 +15,8 @@ Debugging tasks:
 
 Development tasks:
 
+* Code cleanup: Remove debug signals
+
 * Finalize HW cartridge support
 
 * Finalize SW cartridge support
@@ -52,6 +54,11 @@ Documentation tasks:
   it comes to "special" i.e. non-game carts: list of officially supported
   carts and list of don't work (maybe in tests?)
 * Testbench(es) create README.md in test folder?
+* EasyFlash and other homebrew hardware cartridges: Prevent misalignment!
+  Use Protoparts and other links. And link to this discussion:
+  https://discord.com/channels/719326990221574164/794775503818588200/1099263044686729336
+  and
+  https://discord.com/channels/719326990221574164/794775503818588200/1099279097609338881
 
 MiSTer2MEGA65 Framework
 
