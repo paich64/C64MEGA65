@@ -1,7 +1,5 @@
 Debugging tasks:
 
-* Support Olivier in debugging his cartridge
-
 * Black screen from time to time on startup (independent if a cartridge is
   inserted or not): HDMI-only: VGA shows a normal C64 start screen including
   a blinking cursor. But on HDMI the screen stays black but you can use
