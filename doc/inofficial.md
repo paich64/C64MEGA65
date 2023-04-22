@@ -21,4 +21,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A12  | 03/23/23 | dcb2196 | Dual SID support (aka Stero SID)
 | WIP-V5-A13  | 03/26/23 | d0f9fa2 | Support for Ultimax cartridges
 | WIP-V5-A14  | 04/07/23 | 7711653 | Support for the EasyFlash 1CR: Play games and also flash the cartridge using your MEGA65
-| WIP-V5-A15  | 04/22/23 |         | Support for CRT file loading (simulated cartridges) and direct PRG file loading; fully dynamic HDMI flicker-free mode
+| WIP-V5-A15  | 04/22/23 | 07f2b90 | Support for CRT file loading (simulated cartridges) and direct PRG file loading; fully dynamic HDMI flicker-free mode
