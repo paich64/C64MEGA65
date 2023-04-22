@@ -36,6 +36,23 @@ HDMI:
 
 * Get Michael's HDMI monitor to work
 
+Documentation tasks:
+
+* Write a special EasyFlash 1CR file and put it in doc and link to it from
+  various places (README.md, FAQ.md). ALso see FAQ.md.
+* Update README.md: Cartridges (Supported, not supported, Details, how to
+  use, don't do's, Ultimax and either flashing new core #0 or insert it
+  while the MEGA65 is running (share a bunch of Discord links that shows
+  that also the latter one works fine - were users confirmed this)); separate
+  document for how to update core #0?; Some important DualSID usage hints,
+  including take care of address and the pseudo stereo mode "Same as left
+  SID port"; IEC? OTHER topics that stem from the
+  new features?
+* FAQ update, cartridge don't work cases: Ultimax and plastic case and when
+  it comes to "special" i.e. non-game carts: list of officially supported
+  carts and list of don't work (maybe in tests?)
+* Testbench(es) create README.md in test folder?
+
 MiSTer2MEGA65 Framework
 
 * Migration of the progress made on the C64.

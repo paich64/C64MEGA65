@@ -178,6 +178,7 @@ VD_DTY_ST_GET   INCRB
                 INCRB                           ; DECRB done in _VDDTY_GETINFO
                 MOVE    R8, R2                  ; R2: amount of vdrives
                 MOVE    SCRATCH_HEX, R5         ; R5: current status
+                MOVE    0, @R5                  ; clear scratch buffer
                 RSUB    _VDDTY_GETINFO, 1
                 MOVE    SCRATCH_HEX, R5         ; due to DECRB in subroutine
 

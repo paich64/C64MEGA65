@@ -177,11 +177,15 @@ OPTM_INIT       INCRB
                 MOVE    R11, @R0
                 MOVE    OPTM_DY, R0
                 MOVE    R12, @R0
+                MOVE    OPTM_MENULEVEL, R0
+                MOVE    0, @R0
+                MOVE    OPTM_MAINSEL, R0
+                MOVE    0, @R0
                 MOVE    OPTM_CUR_SEL, R0
                 MOVE    0, @R0
                 MOVE    OPTM_SSMS, R0
                 MOVE    0, @R0
-                MOVE    OPTM_MENULEVEL, R0
+                MOVE    OPTM_TEMP, R0
                 MOVE    0, @R0
 
                 DECRB
@@ -925,6 +929,64 @@ _OPTM_RUN_SM_4  ADD     R0, SP                  ; restore SP / free memory
                 RBRA    OPTM_RUN, 1             ; restart _OPTM_RUN
 
 _OPTM_RUN_SPCE  .ASCII_W " "
+
+; ----------------------------------------------------------------------------
+; OPTM_SELECT: Selects a menu item using the OPTM_SEL_* constants. Use this
+; instead of directly calling OPTM_FP_SELECT, since OPTM_FP_SELECT does not
+; do coordinate translation.
+;
+; Input:
+;  R8: Cursor position in flat coordinates
+;  R9: OPTM_SEL_* constant
+;
+; Output:
+;  R8: Unchanged: Position in flat coordinates
+;
+; Semantics of "cursor position" in R8: It is the position within OPTM_ITEMS
+; and OPTM_GROUPS (both from config.vhd), i.e. R8 considers the menu to be
+; a big flat list without submenus.
+; ----------------------------------------------------------------------------
+
+OPTM_SELECT     SYSCALL(enter, 1)
+
+                MOVE    OPTM_DATA, R0           ; R0: size of data structure
+                MOVE    @R0, R0
+                ADD     OPTM_IR_SIZE, R0
+                MOVE    @R0, R0
+                MOVE    R8, R2                  ; R2: sel. item in flat coord
+                MOVE    SP, R3                  ; R3: for restoring the SP
+
+                ; DEBUG
+                MOVE    SP, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)
+
+                ; Create the menu/submenu structure (array) on the stack
+                ; (see OPTM_RUN for details)
+                SUB     R0, SP                  ; reserve memory on the stack
+                SUB     1, SP                   ; 1st word in array = size
+                MOVE    SP, R8
+                MOVE    R0, R9
+                RSUB    _OPTM_STRUCT, 1
+                SUB     1, SP                   ; reserve space for (SP+1)
+                MOVE    R9, @--SP               ; size of (sub)men at (SP+0)
+
+                ; Select menu item
+                MOVE    OPTM_FP_SELECT, R7      ; select line
+                MOVE    R2, R8                  ; R8: selected item
+                RSUB    _OPTM_R_F2M, 1          ; convert R8 to screen coord.
+                MOVE    OPTM_SEL_SEL, R9
+                RSUB    _OPTM_CALL, 1
+                
+                MOVE    R3, SP                  ; restore stack pointer
+
+                ; DEBUG
+                MOVE    SP, R8
+                SYSCALL(puthex, 1)
+                SYSCALL(crlf, 1)        
+
+                SYSCALL(leave, 1)
+                RET
 
 ; ----------------------------------------------------------------------------
 ; Internal helper functions

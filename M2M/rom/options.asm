@@ -796,7 +796,7 @@ _ROSMS_RET      SYSCALL(leave, 1)
 ; Will be copied to the HEAP, together with the configuration data from
 ; config.vhd and then modified to point to the right addresses on the heap
 OPT_MENU_DATA   .DW     SCR$CLR, SCR$PRINTFRAME, OPT_PRINTSTR, SCR$PRINTSTRXY
-                .DW     OPT_PRINTLINE, OPTM_SELECT, OPT_MENU_GETKEY
+                .DW     OPT_PRINTLINE, OPT_SELECT, OPT_MENU_GETKEY
                 .DW     OPTM_CB_SEL, OPTM_CB_SHOW, FATAL,
                 .DW     M2M$OPT_SEL_MULTI, 0    ; selection char + zero term.:
                 .DW     M2M$OPT_SEL_SINGLE, 0   ; multi- and single-select
@@ -894,7 +894,7 @@ _PRINTLN_L      MOVE    M2M$NC_SH, @R3++
 ; R9=1: select
 ; R9=2: print headline/title highlighted
 ; R9=3: select highlighted headline/title
-OPTM_SELECT     INCRB
+OPT_SELECT      INCRB
 
                 MOVE    OPTM_X, R0              ; R0: x start coordinate
                 MOVE    @R0, R0

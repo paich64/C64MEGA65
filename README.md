@@ -4,6 +4,9 @@ short/long resets.
 
 @TODO: Add description for dual SID
 
+@TODO: Since the menu structure changed (submenus): DVI might sit somewhere
+else, so re-do the recipe
+
 Commodore 64 for MEGA65
 =======================
 

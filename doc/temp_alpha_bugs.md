@@ -1,11 +1,7 @@
 ### On Screen Menu
 
 * There are known bugs in the on-screen-menu such as showing menu items as
-  "selected" that are not (for example after you opened the Help menu) or
-  such as showing the menu selection bar at odd positions.
-
-* Strange (no reproduction steps yet) "dual selection" in some menu 
-  close/reopen/maybe reset inbetween cases
+  "selected" that are not (for example after you opened the Help menu)
 
 ### System
 

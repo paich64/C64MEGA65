@@ -10,6 +10,15 @@ the invisibly menu) to pressing NOSCROLL+SLOT#. Others?
 Also link to a description (README.md?) what module types are supported
 at all.
 
+@TODO: EF1CR and other cartridges: They need to sit in a plastic shell
+(show photo), you must not insert just a PCB into the MEGA65 because you will
+never be able to do it well enough so that it works realiably.
+
+https://discord.com/channels/719326990221574164/794775503818588200/1098518494213058692
+
+@TODO: We need an EF1CR documentation MD in the doc folder and we need to
+describe also the "don't dos" there including some info from Daniel.
+
 I did not see it for a long time. But just in case the strange "sometimes the
 screen is black directly after startup" does not go away: Talk about pressing
 the reset button briefly to get it started.
