@@ -26,7 +26,7 @@ entity main is
       pause_i                : in  std_logic;              -- Pull high to pause the core
 
       -- Trigger the sequence RUN<Return> to autostart PRG files
-      trigger_run_i           : in std_logic;
+      trigger_run_i          : in  std_logic;
 
       ---------------------------
       -- Configuration options
@@ -42,7 +42,7 @@ entity main is
 
       -- SID and CIA versions
       c64_sid_ver_i          : in  std_logic_vector(1 downto 0); -- SID version, 0=6581, 1=8580, low bit = left SID
-      c64_sid_port_i         : in unsigned(2 downto 0);    -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
+      c64_sid_port_i         : in  unsigned(2 downto 0);    -- Right SID Port: 0=same as left, 1=DE00, 2=D420, 3=D500, 4=DF00
       c64_cia_ver_i          : in  std_logic;               -- CIA version: 0=6526 "old", 1=8521 "new"
 
       -- Mode selection for Expansion Port (aka Cartridge Port):
@@ -97,9 +97,9 @@ entity main is
 
       -- C64 RAM: No address latching necessary and the chip can always be enabled
       c64_ram_addr_o         : out unsigned(15 downto 0);    -- C64 address bus
-      c64_ram_data_o         : out unsigned(7 downto 0);     -- C64 RAM data out
+      c64_ram_data_o         : out unsigned( 7 downto 0);     -- C64 RAM data out
       c64_ram_we_o           : out std_logic;                -- C64 RAM write enable
-      c64_ram_data_i         : in  unsigned(7 downto 0);     -- C64 RAM data in
+      c64_ram_data_i         : in  unsigned( 7 downto 0);     -- C64 RAM data in
 
       -- C64 IEC handled by QNICE
       c64_clk_sd_i           : in  std_logic;                -- "sd card write clock" for floppy drive internal dual clock RAM buffer
@@ -134,15 +134,15 @@ entity main is
       cart_romh_io           : inout std_logic;
       cart_io1_io            : inout std_logic;
       cart_io2_io            : inout std_logic;
-      cart_d_io              : inout unsigned(7 downto 0);
+      cart_d_io              : inout unsigned( 7 downto 0);
       cart_a_io              : inout unsigned(15 downto 0);
 
       -- RAM Expansion Unit
       ext_cycle_o            : out std_logic;
       reu_cycle_i            : in  std_logic;
       reu_addr_o             : out std_logic_vector(24 downto 0);
-      reu_dout_o             : out std_logic_vector(7 downto 0);
-      reu_din_i              : in  std_logic_vector(7 downto 0);
+      reu_dout_o             : out std_logic_vector( 7 downto 0);
+      reu_din_i              : in  std_logic_vector( 7 downto 0);
       reu_we_o               : out std_logic;
       reu_cs_o               : out std_logic;
 
@@ -161,152 +161,151 @@ entity main is
       crt_lo_ram_data_i      : in  std_logic_vector(15 downto 0);
       crt_hi_ram_data_i      : in  std_logic_vector(15 downto 0);
       crt_addr_bus_o         : out unsigned(15 downto 0);
-      crt_bank_lo_o          : out std_logic_vector(6 downto 0);
-      crt_bank_hi_o          : out std_logic_vector(6 downto 0)
+      crt_bank_lo_o          : out std_logic_vector( 6 downto 0);
+      crt_bank_hi_o          : out std_logic_vector( 6 downto 0)
    );
 end entity main;
 
 architecture synthesis of main is
 
    -- Generic MiSTer C64 signals
-   signal c64_pause           : std_logic;
-   signal c64_drive_led       : std_logic;
+   signal c64_pause            : std_logic;
+   signal c64_drive_led        : std_logic;
 
    -- directly connect the C64's CIA1 to the emulated keyboard matrix within keyboard.vhd
-   signal cia1_pa_i           : std_logic_vector(7 downto 0);
-   signal cia1_pa_o           : std_logic_vector(7 downto 0);
-   signal cia1_pb_i           : std_logic_vector(7 downto 0);
-   signal cia1_pb_o           : std_logic_vector(7 downto 0);
+   signal cia1_pa_i            : std_logic_vector(7 downto 0);
+   signal cia1_pa_o            : std_logic_vector(7 downto 0);
+   signal cia1_pb_i            : std_logic_vector(7 downto 0);
+   signal cia1_pb_o            : std_logic_vector(7 downto 0);
 
-   -- the Restore key is special: it creates a non maskable interrupt (NMI)
-   signal restore_key_n       : std_logic;
+   -- the Restore key is special : it creates a non maskable interrupt (NMI)
+   signal restore_key_n        : std_logic;
 
    -- signals for RAM
-   signal c64_ram_ce          : std_logic;
-   signal c64_ram_we          : std_logic;
-   signal c64_ram_data        : unsigned(7 downto 0);
+   signal c64_ram_ce           : std_logic;
+   signal c64_ram_we           : std_logic;
+   signal c64_ram_data         : unsigned(7 downto 0);
 
-   -- 18-bit SID from C64: Needs to go through audio processing ported from Verilog to VHDL from MiSTer's c64.sv
-   signal c64_sid_l           : std_logic_vector(17 downto 0);
-   signal c64_sid_r           : std_logic_vector(17 downto 0);
-   signal alo                 : std_logic_vector(15 downto 0);
-   signal aro                 : std_logic_vector(15 downto 0);
+   -- 18-bit SID from C64 : Needs to go through audio processing ported from Verilog to VHDL from MiSTer's c64.sv
+   signal c64_sid_l            : std_logic_vector(17 downto 0);
+   signal c64_sid_r            : std_logic_vector(17 downto 0);
+   signal alo                  : std_logic_vector(15 downto 0);
+   signal aro                  : std_logic_vector(15 downto 0);
 
    -- IEC drives
-   signal iec_drive_ce        : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
-   signal iec_dce_sum         : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
+   signal iec_drive_ce         : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
+   signal iec_dce_sum          : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
 
-   signal iec_img_mounted_i   : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal iec_img_readonly_i  : std_logic;
-   signal iec_img_size_i      : std_logic_vector(31 downto 0);
-   signal iec_img_type_i      : std_logic_vector(1 downto 0);
+   signal iec_img_mounted_i    : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal iec_img_readonly_i   : std_logic;
+   signal iec_img_size_i       : std_logic_vector(31 downto 0);
+   signal iec_img_type_i       : std_logic_vector( 1 downto 0);
 
-   signal iec_drives_reset    : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal vdrives_mounted     : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal cache_dirty         : std_logic_vector(G_VDNUM - 1 downto 0);
-   signal prevent_reset       : std_logic;
+   signal iec_drives_reset     : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal vdrives_mounted      : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal cache_dirty          : std_logic_vector(G_VDNUM - 1 downto 0);
+   signal prevent_reset        : std_logic;
 
-   signal c64_iec_clk_o       : std_logic;
-   signal c64_iec_clk_i       : std_logic;
-   signal c64_iec_atn_o       : std_logic;
-   signal c64_iec_data_o      : std_logic;
-   signal c64_iec_data_i      : std_logic;
-   signal iec_sd_lba_o        : vd_vec_array(G_VDNUM - 1 downto 0)(31 downto 0);
-   signal iec_sd_blk_cnt_o    : vd_vec_array(G_VDNUM - 1 downto 0)(5 downto 0);
-   signal iec_sd_rd_o         : vd_std_array(G_VDNUM - 1 downto 0);
-   signal iec_sd_wr_o         : vd_std_array(G_VDNUM - 1 downto 0);
-   signal iec_sd_ack_i        : vd_std_array(G_VDNUM - 1 downto 0);
-   signal iec_sd_buf_addr_i   : std_logic_vector(13 downto 0);
-   signal iec_sd_buf_data_i   : std_logic_vector(7 downto 0);
-   signal iec_sd_buf_data_o   : vd_vec_array(G_VDNUM - 1 downto 0)(7 downto 0);
-   signal iec_sd_buf_wr_i     : std_logic;
-   signal iec_par_stb_i       : std_logic;
-   signal iec_par_stb_o       : std_logic;
-   signal iec_par_data_i      : std_logic_vector(7 downto 0);
-   signal iec_par_data_o      : std_logic_vector(7 downto 0);
-   signal iec_rom_std_i       : std_logic;
-   signal iec_rom_addr_i      : std_logic_vector(15 downto 0);
-   signal iec_rom_data_i      : std_logic_vector(7 downto 0);
-   signal iec_rom_wr_i        : std_logic;
+   signal c64_iec_clk_o        : std_logic;
+   signal c64_iec_clk_i        : std_logic;
+   signal c64_iec_atn_o        : std_logic;
+   signal c64_iec_data_o       : std_logic;
+   signal c64_iec_data_i       : std_logic;
+   signal iec_sd_lba_o         : vd_vec_array(G_VDNUM - 1 downto 0)(31 downto 0);
+   signal iec_sd_blk_cnt_o     : vd_vec_array(G_VDNUM - 1 downto 0)( 5 downto 0);
+   signal iec_sd_rd_o          : vd_std_array(G_VDNUM - 1 downto 0);
+   signal iec_sd_wr_o          : vd_std_array(G_VDNUM - 1 downto 0);
+   signal iec_sd_ack_i         : vd_std_array(G_VDNUM - 1 downto 0);
+   signal iec_sd_buf_addr_i    : std_logic_vector(13 downto 0);
+   signal iec_sd_buf_data_i    : std_logic_vector( 7 downto 0);
+   signal iec_sd_buf_data_o    : vd_vec_array(G_VDNUM - 1 downto 0)(7 downto 0);
+   signal iec_sd_buf_wr_i      : std_logic;
+   signal iec_par_stb_i        : std_logic;
+   signal iec_par_stb_o        : std_logic;
+   signal iec_par_data_i       : std_logic_vector(7 downto 0);
+   signal iec_par_data_o       : std_logic_vector(7 downto 0);
+   signal iec_rom_std_i        : std_logic;
+   signal iec_rom_addr_i       : std_logic_vector(15 downto 0);
+   signal iec_rom_data_i       : std_logic_vector( 7 downto 0);
+   signal iec_rom_wr_i         : std_logic;
 
    -- unprocessed video output of the C64 core
-   signal vga_hs              : std_logic;
-   signal vga_vs              : std_logic;
-   signal vga_red             : unsigned(7 downto 0);
-   signal vga_green           : unsigned(7 downto 0);
-   signal vga_blue            : unsigned(7 downto 0);
+   signal vga_hs               : std_logic;
+   signal vga_vs               : std_logic;
+   signal vga_red              : unsigned(7 downto 0);
+   signal vga_green            : unsigned(7 downto 0);
+   signal vga_blue             : unsigned(7 downto 0);
 
-   -- clock enable to derive the C64's pixel clock from the core's main clock: divide by 4
-   signal video_ce            : std_logic_vector(1 downto 0);
+   -- clock enable to derive the C64's pixel clock from the core's main clock : divide by 4
+   signal video_ce             : std_logic_vector(1 downto 0);
 
    -- Hard reset handling
-   constant hard_rst_delay    : natural := 100_000; -- roundabout 1/30 of a second
-   signal reset_core_n        : std_logic;
-   signal hard_reset_n        : std_logic;
-   signal hard_rst_counter    : natural := 0;
-   signal system_cold_start   : natural range 0 to 4 := 4;
+   constant hard_rst_delay     : natural := 100_000; -- roundabout 1/30 of a second
+   signal reset_core_n         : std_logic;
+   signal hard_reset_n         : std_logic;
+   signal hard_rst_counter     : natural := 0;
+   signal system_cold_start    : natural range 0 to 4 := 4;
 
    -- Core's simulated expansion port
-   signal core_roml           : std_logic;
-   signal core_romh           : std_logic;
-   signal core_ioe            : std_logic;
-   signal core_iof            : std_logic;
-   signal core_nmi_n          : std_logic;
-   signal core_nmi_ack        : std_logic;
-   signal core_irq_n          : std_logic;
-   signal core_dma            : std_logic;
-   signal core_exrom_n        : std_logic;
-   signal core_game_n         : std_logic;
-   signal core_umax_romh      : std_logic;
-   signal core_io_rom         : std_logic;
-   signal core_io_ext         : std_logic;
-   signal core_io_data        : unsigned(7 downto 0);
-   signal core_dotclk         : std_logic;
-   signal core_phi0           : std_logic;
-   signal core_phi2           : std_logic;
+   signal core_roml            : std_logic;
+   signal core_romh            : std_logic;
+   signal core_ioe             : std_logic;
+   signal core_iof             : std_logic;
+   signal core_nmi_n           : std_logic;
+   signal core_nmi_ack         : std_logic;
+   signal core_irq_n           : std_logic;
+   signal core_dma             : std_logic;
+   signal core_exrom_n         : std_logic;
+   signal core_game_n          : std_logic;
+   signal core_umax_romh       : std_logic;
+   signal core_io_rom          : std_logic;
+   signal core_io_ext          : std_logic;
+   signal core_io_data         : unsigned(7 downto 0);
+   signal core_dotclk          : std_logic;
+   signal core_phi0            : std_logic;
+   signal core_phi2            : std_logic;
+   signal cartridge_bank_raddr : std_logic_vector(24 downto 0);
 
    -- Hardware Expansion Port (aka Cartridge Port)
-   signal cart_roml_n         : std_logic;
-   signal cart_romh_n         : std_logic;
-   signal cart_io1_n          : std_logic;
-   signal cart_io2_n          : std_logic;
-   signal cart_nmi_n          : std_logic;
-   signal cart_irq_n          : std_logic;
-   signal cart_dma_n          : std_logic;
-   signal cart_exrom_n        : std_logic;
-   signal cart_game_n         : std_logic;
-   signal data_from_cart      : unsigned(7 downto 0);
+   signal cart_roml_n          : std_logic;
+   signal cart_romh_n          : std_logic;
+   signal cart_io1_n           : std_logic;
+   signal cart_io2_n           : std_logic;
+   signal cart_nmi_n           : std_logic;
+   signal cart_irq_n           : std_logic;
+   signal cart_dma_n           : std_logic;
+   signal cart_exrom_n         : std_logic;
+   signal cart_game_n          : std_logic;
+   signal data_from_cart       : unsigned(7 downto 0);
 
    -- RAM Expansion Unit (REU)
-   signal reu_cfg             : std_logic_vector(1 downto 0);
-   signal reu_dma_req         : std_logic;
-   signal reu_dma_cycle       : std_logic;
-   signal reu_dma_addr        : std_logic_vector(15 downto 0);
-   signal reu_dma_dout        : std_logic_vector(7 downto 0);
-   signal reu_dma_din         : unsigned(7 downto 0);
-   signal reu_dma_we          : std_logic;
-   signal reu_irq             : std_logic;
-   signal reu_iof             : std_logic;
-   signal reu_oe              : std_logic;
-   signal reu_dout            : unsigned(7 downto 0);
+   signal reu_cfg              : std_logic_vector(1 downto 0);
+   signal reu_dma_req          : std_logic;
+   signal reu_dma_cycle        : std_logic;
+   signal reu_dma_addr         : std_logic_vector(15 downto 0);
+   signal reu_dma_dout         : std_logic_vector( 7 downto 0);
+   signal reu_dma_din          : unsigned(7 downto 0);
+   signal reu_dma_we           : std_logic;
+   signal reu_irq              : std_logic;
+   signal reu_iof              : std_logic;
+   signal reu_oe               : std_logic;
+   signal reu_dout             : unsigned(7 downto 0);
 
    -- Signals from the cartridge.v module (software defined cartridges)
-   signal crt_addr            : std_logic_vector(24 downto 0);
-   signal crt_dout            : std_logic_vector(7 downto 0);
-   signal crt_we              : std_logic;
-   signal crt_cs              : std_logic;
-   signal crt_io_rom          : std_logic;
-   signal crt_oe              : std_logic;
-   signal crt_io_ext          : std_logic;
-   signal crt_io_data         : std_logic_vector(7 downto 0);
-   signal crt_nmi             : std_logic;
-   signal crt_exrom           : std_logic;
-   signal crt_game            : std_logic;
+   signal crt_addr             : std_logic_vector(24 downto 0);
+   signal crt_dout             : std_logic_vector( 7 downto 0);
+   signal crt_we               : std_logic;
+   signal crt_cs               : std_logic;
+   signal crt_io_rom           : std_logic;
+   signal crt_oe               : std_logic;
+   signal crt_io_ext           : std_logic;
+   signal crt_io_data          : std_logic_vector(7 downto 0);
+   signal crt_nmi              : std_logic;
+   signal crt_exrom            : std_logic;
+   signal crt_game             : std_logic;
 
-
-
-   signal dbg_joybtn          : std_logic;
-   signal dbg_cart_dir        : std_logic;
+   signal dbg_joybtn           : std_logic;
+   signal dbg_cart_dir         : std_logic;
 
    -- Verilog file from MiSTer core
    component reu
@@ -318,20 +317,20 @@ architecture synthesis of main is
          dma_req     : out std_logic;
          dma_cycle   : in  std_logic;
          dma_addr    : out std_logic_vector(15 downto 0);
-         dma_dout    : out std_logic_vector(7 downto 0);
-         dma_din     : in  std_logic_vector(7 downto 0);
+         dma_dout    : out std_logic_vector( 7 downto 0);
+         dma_din     : in  std_logic_vector( 7 downto 0);
          dma_we      : out std_logic;
          -- Connect to the HyperRAM
          ram_cycle   : in  std_logic;
          ram_addr    : out std_logic_vector(24 downto 0);
-         ram_dout    : out std_logic_vector(7 downto 0);
-         ram_din     : in  std_logic_vector(7 downto 0);
+         ram_dout    : out std_logic_vector( 7 downto 0);
+         ram_din     : in  std_logic_vector( 7 downto 0);
          ram_we      : out std_logic;
          ram_cs      : out std_logic;
          -- CPU register interface to the REU controller
          cpu_addr    : in  unsigned(15 downto 0);
-         cpu_dout    : in  unsigned(7 downto 0);
-         cpu_din     : out unsigned(7 downto 0);
+         cpu_dout    : in  unsigned( 7 downto 0);
+         cpu_din     : out unsigned( 7 downto 0);
          cpu_we      : in  std_logic;
          cpu_cs      : in  std_logic;
          irq         : out std_logic
@@ -409,6 +408,8 @@ architecture synthesis of main is
    attribute mark_debug of crt_bank_hi_o          : signal is "true";
    attribute mark_debug of crt_bank_lo_o          : signal is "true";
    attribute mark_debug of crt_bank_wait_i        : signal is "true";
+   attribute mark_debug of crt_lo_ram_data_i      : signal is "true";
+   attribute mark_debug of crt_hi_ram_data_i      : signal is "true";
    attribute mark_debug of crt_cs                 : signal is "true";
    attribute mark_debug of crt_exrom              : signal is "true";
    attribute mark_debug of crt_game               : signal is "true";
@@ -487,7 +488,7 @@ begin
    cpu_data_in : process(all)
    begin
       c64_ram_data <= x"00";
-      
+
       -- We are emulating what is written here: https://www.c64-wiki.com/wiki/Reset_Button
       -- and avoid that the KERNAL ever sees the CBM80 signature during hard reset reset.
       -- But we cannot do it like on real hardware using the exrom signal because the
@@ -498,7 +499,7 @@ begin
       -- Access the hardware cartridge
       elsif c64_exp_port_mode_i = 0 and (cart_roml_n = '0' or cart_romh_n = '0') then
          c64_ram_data <= data_from_cart;
-         
+
       -- Access the simulated cartridge
       elsif c64_exp_port_mode_i = 2 and (cart_roml_n = '0' or cart_romh_n = '0') then
          c64_ram_data <= unsigned(crt_lo_ram_data_i(15 downto 8)) when cart_roml_n = '0' and crt_addr_bus_o(0) = '1' else
@@ -506,13 +507,13 @@ begin
                          unsigned(crt_hi_ram_data_i(15 downto 8)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '1' else
                          unsigned(crt_hi_ram_data_i( 7 downto 0)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '0';
 
-      -- Standard access to the C64's RAM 
+      -- Standard access to the C64's RAM
       else
          c64_ram_data <= c64_ram_data_i;
-         
+
       end if;
    end process;
-   
+
    -- RAM write enable also needs to check for chip enable
    c64_ram_we_o <= c64_ram_ce and c64_ram_we;
 
@@ -710,9 +711,9 @@ begin
          cart_phi2_o       <= core_phi2;
          cart_dotclock_o   <= core_dotclk;
 
-         cart_nmi_n        <= cart_nmi_i; 
-         cart_irq_n        <= cart_irq_i;       
-         cart_dma_n        <= cart_dma_i; 
+         cart_nmi_n        <= cart_nmi_i;
+         cart_irq_n        <= cart_irq_i;
+         cart_dma_n        <= cart_dma_i;
          cart_exrom_n      <= cart_exrom_i;
          cart_game_n       <= cart_game_i;
 
@@ -720,14 +721,14 @@ begin
          -- we need to treat the address bus as a bi-directional port
          cart_addr_en_o    <= '0';
          if core_umax_romh = '0' then
-            cart_a_io         <= c64_ram_addr_o;            
+            cart_a_io         <= c64_ram_addr_o;
          -- Ultimax mode and VIC accesses the bus
          else
             -- According to "The PLA Dissected", the address lines A12 to A15 of the C64 address bus are pulled up by
             -- RP4 whenever the VIC-II has the bus, so they are %1111 usually.
             cart_a_io         <= "11" & c64_ram_addr_o(13 downto 0);
-         end if;  
-      
+         end if;
+
          -- Switch the data lines bi-directionally so that the CPU can also
          -- write to the cartridge, e.g. for bank switching
          cart_data_en_o       <= '0';
@@ -768,7 +769,7 @@ begin
             core_nmi_n     <= cart_nmi_n and restore_key_n;
             core_io_ext    <= core_ioe or core_iof;
             core_io_data   <= data_from_cart;
-            
+
          -- Simulate 1750 REU 512KB
          when 1 =>
             core_io_ext    <= reu_oe;
@@ -785,7 +786,7 @@ begin
             core_exrom_n   <= crt_exrom;
             core_dma       <= cartridge_loading_i or crt_bank_wait_i;
             if core_umax_romh = '1' then
-               -- Ultimax mode and VIC accesses the bus: we need to translate the address, see comment about "The PLA Dissected" above 
+               -- Ultimax mode and VIC accesses the bus: we need to translate the address, see comment about "The PLA Dissected" above
                crt_addr_bus_o <= "11" & c64_ram_addr_o(13 downto 0);
             end if;
 
@@ -841,6 +842,17 @@ begin
    -- In our implementation we are not using part 3 above, but we are
    -- relying on part 1 and 2 above.
 
+   -- This is a hack, but it works! This MiSTer component already does
+   -- a lookup from bank number of HyperRAM address.
+   -- In other words, bank_lo and bank_hi contain the upper bits of the
+   -- cartridge_bank_raddr input. In this implementation we use our own lookup
+   -- (located in crt_cacher.vhd), so we want to "disable" the mapping
+   -- done by MiSTer. We do this by ensuring that the mapping is essentially
+   -- the identity transformation. In other words, even though the MiSTer is
+   -- performing a mapping, the output result of this mapping (in bank_lo
+   -- and bank_hi) is precisely the bank number we want.
+   cartridge_bank_raddr <= "000000" & cartridge_bank_num_i(5 downto 0) & X"000" & "0";
+
    i_cartridge : component cartridge
       port map (
          clk32           => clk_main_i,                        -- input
@@ -853,7 +865,7 @@ begin
          cart_bank_size  => cartridge_bank_size_i,             -- input
          cart_bank_num   => cartridge_bank_num_i,              -- input
          cart_bank_type  => cartridge_bank_type_i,             -- input
-         cart_bank_raddr => "000000" & cartridge_bank_num_i(5 downto 0) & X"000" & "0", -- input
+         cart_bank_raddr => cartridge_bank_raddr,              -- input
          cart_bank_wr    => cartridge_bank_wr_i,               -- input
          exrom           => crt_exrom,                         -- output
          game            => crt_game,                          -- output
@@ -879,7 +891,7 @@ begin
          nmi             => crt_nmi,                           -- output (TBD: inverted of cart_nmi_n)
          nmi_ack         => core_nmi_ack                       -- input
       ); -- i_cartridge
-  
+
    --------------------------------------------------------------------------------------------------
    -- Generate video output for the M2M framework
    --------------------------------------------------------------------------------------------------
@@ -926,7 +938,7 @@ begin
       port map (
          clk_main_i           => clk_main_i,
          reset_i              => not reset_core_n,
-         
+
          -- Trigger the sequence RUN<Return> to autostart PRG files
          trigger_run_i        => trigger_run_i,
 

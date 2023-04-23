@@ -113,6 +113,10 @@ begin
                         or lo_load = '1'
              else '0';
 
+   -- Even though MiSTer implements a similar mapping in the file cartridge.v, MiSTer's
+   -- implementation only stores the upper bits of the HyperRAM address, which is not
+   -- enough for us. Therefore we replicate the mapping here, but retain the complete
+   -- HyperRAM address.
    p_banks : process (clk_i)
    begin
       if rising_edge(clk_i) then
