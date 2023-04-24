@@ -23,4 +23,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A14  | 04/07/23 | 7711653 | Support for the EasyFlash 1CR: Play games and also flash the cartridge using your MEGA65
 | WIP-V5-A15  | 04/22/23 | 07f2b90 | Support for CRT file loading (simulated cartridges) and direct PRG file loading; fully dynamic HDMI flicker-free mode
 | WIP-V5-A16  | 04/24/23 | 7162767 | Support for the hardware IEC port of the MEGA65: Connect disk drives, printers, SD2IEC, etc.
-| WIP-V5-A17  | 04/24/23 |         | Add support for EasyFlash's 256 bytes of RAM or in general support for cartridge RAM that is located at $DExx and $DFxx (256 bytes each)
+| WIP-V5-A17  | 04/24/23 | b0d47b2 | Add support for EasyFlash's 256 bytes of RAM or in general support for cartridge RAM that is located at $DExx and $DFxx (256 bytes each)
