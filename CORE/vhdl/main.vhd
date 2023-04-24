@@ -174,7 +174,11 @@ entity main is
       crt_bank_wait_i        : in  std_logic;
       crt_lo_ram_data_i      : in  std_logic_vector(15 downto 0);
       crt_hi_ram_data_i      : in  std_logic_vector(15 downto 0);
+      crt_ioe_ram_data_i     : in  std_logic_vector( 7 downto 0);
+      crt_iof_ram_data_i     : in  std_logic_vector( 7 downto 0);
       crt_addr_bus_o         : out unsigned(15 downto 0);
+      crt_ioe_we_o           : out std_logic;
+      crt_iof_we_o           : out std_logic;
       crt_bank_lo_o          : out std_logic_vector( 6 downto 0);
       crt_bank_hi_o          : out std_logic_vector( 6 downto 0)
    );
@@ -401,9 +405,9 @@ architecture synthesis of main is
    attribute mark_debug : string;
    attribute mark_debug of c64_ram_addr_o         : signal is "true";
    attribute mark_debug of c64_ram_ce             : signal is "true";
+   attribute mark_debug of c64_ram_data_i         : signal is "true";
    attribute mark_debug of c64_ram_data_o         : signal is "true";
    attribute mark_debug of c64_ram_data           : signal is "true";
-   attribute mark_debug of c64_ram_data_i         : signal is "true";
    attribute mark_debug of c64_ram_we             : signal is "true";
    attribute mark_debug of cartridge_bank_laddr_i : signal is "true";
    attribute mark_debug of cartridge_bank_num_i   : signal is "true";
@@ -424,25 +428,30 @@ architecture synthesis of main is
    attribute mark_debug of core_romh              : signal is "true";
    attribute mark_debug of core_roml              : signal is "true";
    attribute mark_debug of core_umax_romh         : signal is "true";
+   attribute mark_debug of crt_addr_bus_o         : signal is "true";
    attribute mark_debug of crt_addr               : signal is "true";
    attribute mark_debug of crt_bank_hi_o          : signal is "true";
    attribute mark_debug of crt_bank_lo_o          : signal is "true";
    attribute mark_debug of crt_bank_wait_i        : signal is "true";
-   attribute mark_debug of crt_lo_ram_data_i      : signal is "true";
-   attribute mark_debug of crt_hi_ram_data_i      : signal is "true";
    attribute mark_debug of crt_cs                 : signal is "true";
    attribute mark_debug of crt_exrom              : signal is "true";
    attribute mark_debug of crt_game               : signal is "true";
+   attribute mark_debug of crt_hi_ram_data_i      : signal is "true";
    attribute mark_debug of crt_io_data            : signal is "true";
+   attribute mark_debug of crt_ioe_ram_data_i     : signal is "true";
+   attribute mark_debug of crt_ioe_we_o           : signal is "true";
+   attribute mark_debug of crt_iof_ram_data_i     : signal is "true";
+   attribute mark_debug of crt_iof_we_o           : signal is "true";
    attribute mark_debug of crt_io_rom             : signal is "true";
+   attribute mark_debug of crt_lo_ram_data_i      : signal is "true";
    attribute mark_debug of crt_nmi                : signal is "true";
    attribute mark_debug of crt_oe                 : signal is "true";
    attribute mark_debug of crt_we                 : signal is "true";
    attribute mark_debug of ext_cycle_o            : signal is "true";
    attribute mark_debug of reset_core_n           : signal is "true";
-   attribute mark_debug of restore_key_n          : signal is "true";
-   attribute mark_debug of reset_soft_i           : signal is "true";
    attribute mark_debug of reset_hard_i           : signal is "true";
+   attribute mark_debug of reset_soft_i           : signal is "true";
+   attribute mark_debug of restore_key_n          : signal is "true";
 
 begin
 
@@ -521,11 +530,13 @@ begin
          c64_ram_data <= data_from_cart;
 
       -- Access the simulated cartridge
-      elsif c64_exp_port_mode_i = 2 and (cart_roml_n = '0' or cart_romh_n = '0') then
+      elsif c64_exp_port_mode_i = 2 and (cart_roml_n = '0' or cart_romh_n = '0' or core_ioe = '1' or core_iof = '1') then
          c64_ram_data <= unsigned(crt_lo_ram_data_i(15 downto 8)) when cart_roml_n = '0' and crt_addr_bus_o(0) = '1' else
                          unsigned(crt_lo_ram_data_i( 7 downto 0)) when cart_roml_n = '0' and crt_addr_bus_o(0) = '0' else
                          unsigned(crt_hi_ram_data_i(15 downto 8)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '1' else
-                         unsigned(crt_hi_ram_data_i( 7 downto 0)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '0';
+                         unsigned(crt_hi_ram_data_i( 7 downto 0)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '0' else
+                         unsigned(crt_ioe_ram_data_i)             when core_ioe = '1'                                else
+                         unsigned(crt_iof_ram_data_i);
 
       -- Standard access to the C64's RAM
       else
@@ -911,6 +922,9 @@ begin
          nmi             => crt_nmi,                           -- output (TBD: inverted of cart_nmi_n)
          nmi_ack         => core_nmi_ack                       -- input
       ); -- i_cartridge
+
+   crt_ioe_we_o <= core_ioe and crt_we;
+   crt_iof_we_o <= core_iof and crt_we;
 
    --------------------------------------------------------------------------------------------------
    -- Generate video output for the M2M framework

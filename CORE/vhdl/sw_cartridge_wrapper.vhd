@@ -36,8 +36,13 @@ port (
    main_bank_hi_i       : in  std_logic_vector( 6 downto 0);
    main_bank_wait_o     : out std_logic;
    main_ram_addr_i      : in  std_logic_vector(15 downto 0);
+   main_ram_data_i      : in  std_logic_vector( 7 downto 0);
+   main_ioe_we_i        : in  std_logic;
+   main_iof_we_i        : in  std_logic;
    main_lo_ram_data_o   : out std_logic_vector(15 downto 0);
    main_hi_ram_data_o   : out std_logic_vector(15 downto 0);
+   main_ioe_ram_data_o  : out std_logic_vector( 7 downto 0);
+   main_iof_ram_data_o  : out std_logic_vector( 7 downto 0);
 
    hr_clk_i             : in  std_logic;
    hr_rst_i             : in  std_logic;
@@ -612,6 +617,50 @@ begin
          wren_b     => hr_bram_hi_wren,
          q_b        => open
       ); -- crt_lo_ram
+
+   ioe_ram : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH => 8,         -- 256 bytes
+         DATA_WIDTH => 8,
+         FALLING_A  => false,
+         FALLING_B  => false
+      )
+      port map (
+         -- C64 MiSTer core
+         clock_a    => main_clk_i,
+         address_a  => main_ram_addr_i(7 downto 0),
+         data_a     => main_ram_data_i,
+         wren_a     => main_ioe_we_i,
+         q_a        => main_ioe_ram_data_o,
+
+         clock_b    => '0',
+         address_b  => (others => '0'),
+         data_b     => (others => '0'),
+         wren_b     => '0',
+         q_b        => open
+      ); -- ioe_ram
+
+   iof_ram : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH => 8,         -- 256 bytes
+         DATA_WIDTH => 8,
+         FALLING_A  => false,
+         FALLING_B  => false
+      )
+      port map (
+         -- C64 MiSTer core
+         clock_a    => main_clk_i,
+         address_a  => main_ram_addr_i(7 downto 0),
+         data_a     => main_ram_data_i,
+         wren_a     => main_iof_we_i,
+         q_a        => main_iof_ram_data_o,
+
+         clock_b    => '0',
+         address_b  => (others => '0'),
+         data_b     => (others => '0'),
+         wren_b     => '0',
+         q_b        => open
+      ); -- iof_ram
 
 end architecture synthesis;
 

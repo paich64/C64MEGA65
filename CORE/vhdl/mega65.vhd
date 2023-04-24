@@ -225,6 +225,8 @@ signal main_ram_we                : std_logic;                     -- C64 RAM wr
 signal main_ram_data_to_c64       : std_logic_vector( 7 downto 0); -- C64 RAM data in
 signal main_crt_lo_ram_data       : std_logic_vector(15 downto 0);
 signal main_crt_hi_ram_data       : std_logic_vector(15 downto 0);
+signal main_crt_ioe_ram_data      : std_logic_vector( 7 downto 0);
+signal main_crt_iof_ram_data      : std_logic_vector( 7 downto 0);
 
 -- RAM Expansion Unit
 signal main_ext_cycle             : std_logic;
@@ -267,6 +269,8 @@ signal main_crt_bank_raddr        : std_logic_vector(24 downto 0);
 signal main_crt_bank_wr           : std_logic;
 
 signal main_crt_addr_bus          : unsigned(15 downto 0);
+signal main_crt_ioe_we            : std_logic;
+signal main_crt_iof_we            : std_logic;
 signal main_crt_bank_lo           : std_logic_vector( 6 downto 0);
 signal main_crt_bank_hi           : std_logic_vector( 6 downto 0);
 signal main_crt_bank_wait         : std_logic;
@@ -601,9 +605,13 @@ begin
          cartridge_bank_raddr_i => main_crt_bank_raddr,
          cartridge_bank_wr_i    => main_crt_bank_wr,
          crt_bank_wait_i        => main_crt_bank_wait,
-         crt_lo_ram_data_i      => main_crt_lo_ram_data, 
+         crt_lo_ram_data_i      => main_crt_lo_ram_data,
          crt_hi_ram_data_i      => main_crt_hi_ram_data,
+         crt_ioe_ram_data_i     => main_crt_ioe_ram_data,
+         crt_iof_ram_data_i     => main_crt_iof_ram_data,
          crt_addr_bus_o         => main_crt_addr_bus,
+         crt_ioe_we_o           => main_crt_ioe_we,
+         crt_iof_we_o           => main_crt_iof_we,
          crt_bank_lo_o          => main_crt_bank_lo,
          crt_bank_hi_o          => main_crt_bank_hi 
       ); -- i_main
@@ -841,8 +849,13 @@ begin
       main_bank_hi_i       => main_crt_bank_hi,
       main_bank_wait_o     => main_crt_bank_wait,
       main_ram_addr_i      => std_logic_vector(main_crt_addr_bus),
+      main_ram_data_i      => std_logic_vector(main_ram_data_from_c64),
+      main_ioe_we_i        => main_crt_ioe_we,
+      main_iof_we_i        => main_crt_iof_we,
       main_lo_ram_data_o   => main_crt_lo_ram_data,
       main_hi_ram_data_o   => main_crt_hi_ram_data,
+      main_ioe_ram_data_o  => main_crt_ioe_ram_data,
+      main_iof_ram_data_o  => main_crt_iof_ram_data,
       hr_clk_i             => hr_clk_i,
       hr_rst_i             => hr_rst_i,
       hr_write_o           => hr_crt_write,
