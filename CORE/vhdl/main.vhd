@@ -108,7 +108,21 @@ entity main is
       c64_qnice_data_o       : out std_logic_vector(15 downto 0);
       c64_qnice_ce_i         : in  std_logic;
       c64_qnice_we_i         : in  std_logic;
-
+      
+      -- CBM-488/IEC serial (hardware) port
+      iec_hardware_port_en   : in  std_logic;
+      iec_reset_n_o          : out std_logic;
+      iec_atn_n_o            : out std_logic;
+      iec_clk_en_o           : out std_logic;
+      iec_clk_n_i            : in  std_logic;
+      iec_clk_n_o            : out std_logic;
+      iec_data_en_o          : out std_logic;
+      iec_data_n_i           : in  std_logic;
+      iec_data_n_o           : out std_logic;
+      iec_srq_en_o           : out std_logic;
+      iec_srq_n_i            : in  std_logic;
+      iec_srq_n_o            : out std_logic;    
+   
       -- C64 Expansion Port (aka Cartridge Port) control lines
       -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
       cart_ctrl_en_o         : out std_logic;
@@ -192,7 +206,18 @@ architecture synthesis of main is
    signal alo                  : std_logic_vector(15 downto 0);
    signal aro                  : std_logic_vector(15 downto 0);
 
-   -- IEC drives
+   -- C64's IEC signals
+   signal c64_iec_clk_o        : std_logic;
+   signal c64_iec_clk_i        : std_logic;
+   signal c64_iec_atn_o        : std_logic;
+   signal c64_iec_data_o       : std_logic;
+   signal c64_iec_data_i       : std_logic;
+
+   -- Hardware IEC port
+   signal hw_iec_clk_n_i       : std_logic;
+   signal hw_iec_data_n_i      : std_logic;
+
+   -- Simulated IEC drives   
    signal iec_drive_ce         : std_logic;      -- chip enable for iec_drive (clock divider, see generate_drive_ce below)
    signal iec_dce_sum          : integer := 0;   -- caution: we expect 32-bit integers here and we expect the initialization to 0
 
@@ -205,12 +230,7 @@ architecture synthesis of main is
    signal vdrives_mounted      : std_logic_vector(G_VDNUM - 1 downto 0);
    signal cache_dirty          : std_logic_vector(G_VDNUM - 1 downto 0);
    signal prevent_reset        : std_logic;
-
-   signal c64_iec_clk_o        : std_logic;
-   signal c64_iec_clk_i        : std_logic;
-   signal c64_iec_atn_o        : std_logic;
-   signal c64_iec_data_o       : std_logic;
-   signal c64_iec_data_i       : std_logic;
+  
    signal iec_sd_lba_o         : vd_vec_array(G_VDNUM - 1 downto 0)(31 downto 0);
    signal iec_sd_blk_cnt_o     : vd_vec_array(G_VDNUM - 1 downto 0)( 5 downto 0);
    signal iec_sd_rd_o          : vd_std_array(G_VDNUM - 1 downto 0);
@@ -629,10 +649,10 @@ begin
          cnt1_o      => open,
 
          -- IEC
-         iec_clk_i   => c64_iec_clk_i,
+         iec_clk_i   => c64_iec_clk_i and hw_iec_clk_n_i,
          iec_clk_o   => c64_iec_clk_o,
          iec_atn_o   => c64_iec_atn_o,
-         iec_data_i  => c64_iec_data_i,
+         iec_data_i  => c64_iec_data_i and hw_iec_data_n_i,
          iec_data_o  => c64_iec_data_o,
 
          c64rom_addr => "00000000000000",
@@ -1009,6 +1029,63 @@ begin
 
    audio_left_o  <= signed(alo);
    audio_right_o <= signed(aro);
+   
+   --------------------------------------------------------------------------------------------------
+   -- Hardware IEC port
+   --------------------------------------------------------------------------------------------------
+   
+   handle_hardware_iec_port : process(all)
+   begin      
+      iec_reset_n_o     <= '1';
+      iec_atn_n_o       <= '1';
+      iec_clk_en_o      <= '0';
+      iec_clk_n_o       <= '1';
+      iec_data_en_o     <= '0';
+      iec_data_n_o      <= '1';
+
+      -- Since IEC is a bus, we need to connect the input lines coming from the hardware port
+      -- to all participants of the bus. At this time these are:
+      --    C64: i_fpga64_sid_iec using the iec_ signals
+      --    Simulated disk drives: i_iec_drive using the iec_ signals
+      -- All signals are LOW active, so we need to AND them.
+      -- As soon as we have more participants than just i_fpga64_sid_iec and i_iec_drive we will
+      -- need to have some more signals for the bus instead of directly connecting them as we do today.
+      hw_iec_clk_n_i    <= '1';
+      hw_iec_data_n_i   <= '1';
+      
+      -- According to https://www.c64-wiki.com/wiki/Serial_Port, the C64 does not use the SRQ line and therefore
+      -- we are at this time also not using it. The wiki article states, hat even though it is not used, it is
+      -- still connected with the read line of the cassette port (although this can only detect signal edges,
+      -- but not signal levels).
+      -- @TODO: Investigate, if there are some edge-case use-cases that are using this "feature" and
+      -- in this case enhance our simulation
+      iec_srq_en_o      <= '0';   
+      iec_srq_n_o       <= '1';
+        
+      if iec_hardware_port_en = '1' then
+         -- The IEC bus is low active. By default, we let the hardware bus lines float by setting the NC7SZ126P5X
+         -- output driver's OE to zero. We hardcode all output lines to zero and as soon as we need to pull a line
+         -- to zero, we activate the NC7SZ126P5X OE by setting it to one. This means that the actual signalling is
+         -- done by changing the NC7SZ126P5X OE instead of changing the output lines to high/low. This ensures
+         -- that the lines keep floating when we have "nothing to say" to the bus.
+         iec_clk_n_o       <= '0';
+         iec_data_n_o      <= '0';
+         
+         -- These lines are not connected to a NC7SZ126P5X since the C64 is supposed to be the only
+         -- party in the bus who is allowed to pull this line to zero
+         iec_reset_n_o     <= reset_core_n;
+         iec_atn_n_o       <= c64_iec_atn_o;
+
+         -- Read from the hardware IEC port (see comment above: We need to connect this to i_fpga64_sid_iec and i_iec_drive)
+         hw_iec_clk_n_i    <= iec_clk_n_i; 
+         hw_iec_data_n_i   <= iec_data_n_i;
+                           
+         -- Write to the IEC port by pulling the signals low and otherwise let them float (using the NC7SZ126P5X chip)
+         -- We need to invert the logic, because if the C64 wants to pull something to LOW we need to ENABLE the NC7SZ126P5X's OE
+         iec_clk_en_o      <= not c64_iec_clk_o;
+         iec_data_en_o     <= not c64_iec_data_o;
+      end if;
+   end process;
 
    --------------------------------------------------------------------------------------------------
    -- MiSTer IEC drives
@@ -1046,10 +1123,10 @@ begin
          pause          => pause_i,
 
          -- interface to the C64 core
-         iec_clk_i      => c64_iec_clk_o,
+         iec_clk_i      => c64_iec_clk_o and hw_iec_clk_n_i,
          iec_clk_o      => c64_iec_clk_i,
          iec_atn_i      => c64_iec_atn_o,
-         iec_data_i     => c64_iec_data_o,
+         iec_data_i     => c64_iec_data_o and hw_iec_data_n_i,
          iec_data_o     => c64_iec_data_i,
 
          -- disk image status

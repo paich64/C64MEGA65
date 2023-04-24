@@ -20,9 +20,11 @@ Feature Roadmap
 
 * NTSC
 * Support two drives: 8 and 9
-* Dual SID
 * Hardware IEC port: Work with real floppy drives, printers and other serial
   devices
+* Offer an SD2IEC compatible IEC device that browses the SD card and that
+  you can for example use to flash the EF1CR cartridge without the need of
+  splitting large CRTs into multiple D64 disks using EasySplit
 * Use the MEGA65's built-in disk drive as a C1581
 * Simulated C1581 via `*.d81` disk images
 * GCR encoded disk images (`*.g64`)

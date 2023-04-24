@@ -147,6 +147,19 @@ port (
    -- C64 specific ports that are not supported by the M2M framework
    --------------------------------------------------------------------
 
+   -- CBM-488/IEC serial port
+   iec_reset_n_o            : out std_logic;
+   iec_atn_n_o              : out std_logic;
+   iec_clk_en_o             : out std_logic;
+   iec_clk_n_i              : in std_logic;
+   iec_clk_n_o              : out std_logic;
+   iec_data_en_o            : out std_logic;
+   iec_data_n_i             : in std_logic;
+   iec_data_n_o             : out std_logic;
+   iec_srq_en_o             : out std_logic;
+   iec_srq_n_i              : in std_logic;
+   iec_srq_n_o              : out std_logic;
+
    -- C64 Expansion Port (aka Cartridge Port) control lines
    -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
    cart_ctrl_en_o           : out std_logic;
@@ -524,6 +537,20 @@ begin
          c64_qnice_data_o       => qnice_c64_qnice_data,
          c64_qnice_ce_i         => qnice_c64_qnice_ce,
          c64_qnice_we_i         => qnice_c64_qnice_we,
+         
+         -- CBM-488/IEC serial (hardware) port
+         iec_hardware_port_en   => main_osm_control_i(C_MENU_IEC),
+         iec_reset_n_o          => iec_reset_n_o,
+         iec_atn_n_o            => iec_atn_n_o,
+         iec_clk_en_o           => iec_clk_en_o,
+         iec_clk_n_i            => iec_clk_n_i,
+         iec_clk_n_o            => iec_clk_n_o,
+         iec_data_en_o          => iec_data_en_o,
+         iec_data_n_i           => iec_data_n_i,
+         iec_data_n_o           => iec_data_n_o,
+         iec_srq_en_o           => iec_srq_en_o,
+         iec_srq_n_i            => iec_srq_n_i,
+         iec_srq_n_o            => iec_srq_n_o,
 
          -- C64 Expansion Port (aka Cartridge Port) control lines
          -- *_dir=1 means FPGA->Port, =0 means Port->FPGA

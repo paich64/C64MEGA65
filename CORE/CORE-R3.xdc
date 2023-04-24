@@ -249,6 +249,19 @@ set_property -dict {PACKAGE_PIN C22 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports
 #set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr2_reset]
 #set_property -dict {PACKAGE_PIN J5 IOSTANDARD LVCMOS33 PULLUP FALSE} [get_ports hr_cs1]
 
+# CBM-488/IEC serial port
+set_property -dict {PACKAGE_PIN AB21 IOSTANDARD LVCMOS33} [get_ports iec_reset]
+set_property -dict {PACKAGE_PIN N17  IOSTANDARD LVCMOS33} [get_ports iec_atn]
+set_property -dict {PACKAGE_PIN Y21  IOSTANDARD LVCMOS33} [get_ports iec_data_en]
+set_property -dict {PACKAGE_PIN Y22  IOSTANDARD LVCMOS33} [get_ports iec_data_o]
+set_property -dict {PACKAGE_PIN AB22 IOSTANDARD LVCMOS33 PULLUP true} [get_ports iec_data_i]
+set_property -dict {PACKAGE_PIN AA21 IOSTANDARD LVCMOS33} [get_ports iec_clk_en]
+set_property -dict {PACKAGE_PIN Y19  IOSTANDARD LVCMOS33} [get_ports iec_clk_o]
+set_property -dict {PACKAGE_PIN Y18  IOSTANDARD LVCMOS33 PULLUP true} [get_ports iec_clk_i]
+set_property -dict {PACKAGE_PIN U20  IOSTANDARD LVCMOS33} [get_ports iec_srq_o]
+set_property -dict {PACKAGE_PIN AA18 IOSTANDARD LVCMOS33} [get_ports iec_srq_i]
+set_property -dict {PACKAGE_PIN AB20 IOSTANDARD LVCMOS33} [get_ports iec_srq_en]
+
 # C64 Cartridge port control lines
 # *_dir=1 means FPGA->Port, =0 means Port->FPGA
 set_property -dict {PACKAGE_PIN G18  IOSTANDARD LVCMOS33} [get_ports cart_ctrl_en]

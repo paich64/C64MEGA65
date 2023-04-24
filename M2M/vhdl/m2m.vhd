@@ -12,7 +12,7 @@ use ieee.numeric_std.all;
 
 entity m2m is
 port (
-   CLK            : in  std_logic;                  -- 100 MHz clock
+   CLK               : in  std_logic;                  -- 100 MHz clock
 
    -- MAX10 FPGA (delivers reset)
    max10_tx          : in std_logic;
@@ -21,107 +21,120 @@ port (
 
    -- Serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
-   UART_RXD       : in  std_logic;                  -- receive data
-   UART_TXD       : out std_logic;                  -- send data
+   UART_RXD          : in  std_logic;                  -- receive data
+   UART_TXD          : out std_logic;                  -- send data
 
    -- VGA
-   VGA_RED        : out std_logic_vector(7 downto 0);
-   VGA_GREEN      : out std_logic_vector(7 downto 0);
-   VGA_BLUE       : out std_logic_vector(7 downto 0);
-   VGA_HS         : out std_logic;
-   VGA_VS         : out std_logic;
+   VGA_RED           : out std_logic_vector(7 downto 0);
+   VGA_GREEN         : out std_logic_vector(7 downto 0);
+   VGA_BLUE          : out std_logic_vector(7 downto 0);
+   VGA_HS            : out std_logic;
+   VGA_VS            : out std_logic;
 
    -- VDAC
-   vdac_clk       : out std_logic;
-   vdac_sync_n    : out std_logic;
-   vdac_blank_n   : out std_logic;
+   vdac_clk          : out std_logic;
+   vdac_sync_n       : out std_logic;
+   vdac_blank_n      : out std_logic;
 
    -- Digital Video (HDMI)
-   tmds_data_p    : out std_logic_vector(2 downto 0);
-   tmds_data_n    : out std_logic_vector(2 downto 0);
-   tmds_clk_p     : out std_logic;
-   tmds_clk_n     : out std_logic;
+   tmds_data_p       : out std_logic_vector(2 downto 0);
+   tmds_data_n       : out std_logic_vector(2 downto 0);
+   tmds_clk_p        : out std_logic;
+   tmds_clk_n        : out std_logic;
 
    -- MEGA65 smart keyboard controller
-   kb_io0         : out std_logic;                 -- clock to keyboard
-   kb_io1         : out std_logic;                 -- data output to keyboard
-   kb_io2         : in  std_logic;                 -- data input from keyboard
+   kb_io0            : out std_logic;                 -- clock to keyboard
+   kb_io1            : out std_logic;                 -- data output to keyboard
+   kb_io2            : in  std_logic;                 -- data input from keyboard
 
    -- SD Card (internal on bottom)
-   SD_RESET       : out std_logic;
-   SD_CLK         : out std_logic;
-   SD_MOSI        : out std_logic;
-   SD_MISO        : in  std_logic;
-   SD_CD          : in  std_logic;
+   SD_RESET          : out std_logic;
+   SD_CLK            : out std_logic;
+   SD_MOSI           : out std_logic;
+   SD_MISO           : in  std_logic;
+   SD_CD             : in  std_logic;
 
    -- SD Card (external on back)
-   SD2_RESET      : out std_logic;
-   SD2_CLK        : out std_logic;
-   SD2_MOSI       : out std_logic;
-   SD2_MISO       : in  std_logic;
-   SD2_CD         : in  std_logic;
+   SD2_RESET         : out std_logic;
+   SD2_CLK           : out std_logic;
+   SD2_MOSI          : out std_logic;
+   SD2_MISO          : in  std_logic;
+   SD2_CD            : in  std_logic;
 
    -- 3.5mm analog audio jack
-   pwm_l          : out std_logic;
-   pwm_r          : out std_logic;
+   pwm_l             : out std_logic;
+   pwm_r             : out std_logic;
 
    -- Joysticks and Paddles
-   joy_1_up_n     : in  std_logic;
-   joy_1_down_n   : in  std_logic;
-   joy_1_left_n   : in  std_logic;
-   joy_1_right_n  : in  std_logic;
-   joy_1_fire_n   : in  std_logic;
+   joy_1_up_n        : in  std_logic;
+   joy_1_down_n      : in  std_logic;
+   joy_1_left_n      : in  std_logic;
+   joy_1_right_n     : in  std_logic;
+   joy_1_fire_n      : in  std_logic;
 
-   joy_2_up_n     : in  std_logic;
-   joy_2_down_n   : in  std_logic;
-   joy_2_left_n   : in  std_logic;
-   joy_2_right_n  : in  std_logic;
-   joy_2_fire_n   : in  std_logic;
+   joy_2_up_n        : in  std_logic;
+   joy_2_down_n      : in  std_logic;
+   joy_2_left_n      : in  std_logic;
+   joy_2_right_n     : in  std_logic;
+   joy_2_fire_n      : in  std_logic;
 
-   paddle         : in  std_logic_vector(3 downto 0);
-   paddle_drain   : out std_logic;
+   paddle            : in  std_logic_vector(3 downto 0);
+   paddle_drain      : out std_logic;
 
    -- Built-in HyperRAM
-   hr_d           : inout std_logic_vector(7 downto 0);    -- Data/Address
-   hr_rwds        : inout std_logic;               -- RW Data strobe
-   hr_reset       : out std_logic;                 -- Active low RESET line to HyperRAM
-   hr_clk_p       : out std_logic;
-   hr_cs0         : out std_logic;
+   hr_d              : inout std_logic_vector(7 downto 0);    -- Data/Address
+   hr_rwds           : inout std_logic;               -- RW Data strobe
+   hr_reset          : out std_logic;                 -- Active low RESET line to HyperRAM
+   hr_clk_p          : out std_logic;
+   hr_cs0            : out std_logic;
    
    --------------------------------------------------------------------
    -- C64 specific ports that are not supported by the M2M framework
    --------------------------------------------------------------------
    
+   -- CBM-488/IEC serial port
+   iec_reset_n_o     : out std_logic;
+   iec_atn_n_o       : out std_logic;
+   iec_clk_en_o      : out std_logic;
+   iec_clk_n_i       : in std_logic;
+   iec_clk_n_o       : out std_logic;
+   iec_data_en_o     : out std_logic;
+   iec_data_n_i      : in std_logic;
+   iec_data_n_o      : out std_logic;
+   iec_srq_en_o      : out std_logic;
+   iec_srq_n_i       : in std_logic;
+   iec_srq_n_o       : out std_logic;
+   
    -- C64 Expansion Port (aka Cartridge Port) control lines
    -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
-   cart_ctrl_en_o          : out std_logic;
-   cart_ctrl_dir_o         : out std_logic;
-   cart_addr_en_o          : out std_logic;     
-   cart_haddr_dir_o        : out std_logic;
-   cart_laddr_dir_o        : out std_logic;
-   cart_data_en_o          : out std_logic;
-   cart_data_dir_o         : out std_logic;
+   cart_ctrl_en_o    : out std_logic;
+   cart_ctrl_dir_o   : out std_logic;
+   cart_addr_en_o    : out std_logic;     
+   cart_haddr_dir_o  : out std_logic;
+   cart_laddr_dir_o  : out std_logic;
+   cart_data_en_o    : out std_logic;
+   cart_data_dir_o   : out std_logic;
 
    -- C64 Expansion Port (aka Cartridge Port)
-   cart_reset_o            : out std_logic;   
-   cart_phi2_o             : out std_logic;
-   cart_dotclock_o         : out std_logic;
+   cart_reset_o      : out std_logic;   
+   cart_phi2_o       : out std_logic;
+   cart_dotclock_o   : out std_logic;
    
-   cart_nmi_i              : in std_logic;
-   cart_irq_i              : in std_logic;
-   cart_dma_i              : in std_logic;
-   cart_exrom_i            : in std_logic;
-   cart_game_i             : in std_logic;   
+   cart_nmi_i        : in std_logic;
+   cart_irq_i        : in std_logic;
+   cart_dma_i        : in std_logic;
+   cart_exrom_i      : in std_logic;
+   cart_game_i       : in std_logic;   
    
-   cart_ba_io              : inout std_logic;
-   cart_rw_io              : inout std_logic;
-   cart_roml_io            : inout std_logic;
-   cart_romh_io            : inout std_logic;
-   cart_io1_io             : inout std_logic;
-   cart_io2_io             : inout std_logic;
+   cart_ba_io        : inout std_logic;
+   cart_rw_io        : inout std_logic;
+   cart_roml_io      : inout std_logic;
+   cart_romh_io      : inout std_logic;
+   cart_io1_io       : inout std_logic;
+   cart_io2_io       : inout std_logic;
 
-   cart_d_io               : inout unsigned(7 downto 0);
-   cart_a_io               : inout unsigned(15 downto 0)
+   cart_d_io         : inout unsigned(7 downto 0);
+   cart_a_io         : inout unsigned(15 downto 0)
 );
 end entity m2m;
 
@@ -508,6 +521,19 @@ begin
          --------------------------------------------------------------------
          -- C64 specific ports that are not supported by the M2M framework
          --------------------------------------------------------------------
+   
+         -- CBM-488/IEC serial port
+         iec_reset_n_o           => iec_reset_n_o,
+         iec_atn_n_o             => iec_atn_n_o,
+         iec_clk_en_o            => iec_clk_en_o,
+         iec_clk_n_i             => iec_clk_n_i,
+         iec_clk_n_o             => iec_clk_n_o,
+         iec_data_en_o           => iec_data_en_o,
+         iec_data_n_i            => iec_data_n_i,
+         iec_data_n_o            => iec_data_n_o,
+         iec_srq_en_o            => iec_srq_en_o,
+         iec_srq_n_i             => iec_srq_n_i,
+         iec_srq_n_o             => iec_srq_n_o,
    
            -- C64 Expansion Port (aka Cartridge Port) control lines
          -- *_dir=1 means FPGA->Port, =0 means Port->FPGA

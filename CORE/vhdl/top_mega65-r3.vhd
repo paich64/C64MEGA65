@@ -99,7 +99,20 @@ port (
    --------------------------------------------------------------------
    -- C64 specific ports that are not supported by the M2M framework
    --------------------------------------------------------------------
-   
+
+   -- CBM-488/IEC serial port
+   iec_reset      : out std_logic;
+   iec_atn        : out std_logic;
+   iec_clk_en     : out std_logic;
+   iec_clk_i      : in std_logic;
+   iec_clk_o      : out std_logic;
+   iec_data_en    : out std_logic;
+   iec_data_i     : in std_logic;
+   iec_data_o     : out std_logic;
+   iec_srq_en     : out std_logic;   
+   iec_srq_i      : in std_logic;
+   iec_srq_o      : out std_logic;
+
    -- C64 Expansion Port (aka Cartridge Port) control lines
    -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
    cart_ctrl_en   : out std_logic;
@@ -216,7 +229,20 @@ begin
          --------------------------------------------------------------------
          -- C64 specific ports that are not supported by the M2M framework
          --------------------------------------------------------------------
-         
+        
+         -- CBM-488/IEC serial port
+         iec_reset_n_o     => iec_reset,
+         iec_atn_n_o       => iec_atn,
+         iec_clk_en_o      => iec_clk_en,
+         iec_clk_n_i       => iec_clk_i,
+         iec_clk_n_o       => iec_clk_o,
+         iec_data_en_o     => iec_data_en,
+         iec_data_n_i      => iec_data_i,
+         iec_data_n_o      => iec_data_o,
+         iec_srq_en_o      => iec_srq_en,   
+         iec_srq_n_i       => iec_srq_i,
+         iec_srq_n_o       => iec_srq_o,
+            
          -- C64 Expansion Port (aka Cartridge Port) control lines
          -- *_dir=1 means FPGA->Port, =0 means Port->FPGA
          cart_ctrl_en_o    => cart_ctrl_en,

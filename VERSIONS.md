@@ -13,6 +13,8 @@ short video that demonstrates how different cartridge types are inserted and
 used (old to new, game, tool, GeoRAM, EasyFlash various models, ...) and then
 also software cartridges.
 
+@TODO Fully dynamic flicker-free HDMI
+
 ## New Features
 
 * More clearly arranged menu using submenus
