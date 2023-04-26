@@ -155,30 +155,28 @@ installed/activated, then the software crashes.
 
 ### Constraints and Roadmap
 
-Our Release 4 is still an early release. Thanks to all the folks who
+Our Release 5 is a mature release. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
-Commodore 64. With our Release 4 you can play nearly all the available games
-and watch almost all demos ever written for the C64. It happens more often
-than not, that the core is recognized as real hardware by software.
+Commodore 64. With our Release 5 you can play nearly all the available games
+and watch almost all demos ever written for the C64. You can plug nearly
+every hardware cartridge ever made for the C64 into the MEGA65's expansion
+port and you can work with any IEC device (retro devices such as original
+1541 or 1581 drives and modern devices such as the SD2IEC and the
+Ultimate-II+). It happens more often than not, that the core is recognized
+as real hardware by software.
 
-At this moment, our MEGA65 version of the core is not supporting
-some of the very nice hardware offerings that the MEGA65 makes, such as:
+Yet, at this moment, our MEGA65 version of the MiSTer core is stil lacking
+some nice features such as:
 
-* Expansion port: Support hardware cartridges
-* IEC port: Support real drives, printers, ...
 * Use the MEGA65's physical drive as a C1581
-
-Also, some things that folks would consider as "basic stuff" are not
-supported yet, such as:
-
 * NTSC mode
 * Mounting tapes (`*.tap`)
-* Mounting cartridges (`*.crt`)
+* Supporting G64 disk images (`*.g64`)
+* Formating disk images (`*.d64` and `*.g64`)
+* Supporting MiSTer's GCR-level disk manipulation
 
-The MiSTer core, which is the basis of this MEGA65 core offers a ton of
-additional convenience features and nerdy stuff. We are not yet supporting
-most of it. Have a look at our [Roadmap](ROADMAP.md)
-to learn more.
+And there is much more. Have a look at our [Roadmap](ROADMAP.md)
+to learn what we plan to do in future.
 
 Since we do this as a hobby, it might take a year or longer until these
 things are supported. So please bear with us or [help us](CONTRIBUTING.md).
@@ -203,7 +201,7 @@ supporting older R2 machines. If you are not sure what MEGA65 version you have
 then you very probably have an R3, R3A or newer: The Devkits are R3 and the
 machines from Trenz are R3A.
 
-1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V4/C64MEGA65-V4.zip)
+1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V5/C64MEGA65-V5.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Copy the `.cor` file on an SD card that has been formatted using the
    MEGA65's built-in formatting tool. If you want to be on the safe side, just
