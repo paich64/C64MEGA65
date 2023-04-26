@@ -171,6 +171,7 @@ some nice features such as:
 * Use the MEGA65's physical drive as a C1581
 * NTSC mode
 * Mounting tapes (`*.tap`)
+* Supporting D81 disk images (`*.d81`)
 * Supporting G64 disk images (`*.g64`)
 * Formating disk images (`*.d64` and `*.g64`)
 * Supporting MiSTer's GCR-level disk manipulation
