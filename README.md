@@ -24,7 +24,7 @@ This core is based on the
 itself is based on the work of [many others](AUTHORS).
 
 [MJoergen](https://github.com/MJoergen) and
-[sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2022.
+[sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2022 and 2023.
 
 The core uses the [MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
 framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
@@ -34,17 +34,32 @@ on-screen-menu.
 Features
 --------
 
-With our [Release 4](VERSIONS.md), we are striving for a **retro C64 PAL
-experience**: The core turns your MEGA65 into a Commodore 64, with a
-C1541 drive, a pair of Joysticks, a Mouse and/or Paddles. No frills but
-optionally including a 512KB 1750 REU. The C64 runs the original Commodore 
-KERNAL and the C1541 runs the original Commodore DOS, which leads to authentic
-loading speeds. You will be surprised, how slowly the C64/C1541 were
-loading... :-)
+With our [Release 5](VERSIONS.md), we are striving for a **retro C64 PAL
+experience**: The core turns your MEGA65 into a Commodore 64 with a C1541
+drive (you can mount `*.d64`) images. It supports the following hardware
+ports of the MEGA65:
+
+* Joystick port for joysticks, mice and paddles
+* Expansion port for C64 cartridges: Games, Freezers, Fast loader
+  cartridges, REUs, Multi-Function Flash Cartridges, etc.
+* IEC port so that you can attach real 1541 & 1581 drives as well as
+  printers, plotters or modern devices such as the SD2IEC and the
+  Ultimate-II+
+
+Additionally, the C64 for MEGA65 core can simulate a 1750 REU with 512KB
+of RAM, it can simulate cartridges (by loading `*.crt` files) and it offers
+a Dual SID / Stereo SID experience.
+
+The C64 runs the original Commodore KERNAL and the C1541 runs the original
+Commodore DOS, which leads to authenticloading speeds. You will be surprised,
+how slowly the C64/C1541 were loading... :-) You can optionally install
+JiffyDOS or use fast loader cartridges to speed up loading.
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
-recognizing this core as genuine C64 hardware.
+recognizing this core as genuine C64 hardware. And even things like using
+a fast loader cartridge while connecting a genuine 1541 via IEC are working
+flawlessly.
 
 ### Video and Audio
 
@@ -85,9 +100,11 @@ Important: If you use analog retro monitors, please switch off
 
 ### Convenience
 
-* On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
-  and to configure the core
-* Realtime switching between a 6581 SID and a 8580 SID
+* On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount `*.d64` 
+  disk images, load and run `*.crt` cartridges, directly run `*.prg`
+  programs and to configure the core
+* Realtime switching between 6581/8580 mono SID and several stereo SID
+  options
 * Realtime switching between 6526 CIA and 8521 CIA
 * CRT filter: Optional visual scan lines via HDMI so that the output looks
   more like an old monitor or TV including authentic anti-aliasing
