@@ -51,7 +51,7 @@ of RAM, it can simulate cartridges (by loading `*.crt` files) and it offers
 a Dual SID / Stereo SID experience.
 
 The C64 runs the original Commodore KERNAL and the C1541 runs the original
-Commodore DOS, which leads to authenticloading speeds. You will be surprised,
+Commodore DOS, which leads to authentic loading speeds. You will be surprised,
 how slowly the C64/C1541 were loading... :-) You can optionally install
 JiffyDOS or use fast loader cartridges to speed up loading.
 
@@ -173,7 +173,7 @@ some nice features such as:
 * Mounting tapes (`*.tap`)
 * Supporting D81 disk images (`*.d81`)
 * Supporting G64 disk images (`*.g64`)
-* Formating disk images (`*.d64` and `*.g64`)
+* Formatting disk images (`*.d64` and `*.g64`)
 * Supporting MiSTer's GCR-level disk manipulation
 
 And there is much more. Have a look at our [Roadmap](ROADMAP.md)
@@ -507,7 +507,7 @@ framework - has a debug mode that consists of a real-time log of various system
 states and an interactive debug console.
 
 To access the log and the console, connect a serial terminal to the MEGA65
-using the JTAG adater while making sure that the serial terminal's parameters
+using the JTAG adapter while making sure that the serial terminal's parameters
 are set to 115,200 baud 8-N-1, no flow control such as XON/XOFF, RTS/CTS,
 DTR/DSR. Set any terminal emulation to "None" and if you can configure it,
 set the send mode to "Interactive" (instead of things like "Line buffered").
