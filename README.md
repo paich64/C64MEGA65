@@ -160,10 +160,10 @@ Our Release 5 is a mature release. Thanks to all the folks who
 Commodore 64. With our Release 5 you can play nearly all the available games
 and watch almost all demos ever written for the C64. You can plug nearly
 every hardware cartridge ever made for the C64 into the MEGA65's expansion
-port and you can work with any IEC device (retro devices such as original
-1541 or 1581 drives and modern devices such as the SD2IEC and the
-Ultimate-II+). It happens more often than not, that the core is recognized
-as real hardware by software.
+port and enjoy working/playing with it and you can work with any IEC device
+(retro devices such as original 1541 or 1581 drives, printers, plotters
+and modern devices such as the SD2IEC and the Ultimate-II+). It happens more
+often than not, that the core is recognized as real hardware by software.
 
 Yet, at this moment, our MEGA65 version of the MiSTer core is stil lacking
 some nice features such as:
