@@ -165,7 +165,7 @@ port and enjoy working/playing with it and you can work with any IEC device
 and modern devices such as the SD2IEC and the Ultimate-II+). It happens more
 often than not, that the core is recognized as real hardware by software.
 
-Yet, at this moment, our MEGA65 version of the MiSTer core is stil lacking
+Yet, at this moment, our MEGA65 version of the MiSTer core is still lacking
 some nice features such as:
 
 * Use the MEGA65's physical drive as a C1581
