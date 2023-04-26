@@ -1,6 +1,9 @@
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
+@TODO: The fully dynamic flicker-free HDMI, which also reduces our output
+latency on HDMI to less than 1ms
+
 @TODO: Dual SID
 
 @TODO: Check, adjust/rewrite for clarity:
