@@ -1,3 +1,15 @@
+Cartridge Cases
+===============
+
+Some modern "homebrew" cartridges come as a raw PCB, without a plastic case.
+**Never insert a raw PCB into your MEGA65's Expansion Port.** It is nearly
+impossible to align all the pads and connections correctly so you might
+damage the MEGA65 - or - in less drastic cases the cartridge will not work
+reliably ("only sometimes") and the
+
+==============================================================================
+
+
 Flash Cartridges
 ================
 
@@ -12,9 +24,8 @@ after its release should be rewarded.
 
 But there are many awesome
 [game releases and other releases on csdb.dk](https://csdb.dk/browse.php?grouptype_id=0&profession_id=0&type=releases&releasetype_id=46&eventtype_id=0&bbstype_id=0&sidtype_id=0&browsesub=Browse%21)
-
 that are not published on a hardware cartridge. And unfortunately more often
-than not, your favorite cartridge is sold out on
+than not, your favorite cartridge is sold-out on
 [Protovision](https://www.protovision.games)
 and
 [RGCD](https://rgcd.bigcartel.com/products).
@@ -35,6 +46,27 @@ unintended consequences.
 So for a 100% glitch-free retro experience, you might want to use real
 hardware, i.e. real Flash Cartridges.
 
+EasyFlash 1 and EasyFlash 1CR
+-----------------------------
+
+The original EasyFlash (aka EasyFlash 1) and the cost reduced
+[EasyFlash 1CR](https://www.freepascal.org/~daniel/easyflash/)
+
+
+[why](https://skoe.de/easyflash/why/)
+Answer taken from the
+[EasyFlash website](https://skoe.de/easyflash/)
+
+EasyFlash is a cartridge for the C64 expansion port. In contrast to traditional
+cartridges, this one can be programmed directly from the C64.
+
+You can easily create various classic computer game cartridges or program collections with it. All what you need to do this is a C64, an EasyFlash, the software available here and an image of the cartridge (*.crt). As these CRT files may be quite large, a large capacity disk drive like the FD-2000 or an sd2iec device may be useful. For smaller drives EasySplit can be used to compress and split large cartridge images.
+
+
+https://www.c64-wiki.com/wiki/EasyFlash
+
+
+
 ==============================================================================
 
 Cases:
@@ -46,12 +78,6 @@ Protoparts
 https://www.protoparts.at/product-category/gehaeuse/
 
 Buy original cartridges from our friends at
-
-
-
-EasyFlash 1 and EasyFlash 1CR
------------------------------
-
 
 aslödk qöldk qöldk qöldk qwöldk qwöldkqwöldk qwöldk qölwdk qölwkdqlödkqwöldkq
 kj dqlkwjd lkqdj klqwj dlqkwj dlkqj dklqwj dklqwj dlkqwjdlkqwj dklqj dqklwjd
