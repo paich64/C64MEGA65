@@ -1,15 +1,33 @@
 Featured Cartridges
 ===================
 
-EasyFlash 1 and EasyFlash 1CR
-EasyFlash 3
-The Final Cartridge III
-Kungfu (?)
-Action Replay (?)
-GeoRAM
+
+Cases:
+
+TFW8-bit
+https://www.thefuturewas8bit.com/c64romcart.html
+
+Protoparts
+https://www.protoparts.at/product-category/gehaeuse/
+
+Buy original cartridges from our friends at
+[Protovision](https://www.protovision.games)
+and
+[RGCD](https://rgcd.bigcartel.com/products)
+
 
 EasyFlash 1 and EasyFlash 1CR
-=============================
+-----------------------------
+
+
+aslödk qöldk qöldk qöldk qwöldk qwöldkqwöldk qwöldk qölwdk qölwkdqlödkqwöldkq
+kj dqlkwjd lkqdj klqwj dlqkwj dlkqj dklqwj dklqwj dlkqwjdlkqwj dklqj dqklwjd
+qwlkdj qkldjlkqwdj qkl djlkqwj dklqwj dklqwj dlkqj dklqj dklqwj dkqlj.
+
+![EF1CR-case-variants](doc/ef1cr-cases.jpg)
+
+qwdjklqw djlqkwj dlkqjd lqkwj dlkqwj dklqj dlqkwjd qklwjd wqlkjd qlkwjd lkqjw
+qwdölk qwökd öqlwk.
 
 https://www.freepascal.org/~daniel/easyflash/
 
@@ -27,6 +45,17 @@ How to flash
 ... using an SD2IEC or other IEC devices that can hold large CRTs
 
 Technical info
+
+EasyFlash 3
+===========
+
+TODO LIST
+=========
+
+Kungfu (?)
+The Final Cartridge III
+Action Replay (?)
+GeoRAM
 
 CORE #0 Notes
 -------------
