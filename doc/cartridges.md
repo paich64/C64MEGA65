@@ -138,9 +138,10 @@ files into multiple `*.d64` files.
 
 #### Adjusting the case for being able to re-flash any time
 
-![EF1CR-case-variants](assets/ef1cr-case-lydon.jpg)
+| Lydon's Example                  | sy2002's Example                  |
+|----------------------------------|-----------------------------------|
+| ![](assets/ef1cr-case-lydon.jpg) | ![](assets/ef1cr-case-sy2002.jpg) |
 
-![EF1CR-case-variants](assets/ef1cr-case-sy2002.jpg)
 
 ==============================================================================
 
