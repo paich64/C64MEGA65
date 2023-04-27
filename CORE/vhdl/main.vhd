@@ -873,7 +873,7 @@ begin
    i_cartridge : component cartridge
       port map (
          clk32           => clk_main_i,                        -- input
-         reset_n         => reset_core_n,                      -- input
+         reset_n         => hard_reset_n,                      -- input
          cart_loading    => cartridge_loading_i,               -- input
          cart_id         => cartridge_id_i,                    -- input
          cart_exrom      => cartridge_exrom_i,                 -- input

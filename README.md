@@ -24,7 +24,7 @@ This core is based on the
 itself is based on the work of [many others](AUTHORS).
 
 [MJoergen](https://github.com/MJoergen) and
-[sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2022.
+[sy2002](http://www.sy2002.de) ported the core to the MEGA65 in 2022 and 2023.
 
 The core uses the [MiSTer2MEGA65](https://github.com/sy2002/MiSTer2MEGA65)
 framework and [QNICE-FPGA](https://github.com/sy2002/QNICE-FPGA) for
@@ -34,17 +34,32 @@ on-screen-menu.
 Features
 --------
 
-With our [Release 4](VERSIONS.md), we are striving for a **retro C64 PAL
-experience**: The core turns your MEGA65 into a Commodore 64, with a
-C1541 drive, a pair of Joysticks, a Mouse and/or Paddles. No frills but
-optionally including a 512KB 1750 REU. The C64 runs the original Commodore 
-KERNAL and the C1541 runs the original Commodore DOS, which leads to authentic
-loading speeds. You will be surprised, how slowly the C64/C1541 were
-loading... :-)
+With our [Release 5](VERSIONS.md), we are striving for a **retro C64 PAL
+experience**: The core turns your MEGA65 into a Commodore 64 with a C1541
+drive (you can mount `*.d64`) images. It supports the following hardware
+ports of the MEGA65:
+
+* Joystick port for joysticks, mice and paddles
+* Expansion port for C64 cartridges: Games, Freezers, Fast loader
+  cartridges, REUs, Multi-Function Flash Cartridges, etc.
+* IEC port so that you can attach real 1541 & 1581 drives as well as
+  printers, plotters or modern devices such as the SD2IEC and the
+  Ultimate-II+
+
+Additionally, the C64 for MEGA65 core can simulate a 1750 REU with 512KB
+of RAM, it can simulate cartridges (by loading `*.crt` files) and it offers
+a Dual SID / Stereo SID experience.
+
+The C64 runs the original Commodore KERNAL and the C1541 runs the original
+Commodore DOS, which leads to authentic loading speeds. You will be surprised,
+how slowly the C64/C1541 were loading... :-) You can optionally install
+JiffyDOS or use fast loader cartridges to speed up loading.
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
-recognizing this core as genuine C64 hardware.
+recognizing this core as genuine C64 hardware. And even things like using
+a fast loader cartridge while connecting a genuine 1541 via IEC are working
+flawlessly.
 
 ### Video and Audio
 
@@ -85,9 +100,11 @@ Important: If you use analog retro monitors, please switch off
 
 ### Convenience
 
-* On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount disk images
-  and to configure the core
-* Realtime switching between a 6581 SID and a 8580 SID
+* On-Screen-Menu via the MEGA65's <kbd>Help</kbd> key to mount `*.d64` 
+  disk images, load and run `*.crt` cartridges, directly run `*.prg`
+  programs and to configure the core
+* Realtime switching between 6581/8580 mono SID and several stereo SID
+  options
 * Realtime switching between 6526 CIA and 8521 CIA
 * CRT filter: Optional visual scan lines via HDMI so that the output looks
   more like an old monitor or TV including authentic anti-aliasing
@@ -138,30 +155,29 @@ installed/activated, then the software crashes.
 
 ### Constraints and Roadmap
 
-Our Release 4 is still an early release. Thanks to all the folks who
+Our Release 5 is a mature release. Thanks to all the folks who
 [contributed](AUTHORS) to the core, it is incredibly compatible to an original
-Commodore 64. With our Release 4 you can play nearly all the available games
-and watch almost all demos ever written for the C64. It happens more often
-than not, that the core is recognized as real hardware by software.
+Commodore 64. With our Release 5 you can play nearly all the available games
+and watch almost all demos ever written for the C64. You can plug nearly
+every hardware cartridge ever made for the C64 into the MEGA65's expansion
+port and enjoy working/playing with it and you can work with any IEC device
+(retro devices such as original 1541 or 1581 drives, printers, plotters
+and modern devices such as the SD2IEC and the Ultimate-II+). It happens more
+often than not, that the core is recognized as real hardware by software.
 
-At this moment, our MEGA65 version of the core is not supporting
-some of the very nice hardware offerings that the MEGA65 makes, such as:
+Yet, at this moment, our MEGA65 version of the MiSTer core is still lacking
+some nice features such as:
 
-* Expansion port: Support hardware cartridges
-* IEC port: Support real drives, printers, ...
 * Use the MEGA65's physical drive as a C1581
-
-Also, some things that folks would consider as "basic stuff" are not
-supported yet, such as:
-
 * NTSC mode
 * Mounting tapes (`*.tap`)
-* Mounting cartridges (`*.crt`)
+* Supporting D81 disk images (`*.d81`)
+* Supporting G64 disk images (`*.g64`)
+* Formatting disk images (`*.d64` and `*.g64`)
+* Supporting MiSTer's GCR-level disk manipulation
 
-The MiSTer core, which is the basis of this MEGA65 core offers a ton of
-additional convenience features and nerdy stuff. We are not yet supporting
-most of it. Have a look at our [Roadmap](ROADMAP.md)
-to learn more.
+And there is much more. Have a look at our [Roadmap](ROADMAP.md)
+to learn what we plan to do in future.
 
 Since we do this as a hobby, it might take a year or longer until these
 things are supported. So please bear with us or [help us](CONTRIBUTING.md).
@@ -186,7 +202,7 @@ supporting older R2 machines. If you are not sure what MEGA65 version you have
 then you very probably have an R3, R3A or newer: The Devkits are R3 and the
 machines from Trenz are R3A.
 
-1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V4/C64MEGA65-V4.zip)
+1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V5/C64MEGA65-V5.zip)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Copy the `.cor` file on an SD card that has been formatted using the
    MEGA65's built-in formatting tool. If you want to be on the safe side, just
@@ -491,7 +507,7 @@ framework - has a debug mode that consists of a real-time log of various system
 states and an interactive debug console.
 
 To access the log and the console, connect a serial terminal to the MEGA65
-using the JTAG adater while making sure that the serial terminal's parameters
+using the JTAG adapter while making sure that the serial terminal's parameters
 are set to 115,200 baud 8-N-1, no flow control such as XON/XOFF, RTS/CTS,
 DTR/DSR. Set any terminal emulation to "None" and if you can configure it,
 set the send mode to "Interactive" (instead of things like "Line buffered").

@@ -1,6 +1,9 @@
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
+@TODO: The fully dynamic flicker-free HDMI, which also reduces our output
+latency on HDMI to less than 1ms
+
 @TODO: Dual SID
 
 @TODO: Check, adjust/rewrite for clarity:
@@ -46,7 +49,7 @@ When Jiffy DOS is found, then a menu item called (for example) "Use JiffyDOS"
 is shown in the "C64 Configuration". The dependent menu item would be a pure
 "show/hide" thing, i.e. not influence the size of the config file and also
 if from time to time JiffyDOS is not found (other SD card inserted), a
-potential "switch ON" would not be forgotton next time it is being found.
+potential "switch ON" would not be forgotten next time it is being found.
 For convenience we should have the option to reset the C64 if this setting
 is changed. The dependency could be specified in config.vhd by specifying
 bits in a register (other than the register we use for the menu?). We would
@@ -194,7 +197,7 @@ play the fantastic Sonic the Hedgehog for REU.
     in the font. Instead, a space (empty character, " ") was printed, for
     example the file name "C64+" was shown as "C64 ".
 
-  - Directories where not aways being sorted in proper alphabetical order and
+  - Directories where not always being sorted in proper alphabetical order and
     ascending numbers.
 
   - While browsing directories with a large amount of subdirectories (e.g.
@@ -247,7 +250,7 @@ for Paddles.
   Bomberman C64, that support a Multiplayer Joystick Interface
   (https://www.c64-wiki.com/wiki/Multiplayer_Interface), to work. Reason is,
   that due to the low-active nature of the User Port these games detected
-  "ghost activites" on the (not existent) joystick connected via User Port.
+  "ghost activities" on the (not existent) joystick connected via User Port.
 
 * Zero Page register $01 has the correct default value $37 now. It had the
   wrong value $C7 due to two bugs that have been fixed:
