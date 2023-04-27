@@ -1,3 +1,6 @@
+@TODO: Adjust links (from develop branch to master, where necessarry, for
+example mover.sh)
+
 @TODO: Add some FAQs around starting the C64 core while a cartridge is
 inserted. Problems such as this here can arise:
 
@@ -219,12 +222,48 @@ Caution: AMIGA mice look pretty much like C64 mice but the C64 core does not
 support AMIGA mice, yet. The MEGA65 core does support AMIGA mice and this
 feature is on our roadmap.
 
-## 9) Can I use cartridges or real IEC devices?
+## 9) Can I use cartridges?
 
-Not yet, but we are working to support this. Look at the
-[roadmap for the upcoming Version 5](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md).
+Yes, from Version 5 on, the core supports both real hardware cartridges that
+you can insert into the MEGA65's Expansion Port and simulated cartridges that
+you can load as `*.crt` files from your SD card. Make sure that you read
+[@TODO section ABC](@TODO)
+of the user's manual. The core is able to run more than 99% of all game
+cartridges. If want to use certain sophisticated cartridges other than games,
+make sure that you checkout
+[this document](https://github.com/MJoergen/C64MEGA65/blob/develop/doc/cartridges.md)
+dedicated to certain featured hardware cartridges.
 
-## 10) Which features are on the roadmap?
+## 10) Can I use IEC devices?
+
+Yes, from Version 5 on, you can connect floppy drives (such as the original
+1541 and 1581), hard disks, printers, plotters or modern devices such as the
+SD2IEC and the Ultimate-II+ to your MEGA65. All CBM-Bus/IEEE-488 bus/IEC Bus
+compliant devices are supposed to work.
+
+Caution: Avoid device number conflicts! The core uses device number #8 for
+the built-in simulated 1541 that can mount `*.d64` files. So you need to
+ensure that no other drive uses #8 and that all the device numbers you use
+are correct.
+[Learn more here](https://www.c64-wiki.com/wiki/Device_number) and make
+sure you activate the feature using the menu item "IEC: Use hardware port"
+if you want to use.
+
+## 11) How many files in a folder can the file browser handle?
+
+The file browser can handle about 25,000 characters. If we assume an average
+length of a filename (including the file extension) of 40 characters then this
+means 25,000 / 40 = 625 files.
+
+You might find
+[this bash script](https://github.com/MJoergen/C64MEGA65/tree/develop/M2M/tools/mover.sh)
+helpful. You can run it inside a folder with a lot of files and afterwards you
+have a directory structure `a .. z` and the files are moved there by name,
+plus you will have a folder called `0` where all the files that start with
+digits are. Don't forget to go to the folder `m` and remove `mover.sh`.
+
+
+## 12) Which features are on the roadmap?
 
 [Here](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md) is the
 roadmap for the upcoming Version 5.
@@ -233,14 +272,14 @@ And
 [here](https://github.com/MJoergen/C64MEGA65/blob/develop/ROADMAP.md)
 is the roadmap for "later than Version 5".
 
-## 11) Where can I post and discuss my feature request?
+## 13) Where can I post and discuss my feature request?
 
 The
 [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
 channel on the MEGA65 discord is the right place to post and
 discuss feature requests.
 
-## 12) Are there cores other than the C64 available or in development?
+## 14) Are there cores other than the C64 available or in development?
 
 Yes. Please visit this website, it contains a list of MEGA65 cores that
 will be constantly updated:
