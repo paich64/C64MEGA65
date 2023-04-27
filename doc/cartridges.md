@@ -138,59 +138,50 @@ files into multiple `*.d64` files.
 
 #### Adjusting the case for being able to re-flash any time
 
+After you flashed the EF 1CR for the first time, the built-in flasher is gone
+and replaced by the game you flashed. If you want to re-flash at a later stage
+you need to either use a screwdriver, open the case, move the switch to the
+PROG position, close the case again, start the MEGA65 while the cartridge
+is inserted, re-flash using
+[preferably this version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/develop/doc/assets/easyprog-dm.prg),
+open the cartridge case with a screwdriver again, move the switch back to the
+BOOT position, close the case again and you are good to go. CAUTION: Do not
+fall for the temptation to not use the plastic case! See above, very first
+headline of this file.
+
+As this is obviously a onerous workflow, we recommend that you cut or drill
+some holes into the EF 1CR's case. Here are two examples from the MEGA65
+team:
+
 | Lydon's Example                  | sy2002's Example                  |
 |----------------------------------|-----------------------------------|
 | ![](assets/ef1cr-case-lydon.jpg) | ![](assets/ef1cr-case-sy2002.jpg) |
 
-
-==============================================================================
-
-Cases:
-
-TFW8-bit
-https://www.thefuturewas8bit.com/c64romcart.html
-
-Protoparts
-https://www.protoparts.at/product-category/gehaeuse/
-
-Buy original cartridges from our friends at
-
-aslödk qöldk qöldk qöldk qwöldk qwöldkqwöldk qwöldk qölwdk qölwkdqlödkqwöldkq
-kj dqlkwjd lkqdj klqwj dlqkwj dlkqj dklqwj dklqwj dlkqwjdlkqwj dklqj dqklwjd
-qwlkdj qkldjlkqwdj qkl djlkqwj dklqwj dklqwj dlkqj dklqj dklqwj dkqlj.
-
-
-
-qwdjklqw djlqkwj dlkqjd lqkwj dlkqwj dklqj dlqkwjd qklwjd wqlkjd qlkwjd lkqjw
-qwdölk qwökd öqlwk.
-
-
-
-How to use
-...incl updating core 0 or plugging in while the MEGA65 is on
-
-...warning: Through hole version vs. SMD version
-
-Important info about cases
-
-How to flash
-
-... using EasySplit and D64 disks
-
-... using an SD2IEC or other IEC devices that can hold large CRTs
-
-Technical info
-
 EasyFlash 3
-===========
+-----------
 
-TODO LIST
-=========
+WORK IN PROGRESS
 
-Kungfu (?)
+Kung Fu Flash
+-------------
+
+WORK IN PROGRESS
+
+
 The Final Cartridge III
-Action Replay (?)
+-----------------------
+
+WORK IN PROGRESS
+
+Action Replay
+-------------
+
+WORK IN PROGRESS
+
 GeoRAM
+------
+
+WORK IN PROGRESS
 
 CORE #0 Notes
 -------------
