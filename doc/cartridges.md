@@ -5,10 +5,12 @@ Some modern "homebrew" cartridges come as a raw PCB, without a plastic case.
 **Never insert a raw PCB into your MEGA65's Expansion Port.** It is nearly
 impossible to align all the pads and connections correctly so you might
 damage the MEGA65 - or - in less drastic cases the cartridge will not work
-reliably ("only sometimes") and the
+reliably, but "only sometimes" and you will experience strange bugs.
 
-==============================================================================
-
+Put your cartridges in cartride cases from
+[The Future was 8BIT](https://www.thefuturewas8bit.com/c64romcart.html)
+or from
+[Protoparts](https://www.protoparts.at/product-category/gehaeuse/).
 
 Flash Cartridges
 ================
@@ -51,21 +53,41 @@ EasyFlash 1 and EasyFlash 1CR
 
 The original EasyFlash (aka EasyFlash 1) and the cost reduced
 [EasyFlash 1CR](https://www.freepascal.org/~daniel/easyflash/)
+are for sure among the most popular cartridges in the scene. Many new games
+and other releases come in the EasyFlash cartridge format. Here is a
+description about the EasyFlash taken from the
+[original EasyFlash website](https://skoe.de/easyflash/):
 
+"EasyFlash is a cartridge for the C64 expansion port. In contrast to
+traditional cartridges, this one can be programmed directly from the C64.
 
-[why](https://skoe.de/easyflash/why/)
-Answer taken from the
-[EasyFlash website](https://skoe.de/easyflash/)
+You can easily create various classic computer game cartridges or program
+collections with it. All what you need to do this is a C64, an EasyFlash,
+the software available
+[here](https://skoe.de/easyflash/downloads/)
+and an image of the cartridge `*.crt`. As these `*.crt` files may be
+quite large, a large capacity disk drive like the
+FD-2000 or an
+[SD2IEC](https://www.ncsystems.eu/)
+device may be useful. For smaller drives EasySplit can be used to compress
+and split large cartridge images."
 
-EasyFlash is a cartridge for the C64 expansion port. In contrast to traditional
-cartridges, this one can be programmed directly from the C64.
+Learn more about EasyFlash on the
+[C64 Wiki](https://www.c64-wiki.com/wiki/EasyFlash). 
 
-You can easily create various classic computer game cartridges or program collections with it. All what you need to do this is a C64, an EasyFlash, the software available here and an image of the cartridge (*.crt). As these CRT files may be quite large, a large capacity disk drive like the FD-2000 or an sd2iec device may be useful. For smaller drives EasySplit can be used to compress and split large cartridge images.
+Using the our C64 core, your MEGA65 is able to flash EasyFlash
+cartridges. 
 
+### EasyFlash 1CR
 
-https://www.c64-wiki.com/wiki/EasyFlash
-
-
+Since the EasyFlash 1 is hard to find these days, we will focus on the
+[EasyFlash 1CR](https://www.freepascal.org/~daniel/easyflash/)
+by Dani&euml;l Mantione. This handy cartridge is officially and proactively
+supported by the C64 for MEGA65 core development team, so this is your number
+one go to Flash Cartridge. Buy it
+[here]((https://www.freepascal.org/~daniel/easyflash/))
+by filling out Dani&euml;l's form (scroll down). IMPORTANT: You need to
+specify that
 
 ==============================================================================
 
@@ -88,7 +110,7 @@ qwlkdj qkldjlkqwdj qkl djlkqwj dklqwj dklqwj dlkqj dklqj dklqwj dkqlj.
 qwdjklqw djlqkwj dlkqjd lqkwj dlkqwj dklqj dlqkwjd qklwjd wqlkjd qlkwjd lkqjw
 qwdölk qwökd öqlwk.
 
-https://www.freepascal.org/~daniel/easyflash/
+
 
 How to use
 ...incl updating core 0 or plugging in while the MEGA65 is on
