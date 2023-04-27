@@ -157,6 +157,11 @@ team:
 |----------------------------------|-----------------------------------|
 | ![](assets/ef1cr-case-lydon.jpg) | ![](assets/ef1cr-case-sy2002.jpg) |
 
+[This version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/develop/doc/assets/easyprog-dm.prg)
+is from the creator of the EF 1CR and is recommended for re-flashing the
+EF 1CR. You can also use
+[EasyProg 1.8.1 or newer](https://github.com/KimJorgensen/easyflash/releases).
+
 EasyFlash 3
 -----------
 
