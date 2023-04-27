@@ -80,14 +80,67 @@ cartridges.
 
 ### EasyFlash 1CR
 
-Since the EasyFlash 1 is hard to find these days, we will focus on the
+#### Buy the correct version
+
+Since the original EasyFlash 1 is hard to find these days, we will
+focus on the
 [EasyFlash 1CR](https://www.freepascal.org/~daniel/easyflash/)
 by Dani&euml;l Mantione. This handy cartridge is officially and proactively
 supported by the C64 for MEGA65 core development team, so this is your number
 one go to Flash Cartridge. Buy it
-[here]((https://www.freepascal.org/~daniel/easyflash/))
-by filling out Dani&euml;l's form (scroll down). IMPORTANT: You need to
-specify that
+[here](https://www.freepascal.org/~daniel/easyflash/)
+by filling out Dani&euml;l's form. Scroll down to the bottom of his web page
+to find an order form. Here are some important considerations:
+
+* Use the field where you specify your postal address to add the comment
+  that you want a so called "Through Hole" version of the cartridge and
+  **not** the so called "SMD" version of the cartridge. Only the
+  "Through Hole" version is supported on the MEGA65 at this time. (This might
+  change in future.)
+
+* We highly recommend that you buy fully assembled cartridges to ensure
+  that they actually work on your MEGA65.
+  
+* You need a case for the cartridge. The easiest way to obtain one is to
+  order it from Dani&euml;l's website together with your Easy Flash 1CR.
+
+The following image shows, how the "Through Hole" version of the EF 1CR
+looks like and it shows different case variants that Dani&euml;l sells.
+We recommend to order a
+[The Future was 8BIT](https://www.thefuturewas8bit.com/c64romcart.html)
+or
+[Protoparts](https://www.protoparts.at/product-category/gehaeuse/).
+case.
+
+![EF1CR-case-variants](assets/ef1cr-cases.jpg)
+  
+#### The basic idea and usage of the Easy Flash 1CR
+
+As "CR" stands for "cost reduced", one of the basic idea of the Easy Flash
+1CR is that it is affordable enough to be the Flash Cartrdige for all the
+cartridge-based games that you really love: Flash once and enjoy forever.
+Buy one cartridge per game. For avoiding misunderstanding: The EF 1CR
+can be re-flashed as often as you like.
+
+Conveniently, the Easy Flash 1CR comes with a preinstalled flasher: When you
+insert the cartridge into your MEGA65's Expansion Port and
+[start the machine and the cartridge correctly (!)](@TODO)
+then you will see the EasyFlash program's start screen and you will
+imediatelly be able to flash the `*.crt` file as
+[described here](https://skoe.de/easyflash/writecrt/). If you don't have a
+[SD2IEC](https://www.ncsystems.eu/)
+or something similar, then you will likely need to split large `*.crt` files
+into multiple `*.d64` images using
+[EasySplit](http://skoe.de/easyflash/splitfiles/). Watch this
+[YouTube video](https://youtu.be/jD-RmB6YzXc)
+to learn how the flashing on the MEGA65 works when you have split the `*.crt`
+files into multiple `*.d64` files.
+
+#### Adjusting the case for being able to re-flash any time
+
+![EF1CR-case-variants](assets/ef1cr-case-lydon.jpg)
+
+![EF1CR-case-variants](assets/ef1cr-case-sy2002.jpg)
 
 ==============================================================================
 
@@ -105,7 +158,7 @@ aslödk qöldk qöldk qöldk qwöldk qwöldkqwöldk qwöldk qölwdk qölwkdqlöd
 kj dqlkwjd lkqdj klqwj dlqkwj dlkqj dklqwj dklqwj dlkqwjdlkqwj dklqj dqklwjd
 qwlkdj qkldjlkqwdj qkl djlkqwj dklqwj dklqwj dlkqj dklqj dklqwj dkqlj.
 
-![EF1CR-case-variants](assets/ef1cr-cases.jpg)
+
 
 qwdjklqw djlqkwj dlkqjd lqkwj dlkqwj dklqj dlqkwjd qklwjd wqlkjd qlkwjd lkqjw
 qwdölk qwökd öqlwk.
