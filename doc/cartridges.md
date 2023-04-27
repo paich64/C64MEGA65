@@ -72,7 +72,7 @@ FD-2000 or an
 device may be useful. For smaller drives EasySplit can be used to compress
 and split large cartridge images."
 
-Learn more about EasyFlash on the
+Learn more about the EasyFlash on the
 [C64 Wiki](https://www.c64-wiki.com/wiki/EasyFlash). 
 
 Using the our C64 core, your MEGA65 is able to flash EasyFlash
@@ -99,7 +99,7 @@ to find an order form. Here are some important considerations:
   change in future.)
 
 * We highly recommend that you buy fully assembled cartridges to ensure
-  that they actually work on your MEGA65.
+  that they actually work in your MEGA65.
   
 * You need a case for the cartridge. The easiest way to obtain one is to
   order it from Dani&euml;l's website together with your Easy Flash 1CR.
