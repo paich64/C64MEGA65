@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A18]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A19]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A18]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A19]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A18]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A19]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A18]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A19]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -357,7 +357,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal writ
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 64;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 74;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -365,7 +365,7 @@ constant OPTM_SIZE         : natural := 64;  -- amount of items including empty 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
 constant OPTM_DX           : natural := 25;
-constant OPTM_DY           : natural := 31;
+constant OPTM_DY           : natural := 30;
 
 -- !!! DO NOT TOUCH THE TYPE DEFINITION IN THE NEXT LINE AND CONTINUE YOUR CONFIGURATION ONE LINE LATER                                              
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC - 1;
@@ -419,6 +419,17 @@ constant OPTM_ITEMS        : string :=
    
    " CIA: Use 8521 (C64C)\n"    &
    " IEC: Use hardware port\n"  &
+   
+   " Kernal: %s\n"              &  -- Kernal submenu
+   " Kernal Settings\n"         &
+   "\n"                         &
+   " Standard\n"                &
+   " Games System\n"            &
+   " Japanese\n"                &
+   " JiffyDOS\n"                &
+   "\n"                         &
+   " Back to main menu\n"       &
+    
    "\n"                         &
    " Display Settings\n"        &
    "\n"                         &
@@ -431,12 +442,14 @@ constant OPTM_ITEMS        : string :=
    " 4:3  576p 50 Hz\n"         &
    " 5:4  576p 50 Hz\n"         &
    "\n"                         &
+   " HDMI: Flicker-free\n"      &   
+   " HDMI: DVI (no sound)\n"    &
+   "\n"                         &
    " Back to main menu\n"       &
-   
+ 
    " HDMI: CRT emulation\n"     &
    " HDMI: Zoom-in\n"           &
-   " HDMI: Flicker-free\n"      &
-   " HDMI: DVI (no sound)\n"    &
+
    " VGA: Retro 15 kHz RGB\n"   &
    "\n"                         &
    " About & Help\n"            &
@@ -454,13 +467,14 @@ constant OPTM_G_SID_PORT      : integer := 8;
 constant OPTM_G_IMPROVE_AUDIO : integer := 9;
 constant OPTM_G_CIA_8521      : integer := 10;
 constant OPTM_G_IEC           : integer := 11;
-constant OPTM_G_HDMI_MODES    : integer := 12;
-constant OPTM_G_CRT_EMULATION : integer := 13;
-constant OPTM_G_HDMI_ZOOM     : integer := 14;
-constant OPTM_G_HDMI_FF       : integer := 15;
-constant OPTM_G_HDMI_DVI      : integer := 16;
-constant OPTM_G_VGA_RETRO     : integer := 17;
-constant OPTM_G_ABOUT_HELP    : integer := 18;
+constant OPTM_G_KERNAL_MODES  : integer := 12;
+constant OPTM_G_HDMI_MODES    : integer := 13;
+constant OPTM_G_HDMI_FF       : integer := 14;
+constant OPTM_G_HDMI_DVI      : integer := 15;
+constant OPTM_G_CRT_EMULATION : integer := 16;
+constant OPTM_G_HDMI_ZOOM     : integer := 17;
+constant OPTM_G_VGA_RETRO     : integer := 18;
+constant OPTM_G_ABOUT_HELP    : integer := 19;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
@@ -507,24 +521,36 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                                                                           
                                              OPTM_G_CIA_8521      + OPTM_G_SINGLESEL,
                                              OPTM_G_IEC           + OPTM_G_SINGLESEL,
+
+                                             OPTM_G_SUBMENU,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_KERNAL_MODES  + OPTM_G_STDSEL,
+                                             OPTM_G_KERNAL_MODES,
+                                             OPTM_G_KERNAL_MODES,
+                                             OPTM_G_KERNAL_MODES,
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE         + OPTM_G_SUBMENU,
+                                             
                                              OPTM_G_LINE,
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
 
                                              OPTM_G_SUBMENU,
-                                             OPTM_G_TEXT + OPTM_G_HEADLINE,
+                                             OPTM_G_HEADLINE,
                                              OPTM_G_LINE,                                                          
                                              OPTM_G_HDMI_MODES    + OPTM_G_STDSEL,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_HDMI_MODES,
                                              OPTM_G_LINE,
+                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
+                                             OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,                                             
+                                             OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,                                                                             
                                              
                                              OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
-                                             OPTM_G_HDMI_FF       + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
-                                             OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,
                                              OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,

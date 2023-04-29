@@ -172,14 +172,15 @@ Kung Fu Flash
 
 WORK IN PROGRESS
 
+Utility Cartridges that are known to work
+-----------------------------------------
 
-The Final Cartridge III
------------------------
+* Action Replay
+* Epyx Fast Load
+* Final Cartridge III
+* PowerCartridge
+* Super Snapshot
 
-WORK IN PROGRESS
-
-Action Replay
--------------
 
 WORK IN PROGRESS
 

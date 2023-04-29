@@ -206,6 +206,7 @@ signal main_clk                   : std_logic;               -- Core main clock
 ---------------------------------------------------------------------------------------------
 
 -- C64 specific signals for PAL/NTSC and core speed switching
+signal c64_rom                    : std_logic_vector(1 downto 0); -- Select C64's ROM: 0=Custom, 1=Standard, 2=GS, 3=Japan
 signal core_speed                 : unsigned(1 downto 0);    -- see clock.vhd for details
 signal c64_ntsc                   : std_logic;               -- global switch: 0 = PAL mode, 1 = NTSC mode
 signal c64_clock_speed            : natural;                 -- clock speed depending on PAL/NTSC
@@ -329,21 +330,37 @@ constant C_MENU_STEREO_R_DF00 : natural := 35;
 constant C_MENU_IMPROVE_AUDIO : natural := 38;
 constant C_MENU_8521          : natural := 41;
 constant C_MENU_IEC           : natural := 42;
-constant C_MENU_HDMI_16_9_50  : natural := 49;
-constant C_MENU_HDMI_16_9_60  : natural := 50;
-constant C_MENU_HDMI_4_3_50   : natural := 51;
-constant C_MENU_HDMI_5_4_50   : natural := 52;
-constant C_MENU_CRT_EMULATION : natural := 55;
-constant C_MENU_HDMI_ZOOM     : natural := 56;
-constant C_MENU_HDMI_FF       : natural := 57;  -- Important: If this index changes, you also need to adjust CORE-R3.xdc
-constant C_MENU_HDMI_DVI      : natural := 58;
-constant C_MENU_VGA_RETRO     : natural := 59;
+constant C_MENU_KERNAL_STD    : natural := 46;
+constant C_MENU_KERNAL_GS     : natural := 47;
+constant C_MENU_KERNAL_JAPAN  : natural := 48;
+constant C_MENU_KERNAL_JIFFY  : natural := 49;
+constant C_MENU_HDMI_16_9_50  : natural := 58;
+constant C_MENU_HDMI_16_9_60  : natural := 59;
+constant C_MENU_HDMI_4_3_50   : natural := 60;
+constant C_MENU_HDMI_5_4_50   : natural := 61;
+constant C_MENU_HDMI_FF       : natural := 63;
+constant C_MENU_HDMI_DVI      : natural := 64;
+constant C_MENU_CRT_EMULATION : natural := 67;
+constant C_MENU_HDMI_ZOOM     : natural := 68;
+constant C_MENU_VGA_RETRO     : natural := 69;
 
 -- RAMs for the C64
 signal qnice_c64_ram_we             : std_logic;
 signal qnice_c64_ram_data           : std_logic_vector(7 downto 0);  -- The actual RAM of the C64
 signal qnice_c64_mount_buf_ram_we   : std_logic;
 signal qnice_c64_mount_buf_ram_data : std_logic_vector(7 downto 0);  -- Disk mount buffer
+
+-- Custom Kernal access: C64 ROM
+signal qnice_c64rom_we              : std_logic;
+signal qnice_c64rom_addr            : std_logic_vector(13 downto 0);
+signal qnice_c64rom_data_to         : std_logic_vector(7 downto 0);
+signal qnice_c64rom_data_from	      : std_logic_vector(7 downto 0);
+
+-- Custom DOS access: Simulated C1541
+signal qnice_c1541rom_we            : std_logic;
+signal qnice_c1541rom_addr          : std_logic_vector(13 downto 0);
+signal qnice_c1541rom_data_to       : std_logic_vector(7 downto 0);
+signal qnice_c1541rom_data_from	   : std_logic_vector(7 downto 0);
 
 -- Signals for multiplexing the C64's RAM between C_DEV_C64_RAM and C_DEV_C64_PRG
 signal qnice_c64_ramx_we            : std_logic;
@@ -398,6 +415,12 @@ begin
    ---------------------------------------------------------------------------------------------
 
    c64_ntsc          <= '0'; -- @TODO: For now, we hardcode PAL mode
+
+   -- Select C64's ROM: 0=Custom, 1=Standard, 2=GS, 3=Japan
+   c64_rom <= "01" when main_osm_control_i(C_MENU_KERNAL_STD)     else
+              "10" when main_osm_control_i(C_MENU_KERNAL_GS)      else
+              "11" when main_osm_control_i(C_MENU_KERNAL_JAPAN)   else
+              "00";
 
    -- Switch between two clock rates for the CORE, corresponding to frame rates that
    -- closely "embrace" the output rate of exactly 50 Hz (determined by the HDMI resolution).
@@ -463,6 +486,9 @@ begin
          ---------------------------
          -- Configuration options
          ---------------------------
+
+         -- Select C64's ROM: 0=Custom, 1=Standard, 2=GS, 3=Japan
+         c64_rom_i              => c64_rom,
 
          -- Video mode selection:
          -- c64_ntsc_i: PAL/NTSC switch
@@ -613,7 +639,19 @@ begin
          crt_ioe_we_o           => main_crt_ioe_we,
          crt_iof_we_o           => main_crt_iof_we,
          crt_bank_lo_o          => main_crt_bank_lo,
-         crt_bank_hi_o          => main_crt_bank_hi 
+         crt_bank_hi_o          => main_crt_bank_hi,
+
+         -- Custom Kernal: C64 ROM (in QNICE clock domain via c64_clk_sd_i)
+         c64rom_we_i            => qnice_c64rom_we,
+         c64rom_addr_i          => qnice_c64rom_addr,
+         c64rom_data_i          => qnice_c64rom_data_to,
+         c64rom_data_o          => qnice_c64rom_data_from,
+         
+         -- Access custom DOS for the simulated C1541 (in QNICE clock domain via c64_clk_sd_i)
+         c1541rom_we_i          => qnice_c1541rom_we,
+         c1541rom_addr_i        => qnice_c1541rom_addr,
+         c1541rom_data_i        => qnice_c1541rom_data_to,
+         c1541rom_data_o        => qnice_c1541rom_data_from               
       ); -- i_main
 
    ---------------------------------------------------------------------------------------------
@@ -679,6 +717,12 @@ begin
       qnice_c64_ramx_addr        <= (others => '0');
       qnice_c64_ramx_d_to        <= (others => '0');
       qnice_c64_ramx_we          <= '0';
+      qnice_c64rom_we            <= '0';
+      qnice_c64rom_addr          <= (others => '0');
+      qnice_c64rom_data_to       <= (others => '0');
+      qnice_c1541rom_we          <= '0';
+      qnice_c1541rom_addr        <= (others => '0');
+      qnice_c1541rom_data_to     <= (others => '0');
 
       case qnice_dev_id_i is
          -- C64 RAM
@@ -716,6 +760,20 @@ begin
             qnice_crt_qnice_we         <= qnice_dev_we_i;
             qnice_dev_data_o           <= qnice_crt_qnice_data;
             qnice_dev_wait_o           <= qnice_crt_qnice_wait;
+            
+         -- Custom Kernal Access: C64 ROM
+         when C_DEV_C64_KERNAL_C64 =>
+            qnice_c64rom_addr          <= qnice_dev_addr_i(13 downto 0);
+            qnice_c64rom_we            <= qnice_dev_we_i;
+            qnice_dev_data_o           <= x"00" & qnice_c64rom_data_from;
+            qnice_c64rom_data_to       <= qnice_dev_data_i(7 downto 0);
+         
+         -- Custom Kernal Access: C1541 ROM
+         when C_DEV_C64_KERNAL_C1541 =>
+            qnice_c1541rom_addr        <= qnice_dev_addr_i(13 downto 0);
+            qnice_c1541rom_we          <= qnice_dev_we_i;
+            qnice_dev_data_o           <= x"00" & qnice_c1541rom_data_from;
+            qnice_c1541rom_data_to     <= qnice_dev_data_i(7 downto 0);
 
          when others => null;
       end case;

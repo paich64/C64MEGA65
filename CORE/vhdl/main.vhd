@@ -32,6 +32,9 @@ entity main is
       -- Configuration options
       ---------------------------
 
+      -- Select C64's ROM: 0=Custom, 1=Standard, 2=GS, 3=Japan
+      c64_rom_i              : in  std_logic_vector(1 downto 0);
+
       -- Video mode selection:
       -- c64_ntsc_i: PAL/NTSC switch
       -- clk_main_speed_i: The core's clock speed depends on mode and needs to be very exact for avoiding clock drift
@@ -97,12 +100,12 @@ entity main is
 
       -- C64 RAM: No address latching necessary and the chip can always be enabled
       c64_ram_addr_o         : out unsigned(15 downto 0);    -- C64 address bus
-      c64_ram_data_o         : out unsigned( 7 downto 0);     -- C64 RAM data out
+      c64_ram_data_o         : out unsigned( 7 downto 0);    -- C64 RAM data out
       c64_ram_we_o           : out std_logic;                -- C64 RAM write enable
-      c64_ram_data_i         : in  unsigned( 7 downto 0);     -- C64 RAM data in
+      c64_ram_data_i         : in  unsigned( 7 downto 0);    -- C64 RAM data in
 
       -- C64 IEC handled by QNICE
-      c64_clk_sd_i           : in  std_logic;                -- "sd card write clock" for floppy drive internal dual clock RAM buffer
+      c64_clk_sd_i           : in  std_logic;                -- QNICE "sd card write clock" for floppy drive internal dual clock RAM buffer
       c64_qnice_addr_i       : in  std_logic_vector(27 downto 0);
       c64_qnice_data_i       : in  std_logic_vector(15 downto 0);
       c64_qnice_data_o       : out std_logic_vector(15 downto 0);
@@ -180,7 +183,19 @@ entity main is
       crt_ioe_we_o           : out std_logic;
       crt_iof_we_o           : out std_logic;
       crt_bank_lo_o          : out std_logic_vector( 6 downto 0);
-      crt_bank_hi_o          : out std_logic_vector( 6 downto 0)
+      crt_bank_hi_o          : out std_logic_vector( 6 downto 0);
+      
+		-- Access custom Kernal: C64's Basic and DOS (in QNICE clock domain via c64_clk_sd_i)
+      c64rom_we_i            : in std_logic;
+      c64rom_addr_i          : in std_logic_vector(13 downto 0);
+      c64rom_data_i          : in std_logic_vector(7 downto 0);
+      c64rom_data_o          : out std_logic_vector(7 downto 0);
+      
+      -- Access custom DOS for the simulated C1541 (in QNICE clock domain via c64_clk_sd_i)
+      c1541rom_we_i          : in std_logic;
+      c1541rom_addr_i        : in std_logic_vector(13 downto 0);
+      c1541rom_data_i        : in std_logic_vector(7 downto 0);
+      c1541rom_data_o        : out std_logic_vector(7 downto 0)
    );
 end entity main;
 
@@ -558,7 +573,9 @@ begin
          clk32       => clk_main_i,
          clk32_speed => clk_main_speed_i,
          reset_n     => reset_core_n,
-         bios        => "01",             -- standard C64, internal ROM
+         
+         -- Select C64's ROM: 0=Custom, 1=Standard, 2=GS, 3=Japan
+         bios        => c64_rom_i,
 
          pause       => pause_i,
          pause_out   => c64_pause,        -- unused
@@ -667,14 +684,18 @@ begin
          iec_data_i  => c64_iec_data_i and hw_iec_data_n_i,
          iec_data_o  => c64_iec_data_o,
 
-         c64rom_addr => "00000000000000",
-         c64rom_data => x"00",
-         c64rom_wr   => '0',
-
+         -- Cassette drive
          cass_motor  => open,
          cass_write  => open,
          cass_sense  => '1',              -- low active
-         cass_read   => '1'               -- default is '1' according to MiSTer's c1530.vhd
+         cass_read   => '1',              -- default is '1' according to MiSTer's c1530.vhd
+
+         -- Access custom Kernal: C64's Basic and DOS
+         c64rom_clk_i   => c64_clk_sd_i,
+         c64rom_we_i    => c64rom_we_i,
+         c64rom_addr_i  => c64rom_addr_i,
+         c64rom_data_i  => c64rom_data_i,
+         c64rom_data_o  => c64rom_data_o
       ); -- i_fpga64_sid_iec
 
    --------------------------------------------------------------------------------------------------
@@ -1120,12 +1141,6 @@ begin
    iec_par_stb_i        <= '0';
    iec_par_data_i       <= (others => '0');
 
-   -- Custom ROM load facility: not implemented, yet
-   iec_rom_std_i        <= '1';     -- use the factory default ROM
-   iec_rom_addr_i       <= (others => '0');
-   iec_rom_data_i       <= (others => '0');
-   iec_rom_wr_i         <= '0';
-
    -- Drive is held to reset if the core is held to reset or if the drive is not mounted, yet
    -- @TODO: MiSTer also allows these options when it comes to drive-enable:
    --        "P2oPQ,Enable Drive #8,If Mounted,Always,Never;"
@@ -1182,13 +1197,12 @@ begin
          par_data_i     => iec_par_data_i,
          par_data_o     => iec_par_data_o,
 
-         -- Facility to load custom rom (currently not used)
-         -- Important: If we want to use it, we need to replace "iecdrv_mem" in c1581_multi.sv
-         -- by "dualport_2clk_ram" due to QNICE's falling-edge reading and writing
-         rom_std        => iec_rom_std_i,       -- hardcoded to '1', use the factory default ROM
-         rom_addr       => iec_rom_addr_i,
-         rom_data       => iec_rom_data_i,
-         rom_wr         => iec_rom_wr_i
+         -- Access custom rom (DOS)
+         rom_std_i      => not c64_rom_i(0) and not c64_rom_i(1), -- 1=use the factory default ROM
+         rom_addr_i     => c1541rom_addr_i,
+         rom_data_i     => c1541rom_data_i,
+         rom_wr_i       => c1541rom_we_i,
+         rom_data_o     => c1541rom_data_o
       ); -- i_iec_drive
 
    -- 16 MHz chip enable for the IEC drives, so that ph2_r and ph2_f can be 1 MHz (C1541's CPU runs with 1 MHz)

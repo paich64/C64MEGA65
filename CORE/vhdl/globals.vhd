@@ -30,7 +30,7 @@ constant QNICE_FIRMWARE_MONITOR   : string  := "../../../M2M/QNICE/monitor/monit
 constant QNICE_FIRMWARE_M2M       : string  := "../../../CORE/m2m-rom/m2m-rom.rom";         -- release
 
 -- Select firmware here
-constant QNICE_FIRMWARE           : string  := QNICE_FIRMWARE_M2M;
+constant QNICE_FIRMWARE           : string  := QNICE_FIRMWARE_MONITOR;
 
 ----------------------------------------------------------------------------------------------------------
 -- Clock Speed(s)
@@ -81,11 +81,13 @@ constant VRAM_ADDR_WIDTH      : natural := f_log2(CHAR_MEM_SIZE);
 -- Commodore 64 specific devices
 ----------------------------------------------------------------------------------------------------------
 
-constant C_DEV_C64_RAM        : std_logic_vector(15 downto 0) := x"0100";     -- C64's main RAM
-constant C_DEV_C64_VDRIVES    : std_logic_vector(15 downto 0) := x"0101";     -- Virtual Device Management System
-constant C_DEV_C64_MOUNT      : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
-constant C_DEV_C64_CRT        : std_logic_vector(15 downto 0) := x"0103";     -- SW cartridges (*.CRT)
-constant C_DEV_C64_PRG        : std_logic_vector(15 downto 0) := x"0104";     -- PRG loader
+constant C_DEV_C64_RAM           : std_logic_vector(15 downto 0) := x"0100";     -- C64's main RAM
+constant C_DEV_C64_VDRIVES       : std_logic_vector(15 downto 0) := x"0101";     -- Virtual Device Management System
+constant C_DEV_C64_MOUNT         : std_logic_vector(15 downto 0) := x"0102";     -- RAM to buffer disk images
+constant C_DEV_C64_CRT           : std_logic_vector(15 downto 0) := x"0103";     -- SW cartridges (*.CRT)
+constant C_DEV_C64_PRG           : std_logic_vector(15 downto 0) := x"0104";     -- PRG loader
+constant C_DEV_C64_KERNAL_C64    : std_logic_vector(15 downto 0) := x"0105";     -- Custom Kernal: C64
+constant C_DEV_C64_KERNAL_C1541  : std_logic_vector(15 downto 0) := x"0106";     -- Custom Kernal: (simulated) C1541
 
 ----------------------------------------------------------------------------------------------------------
 -- HyperRAM memory map (in units of 4kW)
