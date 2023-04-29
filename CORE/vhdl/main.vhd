@@ -288,6 +288,7 @@ architecture synthesis of main is
    signal core_dotclk          : std_logic;
    signal core_phi0            : std_logic;
    signal core_phi2            : std_logic;
+   signal core_phi2_d          : std_logic;
    signal cartridge_bank_raddr : std_logic_vector(24 downto 0);
 
    -- Hardware Expansion Port (aka Cartridge Port)
@@ -683,6 +684,18 @@ begin
    --    * Simulateed cartridge using data from .crt file
    --------------------------------------------------------------------------------------------------
 
+   delay_phi2 : process(clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         if c64_exp_port_mode_i = 0 then
+            core_phi2_d       <= core_phi2;
+            cart_phi2_o       <= core_phi2_d;
+         else
+            cart_phi2_o       <= '0';
+         end if;
+      end if;
+   end process;
+
    handle_hardware_expansion_port : process(all)
    begin
       -- C64 Expansion Port (aka Cartridge Port) control lines
@@ -710,7 +723,6 @@ begin
       cart_ba_io           <= 'Z';
       cart_rw_io           <= 'Z';
       cart_reset_o         <= '1';
-      cart_phi2_o          <= '0';
       cart_dotclock_o      <= '0';
       cart_nmi_n           <= '1';
       cart_irq_n           <= '1';
@@ -739,7 +751,6 @@ begin
          cart_rw_io        <= not c64_ram_we;
 
          cart_reset_o      <= reset_core_n;
-         cart_phi2_o       <= core_phi2;
          cart_dotclock_o   <= core_dotclk;
 
          cart_nmi_n        <= cart_nmi_i;
