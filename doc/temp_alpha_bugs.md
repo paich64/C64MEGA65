@@ -5,6 +5,10 @@
 
 ### System
 
+* Black scren on startup when in MONITOR mode, while no Shell is running:
+  Nothing on VGA and nothing on HDMI. Expected is that we would see
+  a normal C64 screen.
+
 * Black screen on startup (while the OSD is still working) when no SD card
   is inserted (neither internal nor external) - OR - when no SD card is
   readable for the system.

@@ -348,9 +348,20 @@ _OPTM_HM_1A     CMP     '%', @R0                ; search for "%s"
                 RBRA    _OPTM_HM_2, !Z          ; no
                 ADD     1, R0                   ; skip character
 
-                ; respect (sub)menu structure: skip invisible items
+                ; respect (sub)menu structure: skip invisible items by
+                ; finding the next \n and then advancing behind it (see also
+                ; the next comment that starts with "per definition...")
                 CMP     @R1, 0x7FFF             ; item visible?
-                RBRA    _OPTM_HM_2, !N          ; no: skip printing
+                RBRA    _OPTM_HM_HS, N          ; yes: handle %s
+                MOVE    R0, R8                  ; search from behind the %s
+                MOVE    OPTM_NL, R9             ; and find \n
+                SYSCALL(strstr, 1)
+                CMP     0, R10                  ; no \n found means EOS
+                RBRA    _OPTM_SHOW_0, Z
+                ADD     2, R10                  ; skip \n
+                CMP     0, @R10                 ; end of string?
+                RBRA    _OPTM_SHOW_0, Z         ; yes
+                RBRA    _OPTM_HM_0, 1           ; no: next iteration    
 
                 ; Extract from R7 (start of current string) to \n and provide
                 ; this string and the index to the callback function. This
@@ -360,7 +371,7 @@ _OPTM_HM_1A     CMP     '%', @R0                ; search for "%s"
                 ; not find a \n then this means there is an error in
                 ; config.vhd, so we kind of gracefully exit the %s handling
                 ; and continue with tagging the menu items
-                MOVE    R0, R8                  ; search from behind the %s
+_OPTM_HM_HS     MOVE    R0, R8                  ; search from behind the %s
                 MOVE    OPTM_NL, R9             ; and find \n
                 SYSCALL(strstr, 1)
                 CMP     0, R10                  ; no \n found means EOS

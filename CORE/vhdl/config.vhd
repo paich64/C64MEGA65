@@ -421,7 +421,7 @@ constant OPTM_ITEMS        : string :=
    " IEC: Use hardware port\n"  &
    
    " Kernal: %s\n"              &  -- Kernal submenu
-   " Kernal Settings\n"         &
+   " Kernal Selection\n"        &
    "\n"                         &
    " Standard\n"                &
    " Games System\n"            &
