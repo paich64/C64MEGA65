@@ -1,75 +1,42 @@
+@TODO: Code cleanup: Remove debug signals, add file-headers
+
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
-@TODO: The fully dynamic flicker-free HDMI, which also reduces our output
-latency on HDMI to less than 1ms
-
-@TODO: Dual SID
-
-@TODO: Check, adjust/rewrite for clarity:
-Cartridge release: Use hardware cartridges in the MEGA65's expansion port and
-enjoy simulated cartridges using `*.crt` files. And you can now use custom
-KERNALs such as JuffyDOS for the C64 and the C1541.
-
-@TODO: For the release on Discord (and maybe also on the FileHost), we need a
-short video that demonstrates how different cartridge types are inserted and
-used (old to new, game, tool, GeoRAM, EasyFlash various models, ...) and then
-also software cartridges.
-
-@TODO Fully dynamic flicker-free HDMI
+Hardware support release: Insert hardware cartridges into the MEGA65's
+Expansion Port or simulate cartridges via `*.crt` files. Connect IEC devices
+such as drives and printers and enjoy Stereo SID sound. For the most authentic
+retro feeling, feed a composite video signal into your monitor. Load faster
+using JiffyDOS or by directly loading `*.prg` files. 
 
 ## New Features
 
-* More clearly arranged menu using submenus
+* Hardware cartridges can be used in the MEGA65's Expansion Port. Most game
+  cartridges are supported, including Ultimax game cartridges and also some
+  Flash Cartridges and some more sophisticated utility cartridges are
+  supported (see [cartridge documentation](doc/cartridges.md)).
 
-* Hardware cartridges can be used in the MEGA65's expansion port. Most game
-  cartridges are supported, including Ultimax game cartridges.
+* Run simulated cartridges by loading `*.crt` files from your SD card. Most
+  cartridge types are supported. Saving data on the cartridge is not yet
+  supported.
 
-* The following more sophisticated hardware cartridges are supported:
-  EasyFlash 1CR
+* Ability to directly load `*.prg` files
 
-@TODO: Check, if we can support at least REUs and other cartridges that are
-not relying on the missing R3 signals (RESET, NMI and IRQ)
-
-WIP Simulated cartridges using `*.crt` files:  @TODO we might not support
-all cartridge types, add constraints here
-
-WIP Ability to directly load `*.prg` files. This is especially useful in the
-context of SID tunes which often come as stand alone `.prg` files
-@TODO idea: M2M can offer a callback that is executed right before the
-main loop of the shell starts. While PRG loading is like cartridge loading
-but slightly different, the m2m-rom.asm main program can keep a state and then
-jump to the C64's kernal function for RUN to start the program after loading.
-Actually, what we need to do is: reset, load prg, run
-
-WIP Ability to use custom KERNALs such as JiffyDOS for the C64 and the C1541:
-Here is an idea how we can make this simple: Hardcoded filenames for ROM files
-in the /c64 folder and then introduce dependent menu items for the M2M menu:
-When Jiffy DOS is found, then a menu item called (for example) "Use JiffyDOS"
-is shown in the "C64 Configuration". The dependent menu item would be a pure
-"show/hide" thing, i.e. not influence the size of the config file and also
-if from time to time JiffyDOS is not found (other SD card inserted), a
-potential "switch ON" would not be forgotten next time it is being found.
-For convenience we should have the option to reset the C64 if this setting
-is changed. The dependency could be specified in config.vhd by specifying
-bits in a register (other than the register we use for the menu?). We would
-need quite some core specific code that resides in m2m-rom/m2m-rom.asm (and
-callback functions that are for example called before the main loop starts and
-that offer also a fatal mechanism for the authors of the callback; we should
-just make the interface of FATAL public because is available everywhere).
+WIP Ability to switch Kernal versions: Standard, C64 Games System, Japanese
+  Revision and [JiffyDOS](doc/jiffy.md)
 
 * Stereo SID support: You can chose from multiple real dual SID combinations
   and enjoy stereo SID tunes and demos. And you can also use "pseudo stereo"
   by running the two different SID models 6581 and 8050 at the same (one left
   and one right) while they play the same mono tune.
 
-WIP IEC Hardware port: @TODO: Idea: Drive #8 stays hardwired as it is but
-you can plug other IEC devices (such as drives with #9 onwards) and printers
-into the MEGA6's IEC port. Can be as simple as a single-select item:
-"Enable hardware IEC port".
+* Hardware IEC port: Attach real 1541 & 1581 drives as well as printers,
+  plotters or modern devices such as the SD2IEC and the Ultimate-II+
 
 WIP 15khz RGB + csync:
 https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500
+
+* More clearly arranged menu using submenus
 
 ## Improved C64 and C1541 Accuracy & Compatibility
 
@@ -100,17 +67,9 @@ https://discord.com/channels/719326990221574164/794775503818588200/1082080087891
   version 1.4b: It did not assert the +5V power signal. Now it does
   assert the +5 power signal via the FPGA pin `ct_hpd`.
 
-WIP HDMI compatibility: MJoergen research project to fix the HDMI sound on his
-monitor which might lead to more HDMI compatibility in general. Research path:
-Use an FPGA board with HDMI input, to capture the data from both the MEGA65
-(has no sound) and the laptop (has sound), to compare them. Might very well
-help to fix https://github.com/MJoergen/C64MEGA65/issues/4
-And this: https://github.com/MJoergen/C64MEGA65/issues/13
-
-WIP Eliminate HDMI Flicker-free "~20min period artefact" by manual clock
-frequency tuning. Investigate dynamic PLL adjustment/autotune in conjunction
-with ascal to improve flicker-free HDMI further (maybe there is a possibility
-to achieve flicker-free without the need of slowing down by 0.25%)
+* Fully dynamic flicker-free HDMI, which reduces our output latency on
+  HDMI to less than 1ms and also eliminates the artecfact, that moved from
+  the top to the bottom of the screen every once in a while.
 
 ## Bugfixes
 
@@ -128,14 +87,6 @@ to achieve flicker-free without the need of slowing down by 0.25%)
 
 * Now using glitch-free clock multiplexers: The user can switch the
   "HDMI: Flicker-free" mode ON/OFF without the system performing a reset.
-
-WIP HyperRAM device support to QNICE: @TODO Describe where this is used;
-for example for the `*.crt` support as these files can become very large
-
-WIP Refactor audio clock, video clock, (<=== already done | @TODO ==>)
-asynchronous resets and other things around clk.vhd to reduce
-warnings upon `report_cdc` and to make sure the whole clock architecture is
-cleaner. (Also need to double-check M2M itself.)
 
 Version 4 - November 25, 2022
 =============================

@@ -155,3 +155,10 @@ CRTROM_MAN_MAX  .EQU   3                        ; max. amt. of. man. CRTS/ROMs
 CRTROM_MAN_LDF  .BLOCK CRTROM_MAN_MAX           ; flag: has been loaded
 CRTROM_MAN_DEV  .BLOCK CRTROM_MAN_MAX           ; byte streaming device ids
 CRTROM_MAN_4KS  .BLOCK CRTROM_MAN_MAX           ; 4K start address within dev.
+CRTROM_AUT_NUM  .BLOCK 1                        ; amount of automatic ROMSs
+CRTROM_AUT_MAX  .EQU   3                        ; max. amt. of. automatic ROMs
+CRTROM_AUT_LDF  .BLOCK CRTROM_AUT_MAX           ; flag: has been loaded
+CRTROM_AUT_DEV  .BLOCK CRTROM_AUT_MAX           ; byte streaming device ids
+CRTROM_AUT_4KS  .BLOCK CRTROM_AUT_MAX           ; 4K start address within dev.
+CRTROM_AUT_MOD  .BLOCK CRTROM_AUT_MAX           ; mode: mandatory or optional
+CRTROM_AUT_NAM  .BLOCK CRTROM_AUT_MAX           ; startpos of filenames

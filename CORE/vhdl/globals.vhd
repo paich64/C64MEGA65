@@ -93,8 +93,8 @@ constant C_DEV_C64_KERNAL_C1541  : std_logic_vector(15 downto 0) := x"0106";    
 -- HyperRAM memory map (in units of 4kW)
 ----------------------------------------------------------------------------------------------------------
 
-constant C_HMAP_M2M           : std_logic_vector(15 downto 0) := x"0000";     -- Reserved for the M2M framework
-constant C_HMAP_CRT           : std_logic_vector(15 downto 0) := x"0200";     -- Contains CRT files
+constant C_HMAP_M2M              : std_logic_vector(15 downto 0) := x"0000";     -- Reserved for the M2M framework
+constant C_HMAP_CRT              : std_logic_vector(15 downto 0) := x"0200";     -- Contains CRT files
 
 ----------------------------------------------------------------------------------------------------------
 -- Virtual Drive Management System
@@ -118,15 +118,22 @@ constant C_VD_BUFFER          : vd_buf_array := (  C_DEV_C64_MOUNT,
 ----------------------------------------------------------------------------------------------------------
 
 type crtrom_buf_array is array(natural range<>) of std_logic_vector;
+constant ENDSTR : character := character'val(0);
 
 -- Cartridges and ROMs can be stored into QNICE devices, HyperRAM and SDRAM
 constant C_CRTROMTYPE_DEVICE     : std_logic_vector(15 downto 0) := x"0000";
 constant C_CRTROMTYPE_HYPERRAM   : std_logic_vector(15 downto 0) := x"0001";
 constant C_CRTROMTYPE_SDRAM      : std_logic_vector(15 downto 0) := x"0002";           -- @TODO/RESERVED for future R4 boards
 
+-- Types of automatically loaded ROMs:
+-- If a mandatory file is missing, then the core outputs the missing file and goes fatal
+constant C_CRTROMTYPE_MANDATORY  : std_logic_vector(15 downto 0) := x"0003";
+constant C_CRTROMTYPE_OPTIONAL   : std_logic_vector(15 downto 0) := x"0004";
+
 -- Manually loadable ROMs and cartridges as defined in config.vhd
+--
 -- If you are not using this, then make sure that:
---    C_CRTROM_MAN_NUM    is 0
+--    C_CRTROMS_MAN_NUM   is 0
 --    C_CRTROMS_MAN       is (x"EEEE", x"EEEE", x"EEEE")
 -- Each entry of the array consists of two constants:
 --    1) Type of CRT or ROM: Load to a QNICE device, load into HyperRAM, load into SDRAM
@@ -134,20 +141,41 @@ constant C_CRTROMTYPE_SDRAM      : std_logic_vector(15 downto 0) := x"0002";    
 --       else it is a 4k window in HyperRAM or in SDRAM
 -- In case we are loading to a QNICE device, then the control and status register is located at the 4k window 0xFFFF.
 -- @TODO: See @TODO for more details about the control and status register
-constant C_CRTROM_MAN_NUM        : natural := 2;                                       -- amount of manually loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
-constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_DEVICE,   C_DEV_C64_PRG,
-                                                         C_CRTROMTYPE_DEVICE,   C_DEV_C64_CRT,
+constant C_CRTROMS_MAN_NUM       : natural := 2;                                       -- Amount of manually loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_DEVICE, C_DEV_C64_PRG,
+                                                         C_CRTROMTYPE_DEVICE, C_DEV_C64_CRT,
                                                          x"EEEE");                     -- Always finish the array using x"EEEE"
 
--- @TODO: See MiSTer2MEGA65/doc/temp/romloading.md: At this moment, we are only supporting
--- manually loaded ROMs and cartridges, so we would need a second array that is accessed via
--- a different address (see framework.vhd section "when C_CRTSANDROMS") and more Shell code to
--- support automatically loaded mandatory and optional ROMs.
--- The array will be something along these lines (to be fine-tuned):
--- Entry 1) Storage type to load to (device, HyperRAM, SDRAM)
--- Entry 2) device ID or 4k window
--- Entry 3) Flags, such as mandatory or not, how to treat the situation of a mandatory ROM is not found, etc.
--- Entry 4) Error message(s) for mandatory but not found situations (?)
+-- Automatically loaded ROMs: These ROMs are loaded before the core starts
+--
+-- Works similar to manually loadable ROMs and cartridges and each line item has two additional parameters:
+--    1) and 2) see above
+--    3) Mandatory or optional ROM
+--    4) Start address of ROM file name within C_CRTROM_AUTO_NAMES
+-- If you are not using this, then make sure that:
+--    C_CRTROMS_AUTO_NUM  is 0
+--    C_CRTROMS_AUTO      is (x"EEEE", x"EEEE", x"EEEE", x"EEEE", x"EEEE")
+-- How to pass the filenames of the ROMs to the framework:
+-- C_CRTROMS_AUTO_NAMES is a concatenation of all filenames (see config.vhd's WHS_DATA for an example of how to concatenate)
+--    The start addresses of the filename can be determined similarly to how it is done in config.vhd's HELP_x_START
+--    using a concatenated addition and VHDL's string length operator.    
+--    IMPORTANT: a) The framework is not doing any consistency or error check when it comes to C_CRTROMS_AUTO_NAMES, so you
+--                  need to be extra careful that the string itself plus the start position of the namex are correct.
+--               b) Don't forget to zero-terminate each of your substrings of C_CRTROMS_AUTO_NAMES by adding "& ENDSTR;"
+--               c) Don't forget to finish the C_CRTROMS_AUTO array with x"EEEE"
+
+-- C64 core specific ROMs
+constant JIFFY_DOS_C64           : string  := "/c64/jd-c64.bin" & ENDSTR;
+constant JIFFY_DOS_C1541         : string  := "/c64/jd-c1541.bin" & ENDSTR;
+constant JIFFY_DOS_C64_START     : std_logic_vector(15 downto 0) := x"0000";
+constant JIFFY_DOS_C1541_START   : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(JIFFY_DOS_C64'length, 16));
+
+-- M2M framework constants
+constant C_CRTROMS_AUTO_NUM      : natural := 2;                                       -- Amount of automatically loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROMS_AUTO_NAMES    : string  := JIFFY_DOS_C64 & JIFFY_DOS_C1541;     
+constant C_CRTROMS_AUTO          : crtrom_buf_array := ( C_CRTROMTYPE_DEVICE, C_DEV_C64_KERNAL_C64,   C_CRTROMTYPE_OPTIONAL, JIFFY_DOS_C64_START,
+                                                         C_CRTROMTYPE_DEVICE, C_DEV_C64_KERNAL_C1541, C_CRTROMTYPE_OPTIONAL, JIFFY_DOS_C1541_START,
+                                                         x"EEEE");                     -- Always finish the array using x"EEEE"
 
 ----------------------------------------------------------------------------------------------------------
 -- Audio filters

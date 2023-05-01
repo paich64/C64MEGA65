@@ -187,6 +187,40 @@ _W333MS_L2      SUB     1, R1
                 RET
 
 ; ----------------------------------------------------------------------------
+; WAIT_FOR_SD
+;   Waits SD_WAIT cycles relative to the start of the Shell. This is used
+;   as a workaround to increase the SD card reading stability after power-on.
+;   The function waits only after power-on and hard resets, i.e. it respects
+;   the SD_WAIT_DONE variable.
+; ----------------------------------------------------------------------------
+
+WAIT_FOR_SD     SYSCALL(enter, 1)
+
+                MOVE    SD_WAIT_DONE, R8        ; successfully waited before?
+                CMP     0, @R8
+                RBRA    _WAITFSD_RET, !Z        ; yes
+
+                MOVE    SD_CYC_MID, R8          ; 32-bit addition to calculate
+                MOVE    @R8, R8                 ; ..the target cycles
+                MOVE    SD_CYC_HI, R9
+                MOVE    @R9, R9
+                ADD     SD_WAIT, R8
+                ADDC    0, R9
+                MOVE    IO$CYC_MID, R10
+                MOVE    IO$CYC_HI, R11
+_WAITFSD_1      CMP     @R11, R9
+                RBRA    _WAITFSD_2, N           ; wait until @R11 >= R9
+                RBRA    _WAITFSD_1, !Z
+_WAITFSD_2      CMP     @R10, R8
+                RBRA    _WAITFSD_2, !N          ; wait while @R10 <= R8
+
+                MOVE    SD_WAIT_DONE, R8        ; remember that we waited
+                MOVE    1, @R8
+
+_WAITFSD_RET    SYSCALL(leave, 1)
+                RET
+
+; ----------------------------------------------------------------------------
 ; WORD2HEXSTR
 ;    Convert a word into its hexadecimal zero-terminated string representation
 ;    R8: word

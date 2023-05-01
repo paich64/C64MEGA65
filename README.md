@@ -1,11 +1,15 @@
-@TODO: Add description for cartridges, including what module types are
-supported and link to the FAQs for troubleshooting. Also Describe the
-short/long resets.
+@TODO: Add descriptions:
 
-@TODO: Add description for dual SID
-
-@TODO: Since the menu structure changed (submenus): DVI might sit somewhere
-else, so re-do the recipe
+* HW and SIM carts, including links to cartridge.md (which should also
+  explain the nitty/gritties of the CORE #0 and the alternatives); update
+  FAQ
+* Dual SID
+* PRG loading
+* Hardware IEC
+* Kernals and JiffyDOS
+* Since the menu structure changed (submenus): DVI might sit somewhere
+  else, so re-do the recipe
+* 15khz RGB + csync
 
 Commodore 64 for MEGA65
 =======================

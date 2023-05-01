@@ -340,7 +340,7 @@ constant OPTM_GTC          : natural := 17;                -- Amount of signific
 -- configuration file, such as OPTM_G_MOUNT_DRV and OPTM_G_LOAD_ROM, then we need to make sure that we
 -- also extend _ROSMS_4A and _ROSMC_NEXTBIT in options.asm accordingly.
 -- Also: Right now OPTM_G_SUBMENU cannot have a "selected" state (and therefore cannot be saved in the config file)
--- and this _ROSMS_4A and _ROSMC_NEXTBIT are not yet handling the situation. If we decided to change that in future,
+-- and therefore _ROSMS_4A and _ROSMC_NEXTBIT are not yet handling the situation. If we decided to change that in future,
 -- we would need to define the right semantics everywhere.
 
 --------------------------------------------------------------------------------------------------------------------

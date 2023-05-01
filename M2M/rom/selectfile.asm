@@ -42,39 +42,11 @@ SELECT_FILE     SYSCALL(enter, 1)
                 MOVE    @R0, SP                 ; restore the own stack
 
                 ; Perform the SD card "stability" workaround (see shell.asm)
-                MOVE    SD_WAIT_DONE, R8        ; successfully waited before?
-                CMP     0, @R8
-                RBRA    _S_CONT_CHECK, !Z       ; yes
-
-                MOVE    SD_CYC_HI, R8           ; did we wait veeeery long?
-                MOVE    IO$CYC_HI, R9
-                MOVE    @R9, R9
-                SUB     @R8, R9
-                RBRA    _S_SD_WAITDONE, !Z      ; yes
-
-                MOVE    SD_CYC_MID, R8
-                MOVE    @R8, R8
-                MOVE    IO$CYC_MID, R9
-                MOVE    @R9, R10
-                SUB     R8, R10
-                MOVE    SD_WAIT, R11
-                CMP     R10, R11                ; less or equal wait time?
-                RBRA    _S_SD_WAITDONE, N       ; no: proceed with browser
-
-                RSUB    SCR$CLRINNER, 1         
+                RSUB    SCR$CLRINNER, 1
                 MOVE    STR_INITWAIT, R8
                 RSUB    SCR$PRINTSTR, 1         ; Show "Please wait"-message
-                MOVE    SD_CYC_MID, R8
-                MOVE    @R8, R8
-                MOVE    IO$CYC_MID, R9                
-_S_SD_WAIT      MOVE    @R9, R10
-                SUB     R8, R10
-                CMP     R10, R11
-                RBRA    _S_SD_WAIT, !N
+                RSUB    WAIT_FOR_SD, 1
                 RSUB    SCR$CLRINNER, 1
-
-_S_SD_WAITDONE  MOVE    SD_WAIT_DONE, R8        ; remember that we waited
-                MOVE    1, @R8                
 
                 ; if we already have run the browser before, then let us
                 ; continue where we left off

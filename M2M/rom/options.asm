@@ -346,24 +346,10 @@ _HLP_CA_1       MOVE    LOG_STR_CFG_ON, R8
                 ; RP_SYSTEM_START (gencfg.asm)
                 MOVE    M2M$CSR, R2
                 MOVE    M2M$CSR_RESET, @R2
-
-                ; wait SD_WAIT cycles
-                MOVE    SD_CYC_MID, R8          ; 32-bit addition to calculate
-                MOVE    @R8, R8                 ; ..the target cycles
-                MOVE    SD_CYC_HI, R9
-                MOVE    @R9, R9
-                ADD     SD_WAIT, R8
-                ADDC    0, R9
-                MOVE    IO$CYC_MID, R10
-                MOVE    IO$CYC_HI, R11
-_HLP_CA_2A      CMP     @R11, R9
-                RBRA    _HLP_CA_2B, N           ; wait until @R11 >= R9
-                RBRA    _HLP_CA_2A, !Z
-_HLP_CA_2B      CMP     @R10, R8
-                RBRA    _HLP_CA_2B, !N          ; wait while @R10 <= R8
+                RSUB    WAIT_FOR_SD, 1
 
                 ; Mount SD card
-_HLP_CA_3       MOVE    CONFIG_DEVH, R8         ; device handle
+                MOVE    CONFIG_DEVH, R8         ; device handle
                 MOVE    1, R9                   ; partition #1 hardcoded
                 SYSCALL(f32_mnt_sd, 1)
                 CMP     0, R9                   ; R9=error code; 0=OK

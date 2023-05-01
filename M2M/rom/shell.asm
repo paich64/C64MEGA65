@@ -3,10 +3,10 @@
 ;
 ; Shell: User interface and core automation
 ;
-; The intention of the Shell is to provide a uniform user interface and core
-; automation for all MiSTer2MEGA65 projects.
+; The Shell provides a uniform user interface and core automation
+; for all MiSTer2MEGA65 projects.
 ;
-; done by sy2002 in 2022 and licensed under GPL v3
+; done by sy2002 in 2023 and licensed under GPL v3
 ; ****************************************************************************
 
 ; ----------------------------------------------------------------------------
@@ -52,6 +52,8 @@ START_SHELL     MOVE    LOG_M2M, R8
                 ; FAT32 subsystem: initialize SD card device handles for the
                 ; vdrive and CRT/ROM loader (HANDLE_DEV) and for the config
                 ; file (CONFIG_DEVH) and initialize the config file handle
+                ; It is important that these handles are initialized to zero
+                ; as parts of the code use this as a flag.
                 MOVE    HANDLE_DEV, R8
                 MOVE    0, @R8
                 MOVE    CONFIG_DEVH, R8
@@ -105,6 +107,7 @@ START_SHELL     MOVE    LOG_M2M, R8
                 RSUB    CRTROM_INIT, 1          ; CRT/ROM loader system
                 RSUB    KEYB$INIT, 1            ; keyboard library
                 RSUB    HELP_MENU_INIT, 1       ; menu library
+                RSUB    CRTROM_AUTOLOAD, 1      ; auto-load ROMs
 
                 ; ------------------------------------------------------------
                 ; Reset management

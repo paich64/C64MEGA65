@@ -40,7 +40,7 @@ DBG_START2
 
 LOG_M2M         .ASCII_P "                                                 \n"
                 .ASCII_P "MiSTer2MEGA65 Firmware and Shell, "
-                .ASCII_P "done by sy2002 & MJoergen in 2022\n"
+                .ASCII_P "done by sy2002 & MJoergen in 2022 & 2023\n"
                 .ASCII_P "https://github.com/sy2002/MiSTer2MEGA65\n\n"
                 .ASCII_P "Press 'Run/Stop' + 'Cursor Up' and then while "
                 .ASCII_P "holding these press 'Help' to enter the debug "
@@ -71,6 +71,21 @@ LOG_STR_ROMPRS  .ASCII_W "Parsing CRT/ROM image: "
 LOG_STR_ROMPRSO .ASCII_W "OK\n"
 LOG_STR_ROMPRSE .ASCII_W "ERROR #"
 LOG_STR_ROMPRSC .ASCII_W ": "
+
+LOG_STR_ARSTART .ASCII_W " auto-load ROMs are part of this core:\n"
+LOG_STR_ARLINE1 .ASCII_W "  ROM #"
+LOG_STR_ARLINE2 .ASCII_W ": type="
+LOG_STR_ARLINE3 .ASCII_W " device="
+LOG_STR_ARLINE4 .ASCII_W " 4k window="
+LOG_STR_ARLINE5 .ASCII_W " mode=mandatory"
+LOG_STR_ARLINE6 .ASCII_W " mode=optional"
+LOG_STR_ARLINE7 .ASCII_W " file="
+LOG_STR_ARLINE8 .ASCII_W "LOADING ROM #"
+LOG_STR_ROMPRS9 .ASCII_W ": OK\n"
+LOG_STR_ROMPRSA .ASCII_W ": FAILED\n"
+LOG_STR_RNOMNT  .ASCII_P "Automatic ROM loading failed: Cannot mount SD card."
+                .ASCII_P " Will try to continue without loading ROMs."
+                .ASCII_W " Mount error code: "
 
 ; ----------------------------------------------------------------------------
 ; Infos
@@ -121,10 +136,20 @@ ERR_F_NEWLINE   .ASCII_P "config.vhd: Each line in OPTM_ITEMS needs\n"
                 .ASCII_W "to be terminated by a newline character.\n"
 ERR_F_NO_S      .ASCII_W "M2M$RPL_S: No %s found in source string.\n"
 
-ERR_F_CR_M_CNT  .ASCII_P "globals.vhd: C_CRTROM_MAN_NUM too large.\n"
+ERR_F_CR_M_CNT  .ASCII_P "globals.vhd: C_CRTROMS_MAN_NUM too large.\n"
                 .ASCII_W "Hint: CRTROM_MAN_MAX in shell.vars.asm\n"
 ERR_F_CR_M_TYPE .ASCII_P "globals.vhd: C_CRTROMS_MAN: Illegal type\n"
                 .ASCII_W "or device id or 4k window.\n"
+
+ERR_F_CR_A_CNT  .ASCII_P "globals.vhd: C_CRTROMS_AUT_NUM too large.\n"
+                .ASCII_W "Hint: CRTROM_AUT_MAX in shell.vars.asm\n"
+ERR_F_CR_A_TYPE .ASCII_P "globals.vhd: C_CRTROMS_AUT: Illegal type\n"
+                .ASCII_W "or device id or 4k window or mode.\n"
+ERR_F_ATRMNMNT  .ASCII_P "This core needs to load one or more\n"
+                .ASCII_P "mandatory ROMs from SD card. But no SD\n"
+                .ASCII_W "card can be mounted.\n"
+ERR_F_ATRMLOAD  .ASCII_P "\n\nFile not found.\n"
+                .ASCII_W "The core needs this ROM to start.\n\n"
 
 ; ------------------------------------------------------------------|
 ; @TODO: Adjust strings so that every string ends at the |
