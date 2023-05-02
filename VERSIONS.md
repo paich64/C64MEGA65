@@ -22,7 +22,7 @@ using JiffyDOS or by directly loading `*.prg` files.
 
 * Ability to directly load `*.prg` files
 
-WIP Ability to switch Kernal versions: Standard, C64 Games System, Japanese
+* Ability to switch Kernal versions: Standard, C64 Games System, Japanese
   Revision and [JiffyDOS](doc/jiffy.md)
 
 * Stereo SID support: You can chose from multiple real dual SID combinations
