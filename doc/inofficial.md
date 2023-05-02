@@ -25,4 +25,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A16  | 04/24/23 | 7162767 | Support for the hardware IEC port of the MEGA65: Connect disk drives, printers, SD2IEC, etc.
 | WIP-V5-A17  | 04/24/23 | b0d47b2 | Add support for EasyFlash's 256 bytes of RAM or in general support for cartridge RAM that is located at $DExx and $DFxx (256 bytes each)
 | WIP-V5-A18  | 04/29/23 | 4f91c48 | More stability for hardware cartridges: Delayed PHI2 signal by 63ns. PowerCartridge now works and EasyFlash 3 can be flashed (but does not run any games, yet). Simulated cartridges: Support for modern Ocean type 1B cartridges such as SoulForce (fixes https://github.com/MJoergen/C64MEGA65/issues/20)
-| WIP-V5-A19  | 05/02/23 |         | Ability to switch Kernal versions: Standard, C64 Games System, Japanese Revision and JiffyDOS
+| WIP-V5-A19  | 05/02/23 | bc3218b | Ability to switch Kernal versions: Standard, C64 Games System, Japanese Revision and JiffyDOS
