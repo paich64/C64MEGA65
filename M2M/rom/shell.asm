@@ -51,7 +51,8 @@ START_SHELL     MOVE    LOG_M2M, R8
 
                 ; FAT32 subsystem: initialize SD card device handles for the
                 ; vdrive and CRT/ROM loader (HANDLE_DEV) and for the config
-                ; file (CONFIG_DEVH) and initialize the config file handle
+                ; file (CONFIG_DEVH) and initialize the config file and the
+                ; ROM auto-load filehandle.
                 ; It is important that these handles are initialized to zero
                 ; as parts of the code use this as a flag.
                 MOVE    HANDLE_DEV, R8
@@ -59,6 +60,8 @@ START_SHELL     MOVE    LOG_M2M, R8
                 MOVE    CONFIG_DEVH, R8
                 MOVE    0, @R8
                 MOVE    CONFIG_FILE, R8
+                MOVE    0, @R8
+                MOVE    CRTROM_AUT_FILE, R8
                 MOVE    0, @R8
 
                 ; initialize file browser persistence variables

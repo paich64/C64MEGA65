@@ -606,7 +606,7 @@ _CRMA_1         MOVE    LOG_STR_ARLINE8, R8
                 MOVE    R9, R10                 ; R10: name for f32_fopen
                 MOVE    R9, R6                  ; R6: remember name for fatal
                 MOVE    CONFIG_DEVH, R8
-                MOVE    CONFIG_FILE, R9         ; re-use config file handle
+                MOVE    CRTROM_AUT_FILE, R9     ; re-use config file handle
                 XOR     R11, R11                ; use / as path separator
                 SYSCALL(f32_fopen, 1)
                 CMP     0, R10                  ; R10=error code; 0=OK
@@ -654,7 +654,7 @@ _CRMA_2         MOVE    CRTROM_AUT_DEV, R2      ; R2: target device
                 ADD     0x1000, R4
                 MOVE    M2M$RAMROM_DATA, R5     ; R5: target address
 
-_CRMA_3         MOVE    CONFIG_FILE, R8         ; read next byte from SD card
+_CRMA_3         MOVE    CRTROM_AUT_FILE, R8     ; read next byte from SD card
                 SYSCALL(f32_fread, 1)
                 CMP     FAT32$EOF, R10          ; end of file?
                 RBRA    _CRMA_EOF, Z
