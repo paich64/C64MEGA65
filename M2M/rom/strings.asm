@@ -148,7 +148,7 @@ ERR_F_CR_A_TYPE .ASCII_P "globals.vhd: C_CRTROMS_AUT: Illegal type\n"
 ERR_F_ATRMNMNT  .ASCII_P "This core needs to load one or more\n"
                 .ASCII_P "mandatory ROMs from SD card. But no SD\n"
                 .ASCII_W "card can be mounted.\n"
-ERR_F_ATRMLOAD  .ASCII_P "\n\nFile not found.\n"
+ERR_F_ATRMLOAD  .ASCII_P "\n\nFile not found or file read error.\n"
                 .ASCII_W "The core needs this ROM to start.\n\n"
 
 ; ------------------------------------------------------------------|

@@ -544,14 +544,13 @@ _HNDLCRTROM_R   MOVE    R2, R10                 ; R10: unchanged
 ; Goes fatal if a mandatory ROM is missing.
 ; ----------------------------------------------------------------------------
 
-
 CRTROM_AUTOLOAD SYSCALL(enter, 1)
 
                 ; We can skip this function if there are no autoload ROMs
                 MOVE    CRTROM_AUT_NUM, R0
                 MOVE    @R0, R0                 ; R0: amount of autoload ROMs
                 RBRA    _CRMA_RET, Z
-                XOR     R1, R1                  ; ROM number counter
+                XOR     R1, R1                  ; R1: ROM number counter
 
                 ; We assume that CRTROM_AUTOLOAD is called after
                 ; HELP_MENU_INIT and we will (re-)use the device handle from
@@ -581,8 +580,7 @@ CRTROM_AUTOLOAD SYSCALL(enter, 1)
 _CRMA_MNTFATAL  MOVE    ERR_F_ATRMNMNT, R8
                 RBRA    FATAL, 1
 
-_CRMA_1         MOVE    R8, R2                  ; R2: device handle
-                MOVE    LOG_STR_ARLINE8, R8
+_CRMA_1         MOVE    LOG_STR_ARLINE8, R8
                 SYSCALL(puts, 1)
                 MOVE    R1, R8
                 SYSCALL(puthex, 1)
@@ -607,8 +605,7 @@ _CRMA_1         MOVE    R8, R2                  ; R2: device handle
                 SYSCALL(strcpy, 1)
                 MOVE    R9, R10                 ; R10: name for f32_fopen
                 MOVE    R9, R6                  ; R6: remember name for fatal
-
-                MOVE    R2, R8
+                MOVE    CONFIG_DEVH, R8
                 MOVE    CONFIG_FILE, R9         ; re-use config file handle
                 XOR     R11, R11                ; use / as path separator
                 SYSCALL(f32_fopen, 1)
@@ -616,16 +613,15 @@ _CRMA_1         MOVE    R8, R2                  ; R2: device handle
                 RBRA    _CRMA_2, Z              ; file open OK
                 MOVE    LOG_STR_ROMPRSA, R8     ; file open NOT ok
                 SYSCALL(puts, 1)
-                MOVE    CRTROM_AUT_MOD, R8
-                ADD     R1, R8
+                MOVE    CRTROM_AUT_MOD, R8      ; OK that we cannot open?
+                ADD     R1, R8                  ; b/c of optional ROM?
 
                 CMP     CTRROM_TYPE_OPTNL, @R8  ; optional ROM?
                 RBRA    _CRMA_NEXT, Z           ; yes: proceed
-                MOVE    SP, R0
 
                 ; Fatal: Show file name of the missing ROM, the error message
                 ; and the error code and then go fatal
-                MOVE    R10, R7                 ; R7: error code
+_CRMA_FATAL     MOVE    R10, R7                 ; R7: error code
                 MOVE    R6, R8                  ; R6: file name
                 SYSCALL(strlen, 1)
                 SUB     R9, SP                  ; stack space for file name
@@ -636,24 +632,62 @@ _CRMA_1         MOVE    R8, R2                  ; R2: device handle
                 SUB     1, SP
                 MOVE    R6, R8
                 MOVE    SP, R9
-                MOVE    R9, R0
                 SYSCALL(strcpy, 1)
                 MOVE    ERR_F_ATRMLOAD, R8      ; error message
-                MOVE    R0, R9
                 ADD     R1, R9                  ; concatenate fname + error
                 SYSCALL(strcpy, 1)
                 MOVE    SP, R8
                 MOVE    R7, R9
                 RBRA    FATAL, 1
 
-_CRMA_2         MOVE    LOG_STR_ROMPRS9, R8     ; log OK
-                SYSCALL(puts, 1)
-
                 ; ------------------------------------------------------------
                 ; Load ROM
                 ; ------------------------------------------------------------
 
-                
+_CRMA_2         MOVE    CRTROM_AUT_DEV, R2      ; R2: target device
+                ADD     R1, R2
+                MOVE    @R2, R2
+                MOVE    CRTROM_AUT_4KS, R3      ; R3: 4k window
+                ADD     R1, R3
+                MOVE    @R3, R3
+                MOVE    M2M$RAMROM_DATA, R4     ; R4: next 4k win indicator
+                ADD     0x1000, R4
+                MOVE    M2M$RAMROM_DATA, R5     ; R5: target address
+
+_CRMA_3         MOVE    CONFIG_FILE, R8         ; read next byte from SD card
+                SYSCALL(f32_fread, 1)
+                CMP     FAT32$EOF, R10          ; end of file?
+                RBRA    _CRMA_EOF, Z
+                CMP     0, R10                  ; other read error?
+                RBRA    _CRMA_4, Z              ; no
+
+                ; In case of a read error: check if this ROM is optional. In
+                ; this case we try the next ROM otherwise we go fatal
+                MOVE    CRTROM_AUT_MOD, R8
+                ADD     R1, R8
+                CMP     CTRROM_TYPE_OPTNL, @R8  ; ROM is optional?
+                RBRA    _CRMA_FATAL, !Z         ; no: go fatal
+                MOVE    LOG_STR_ROMPRSA, R8     ; log failed
+                SYSCALL(puts, 1)
+                RBRA    _CRMA_NEXT, 1
+
+                ; Byte successfull read: Now write it into target device
+_CRMA_4         MOVE    M2M$RAMROM_DEV, R8
+                MOVE    R2, @R8
+                MOVE    M2M$RAMROM_4KWIN, R8
+                MOVE    R3, @R8
+                MOVE    R9, @R5++               ; write to target address
+
+                ; 4k window boundary handling
+                CMP     R4, R5                  ; boundary reached?
+                RBRA    _CRMA_5, !Z             ; no
+                MOVE    M2M$RAMROM_DATA, R5     ; yes: reset target address..
+                ADD     1, R3                   ; .. and increase targ. 4k win
+
+_CRMA_5         RBRA    _CRMA_3, 1              ; next byte           
+
+_CRMA_EOF       MOVE    LOG_STR_ROMPRS9, R8     ; EOF: log OK
+                SYSCALL(puts, 1)
 
                 ; Next ROM
 _CRMA_NEXT      MOVE    R7, SP                  ; restore stack pointer
