@@ -166,9 +166,11 @@ architecture synthesis of sw_cartridge_wrapper is
 
    signal main_resp_status        : std_logic_vector( 3 downto 0);
    signal main_resp_status_d      : std_logic_vector( 3 downto 0);
-   signal main_reset_core         : std_logic_vector(32 downto 0);
+   signal main_reset_core         : std_logic_vector(65 downto 0);
 
    attribute mark_debug : string;
+   attribute mark_debug of main_resp_status     : signal is "true";
+   attribute mark_debug of main_reset_core      : signal is "true";
    attribute mark_debug of qnice_rst_i          : signal is "true";
    attribute mark_debug of qnice_addr_i         : signal is "true";
    attribute mark_debug of qnice_data_i         : signal is "true";
@@ -216,11 +218,15 @@ begin
    begin
       if rising_edge(main_clk_i) then
          main_resp_status_d <= main_resp_status;
-         main_reset_core    <= main_reset_core(31 downto 0) & '0';
+         main_reset_core    <= main_reset_core(64 downto 0) & '0';
          if main_resp_status = C_STAT_READY and main_resp_status_d /= C_STAT_READY then
             main_reset_core <= (others => '1');
          end if;
-         main_reset_core_o <= main_reset_core(32);
+         -- Stay in reset until cache is ready
+         if main_reset_core(65) = '1' and main_bank_wait_o = '1' then
+            main_reset_core <= (others => '1');
+         end if;
+         main_reset_core_o <= main_reset_core(65);
       end if;
    end process;
 
