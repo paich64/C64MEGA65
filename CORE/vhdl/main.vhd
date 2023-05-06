@@ -168,6 +168,7 @@ entity main is
       cartridge_id_i         : in  std_logic_vector(15 downto 0);
       cartridge_exrom_i      : in  std_logic_vector( 7 downto 0);
       cartridge_game_i       : in  std_logic_vector( 7 downto 0);
+      cartridge_size_i       : in  std_logic_vector(22 downto 0);
       cartridge_bank_laddr_i : in  std_logic_vector(15 downto 0);
       cartridge_bank_size_i  : in  std_logic_vector(15 downto 0);
       cartridge_bank_num_i   : in  std_logic_vector(15 downto 0);
@@ -331,16 +332,8 @@ architecture synthesis of main is
    signal reu_oe               : std_logic;
    signal reu_dout             : unsigned(7 downto 0);
 
-   -- Signals from the cartridge.v module (software defined cartridges)
-   signal crt_addr             : std_logic_vector(24 downto 0);
-   signal crt_dout             : std_logic_vector( 7 downto 0);
-   signal crt_we               : std_logic;
-   signal crt_cs               : std_logic;
+   -- Signals from the cartridge.vhd module (software defined cartridges)
    signal crt_io_rom           : std_logic;
-   signal crt_oe               : std_logic;
-   signal crt_io_ext           : std_logic;
-   signal crt_io_data          : std_logic_vector(7 downto 0);
-   signal crt_nmi              : std_logic;
    signal crt_exrom            : std_logic;
    signal crt_game             : std_logic;
 
@@ -377,47 +370,6 @@ architecture synthesis of main is
       );
    end component reu;
 
-   -- Verilog file from MiSTer core
-   component cartridge
-      port (
-         clk32           : in  std_logic;
-         reset_n         : in  std_logic;
-         cart_loading    : in  std_logic;
-         cart_id         : in  std_logic_vector(15 downto 0);
-         cart_exrom      : in  std_logic_vector( 7 downto 0);
-         cart_game       : in  std_logic_vector( 7 downto 0);
-         cart_bank_laddr : in  std_logic_vector(15 downto 0);
-         cart_bank_size  : in  std_logic_vector(15 downto 0);
-         cart_bank_num   : in  std_logic_vector(15 downto 0);
-         cart_bank_type  : in  std_logic_vector( 7 downto 0);
-         cart_bank_raddr : in  std_logic_vector(24 downto 0);
-         cart_bank_wr    : in  std_logic;
-         exrom           : out std_logic;
-         game            : out std_logic;
-         romL            : in  std_logic;
-         romH            : in  std_logic;
-         UMAXromH        : in  std_logic;
-         IOE             : in  std_logic;
-         IOF             : in  std_logic;
-         mem_write       : in  std_logic;
-         mem_ce          : in  std_logic;
-         mem_ce_out      : out std_logic;
-         mem_write_out   : out std_logic;
-         IO_rom          : out std_logic;
-         IO_rd           : out std_logic;
-         IO_data         : out std_logic_vector( 7 downto 0);
-         addr_in         : in  std_logic_vector(15 downto 0);
-         data_in         : in  std_logic_vector( 7 downto 0);
-         addr_out        : out std_logic_vector(24 downto 0);
-         bank_lo         : out std_logic_vector( 6 downto 0);
-         bank_hi         : out std_logic_vector( 6 downto 0);
-         freeze_key      : in  std_logic;
-         mod_key         : in  std_logic;
-         nmi             : out std_logic;
-         nmi_ack         : in  std_logic
-      );
-   end component cartridge;
-
    attribute mark_debug : string;
    attribute mark_debug of c64_ram_addr_o         : signal is "true";
    attribute mark_debug of c64_ram_ce             : signal is "true";
@@ -445,24 +397,17 @@ architecture synthesis of main is
    attribute mark_debug of core_roml              : signal is "true";
    attribute mark_debug of core_umax_romh         : signal is "true";
    attribute mark_debug of crt_addr_bus_o         : signal is "true";
-   attribute mark_debug of crt_addr               : signal is "true";
    attribute mark_debug of crt_bank_hi_o          : signal is "true";
    attribute mark_debug of crt_bank_lo_o          : signal is "true";
    attribute mark_debug of crt_bank_wait_i        : signal is "true";
-   attribute mark_debug of crt_cs                 : signal is "true";
    attribute mark_debug of crt_exrom              : signal is "true";
    attribute mark_debug of crt_game               : signal is "true";
    attribute mark_debug of crt_hi_ram_data_i      : signal is "true";
-   attribute mark_debug of crt_io_data            : signal is "true";
    attribute mark_debug of crt_ioe_ram_data_i     : signal is "true";
    attribute mark_debug of crt_ioe_we_o           : signal is "true";
    attribute mark_debug of crt_iof_ram_data_i     : signal is "true";
    attribute mark_debug of crt_iof_we_o           : signal is "true";
-   attribute mark_debug of crt_io_rom             : signal is "true";
    attribute mark_debug of crt_lo_ram_data_i      : signal is "true";
-   attribute mark_debug of crt_nmi                : signal is "true";
-   attribute mark_debug of crt_oe                 : signal is "true";
-   attribute mark_debug of crt_we                 : signal is "true";
    attribute mark_debug of ext_cycle_o            : signal is "true";
    attribute mark_debug of reset_core_n           : signal is "true";
    attribute mark_debug of reset_hard_i           : signal is "true";
@@ -842,12 +787,10 @@ begin
 
          -- Simulated cartridge using data from .crt file
          when 2 =>
-            core_io_rom    <= crt_io_rom;
-            core_io_ext    <= crt_io_ext;
-            core_io_data   <= unsigned(crt_io_data);
             core_game_n    <= crt_game;
             core_exrom_n   <= crt_exrom;
             core_dma       <= cartridge_loading_i or crt_bank_wait_i;
+            core_io_rom    <= crt_io_rom;
             if core_umax_romh = '1' then
                -- Ultimax mode and VIC accesses the bus: we need to translate the address, see comment about "The PLA Dissected" above
                crt_addr_bus_o <= "11" & c64_ram_addr_o(13 downto 0);
@@ -896,67 +839,30 @@ begin
    -- Simulated Cartridge
    --------------------------------------------------------------------------------------------------
 
-   -- This component is part of the MiSTer core, and provides
-   -- support for software emulated cartridges (aka *.CRT files).
-   -- This module does 3 things:
-   -- 1: It stores the decoded CRT file header information in a local RAM.
-   -- 2: It handles the CPU writes to $DExx and $DFxx for the bank switching.
-   -- 3: It does real-time address translation.
-   -- In our implementation we are not using part 3 above, but we are
-   -- relying on part 1 and 2 above.
-
-   -- This is a hack, but it works! This MiSTer component already does
-   -- a lookup from bank number of HyperRAM address.
-   -- In other words, bank_lo and bank_hi contain the upper bits of the
-   -- cartridge_bank_raddr input. In this implementation we use our own lookup
-   -- (located in crt_cacher.vhd), so we want to "disable" the mapping
-   -- done by MiSTer. We do this by ensuring that the mapping is essentially
-   -- the identity transformation. In other words, even though the MiSTer is
-   -- performing a mapping, the output result of this mapping (in bank_lo
-   -- and bank_hi) is precisely the bank number we want.
-   cartridge_bank_raddr <= "000000" & cartridge_bank_num_i(5 downto 0) & X"000" & "0";
-
-   i_cartridge : component cartridge
+   -- This component handles the CPU writes to $DExx and $DFxx for the bank switching.
+   i_cartridge : entity work.cartridge
       port map (
-         clk32           => clk_main_i,                        -- input
-         reset_n         => hard_reset_n,                      -- input
-         cart_loading    => cartridge_loading_i,               -- input
-         cart_id         => cartridge_id_i,                    -- input
-         cart_exrom      => cartridge_exrom_i,                 -- input
-         cart_game       => cartridge_game_i,                  -- input
-         cart_bank_laddr => cartridge_bank_laddr_i,            -- input
-         cart_bank_size  => cartridge_bank_size_i,             -- input
-         cart_bank_num   => cartridge_bank_num_i,              -- input
-         cart_bank_type  => cartridge_bank_type_i,             -- input
-         cart_bank_raddr => cartridge_bank_raddr,              -- input
-         cart_bank_wr    => cartridge_bank_wr_i,               -- input
-         exrom           => crt_exrom,                         -- output
-         game            => crt_game,                          -- output
-         romL            => core_roml,                         -- input
-         romH            => core_romh,                         -- input
-         UMAXromH        => core_umax_romh,                    -- input
-         IOE             => core_ioe,                          -- input
-         IOF             => core_iof,                          -- input
-         mem_write       => c64_ram_we,                        -- input
-         mem_ce          => c64_ram_ce,                        -- input
-         mem_ce_out      => crt_cs,                            -- output
-         mem_write_out   => crt_we,                            -- output
-         IO_rom          => crt_io_rom,                        -- output
-         IO_rd           => crt_oe,                            -- output
-         IO_data         => crt_io_data,                       -- output
-         addr_in         => std_logic_vector(c64_ram_addr_o),  -- input
-         data_in         => std_logic_vector(c64_ram_data_o),  -- input
-         addr_out        => crt_addr,                          -- output
-         bank_lo         => crt_bank_lo_o,                     -- output
-         bank_hi         => crt_bank_hi_o,                     -- output
-         freeze_key      => not restore_key_n,                 -- input
-         mod_key         => '0',                               -- input  (TBD)
-         nmi             => crt_nmi,                           -- output (TBD: inverted of cart_nmi_n)
-         nmi_ack         => core_nmi_ack                       -- input
+         clk_i          => clk_main_i,
+         rst_i          => not hard_reset_n,
+         cart_loading_i => cartridge_loading_i,
+         cart_id_i      => cartridge_id_i,
+         cart_exrom_i   => cartridge_exrom_i,
+         cart_game_i    => cartridge_game_i,
+         cart_size_i    => cartridge_size_i,
+         ioe_i          => core_ioe,         -- Access to $DExx
+         iof_i          => core_iof,         -- Access to $DFxx
+         wr_en_i        => c64_ram_we,
+         wr_data_i      => std_logic_vector(c64_ram_data_o),
+         addr_i         => std_logic_vector(c64_ram_addr_o),
+         bank_lo_o      => crt_bank_lo_o,
+         bank_hi_o      => crt_bank_hi_o,
+         io_rom_o       => crt_io_rom,
+         exrom_o        => crt_exrom,
+         game_o         => crt_game
       ); -- i_cartridge
 
-   crt_ioe_we_o <= core_ioe and crt_we;
-   crt_iof_we_o <= core_iof and crt_we;
+   crt_ioe_we_o <= core_ioe and c64_ram_we;
+   crt_iof_we_o <= core_iof and c64_ram_we;
 
    --------------------------------------------------------------------------------------------------
    -- Generate video output for the M2M framework

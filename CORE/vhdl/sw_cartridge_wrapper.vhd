@@ -26,6 +26,7 @@ port (
    main_id_o            : out std_logic_vector(15 downto 0);
    main_exrom_o         : out std_logic_vector( 7 downto 0);
    main_game_o          : out std_logic_vector( 7 downto 0);
+   main_size_o          : out std_logic_vector(22 downto 0);
    main_bank_laddr_o    : out std_logic_vector(15 downto 0);
    main_bank_size_o     : out std_logic_vector(15 downto 0);
    main_bank_num_o      : out std_logic_vector(15 downto 0);
@@ -157,6 +158,7 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_id                   : std_logic_vector(15 downto 0);
    signal hr_exrom                : std_logic_vector( 7 downto 0);
    signal hr_game                 : std_logic_vector( 7 downto 0);
+   signal hr_size                 : std_logic_vector(22 downto 0);
    signal hr_bank_laddr           : std_logic_vector(15 downto 0);
    signal hr_bank_size            : std_logic_vector(15 downto 0);
    signal hr_bank_num             : std_logic_vector(15 downto 0);
@@ -184,6 +186,7 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of main_id_o            : signal is "true";
    attribute mark_debug of main_exrom_o         : signal is "true";
    attribute mark_debug of main_game_o          : signal is "true";
+   attribute mark_debug of main_size_o          : signal is "true";
    attribute mark_debug of main_bank_laddr_o    : signal is "true";
    attribute mark_debug of main_bank_size_o     : signal is "true";
    attribute mark_debug of main_bank_num_o      : signal is "true";
@@ -196,6 +199,12 @@ architecture synthesis of sw_cartridge_wrapper is
    attribute mark_debug of main_ram_addr_i      : signal is "true";
    attribute mark_debug of main_lo_ram_data_o   : signal is "true";
    attribute mark_debug of main_hi_ram_data_o   : signal is "true";
+   attribute mark_debug of main_ioe_ram_data_o  : signal is "true";
+   attribute mark_debug of main_iof_ram_data_o  : signal is "true";
+   attribute mark_debug of main_ioe_we_i        : signal is "true";
+   attribute mark_debug of main_iof_we_i        : signal is "true";
+   attribute mark_debug of main_ram_addr_i      : signal is "true";
+   attribute mark_debug of main_ram_data_i      : signal is "true";
    attribute mark_debug of hr_rst_i             : signal is "true";
    attribute mark_debug of hr_write_o           : signal is "true";
    attribute mark_debug of hr_read_o            : signal is "true";
@@ -482,6 +491,7 @@ begin
          cart_id_o           => hr_id,
          cart_exrom_o        => hr_exrom,
          cart_game_o         => hr_game,
+         cart_size_o         => hr_size,
          bram_address_o      => hr_bram_address,
          bram_data_o         => hr_bram_data,
          bram_lo_wren_o      => hr_bram_lo_wren,
@@ -557,7 +567,7 @@ begin
 
    i_cdc_stable : entity work.cdc_stable
      generic map (
-       G_DATA_SIZE    => 34,
+       G_DATA_SIZE    => 57,
        G_REGISTER_SRC => false
      )
      port map (
@@ -565,14 +575,16 @@ begin
        src_data_i(15 downto  0) => hr_id,
        src_data_i(23 downto 16) => hr_exrom,
        src_data_i(31 downto 24) => hr_game,
-       src_data_i(32)           => hr_loading,
-       src_data_i(33)           => hr_bank_wait,
+       src_data_i(54 downto 32) => hr_size,
+       src_data_i(55)           => hr_loading,
+       src_data_i(56)           => hr_bank_wait,
        dst_clk_i                => main_clk_i,
        dst_data_o(15 downto  0) => main_id_o,
        dst_data_o(23 downto 16) => main_exrom_o,
        dst_data_o(31 downto 24) => main_game_o,
-       dst_data_o(32)           => main_loading_o,
-       dst_data_o(33)           => main_bank_wait_o
+       dst_data_o(54 downto 32) => main_size_o,
+       dst_data_o(55)           => main_loading_o,
+       dst_data_o(56)           => main_bank_wait_o
      ); -- i_cdc_stable
 
 

@@ -52,7 +52,8 @@ entity crt_parser is
       cart_loading_o      : out std_logic;
       cart_id_o           : out std_logic_vector(15 downto 0);     -- cart ID or cart type
       cart_exrom_o        : out std_logic_vector( 7 downto 0);     -- CRT file EXROM status
-      cart_game_o         : out std_logic_vector( 7 downto 0)      -- CRT file GAME status
+      cart_game_o         : out std_logic_vector( 7 downto 0);     -- CRT file GAME status
+      cart_size_o         : out std_logic_vector(22 downto 0)      -- CRT file size (in bytes)
    );
 end entity crt_parser;
 
@@ -201,6 +202,7 @@ begin
                if req_start_i = '1' then
                   cart_loading_o <= '1';
                   req_address    <= req_address_i;
+                  cart_size_o    <= req_length_i;
                   -- As a minimum, the file must contain a complete CRT header.
                   if req_length_i >= X"00040" then
                      -- Read first 0x20 bytes of CRT header.

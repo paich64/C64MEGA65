@@ -61,6 +61,7 @@ entity crt_loader is
       cart_id_o           : out std_logic_vector(15 downto 0);     -- cart ID or cart type
       cart_exrom_o        : out std_logic_vector( 7 downto 0);     -- CRT file EXROM status
       cart_game_o         : out std_logic_vector( 7 downto 0);     -- CRT file GAME status
+      cart_size_o         : out std_logic_vector(22 downto 0);     -- CRT file size (in bytes)
 
       -- Connect to BRAM (2*8kB)
       bram_address_o      : out std_logic_vector(11 downto 0);
@@ -126,7 +127,8 @@ begin
          cart_loading_o      => cart_loading_o,
          cart_id_o           => cart_id_o,
          cart_exrom_o        => cart_exrom_o,
-         cart_game_o         => cart_game_o
+         cart_game_o         => cart_game_o,
+         cart_size_o         => cart_size_o
       ); -- i_crt_parser
 
    cart_valid <= '1' when resp_status_o = C_STAT_READY

@@ -262,6 +262,7 @@ signal main_crt_loading           : std_logic;
 signal main_crt_id                : std_logic_vector(15 downto 0);
 signal main_crt_exrom             : std_logic_vector( 7 downto 0);
 signal main_crt_game              : std_logic_vector( 7 downto 0);
+signal main_crt_size              : std_logic_vector(22 downto 0);
 signal main_crt_bank_laddr        : std_logic_vector(15 downto 0);
 signal main_crt_bank_size         : std_logic_vector(15 downto 0);
 signal main_crt_bank_num          : std_logic_vector(15 downto 0);
@@ -624,6 +625,7 @@ begin
          cartridge_id_i         => main_crt_id,
          cartridge_exrom_i      => main_crt_exrom,
          cartridge_game_i       => main_crt_game,
+         cartridge_size_i       => main_crt_size,
          cartridge_bank_laddr_i => main_crt_bank_laddr,
          cartridge_bank_size_i  => main_crt_bank_size,
          cartridge_bank_num_i   => main_crt_bank_num,
@@ -897,6 +899,7 @@ begin
       main_id_o            => main_crt_id,
       main_exrom_o         => main_crt_exrom,
       main_game_o          => main_crt_game,
+      main_size_o          => main_crt_size,
       main_bank_laddr_o    => main_crt_bank_laddr,
       main_bank_size_o     => main_crt_bank_size,
       main_bank_num_o      => main_crt_bank_num,
