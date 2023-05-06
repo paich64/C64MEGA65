@@ -70,6 +70,12 @@ HANDLE_FILE6    .BLOCK  FAT32$FDH_STRUCT_SIZE
 ; Remember configuration handling:
 ; * We are using a separate device handle because some logic around SD card
 ;   switching in shell.asm is tied to the status of HANDLE_DEV.
+;   Warning: This is not a best practice. If you want to leverage the
+;   automatic data corruption prevention built in to the FAT32 library of the
+;   monitor, then stick to one device handle per device. Since we are not
+;   following this best practice, we need to prevent data corruption by
+;   ourselves, for example see the ROSM_SAVE dirty check in options.asm.
+;   @TODO: We might want to re-factor the handling of device handles.
 ; * File-handle for config file (saving/loading OSM settings) is valid (i.e.
 ;   not null) when SAVE_SETTINGS (config.vhd) is true and when the file
 ;   specified by CFG_FILE (config.vhd) exists and has exactly the size of
