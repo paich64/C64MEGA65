@@ -159,7 +159,7 @@ that you can save your game states or your work in GEOS.
    [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
    channel on Discord.
 
-## 6) The core's VGA output looks strange
+## 6) The VGA output looks strange or flickers or I lose VGA sync
 
 1. Always try the "auto-adjust" (or similarly named feature) of your screen
    first. This resolves 90% of all issues.

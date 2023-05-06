@@ -19,9 +19,8 @@ Feature Roadmap
 ---------------
 
 * NTSC
+* Turbo mode for games such as Zeropaige's Super Mario Bros
 * Support two drives: 8 and 9
-* Hardware IEC port: Work with real floppy drives, printers and other serial
-  devices
 * Offer an SD2IEC compatible IEC device that browses the SD card and that
   you can for example use to flash the EF1CR cartridge without the need of
   splitting large CRTs into multiple D64 disks using EasySplit
@@ -35,7 +34,6 @@ Feature Roadmap
   * Existing C1541 disk images (`*.d64`) can now be formatted
 * Support `*.d64` images with error maps (filesizes 175,531 and 197,376)
 * Simulated tape drive using `*.t64` tape images
-* Directly load program files (`*.prg`)
 * You can use the Amiga mouse as a C64 mouse
 * Support autoswap via `*.lst` files
 * Support the creation of empty disk images
