@@ -98,7 +98,7 @@ algorithms are working for a very nice looking authentic image.
   cable) or an old RGB-capable monitor (by soldering your own cable)
   to MEGA65's VGA port.
   
-Important: If you use analog retro monitors, please switch off
+Important: If you use VGA displays or analog retro monitors, please switch off
 "HDMI: Flicker-free" as described
 [here](#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
 
@@ -255,7 +255,9 @@ analog VGA monitors or monitors that work with the "retro 15 kHZ RGB
 over VGA" signal.
 
 Otherwise you might encounter strange visual effects that range from
-a blurry image to an "underwater" blurry movement of your screen.
+a blurry image over "underwater" blurry movement of your screen to sporadic
+flickers and sometimes to a complete loss of VGA sync every few seconds or
+minutes.
 
 [Learn more](#flicker-free-hdmi) about "HDMI: Flicker-free" to understand
 why this is happens.

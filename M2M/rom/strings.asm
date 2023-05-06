@@ -65,6 +65,8 @@ LOG_STR_CFG_SDC .ASCII_P "Configuration: Remember settings: OFF  "
                 .ASCII_W "Reason: SD card changed.\n"
 LOG_STR_CFG_REM .ASCII_P "Configuration: New settings successfully stored to "
                 .ASCII_W "SD card.\n"
+LOG_STR_CFG_NO  .ASCII_P "Configuration: New settings cannot be saved because"
+                .ASCII_W " the core is currently saving to a disk image.\n"
 
 LOG_STR_ROMOK   .ASCII_W "Successfully loaded CRT/ROM image to buffer RAM.\n"
 LOG_STR_ROMPRS  .ASCII_W "Parsing CRT/ROM image: "

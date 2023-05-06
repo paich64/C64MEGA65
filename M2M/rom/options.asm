@@ -677,12 +677,35 @@ ROSM_SAVE       SYSCALL(enter, 1)
                 CMP     0, @R8
                 RBRA    _ROSMS_RET, Z
 
-                ; Iterate through the 16 windows of M2M$CFM_DATA to detect
+                ; If any write cache of any virtual drive is dirty then
+                ; we need to assume that the 512-byte hardware buffer is
+                ; currently in use by HANDLE_DEV. See also the comment about
+                ; us not following the QNICE best practice here and the
+                ; @TODO that we might want to refactor this in future.
+                RSUB    VD_ACTIVE, 1            ; any vdrives at all?
+                RBRA    _ROSMS_1, !C            ; no, so no danger of corruptn
+                MOVE    R8, R0                  ; R0: amount of vdrives
+                XOR     R8, R8                  ; vdrive id
+_ROSMS_0        MOVE    VD_CACHE_DIRTY, R9
+                RSUB    VD_DRV_READ, 1          ; get dirty flag for curr. drv
+                CMP     0, R8                   ; dirty?
+                RBRA    _ROSMS_NOWR, !Z         ; yes: do not save
+                ADD     1, R8                   ; no: check next vdrive
+                CMP     R0, R8                  ; done?
+                RBRA    _ROSMS_0, !Z            ; no: next iteration
+                RBRA    _ROSMS_1, 1             ; yes: detect changes & save
+
+_ROSMS_NOWR     MOVE    LOG_STR_CFG_NO, R8
+                SYSCALL(puts, 1)
+                RBRA    _ROSMS_RET, 1
+
+_ROSMS_1        ; Iterate through the 16 windows of M2M$CFM_DATA to detect
                 ; changes because we only save if there are changes
                 RSUB    ROSM_CHANGES, 1
                 RBRA    _ROSMS_RET, !C
 
-                ; Start at the beginning of the config file (R8: file handle)
+                ; Start at the beginning of the config file
+                MOVE    CONFIG_FILE, R8
                 XOR     R9, R9                  ; restart reading from byte 0
                 XOR     R10, R10
                 SYSCALL(f32_fseek, 1)

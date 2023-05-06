@@ -64,8 +64,6 @@ copy /b basic.901226-01.bin +JiffyDOS_C64_6.01.bin jd-c64.bin
 The JiffyDOS download package contains two `*.bin` files. Take the one that
 is exactly `16 kB = 16,384 bytes` in size and rename it to `jd-c1541.bin`.
 
-/basic.901226-01.bin
-
 Install and use JiffyDOS
 ------------------------
 

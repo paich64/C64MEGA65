@@ -38,6 +38,11 @@ https://discord.com/channels/719326990221574164/794775503818588200/1082080087891
 
 * More clearly arranged menu using submenus
 
+* File browser's page up/down (cursor left/right) now jumps to the very first
+  item when you press cursor left one (more) time while you are on the first
+  page and to the very last item when you press cursor right one (more) time
+  while you are on the last page.
+
 ## Improved C64 and C1541 Accuracy & Compatibility
 
 * Improved the 6510 CPU's interrupt dispatching which results in more demos
@@ -76,6 +81,11 @@ https://discord.com/channels/719326990221574164/794775503818588200/1082080087891
 * Fixed a bug in the REU simulation that affected some owners of the newest
   MEGA65 batches who have a so called "Revision D HyperRAM". One effect of the
   bug was that these users were not able to play Sonic the Hedgehog.
+
+* Fixed the possibility of corrupting currently mounted D64 images: If the
+  user changed menu settings while the core was writing to a D64 disk image
+  (yellow MEGA65 drive led), then there was the possibility that this very D64
+  disk image would be corrupted.
 
 ## Under the Hood
 
