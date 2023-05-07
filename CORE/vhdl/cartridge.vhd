@@ -152,6 +152,18 @@ begin
                   bank_hi_o <= (others => '0');
                end if;
 
+            when 60 =>
+               -- GMod2
+               if ioe_i = '1' and wr_en_i = '1' then
+                  exrom_o   <= wr_data_i(6);
+                  bank_lo_o <= "0" & wr_data_i(5 downto 0);
+               end if;
+               if cart_loading_i = '1' then
+                  game_o    <= '1';
+                  exrom_o   <= '0';
+                  bank_lo_o <= (others => '0');
+               end if;
+
             when others =>
                null;
          end case;
