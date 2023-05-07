@@ -102,6 +102,22 @@ begin
                   bank_hi_o <= (others => '0');
                end if;
 
+            when 7 =>
+               -- PowerPlay, FunPlay
+               if ioe_i = '1' and wr_en_i = '1' then
+                  bank_lo_o <= "000" & wr_data_i(0) & wr_data_i(5 downto 3);
+                  if wr_data_i(7 downto 6) & wr_data_i(2 downto 1) = "1011" then
+                     exrom_o <= '1';
+                  end if;
+                  if wr_data_i(7 downto 6) & wr_data_i(2 downto 1) = "0000" then
+                     exrom_o <= '0';
+                  end if;
+               end if;
+               if cart_loading_i = '1' then
+                  game_o  <= '1';
+                  exrom_o <= '0';
+               end if;
+
             when 8 =>
                -- "Super Games"
                if iof_i = '1' and wr_en_i = '1' and cart_disable = '0' then
@@ -117,6 +133,27 @@ begin
                   game_o       <= '0';
                   bank_lo_o    <= (others => '0');
                   bank_hi_o    <= (others => '0');
+               end if;
+
+            when 15 =>
+               -- C64GS - (game=1, exrom=0, 64 banks by 8k)
+               -- 8k config
+               -- Reading from IOE ($DE00 $DEFF) switches to bank 0
+               game_o  <= '1';
+               exrom_o <= '0';
+               if ioe_i = '1' and wr_en_i = '0' then
+                  bank_lo_o <= (others => '0');
+               end if;
+               if ioe_i = '1' and wr_en_i = '1' then
+                  bank_lo_o <= "0" & addr_i(5 downto 0);
+               end if;
+
+            when 17 =>
+               -- Dinamic - (game=1, exrom=0, 16 banks by 8k)
+               game_o  <= '1';
+               exrom_o <= '0';
+               if ioe_i = '1' and wr_en_i = '0' then
+                  bank_lo_o <= "000" & addr_i(3 downto 0);
                end if;
 
             when 19 =>
