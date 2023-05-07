@@ -61,6 +61,8 @@ end entity sw_cartridge_wrapper;
 
 architecture synthesis of sw_cartridge_wrapper is
 
+   constant C_CACHE_SIZE : natural := 2;
+
    constant C_ERROR_STRING_LENGTH : integer := 21;
    type string_vector is array (natural range <>) of string(1 to C_ERROR_STRING_LENGTH);
    constant C_ERROR_STRINGS : string_vector(0 to 7) := (
@@ -154,6 +156,8 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_bank_lo              : std_logic_vector( 6 downto 0);
    signal hr_bank_hi              : std_logic_vector( 6 downto 0);
    signal hr_bank_wait            : std_logic;
+   signal hr_cache_addr_lo        : std_logic_vector( 1 downto 0);
+   signal hr_cache_addr_hi        : std_logic_vector( 1 downto 0);
    signal hr_loading              : std_logic;
    signal hr_id                   : std_logic_vector(15 downto 0);
    signal hr_exrom                : std_logic_vector( 7 downto 0);
@@ -169,6 +173,8 @@ architecture synthesis of sw_cartridge_wrapper is
    signal main_resp_status        : std_logic_vector( 3 downto 0);
    signal main_resp_status_d      : std_logic_vector( 3 downto 0);
    signal main_reset_core         : std_logic_vector(65 downto 0);
+   signal main_cache_addr_lo      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
+   signal main_cache_addr_hi      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
 
    attribute mark_debug : string;
    attribute mark_debug of main_resp_status     : signal is "true";
@@ -461,6 +467,9 @@ begin
    -------------------------------------------------------------
 
    i_crt_loader : entity work.crt_loader
+      generic map (
+         G_CACHE_SIZE => C_CACHE_SIZE
+      )
       port map (
          clk_i               => hr_clk_i,
          rst_i               => hr_rst_i,
@@ -473,6 +482,8 @@ begin
          bank_lo_i           => hr_bank_lo,
          bank_hi_i           => hr_bank_hi,
          bank_wait_o         => hr_bank_wait,
+         cache_addr_lo_o     => hr_cache_addr_lo,
+         cache_addr_hi_o     => hr_cache_addr_hi,
          avm_write_o         => hr_crt_write,
          avm_read_o          => hr_crt_read,
          avm_address_o       => hr_crt_address(21 downto 0),
@@ -567,7 +578,7 @@ begin
 
    i_cdc_stable : entity work.cdc_stable
      generic map (
-       G_DATA_SIZE    => 57,
+       G_DATA_SIZE    => 61,
        G_REGISTER_SRC => false
      )
      port map (
@@ -578,13 +589,17 @@ begin
        src_data_i(54 downto 32) => hr_size,
        src_data_i(55)           => hr_loading,
        src_data_i(56)           => hr_bank_wait,
+       src_data_i(58 downto 57) => hr_cache_addr_lo,
+       src_data_i(60 downto 59) => hr_cache_addr_hi,
        dst_clk_i                => main_clk_i,
        dst_data_o(15 downto  0) => main_id_o,
        dst_data_o(23 downto 16) => main_exrom_o,
        dst_data_o(31 downto 24) => main_game_o,
        dst_data_o(54 downto 32) => main_size_o,
        dst_data_o(55)           => main_loading_o,
-       dst_data_o(56)           => main_bank_wait_o
+       dst_data_o(56)           => main_bank_wait_o,
+       dst_data_o(58 downto 57) => main_cache_addr_lo,
+       dst_data_o(60 downto 59) => main_cache_addr_hi
      ); -- i_cdc_stable
 
 
@@ -594,7 +609,7 @@ begin
 
    crt_lo_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH => 12,         -- 4 kW = 8 kB
+         ADDR_WIDTH => 12 + C_CACHE_SIZE,         -- 4 kW = 8 kB
          DATA_WIDTH => 16,
          FALLING_A  => false,
          FALLING_B  => false
@@ -602,13 +617,13 @@ begin
       port map (
          -- C64 MiSTer core
          clock_a    => main_clk_i,
-         address_a  => main_ram_addr_i(12 downto 1),
+         address_a  => main_cache_addr_lo & main_ram_addr_i(12 downto 1),
          data_a     => (others => '0'),
          wren_a     => '0',
          q_a        => main_lo_ram_data_o,
 
          clock_b    => hr_clk_i,
-         address_b  => hr_bram_address,
+         address_b  => hr_cache_addr_lo & hr_bram_address,
          data_b     => hr_bram_data,
          wren_b     => hr_bram_lo_wren,
          q_b        => open
@@ -616,7 +631,7 @@ begin
 
    crt_hi_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH => 12,         -- 4 kW = 8 kB
+         ADDR_WIDTH => 12 + C_CACHE_SIZE,         -- 4 kW = 8 kB
          DATA_WIDTH => 16,
          FALLING_A  => false,
          FALLING_B  => false
@@ -624,13 +639,13 @@ begin
       port map (
          -- C64 MiSTer core
          clock_a    => main_clk_i,
-         address_a  => main_ram_addr_i(12 downto 1),
+         address_a  => main_cache_addr_hi & main_ram_addr_i(12 downto 1),
          data_a     => (others => '0'),
          wren_a     => '0',
          q_a        => main_hi_ram_data_o,
 
          clock_b    => hr_clk_i,
-         address_b  => hr_bram_address,
+         address_b  => hr_cache_addr_hi & hr_bram_address,
          data_b     => hr_bram_data,
          wren_b     => hr_bram_hi_wren,
          q_b        => open

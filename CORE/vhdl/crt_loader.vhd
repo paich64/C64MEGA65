@@ -23,6 +23,9 @@ use ieee.numeric_std_unsigned.all;
 -- bank_lo_i and bank_hi_i are in units of 8kB.
 
 entity crt_loader is
+   generic (
+      G_CACHE_SIZE : natural
+   );
    port (
       clk_i               : in  std_logic;
       rst_i               : in  std_logic;
@@ -39,6 +42,8 @@ entity crt_loader is
       bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
       bank_hi_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
       bank_wait_o         : out std_logic;                         -- Asserted when cache is being updated
+      cache_addr_lo_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
+      cache_addr_hi_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
 
       -- Connect to HyperRAM
       avm_write_o         : out std_logic;
@@ -135,6 +140,9 @@ begin
             else '0';
 
    i_crt_cacher : entity work.crt_cacher
+      generic map (
+         G_CACHE_SIZE => G_CACHE_SIZE
+      )
       port map (
          clk_i               => clk_i,
          rst_i               => rst_i,
@@ -147,6 +155,8 @@ begin
          bank_lo_i           => bank_lo_i,
          bank_hi_i           => bank_hi_i,
          bank_wait_o         => bank_wait_o,
+         cache_addr_lo_o     => cache_addr_lo_o,
+         cache_addr_hi_o     => cache_addr_hi_o,
          avm_write_o         => avm_cacher_write,
          avm_read_o          => avm_cacher_read,
          avm_address_o       => avm_cacher_address,

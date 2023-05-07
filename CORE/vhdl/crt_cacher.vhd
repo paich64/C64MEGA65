@@ -17,6 +17,9 @@ use ieee.numeric_std_unsigned.all;
 -- bank_lo_i and bank_hi_i are in units of 8kB.
 
 entity crt_cacher is
+   generic (
+      G_CACHE_SIZE : natural
+   );
    port (
       clk_i               : in  std_logic;
       rst_i               : in  std_logic;
@@ -33,6 +36,8 @@ entity crt_cacher is
       bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
       bank_hi_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
       bank_wait_o         : out std_logic;                         -- Asserted when cache is being updated
+      cache_addr_lo_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
+      cache_addr_hi_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
 
       -- Connect to HyperRAM
       avm_write_o         : out std_logic;
@@ -76,6 +81,12 @@ architecture synthesis of crt_cacher is
    signal lo_load_done  : std_logic;
    signal restart       : std_logic;
 
+   type cache_t is array (natural range <>) of std_logic_vector(6 downto 0);
+   signal cache_ram_lo : cache_t(0 to 2**G_CACHE_SIZE-1) := (others => (others => '0'));
+   signal cache_ram_hi : cache_t(0 to 2**G_CACHE_SIZE-1) := (others => (others => '0'));
+   signal next_cache_addr_lo : std_logic_vector(G_CACHE_SIZE-1 downto 0);
+   signal next_cache_addr_hi : std_logic_vector(G_CACHE_SIZE-1 downto 0);
+
    attribute mark_debug : string;
    attribute mark_debug of cart_valid_i        : signal is "true";
    attribute mark_debug of cart_bank_laddr_i   : signal is "true";
@@ -85,6 +96,9 @@ architecture synthesis of crt_cacher is
    attribute mark_debug of cart_bank_wr_i      : signal is "true";
    attribute mark_debug of bank_lo_i           : signal is "true";
    attribute mark_debug of bank_hi_i           : signal is "true";
+   attribute mark_debug of bank_wait_o         : signal is "true";
+   attribute mark_debug of cache_addr_lo_o     : signal is "true";
+   attribute mark_debug of cache_addr_hi_o     : signal is "true";
    attribute mark_debug of avm_write_o         : signal is "true";
    attribute mark_debug of avm_read_o          : signal is "true";
    attribute mark_debug of avm_address_o       : signal is "true";
@@ -104,6 +118,10 @@ architecture synthesis of crt_cacher is
    attribute mark_debug of lo_load             : signal is "true";
    attribute mark_debug of lo_load_done        : signal is "true";
    attribute mark_debug of restart             : signal is "true";
+   attribute mark_debug of next_cache_addr_lo  : signal is "true";
+   attribute mark_debug of next_cache_addr_hi  : signal is "true";
+   attribute mark_debug of cache_ram_lo        : signal is "true";
+   attribute mark_debug of cache_ram_hi        : signal is "true";
 
 begin
 
@@ -132,7 +150,6 @@ begin
          end if;
       end if;
    end process p_banks;
-
 
    p_fsm : process (clk_i)
    begin
@@ -231,6 +248,7 @@ begin
    end process p_fsm;
 
    p_crt_load : process (clk_i)
+      variable found_v : boolean;
    begin
       if rising_edge(clk_i) then
          cart_valid_d <= cart_valid_i;
@@ -247,18 +265,51 @@ begin
          if cart_valid_i = '1' then
             -- Detect change in bank addresses
             if bank_lo_d /= bank_lo_i then
-               lo_load <= '1';
-               restart <= '1';
+               found_v := false;
+               for i in 0 to 2**G_CACHE_SIZE-1 loop
+                  if cache_ram_lo(i) = bank_lo_i then
+                     found_v := true;
+                     cache_addr_lo_o <= std_logic_vector(to_unsigned(i, G_CACHE_SIZE));
+                     exit;
+                  end if;
+               end loop;
+               if not found_v then
+                  cache_addr_lo_o <= next_cache_addr_lo;
+                  cache_ram_lo(to_integer(next_cache_addr_lo)) <= bank_lo_i;
+                  next_cache_addr_lo <= next_cache_addr_lo + 1;
+                  lo_load <= '1';
+                  restart <= '1';
+               end if;
             end if;
+
             if bank_hi_d /= bank_hi_i then
-               hi_load <= '1';
-               restart <= '1';
+               found_v := false;
+               for i in 0 to 2**G_CACHE_SIZE-1 loop
+                  if cache_ram_hi(i) = bank_hi_i then
+                     found_v := true;
+                     cache_addr_hi_o <= std_logic_vector(to_unsigned(i, G_CACHE_SIZE));
+                     exit;
+                  end if;
+               end loop;
+               if not found_v then
+                  cache_addr_hi_o <= next_cache_addr_hi;
+                  cache_ram_hi(to_integer(next_cache_addr_hi)) <= bank_hi_i;
+                  next_cache_addr_hi <= next_cache_addr_hi + 1;
+                  hi_load <= '1';
+                  restart <= '1';
+               end if;
             end if;
          end if;
 
          if cart_valid_d = '0' and cart_valid_i = '1' then
-            lo_load <= '1';
-            hi_load <= '1';
+            cache_addr_lo_o    <= (others => '0');
+            cache_addr_hi_o    <= (others => '0');
+            cache_ram_lo       <= (others => (others => '0'));
+            cache_ram_hi       <= (others => (others => '0'));
+            next_cache_addr_lo <= std_logic_vector(to_unsigned(1, G_CACHE_SIZE));
+            next_cache_addr_hi <= std_logic_vector(to_unsigned(1, G_CACHE_SIZE));
+            lo_load            <= '1';
+            hi_load            <= '1';
          end if;
 
          if state = IDLE_ST then
