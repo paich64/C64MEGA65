@@ -266,7 +266,6 @@ signal main_crt_size              : std_logic_vector(22 downto 0);
 signal main_crt_bank_laddr        : std_logic_vector(15 downto 0);
 signal main_crt_bank_size         : std_logic_vector(15 downto 0);
 signal main_crt_bank_num          : std_logic_vector(15 downto 0);
-signal main_crt_bank_type         : std_logic_vector( 7 downto 0);
 signal main_crt_bank_raddr        : std_logic_vector(24 downto 0);
 signal main_crt_bank_wr           : std_logic;
 
@@ -359,7 +358,7 @@ signal qnice_c64rom_data_from	      : std_logic_vector(7 downto 0);
 
 -- Custom DOS access: Simulated C1541
 signal qnice_c1541rom_we            : std_logic;
-signal qnice_c1541rom_addr          : std_logic_vector(13 downto 0);
+signal qnice_c1541rom_addr          : std_logic_vector(15 downto 0);
 signal qnice_c1541rom_data_to       : std_logic_vector(7 downto 0);
 signal qnice_c1541rom_data_from	   : std_logic_vector(7 downto 0);
 
@@ -629,7 +628,6 @@ begin
          cartridge_bank_laddr_i => main_crt_bank_laddr,
          cartridge_bank_size_i  => main_crt_bank_size,
          cartridge_bank_num_i   => main_crt_bank_num,
-         cartridge_bank_type_i  => main_crt_bank_type,
          cartridge_bank_raddr_i => main_crt_bank_raddr,
          cartridge_bank_wr_i    => main_crt_bank_wr,
          crt_bank_wait_i        => main_crt_bank_wait,
@@ -772,7 +770,7 @@ begin
          
          -- Custom Kernal Access: C1541 ROM
          when C_DEV_C64_KERNAL_C1541 =>
-            qnice_c1541rom_addr        <= qnice_dev_addr_i(13 downto 0);
+            qnice_c1541rom_addr        <= "00" & qnice_dev_addr_i(13 downto 0);
             qnice_c1541rom_we          <= qnice_dev_we_i;
             qnice_dev_data_o           <= x"00" & qnice_c1541rom_data_from;
             qnice_c1541rom_data_to     <= qnice_dev_data_i(7 downto 0);
@@ -903,7 +901,6 @@ begin
       main_bank_laddr_o    => main_crt_bank_laddr,
       main_bank_size_o     => main_crt_bank_size,
       main_bank_num_o      => main_crt_bank_num,
-      main_bank_type_o     => main_crt_bank_type,
       main_bank_raddr_o    => main_crt_bank_raddr,
       main_bank_wr_o       => main_crt_bank_wr,
       main_bank_lo_i       => main_crt_bank_lo,

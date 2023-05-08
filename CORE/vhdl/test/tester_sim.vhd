@@ -22,16 +22,11 @@ entity tester_sim is
       tb_iof_o          : out std_logic;
       tb_loading_i      : in  std_logic;
       tb_bank_wait_i    : in  std_logic;
-      tb_mem_ce_o       : out std_logic;
       tb_mem_write_o    : out std_logic;
       tb_ram_addr_o     : out std_logic_vector(15 downto 0);
       tb_ram_data_i     : in  std_logic_vector( 7 downto 0);
       tb_romh_o         : out std_logic;
       tb_roml_o         : out std_logic;
-      tb_umaxromh_o     : out std_logic;
-      tb_freeze_key_o   : out std_logic;
-      tb_mod_key_o      : out std_logic;
-      tb_nmi_ack_o      : out std_logic;
       tb_running_o      : out std_logic := '1'
    );
 end entity tester_sim;
@@ -46,12 +41,7 @@ begin
    tb_data_o       <= (others => '0');
    tb_ioe_o        <= '0';
    tb_iof_o        <= '0';
-   tb_mem_ce_o     <= '0';
    tb_mem_write_o  <= '0';
-   tb_umaxromh_o   <= '0';
-   tb_freeze_key_o <= '0';
-   tb_mod_key_o    <= '0';
-   tb_nmi_ack_o    <= '0';
 
    -- Simplified PLA
    tb_roml_o <= '1' when tb_ram_addr_o(15 downto 13) = "100"      -- 0x8000 - 0x9FFF
@@ -156,11 +146,11 @@ begin
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_READY);
       wait for 100 ns;
 
-      main_rst_o <= '0';                  -- Now the cartridge.v resets
+      main_rst_o <= '0';
       wait for 2 us;
 
-      c64_cpu_verify(X"FFFC", X"00");     -- Incorrect values are read here.
-      c64_cpu_verify(X"FFFD", X"E0");     -- Incorrect values are read here.
+      c64_cpu_verify(X"FFFC", X"00");
+      c64_cpu_verify(X"FFFD", X"E0");
       wait for 100 ns;
 
       tb_running_o <= '0';

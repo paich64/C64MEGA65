@@ -38,22 +38,22 @@ architecture synthesis of cartridge is
    signal ioe_ena      : std_logic;
    signal iof_ena      : std_logic;
 
-   attribute mark_debug : string;
-   attribute mark_debug of cart_loading_i : signal is "true";
-   attribute mark_debug of cart_id_i      : signal is "true";
-   attribute mark_debug of cart_exrom_i   : signal is "true";
-   attribute mark_debug of cart_game_i    : signal is "true";
-   attribute mark_debug of cart_size_i    : signal is "true";
-   attribute mark_debug of ioe_i          : signal is "true";
-   attribute mark_debug of iof_i          : signal is "true";
-   attribute mark_debug of wr_en_i        : signal is "true";
-   attribute mark_debug of wr_data_i      : signal is "true";
-   attribute mark_debug of addr_i         : signal is "true";
-   attribute mark_debug of bank_lo_o      : signal is "true";
-   attribute mark_debug of bank_hi_o      : signal is "true";
-   attribute mark_debug of exrom_o        : signal is "true";
-   attribute mark_debug of game_o         : signal is "true";
-   attribute mark_debug of cart_disable   : signal is "true";
+--   attribute mark_debug : string;
+--   attribute mark_debug of cart_loading_i : signal is "true";
+--   attribute mark_debug of cart_id_i      : signal is "true";
+--   attribute mark_debug of cart_exrom_i   : signal is "true";
+--   attribute mark_debug of cart_game_i    : signal is "true";
+--   attribute mark_debug of cart_size_i    : signal is "true";
+--   attribute mark_debug of ioe_i          : signal is "true";
+--   attribute mark_debug of iof_i          : signal is "true";
+--   attribute mark_debug of wr_en_i        : signal is "true";
+--   attribute mark_debug of wr_data_i      : signal is "true";
+--   attribute mark_debug of addr_i         : signal is "true";
+--   attribute mark_debug of bank_lo_o      : signal is "true";
+--   attribute mark_debug of bank_hi_o      : signal is "true";
+--   attribute mark_debug of exrom_o        : signal is "true";
+--   attribute mark_debug of game_o         : signal is "true";
+--   attribute mark_debug of cart_disable   : signal is "true";
 
 begin
 

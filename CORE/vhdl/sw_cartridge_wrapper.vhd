@@ -30,7 +30,6 @@ port (
    main_bank_laddr_o    : out std_logic_vector(15 downto 0);
    main_bank_size_o     : out std_logic_vector(15 downto 0);
    main_bank_num_o      : out std_logic_vector(15 downto 0);
-   main_bank_type_o     : out std_logic_vector( 7 downto 0);
    main_bank_raddr_o    : out std_logic_vector(24 downto 0);
    main_bank_wr_o       : out std_logic;
    main_bank_lo_i       : in  std_logic_vector( 6 downto 0);
@@ -166,7 +165,6 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_bank_laddr           : std_logic_vector(15 downto 0);
    signal hr_bank_size            : std_logic_vector(15 downto 0);
    signal hr_bank_num             : std_logic_vector(15 downto 0);
-   signal hr_bank_type            : std_logic_vector( 7 downto 0);
    signal hr_bank_raddr           : std_logic_vector(24 downto 0);
    signal hr_bank_wr              : std_logic;
 
@@ -176,51 +174,50 @@ architecture synthesis of sw_cartridge_wrapper is
    signal main_cache_addr_lo      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
    signal main_cache_addr_hi      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
 
-   attribute mark_debug : string;
-   attribute mark_debug of main_resp_status     : signal is "true";
-   attribute mark_debug of main_reset_core      : signal is "true";
-   attribute mark_debug of qnice_rst_i          : signal is "true";
-   attribute mark_debug of qnice_addr_i         : signal is "true";
-   attribute mark_debug of qnice_data_i         : signal is "true";
-   attribute mark_debug of qnice_ce_i           : signal is "true";
-   attribute mark_debug of qnice_we_i           : signal is "true";
-   attribute mark_debug of qnice_data_o         : signal is "true";
-   attribute mark_debug of qnice_wait_o         : signal is "true";
-   attribute mark_debug of main_rst_i           : signal is "true";
-   attribute mark_debug of main_reset_core_o    : signal is "true";
-   attribute mark_debug of main_loading_o       : signal is "true";
-   attribute mark_debug of main_id_o            : signal is "true";
-   attribute mark_debug of main_exrom_o         : signal is "true";
-   attribute mark_debug of main_game_o          : signal is "true";
-   attribute mark_debug of main_size_o          : signal is "true";
-   attribute mark_debug of main_bank_laddr_o    : signal is "true";
-   attribute mark_debug of main_bank_size_o     : signal is "true";
-   attribute mark_debug of main_bank_num_o      : signal is "true";
-   attribute mark_debug of main_bank_type_o     : signal is "true";
-   attribute mark_debug of main_bank_raddr_o    : signal is "true";
-   attribute mark_debug of main_bank_wr_o       : signal is "true";
-   attribute mark_debug of main_bank_lo_i       : signal is "true";
-   attribute mark_debug of main_bank_hi_i       : signal is "true";
-   attribute mark_debug of main_bank_wait_o     : signal is "true";
-   attribute mark_debug of main_ram_addr_i      : signal is "true";
-   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
-   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
-   attribute mark_debug of main_ioe_ram_data_o  : signal is "true";
-   attribute mark_debug of main_iof_ram_data_o  : signal is "true";
-   attribute mark_debug of main_ioe_we_i        : signal is "true";
-   attribute mark_debug of main_iof_we_i        : signal is "true";
-   attribute mark_debug of main_ram_addr_i      : signal is "true";
-   attribute mark_debug of main_ram_data_i      : signal is "true";
-   attribute mark_debug of hr_rst_i             : signal is "true";
-   attribute mark_debug of hr_write_o           : signal is "true";
-   attribute mark_debug of hr_read_o            : signal is "true";
-   attribute mark_debug of hr_address_o         : signal is "true";
-   attribute mark_debug of hr_writedata_o       : signal is "true";
-   attribute mark_debug of hr_byteenable_o      : signal is "true";
-   attribute mark_debug of hr_burstcount_o      : signal is "true";
-   attribute mark_debug of hr_readdata_i        : signal is "true";
-   attribute mark_debug of hr_readdatavalid_i   : signal is "true";
-   attribute mark_debug of hr_waitrequest_i     : signal is "true";
+--   attribute mark_debug : string;
+--   attribute mark_debug of main_resp_status     : signal is "true";
+--   attribute mark_debug of main_reset_core      : signal is "true";
+--   attribute mark_debug of qnice_rst_i          : signal is "true";
+--   attribute mark_debug of qnice_addr_i         : signal is "true";
+--   attribute mark_debug of qnice_data_i         : signal is "true";
+--   attribute mark_debug of qnice_ce_i           : signal is "true";
+--   attribute mark_debug of qnice_we_i           : signal is "true";
+--   attribute mark_debug of qnice_data_o         : signal is "true";
+--   attribute mark_debug of qnice_wait_o         : signal is "true";
+--   attribute mark_debug of main_rst_i           : signal is "true";
+--   attribute mark_debug of main_reset_core_o    : signal is "true";
+--   attribute mark_debug of main_loading_o       : signal is "true";
+--   attribute mark_debug of main_id_o            : signal is "true";
+--   attribute mark_debug of main_exrom_o         : signal is "true";
+--   attribute mark_debug of main_game_o          : signal is "true";
+--   attribute mark_debug of main_size_o          : signal is "true";
+--   attribute mark_debug of main_bank_laddr_o    : signal is "true";
+--   attribute mark_debug of main_bank_size_o     : signal is "true";
+--   attribute mark_debug of main_bank_num_o      : signal is "true";
+--   attribute mark_debug of main_bank_raddr_o    : signal is "true";
+--   attribute mark_debug of main_bank_wr_o       : signal is "true";
+--   attribute mark_debug of main_bank_lo_i       : signal is "true";
+--   attribute mark_debug of main_bank_hi_i       : signal is "true";
+--   attribute mark_debug of main_bank_wait_o     : signal is "true";
+--   attribute mark_debug of main_ram_addr_i      : signal is "true";
+--   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
+--   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
+--   attribute mark_debug of main_ioe_ram_data_o  : signal is "true";
+--   attribute mark_debug of main_iof_ram_data_o  : signal is "true";
+--   attribute mark_debug of main_ioe_we_i        : signal is "true";
+--   attribute mark_debug of main_iof_we_i        : signal is "true";
+--   attribute mark_debug of main_ram_addr_i      : signal is "true";
+--   attribute mark_debug of main_ram_data_i      : signal is "true";
+--   attribute mark_debug of hr_rst_i             : signal is "true";
+--   attribute mark_debug of hr_write_o           : signal is "true";
+--   attribute mark_debug of hr_read_o            : signal is "true";
+--   attribute mark_debug of hr_address_o         : signal is "true";
+--   attribute mark_debug of hr_writedata_o       : signal is "true";
+--   attribute mark_debug of hr_byteenable_o      : signal is "true";
+--   attribute mark_debug of hr_burstcount_o      : signal is "true";
+--   attribute mark_debug of hr_readdata_i        : signal is "true";
+--   attribute mark_debug of hr_readdatavalid_i   : signal is "true";
+--   attribute mark_debug of hr_waitrequest_i     : signal is "true";
 
 begin
 
@@ -555,7 +552,7 @@ begin
 
    i_cdc_slow : entity work.cdc_slow
      generic map (
-       G_DATA_SIZE    => 81,
+       G_DATA_SIZE    => 73,
        G_REGISTER_SRC => false
      )
      port map (
@@ -565,15 +562,13 @@ begin
        src_data_i(15 downto  0) => hr_bank_laddr,
        src_data_i(31 downto 16) => hr_bank_size,
        src_data_i(47 downto 32) => hr_bank_num,
-       src_data_i(55 downto 48) => hr_bank_type,
-       src_data_i(80 downto 56) => hr_bank_raddr,
+       src_data_i(72 downto 48) => hr_bank_raddr,
        dst_clk_i                => main_clk_i,
        dst_valid_o              => main_bank_wr_o,
        dst_data_o(15 downto  0) => main_bank_laddr_o,
        dst_data_o(31 downto 16) => main_bank_size_o,
        dst_data_o(47 downto 32) => main_bank_num_o,
-       dst_data_o(55 downto 48) => main_bank_type_o,
-       dst_data_o(80 downto 56) => main_bank_raddr_o
+       dst_data_o(72 downto 48) => main_bank_raddr_o
      ); -- i_cdc_slow
 
    i_cdc_stable : entity work.cdc_stable

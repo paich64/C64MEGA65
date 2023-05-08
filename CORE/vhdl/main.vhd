@@ -172,7 +172,6 @@ entity main is
       cartridge_bank_laddr_i : in  std_logic_vector(15 downto 0);
       cartridge_bank_size_i  : in  std_logic_vector(15 downto 0);
       cartridge_bank_num_i   : in  std_logic_vector(15 downto 0);
-      cartridge_bank_type_i  : in  std_logic_vector( 7 downto 0);
       cartridge_bank_raddr_i : in  std_logic_vector(24 downto 0);
       cartridge_bank_wr_i    : in  std_logic;
       crt_bank_wait_i        : in  std_logic;
@@ -194,7 +193,7 @@ entity main is
       
       -- Access custom DOS for the simulated C1541 (in QNICE clock domain via c64_clk_sd_i)
       c1541rom_we_i          : in std_logic;
-      c1541rom_addr_i        : in std_logic_vector(13 downto 0);
+      c1541rom_addr_i        : in std_logic_vector(15 downto 0);
       c1541rom_data_i        : in std_logic_vector(7 downto 0);
       c1541rom_data_o        : out std_logic_vector(7 downto 0)
    );
@@ -381,7 +380,6 @@ architecture synthesis of main is
    attribute mark_debug of cartridge_bank_num_i   : signal is "true";
    attribute mark_debug of cartridge_bank_raddr_i : signal is "true";
    attribute mark_debug of cartridge_bank_size_i  : signal is "true";
-   attribute mark_debug of cartridge_bank_type_i  : signal is "true";
    attribute mark_debug of cartridge_bank_wr_i    : signal is "true";
    attribute mark_debug of cartridge_exrom_i      : signal is "true";
    attribute mark_debug of cartridge_game_i       : signal is "true";
