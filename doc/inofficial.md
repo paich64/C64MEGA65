@@ -27,4 +27,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A18  | 04/29/23 | 4f91c48 | More stability for hardware cartridges: Delayed PHI2 signal by 63ns. PowerCartridge now works and EasyFlash 3 can be flashed (but does not run any games, yet). Simulated cartridges: Support for modern Ocean type 1B cartridges such as SoulForce (fixes https://github.com/MJoergen/C64MEGA65/issues/20)
 | WIP-V5-A19  | 05/02/23 | bc3218b | Ability to switch Kernal versions: Standard, C64 Games System, Japanese Revision and JiffyDOS
 | WIP-V5-A20  | 05/07/23 | dbc7143 | Fixed bug in FAT32 library that lead to an Settings file: Seek failed." error under certain circumstances. Plus other smaller bugs und features.
-| WIP-A5-A21  | 05/08/23 |         | Eye of the Beholder is glitchfree now in CRT simulation: Heavily improved caching mechanisms for `*.crt` files
+| WIP-A5-A21  | 05/08/23 | 18f8a0b | Eye of the Beholder is glitchfree now in CRT simulation: Heavily improved caching mechanisms for `*.crt` files
