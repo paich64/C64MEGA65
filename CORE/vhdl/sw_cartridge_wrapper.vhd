@@ -60,7 +60,7 @@ end entity sw_cartridge_wrapper;
 
 architecture synthesis of sw_cartridge_wrapper is
 
-   constant C_CACHE_SIZE : natural := 2;
+   constant C_CACHE_SIZE : natural := 3;
 
    constant C_ERROR_STRING_LENGTH : integer := 21;
    type string_vector is array (natural range <>) of string(1 to C_ERROR_STRING_LENGTH);
@@ -155,8 +155,8 @@ architecture synthesis of sw_cartridge_wrapper is
    signal hr_bank_lo              : std_logic_vector( 6 downto 0);
    signal hr_bank_hi              : std_logic_vector( 6 downto 0);
    signal hr_bank_wait            : std_logic;
-   signal hr_cache_addr_lo        : std_logic_vector( 1 downto 0);
-   signal hr_cache_addr_hi        : std_logic_vector( 1 downto 0);
+   signal hr_cache_addr_lo        : std_logic_vector(C_CACHE_SIZE-1 downto 0);
+   signal hr_cache_addr_hi        : std_logic_vector(C_CACHE_SIZE-1 downto 0);
    signal hr_loading              : std_logic;
    signal hr_id                   : std_logic_vector(15 downto 0);
    signal hr_exrom                : std_logic_vector( 7 downto 0);
@@ -573,7 +573,7 @@ begin
 
    i_cdc_stable : entity work.cdc_stable
      generic map (
-       G_DATA_SIZE    => 61,
+       G_DATA_SIZE    => 57+2*C_CACHE_SIZE,
        G_REGISTER_SRC => false
      )
      port map (
@@ -584,8 +584,8 @@ begin
        src_data_i(54 downto 32) => hr_size,
        src_data_i(55)           => hr_loading,
        src_data_i(56)           => hr_bank_wait,
-       src_data_i(58 downto 57) => hr_cache_addr_lo,
-       src_data_i(60 downto 59) => hr_cache_addr_hi,
+       src_data_i(56+C_CACHE_SIZE   downto 57)              => hr_cache_addr_lo,
+       src_data_i(56+2*C_CACHE_SIZE downto 57+C_CACHE_SIZE) => hr_cache_addr_hi,
        dst_clk_i                => main_clk_i,
        dst_data_o(15 downto  0) => main_id_o,
        dst_data_o(23 downto 16) => main_exrom_o,
@@ -593,8 +593,8 @@ begin
        dst_data_o(54 downto 32) => main_size_o,
        dst_data_o(55)           => main_loading_o,
        dst_data_o(56)           => main_bank_wait_o,
-       dst_data_o(58 downto 57) => main_cache_addr_lo,
-       dst_data_o(60 downto 59) => main_cache_addr_hi
+       dst_data_o(56+C_CACHE_SIZE   downto 57)              => main_cache_addr_lo,
+       dst_data_o(56+2*C_CACHE_SIZE downto 57+C_CACHE_SIZE) => main_cache_addr_hi
      ); -- i_cdc_stable
 
 
