@@ -92,7 +92,10 @@ begin
                -- best to mirror banks at $8000 and $A000
                if ioe_i = '1' and wr_en_i = '1' then
                   bank_lo_o <= "0" & wr_data_i(5 downto 0);
-                  bank_hi_o <= "0" & wr_data_i(5 downto 0);
+                  -- ROMH is only used for Ocean Type A
+                  if game_o = '0' then
+                     bank_hi_o <= "0" & wr_data_i(5 downto 0);
+                  end if;
                end if;
                -- Autodetect Ocean Type B (512k)
                -- Only $8000 is used, while $A000 is RAM
