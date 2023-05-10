@@ -27,6 +27,8 @@ entity cartridge is
 
       -- To C64
       io_rom_o       : out std_logic;
+      io_ext_o       : out std_logic;
+      io_data_o      : out std_logic_vector(7 downto 0);
       exrom_o        : out std_logic;
       game_o         : out std_logic
    );
@@ -57,12 +59,15 @@ architecture synthesis of cartridge is
 
 begin
 
-   io_rom_o <= (ioe_i and ioe_ena) or
-               (iof_i and iof_ena);
-
    process (clk_i)
    begin
       if rising_edge(clk_i) then
+
+         io_rom_o  <= (ioe_i and ioe_ena) or
+                      (iof_i and iof_ena);
+         io_ext_o  <= '0';
+         io_data_o <= X"FF";
+
          if cart_loading_i = '1' then
             ioe_ena   <= '0';
             iof_ena   <= '0';
@@ -87,7 +92,10 @@ begin
                -- best to mirror banks at $8000 and $A000
                if ioe_i = '1' and wr_en_i = '1' then
                   bank_lo_o <= "0" & wr_data_i(5 downto 0);
-                  bank_hi_o <= "0" & wr_data_i(5 downto 0);
+                  -- ROMH is only used for Ocean Type A
+                  if game_o = '0' then
+                     bank_hi_o <= "0" & wr_data_i(5 downto 0);
+                  end if;
                end if;
                -- Autodetect Ocean Type B (512k)
                -- Only $8000 is used, while $A000 is RAM
@@ -191,6 +199,10 @@ begin
 
             when 60 =>
                -- GMod2
+               -- Access to EEPROM just gives 'ready' back.
+               -- This is a hack to allow games to proceed when they access the EEPROM.
+               io_ext_o  <= ioe_i and not wr_en_i;
+               io_data_o <= X"80";
                if ioe_i = '1' and wr_en_i = '1' then
                   exrom_o   <= wr_data_i(6);
                   bank_lo_o <= "0" & wr_data_i(5 downto 0);

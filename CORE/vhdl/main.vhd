@@ -333,6 +333,8 @@ architecture synthesis of main is
 
    -- Signals from the cartridge.vhd module (software defined cartridges)
    signal crt_io_rom           : std_logic;
+   signal crt_io_ext           : std_logic;
+   signal crt_io_data          : std_logic_vector(7 downto 0);
    signal crt_exrom            : std_logic;
    signal crt_game             : std_logic;
 
@@ -789,6 +791,8 @@ begin
             core_exrom_n   <= crt_exrom;
             core_dma       <= cartridge_loading_i or crt_bank_wait_i;
             core_io_rom    <= crt_io_rom;
+            core_io_ext    <= crt_io_ext;
+            core_io_data   <= unsigned(crt_io_data);
             if core_umax_romh = '1' then
                -- Ultimax mode and VIC accesses the bus: we need to translate the address, see comment about "The PLA Dissected" above
                crt_addr_bus_o <= "11" & c64_ram_addr_o(13 downto 0);
@@ -855,6 +859,8 @@ begin
          bank_lo_o      => crt_bank_lo_o,
          bank_hi_o      => crt_bank_hi_o,
          io_rom_o       => crt_io_rom,
+         io_ext_o       => crt_io_ext,
+         io_data_o      => crt_io_data,
          exrom_o        => crt_exrom,
          game_o         => crt_game
       ); -- i_cartridge
