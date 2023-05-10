@@ -19,6 +19,8 @@ Add tests that stress the new menu system.
 
 Add the PLA test
 
+Add a test for the mouse and the paddles
+
 @@@-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
 @REMOVE THIS FROM THE C64 tests documentation when done. This is just an
 internal reminder for making sure that the MiSTer2MEGA65 framework release

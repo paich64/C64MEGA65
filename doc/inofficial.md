@@ -28,3 +28,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A19  | 05/02/23 | bc3218b | Ability to switch Kernal versions: Standard, C64 Games System, Japanese Revision and JiffyDOS
 | WIP-V5-A20  | 05/07/23 | dbc7143 | Fixed bug in FAT32 library that lead to an Settings file: Seek failed." error under certain circumstances. Plus other smaller bugs und features.
 | WIP-A5-A21  | 05/08/23 | 18f8a0b | Eye of the Beholder is glitchfree now in CRT simulation: Heavily improved caching mechanisms for `*.crt` files
+| WIP-A5-A22  | 05/10/23 |         | Support for composite sync via VGA (CSYNC)

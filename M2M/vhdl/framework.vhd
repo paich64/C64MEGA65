@@ -159,6 +159,7 @@ port (
    qnice_dvi_i             : in  std_logic;
    qnice_video_mode_i      : in  natural range 0 to 3;
    qnice_scandoubler_i     : in  std_logic;
+   qnice_csync_i           : in  std_logic;
    qnice_audio_mute_i      : in  std_logic;
    qnice_audio_filter_i    : in  std_logic;
    qnice_zoom_crop_i       : in  std_logic;
@@ -247,6 +248,7 @@ signal main_csr_joy2_on       : std_logic;
 
 signal main_zoom_crop         : std_logic;
 signal main_scandoubler       : std_logic;
+signal main_csync             : std_logic;
 
 -- keyboard handling
 signal main_qnice_keys_n      : std_logic_vector(15 downto 0);
@@ -875,7 +877,7 @@ begin
    -- Clock domain crossing: QNICE to core
    i_qnice2main: xpm_cdc_array_single
       generic map (
-         WIDTH => 554
+         WIDTH => 555
       )
       port map (
          src_clk                    => qnice_clk,
@@ -891,10 +893,11 @@ begin
          src_in(264 downto 9)       => qnice_osm_control_m_o,
          src_in(520 downto 265)     => qnice_gp_reg_o,
          src_in(521)                => qnice_scandoubler_i,
-         src_in(529 downto 522)     => std_logic_vector(qnice_pot1_x_n),
-         src_in(537 downto 530)     => std_logic_vector(qnice_pot1_y_n),
-         src_in(545 downto 538)     => std_logic_vector(qnice_pot2_x_n),
-         src_in(553 downto 546)     => std_logic_vector(qnice_pot2_y_n),
+         src_in(522)                => qnice_csync_i,
+         src_in(530 downto 523)     => std_logic_vector(qnice_pot1_x_n),
+         src_in(538 downto 531)     => std_logic_vector(qnice_pot1_y_n),
+         src_in(546 downto 539)     => std_logic_vector(qnice_pot2_x_n),
+         src_in(554 downto 547)     => std_logic_vector(qnice_pot2_y_n),
          dest_clk                   => main_clk_i,
          dest_out(0)                => main_qnice_reset_o,
          dest_out(1)                => main_qnice_pause_o,
@@ -908,10 +911,11 @@ begin
          dest_out(264 downto 9)     => main_osm_control_m_o,
          dest_out(520 downto 265)   => main_qnice_gp_reg_o,
          dest_out(521)              => main_scandoubler,
-         dest_out(529 downto 522)   => main_pot1_x_o,
-         dest_out(537 downto 530)   => main_pot1_y_o,
-         dest_out(545 downto 538)   => main_pot2_x_o,
-         dest_out(553 downto 546)   => main_pot2_y_o         
+         dest_out(522)              => main_csync,
+         dest_out(530 downto 523)   => main_pot1_x_o,
+         dest_out(538 downto 531)   => main_pot1_y_o,
+         dest_out(546 downto 539)   => main_pot2_x_o,
+         dest_out(554 downto 547)   => main_pot2_y_o         
       ); -- i_qnice2main
 
    -- Clock domain crossing: core to QNICE
@@ -1105,6 +1109,9 @@ begin
          -- Configure the scandoubler: 0=off/1=on
          -- Make sure the signal is in the video_clk clock domain
          video_scandoubler_i      => main_scandoubler,
+         
+         -- Configure composite sync: 0=off/1=on
+         video_csync_i            => main_csync,
 
          -- Analog output (VGA and audio jack)
          vga_red_o                => vga_red,

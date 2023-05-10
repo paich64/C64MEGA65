@@ -43,6 +43,7 @@ port (
                                                              -- HDMI 1280x720 @ 60 Hz resolution = mode 1,
                                                              -- PAL 576p in 4:3 and 5:4 are modes 2 and 3
    qnice_scandoubler_o      : out std_logic;                 -- 0 = no scandoubler, 1 = scandoubler
+   qnice_csync_o            : out std_logic;                 -- 0 = normal HS/VS, 1 = Composite Sync
    qnice_audio_mute_o       : out std_logic;
    qnice_audio_filter_o     : out std_logic;
    qnice_zoom_crop_o        : out std_logic;
@@ -342,7 +343,9 @@ constant C_MENU_HDMI_FF       : natural := 63;
 constant C_MENU_HDMI_DVI      : natural := 64;
 constant C_MENU_CRT_EMULATION : natural := 67;
 constant C_MENU_HDMI_ZOOM     : natural := 68;
-constant C_MENU_VGA_RETRO     : natural := 69;
+constant C_MENU_VGA_STD       : natural := 72;
+constant C_MENU_VGA_15KHZHSVS : natural := 76;
+constant C_MENU_VGA_15KHZCS   : natural := 77;
 
 -- RAMs for the C64
 signal qnice_c64_ram_we             : std_logic;
@@ -496,7 +499,7 @@ begin
          -- video_retro15kHz_i: Analog video output configuration: Horizontal sync frequency: '0'  =30 kHz ("normal" on "modern" analog monitors), '1'=retro 15 kHz
          c64_ntsc_i             => c64_ntsc,
          clk_main_speed_i       => c64_clock_speed,
-         video_retro15kHz_i     => main_osm_control_i(C_MENU_VGA_RETRO),
+         video_retro15kHz_i     => main_osm_control_i(C_MENU_VGA_15KHZHSVS) or main_osm_control_i(C_MENU_VGA_15KHZCS),
 
          -- SID and CIA versions
          c64_sid_ver_i          => sid_setup,
@@ -669,11 +672,17 @@ begin
                          2 when qnice_osm_control_i(C_MENU_HDMI_4_3_50)  = '1' else
                          1 when qnice_osm_control_i(C_MENU_HDMI_16_9_60) = '1' else
                          0;
+                         
+   qnice_csync_o <= qnice_osm_control_i(C_MENU_VGA_15KHZCS);                  -- Composite sync (CSYNC)
 
    -- Use On-Screen-Menu selections to configure several audio and video settings
    -- Video and audio mode control
    qnice_dvi_o                <= qnice_osm_control_i(C_MENU_HDMI_DVI);        -- 0=HDMI (with sound), 1=DVI (no sound)
-   qnice_scandoubler_o        <= not qnice_osm_control_i(C_MENU_VGA_RETRO);   -- no scandoubler when using the retro 15 kHz RGB mode
+   
+   -- no scandoubler when using the retro 15 kHz RGB mode
+   qnice_scandoubler_o        <= (not qnice_osm_control_i(C_MENU_VGA_15KHZHSVS)) and
+                                 (not qnice_osm_control_i(C_MENU_VGA_15KHZCS));
+   
    qnice_audio_mute_o         <= '0';                                         -- audio is not muted
    qnice_audio_filter_o       <= qnice_osm_control_i(C_MENU_IMPROVE_AUDIO);   -- 0 = raw audio, 1 = use filters from globals.vhd
    qnice_zoom_crop_o          <= qnice_osm_control_i(C_MENU_HDMI_ZOOM);       -- 0 = no zoom/crop

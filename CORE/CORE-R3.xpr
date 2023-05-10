@@ -137,6 +137,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../M2M/vhdl/controllers/MiSTer/csync.sv">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/../M2M/vhdl/controllers/MiSTer/hq2x.sv">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>

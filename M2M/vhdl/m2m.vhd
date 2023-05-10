@@ -230,6 +230,7 @@ signal hr_high                : std_logic;
 signal qnice_dvi              : std_logic;
 signal qnice_video_mode       : natural range 0 to 3;
 signal qnice_scandoubler      : std_logic;
+signal qnice_csync            : std_logic;
 signal qnice_audio_mute       : std_logic;
 signal qnice_audio_filter     : std_logic;
 signal qnice_zoom_crop        : std_logic;
@@ -374,6 +375,7 @@ begin
       qnice_dvi_i             => qnice_dvi,
       qnice_video_mode_i      => qnice_video_mode,
       qnice_scandoubler_i     => qnice_scandoubler,
+      qnice_csync_i           => qnice_csync,
       qnice_audio_mute_i      => qnice_audio_mute,
       qnice_audio_filter_i    => qnice_audio_filter,
       qnice_zoom_crop_i       => qnice_zoom_crop,
@@ -418,6 +420,7 @@ begin
          qnice_dvi_o             => qnice_dvi,
          qnice_video_mode_o      => qnice_video_mode,
          qnice_scandoubler_o     => qnice_scandoubler,
+         qnice_csync_o           => qnice_csync,
          qnice_audio_mute_o      => qnice_audio_mute,
          qnice_audio_filter_o    => qnice_audio_filter,
          qnice_zoom_crop_o       => qnice_zoom_crop,

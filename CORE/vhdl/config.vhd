@@ -77,7 +77,7 @@ type WHS_RECORD_ARRAY_TYPE is array (0 to WHS_RECORDS - 1) of WHS_RECORD_TYPE;
 
 constant SCR_WELCOME : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A21]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A22]\n\n" &
 
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -97,7 +97,7 @@ constant SCR_WELCOME : string :=
    
 constant HELP_1 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A21]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A22]\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
    " Powered by MiSTer2MEGA65\n\n\n" &
@@ -127,7 +127,7 @@ constant HELP_1 : string :=
 
 constant HELP_2 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A21]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A22]\n\n" &
    
    " Post-processing:\n\n" &
    
@@ -156,7 +156,7 @@ constant HELP_2 : string :=
 
 constant HELP_3 : string :=
 
-   "\n Commodore 64 for MEGA65 [WIP-V5-A21]\n\n" &
+   "\n Commodore 64 for MEGA65 [WIP-V5-A22]\n\n" &
    
    " Flicker-free experience on HDMI:\n\n" &
      
@@ -357,7 +357,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal writ
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 74;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 84;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -450,7 +450,18 @@ constant OPTM_ITEMS        : string :=
    " HDMI: CRT emulation\n"     &
    " HDMI: Zoom-in\n"           &
 
-   " VGA: Retro 15 kHz RGB\n"   &
+   " VGA: %s\n"                 &  -- VGA submenu
+   " VGA Display Mode\n"        &
+   "\n"                         &
+   " Standard\n"                &
+   "\n"                         &
+   " Retro 15 kHz mode\n"       &
+   "\n"                         &
+   " 15 kHz with HS/VS\n"       &
+   " 15 kHz with CSYNC\n"       &
+   "\n"                         &
+   " Back to main menu\n"       &
+   
    "\n"                         &
    " About & Help\n"            &
    "\n"                         &
@@ -473,7 +484,7 @@ constant OPTM_G_HDMI_FF       : integer := 14;
 constant OPTM_G_HDMI_DVI      : integer := 15;
 constant OPTM_G_CRT_EMULATION : integer := 16;
 constant OPTM_G_HDMI_ZOOM     : integer := 17;
-constant OPTM_G_VGA_RETRO     : integer := 18;
+constant OPTM_G_VGA_MODES     : integer := 18;
 constant OPTM_G_ABOUT_HELP    : integer := 19;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
@@ -548,10 +559,22 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_HDMI_DVI      + OPTM_G_SINGLESEL,                                             
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,                                                                             
-                                             
+
                                              OPTM_G_CRT_EMULATION + OPTM_G_SINGLESEL + OPTM_G_STDSEL,                                                                                         
                                              OPTM_G_HDMI_ZOOM     + OPTM_G_SINGLESEL,
-                                             OPTM_G_VGA_RETRO     + OPTM_G_SINGLESEL,
+
+                                             OPTM_G_SUBMENU,
+                                             OPTM_G_HEADLINE,
+                                             OPTM_G_LINE,
+                                             OPTM_G_VGA_MODES     + OPTM_G_STDSEL,
+                                             OPTM_G_LINE,
+                                             OPTM_G_TEXT,
+                                             OPTM_G_LINE,
+                                             OPTM_G_VGA_MODES,
+                                             OPTM_G_VGA_MODES,
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE         + OPTM_G_SUBMENU,
+
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,
                                              OPTM_G_LINE,

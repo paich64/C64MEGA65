@@ -1,13 +1,12 @@
-@TODO: Code cleanup: Remove debug signals, add file-headers
-
 Version 5 - XXXXXXXX XX, 2023
 =============================
 
 Hardware support release: Insert hardware cartridges into the MEGA65's
 Expansion Port or simulate cartridges via `*.crt` files. Connect IEC devices
-such as drives and printers and enjoy Stereo SID sound. For the most authentic
-retro feeling, feed a composite video signal into your monitor. Load faster
-using JiffyDOS or by directly loading `*.prg` files. 
+such as drives and printers and enjoy Stereo SID sound. For an authentic
+retro feeling, feed a composite video signal into your monitor or use the
+MiSTer VGA to RGB SCART cable to connect an old TV. Load faster using JiffyDOS
+or by directly loading `*.prg` files.
 
 ## New Features
 
@@ -33,8 +32,10 @@ using JiffyDOS or by directly loading `*.prg` files.
 * Hardware IEC port: Attach real 1541 & 1581 drives as well as printers,
   plotters or modern devices such as the SD2IEC and the Ultimate-II+
 
-WIP 15khz RGB + csync:
-https://discord.com/channels/719326990221574164/794775503818588200/1082080087891005500
+* Support for three VGA output modes: Standard VGA, 15 kHz retro RGB output
+  with either horizontal & vertical sync signals or with a composite sync
+  (CSYNC) signal. The latter one allows you for example to connect the MEGA65
+  to an old SCART TV using the [MiSTer VGA to RGB SCART cable](https://ultimatemister.com/product/rgb-scart-cable/)
 
 * More clearly arranged menu using submenus
 
