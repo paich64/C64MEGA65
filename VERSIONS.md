@@ -36,6 +36,7 @@ or by directly loading `*.prg` files.
   with either horizontal & vertical sync signals or with a composite sync
   (CSYNC) signal. The latter one allows you for example to connect the MEGA65
   to an old SCART TV using the [MiSTer VGA to RGB SCART cable](https://ultimatemister.com/product/rgb-scart-cable/)
+  or to connect it to an old monitor using a standard VGA to BNC cable.
 
 * More clearly arranged menu using submenus
 

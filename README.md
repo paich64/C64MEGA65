@@ -9,7 +9,7 @@
 * Kernals and JiffyDOS
 * Since the menu structure changed (submenus): DVI might sit somewhere
   else, so re-do the recipe
-* 15khz RGB + csync
+* 15khz RGB + csync (incl. cable variants)
 
 Commodore 64 for MEGA65
 =======================
