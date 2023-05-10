@@ -251,7 +251,7 @@ begin
             -- connector, see: https://en.wikipedia.org/wiki/VGA_connector
             -- Composite sync output that is compatible with the MiSTer VGA to SCART adaptor needs
             -- the composite sync signal on pin 13 and HIGH on pin 14, see: https://misterfpga.org/viewtopic.php?t=1811
-            vga_hs_o    <= vga_hs_ps when not video_csync_i else vga_cs_ps;
+            vga_hs_o    <= vga_hs_ps when not video_csync_i else not vga_cs_ps;
             vga_vs_o    <= vga_vs_ps when not video_csync_i else '1';            
          end if;
       end process;
