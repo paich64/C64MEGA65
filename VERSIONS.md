@@ -19,18 +19,18 @@ or by directly loading `*.prg` files.
   cartridge types are supported. Saving data on the cartridge is not yet
   supported.
 
-* Ability to directly load `*.prg` files
+* Ability to directly load `*.prg` files.
 
 * Ability to switch Kernal versions: Standard, C64 Games System, Japanese
-  Revision and [JiffyDOS](doc/jiffy.md)
+  Revision and [JiffyDOS](doc/jiffy.md).
 
-* Stereo SID support: You can chose from multiple real dual SID combinations
+* Stereo SID support: You can choose from multiple real dual SID combinations
   and enjoy stereo SID tunes and demos. And you can also use "pseudo stereo"
   by running the two different SID models 6581 and 8050 at the same (one left
   and one right) while they play the same mono tune.
 
 * Hardware IEC port: Attach real 1541 & 1581 drives as well as printers,
-  plotters or modern devices such as the SD2IEC and the Ultimate-II+
+  plotters or modern devices such as the SD2IEC and the Ultimate-II+.
 
 * Support for three VGA output modes: Standard VGA, 15 kHz retro RGB output
   with either horizontal & vertical sync signals or with a composite sync
@@ -38,7 +38,7 @@ or by directly loading `*.prg` files.
   to an old SCART TV using the [MiSTer VGA to RGB SCART cable](https://ultimatemister.com/product/rgb-scart-cable/)
   or to connect it to an old monitor using a standard VGA to BNC cable.
 
-* More clearly arranged menu using submenus
+* More clearly arranged menu system using submenus.
 
 * File browser's page up/down (cursor left/right) now jumps to the very first
   item when you press cursor left one (more) time while you are on the first
@@ -49,13 +49,13 @@ or by directly loading `*.prg` files.
 
 * Improved the 6510 CPU's interrupt dispatching which results in more demos
   working flawlessly (for example "All Hallows' Eve", this fixes
-  https://github.com/MJoergen/C64MEGA65/issues/9)
+  https://github.com/MJoergen/C64MEGA65/issues/9).
 
 * Improved accuracy of the frequency ratio between the C64's CPU and the C1541
   floppy's CPU which results in more demos working flawlessly (for example
   "Unbounded" by Demotion and "Ice Cream Castle" by Crest). It also fixes an
   issue with the diskmag "Input 64"
-  (https://github.com/MJoergen/C64MEGA65/issues/2)
+  (https://github.com/MJoergen/C64MEGA65/issues/2).
 
 * Merge MiSTer upstream fixes to improve simulation accuracy and compatibility
   with real hardware:
@@ -75,7 +75,7 @@ or by directly loading `*.prg` files.
   assert the +5 power signal via the FPGA pin `ct_hpd`.
 
 * Fully dynamic flicker-free HDMI, which reduces our output latency on
-  HDMI to less than 1ms and also eliminates the artecfact, that moved from
+  HDMI to less than 1ms and also eliminates the artifact, that moved from
   the top to the bottom of the screen every once in a while.
 
 ## Bugfixes
