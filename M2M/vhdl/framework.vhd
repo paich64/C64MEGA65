@@ -275,6 +275,8 @@ signal main_osm_cfg_xy        : std_logic_vector(15 downto 0);
 signal main_osm_cfg_dxdy      : std_logic_vector(15 downto 0);
 signal main_osm_vram_addr     : std_logic_vector(15 downto 0);
 signal main_osm_vram_data     : std_logic_vector(15 downto 0);
+signal main_hdmax             : natural range 0 to 4095;
+signal main_vdmax             : natural range 0 to 4095;
 
 --- control signals from QNICE in main's clock domain
 signal main_audio_filter      : std_logic;      
@@ -305,6 +307,8 @@ signal qnice_vram_attr_we     : std_logic;   -- Writing to bits 15-8
 signal qnice_osm_cfg_enable   : std_logic;
 signal qnice_osm_cfg_xy       : std_logic_vector(15 downto 0);
 signal qnice_osm_cfg_dxdy     : std_logic_vector(15 downto 0);
+signal qnice_hdmax            : std_logic_vector(15 downto 0);
+signal qnice_vdmax            : std_logic_vector(15 downto 0);
 
 -- m2m_keyb output for the firmware and the Shell; see also sysdef.asm
 signal qnice_qnice_keys_n     : std_logic_vector(15 downto 0);
@@ -748,6 +752,12 @@ begin
                         -- SHELL_M_DXDY: Use full screen
                         when X"002" => qnice_ramrom_data_in <= std_logic_vector(to_unsigned((VGA_DX/FONT_DX) * 256 + (VGA_DY/FONT_DY), 16));
 
+                        -- CORE_X: Horizontal size of core display
+                        when X"003" => qnice_ramrom_data_in <= std_logic_vector(unsigned(qnice_hdmax) + 1);
+
+                        -- CORE_Y: Vertical size of core display
+                        when X"004" => qnice_ramrom_data_in <= std_logic_vector(unsigned(qnice_vdmax) + 1);
+
                         when others => null;
                      end case;
 
@@ -921,13 +931,17 @@ begin
    -- Clock domain crossing: core to QNICE
    i_main2qnice: xpm_cdc_array_single
       generic map (
-         WIDTH => 16
+         WIDTH => 48
       )
       port map (
          src_clk                => main_clk_i,
-         src_in(15 downto 0)    => main_qnice_keys_n,
+         src_in(15 downto  0)   => main_qnice_keys_n,
+         src_in(31 downto 16)   => std_logic_vector(to_unsigned(main_vdmax, 16)),
+         src_in(47 downto 32)   => std_logic_vector(to_unsigned(main_hdmax, 16)),
          dest_clk               => qnice_clk,
-         dest_out(15 downto 0)  => qnice_qnice_keys_n
+         dest_out(15 downto  0) => qnice_qnice_keys_n,
+         dest_out(31 downto 16) => qnice_vdmax,
+         dest_out(47 downto 32) => qnice_hdmax
       ); -- i_main2qnice
 
    -- Clock domain crossing: QNICE to VGA QNICE-On-Screen-Display
@@ -1177,6 +1191,8 @@ begin
          video_vs_i               => main_crop_vs,
          video_hblank_i           => main_crop_hblank,
          video_vblank_i           => main_crop_vblank,
+         video_hdmax_o            => main_hdmax,
+         video_vdmax_o            => main_vdmax,
          audio_clk_i              => audio_clk, -- 30 MHz
          audio_rst_i              => audio_rst,
          audio_left_i             => audio_l,

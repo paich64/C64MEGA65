@@ -63,15 +63,17 @@ entity digital_pipeline is
       hdmi_osm_vram_addr_o     : out std_logic_vector(15 downto 0);
       hdmi_osm_vram_data_i     : in  std_logic_vector(15 downto 0);
       sys_info_hdmi_o          : out std_logic_vector(47 downto 0);
+      video_hdmax_o            : out natural range 0 to 4095;
+      video_vdmax_o            : out natural range 0 to 4095;
     
       -- QNICE connection to ascal's mode register
-      qnice_ascal_mode_i       : in unsigned(4 downto 0);
+      qnice_ascal_mode_i       : in  unsigned(4 downto 0);
     
       -- QNICE device for interacting with the Polyphase filter coefficients
-      qnice_poly_clk_i         : in std_logic;
-      qnice_poly_dw_i          : in unsigned(9 downto 0);
-      qnice_poly_a_i           : in unsigned(6+3 downto 0);    -- FRAC+3 downto 0, if we change FRAC below, we need to change quite some code, also in the M2M Firmware
-      qnice_poly_wr_i          : in std_logic;
+      qnice_poly_clk_i         : in  std_logic;
+      qnice_poly_dw_i          : in  unsigned(9 downto 0);
+      qnice_poly_a_i           : in  unsigned(6+3 downto 0);    -- FRAC+3 downto 0, if we change FRAC below, we need to change quite some code, also in the M2M Firmware
+      qnice_poly_wr_i          : in  std_logic;
 
       -- Connect to HyperRAM controller
       hr_clk_i                 : in  std_logic;
@@ -367,8 +369,8 @@ begin
          vimax             => 0,                            -- input
 
          -- Detected input image size
-         i_hdmax           => open,                         -- output
-         i_vdmax           => open,                         -- output
+         i_hdmax           => video_hdmax_o,                -- output
+         i_vdmax           => video_vdmax_o,                -- output
 
          -- Output video parameters
          run               => '1',                          -- input
