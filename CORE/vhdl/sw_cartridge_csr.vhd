@@ -1,9 +1,15 @@
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
+-- This module handles the QNICE "Control and Status" interface of the
+-- sw_cartridge_wrapper modulde.
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
--- This module acts as a complete wrapper around the SW cartridge emulation.
--- It contains interfaces to the QNICE, to the C64 core, and to the HyperRAM.
 
 entity sw_cartridge_csr is
 generic (

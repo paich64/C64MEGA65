@@ -1,9 +1,15 @@
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
+-- This module acts as a bridge connection between the RAM Expansion Unit of the C64
+-- and the HyperRAM device of the MEGA65.
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std_unsigned.all;
-
--- This module acts as a bridge connection between the RAM Expansion Unit of the C64
--- and the HyperRAM device of the MEGA65.
 
 entity reu_mapper is
    generic (

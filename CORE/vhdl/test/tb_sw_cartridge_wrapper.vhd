@@ -1,3 +1,11 @@
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
+-- This is a testbench for the sw_cartridge_wrapper module.
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;

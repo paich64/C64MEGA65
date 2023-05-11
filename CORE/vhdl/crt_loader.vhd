@@ -1,26 +1,30 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use ieee.numeric_std_unsigned.all;
-
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
 -- This module reads and parses the CRT file that is loaded into the HyperRAM device.
--- It stores decoded header information in variours tables.
+-- It stores decoded header information in various tables.
 -- Furthermore, it loads and caches the active banks into BRAM.
-
+--
 -- This module runs entirely in the HyperRAM clock domain, and therefore the BRAM
 -- is placed outside this module.
-
+--
 -- It acts as a master towards both the HyperRAM and the BRAM.
 -- The maximum amount of addressable HyperRAM is 22 address bits @ 16 data bits, i.e. 8 MB of memory.
 -- Not all this memory will be available to the CRT file, though.
 -- The CRT file is stored in little-endian format, i.e. even address bytes are in bits 7-0 and
 -- odd address bytes are in bits 15-8.
-
+--
 -- req_start_i   : Asserted when the entire CRT file has been loaded verbatim into HyperRAM.
 -- req_address_i : The start address in HyperRAM (in units of 16-bit words).
 -- req_length_i  : The length of the CRT file (in units of bytes).
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
 
--- bank_lo_i and bank_hi_i are in units of 8kB.
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 entity crt_loader is
    generic (
@@ -39,8 +43,8 @@ entity crt_loader is
       resp_address_o      : out std_logic_vector(22 downto 0) := (others => '0');
 
       -- Control interface (CORE)
-      bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
-      bank_hi_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
+      bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current bank number of ROM LO
+      bank_hi_i           : in  std_logic_vector( 6 downto 0);     -- Current bank number of ROM HI
       bank_wait_o         : out std_logic;                         -- Asserted when cache is being updated
       cache_addr_lo_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
       cache_addr_hi_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);

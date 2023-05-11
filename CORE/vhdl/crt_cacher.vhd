@@ -1,20 +1,28 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use ieee.numeric_std_unsigned.all;
-
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
 -- This module loads and caches the active banks into BRAM.
-
+--
 -- This module runs entirely in the HyperRAM clock domain, and therefore the BRAM
 -- is placed outside this module.
-
+--
 -- It acts as a master towards both the HyperRAM and the BRAM.
 -- The maximum amount of addressable HyperRAM is 22 address bits @ 16 data bits, i.e. 8 MB of memory.
 -- Not all this memory will be available to the CRT file, though.
 -- The CRT file is stored in little-endian format, i.e. even address bytes are in bits 7-0 and
 -- odd address bytes are in bits 15-8.
+--
+-- bank_lo_i and bank_hi_i are bank numbers set by the program (typically using writes
+-- to $DExx or $DFxx), and must match the "Bank Number" field (offset $000A) in the
+-- correspodning CHIP part of the CRT file.
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
 
--- bank_lo_i and bank_hi_i are in units of 8kB.
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 entity crt_cacher is
    generic (
@@ -33,8 +41,8 @@ entity crt_cacher is
       cart_bank_wr_i      : in  std_logic;
 
       -- Control interface (CORE)
-      bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank LO
-      bank_hi_i           : in  std_logic_vector( 6 downto 0);     -- Current location in HyperRAM of bank HI
+      bank_lo_i           : in  std_logic_vector( 6 downto 0);     -- Current bank number of ROM LO
+      bank_hi_i           : in  std_logic_vector( 6 downto 0);     -- Current bank number of ROM HI
       bank_wait_o         : out std_logic;                         -- Asserted when cache is being updated
       cache_addr_lo_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
       cache_addr_hi_o     : out std_logic_vector(G_CACHE_SIZE-1 downto 0);
@@ -131,10 +139,7 @@ begin
                         or lo_load = '1'
              else '0';
 
-   -- Even though MiSTer implements a similar mapping in the file cartridge.v, MiSTer's
-   -- implementation only stores the upper bits of the HyperRAM address, which is not
-   -- enough for us. Therefore we replicate the mapping here, but retain the complete
-   -- HyperRAM address.
+   -- Here we store the mapping from "Bank number" to "Address in HyperRAM".
    p_banks : process (clk_i)
    begin
       if rising_edge(clk_i) then
@@ -201,7 +206,7 @@ begin
                         avm_write_o      <= '0';
                         avm_read_o       <= '1';
                         avm_address_o    <= avm_address_o + X"80";
-                        avm_burstcount_o <= X"80"; -- Read 256 bytes
+                        avm_burstcount_o <= X"80"; -- Read another 256 bytes
                      end if;
                   end if;
                end if;
@@ -221,7 +226,7 @@ begin
                         avm_write_o      <= '0';
                         avm_read_o       <= '1';
                         avm_address_o    <= avm_address_o + X"80";
-                        avm_burstcount_o <= X"80"; -- Read 256 bytes
+                        avm_burstcount_o <= X"80"; -- Read another 256 bytes
                      end if;
                   end if;
                end if;
@@ -266,16 +271,22 @@ begin
             -- Detect change in bank addresses
             if bank_lo_d /= bank_lo_i then
                found_v := false;
+               -- Do we already have this bank cached?
                for i in 0 to 2**G_CACHE_SIZE-1 loop
                   if cache_ram_lo(i) = bank_lo_i then
                      found_v := true;
+                     -- Yes, just return the correct location
                      cache_addr_lo_o <= std_logic_vector(to_unsigned(i, G_CACHE_SIZE));
                      exit;
                   end if;
                end loop;
                if not found_v then
+                  -- No, we must load the bank from HyperRAM
                   cache_addr_lo_o <= next_cache_addr_lo;
                   cache_ram_lo(to_integer(next_cache_addr_lo)) <= bank_lo_i;
+                  -- The cache replacement policy is very simple:
+                  -- Simply choose the next bank to be replaced in a
+                  -- round-robin manner.
                   next_cache_addr_lo <= next_cache_addr_lo + 1;
                   lo_load <= '1';
                   restart <= '1';
@@ -284,16 +295,22 @@ begin
 
             if bank_hi_d /= bank_hi_i then
                found_v := false;
+               -- Do we already have this bank cached?
                for i in 0 to 2**G_CACHE_SIZE-1 loop
                   if cache_ram_hi(i) = bank_hi_i then
                      found_v := true;
+                     -- Yes, just return the correct location
                      cache_addr_hi_o <= std_logic_vector(to_unsigned(i, G_CACHE_SIZE));
                      exit;
                   end if;
                end loop;
                if not found_v then
+                  -- No, we must load the bank from HyperRAM
                   cache_addr_hi_o <= next_cache_addr_hi;
                   cache_ram_hi(to_integer(next_cache_addr_hi)) <= bank_hi_i;
+                  -- The cache replacement policy is very simple:
+                  -- Simply choose the next bank to be replaced in a
+                  -- round-robin manner.
                   next_cache_addr_hi <= next_cache_addr_hi + 1;
                   hi_load <= '1';
                   restart <= '1';
@@ -302,12 +319,14 @@ begin
          end if;
 
          if cart_valid_d = '0' and cart_valid_i = '1' then
+            -- We've loaded a new cartridge, so begin initialization
             cache_addr_lo_o    <= (others => '0');
             cache_addr_hi_o    <= (others => '0');
             cache_ram_lo       <= (others => (others => '0'));
             cache_ram_hi       <= (others => (others => '0'));
             next_cache_addr_lo <= std_logic_vector(to_unsigned(1, G_CACHE_SIZE));
             next_cache_addr_hi <= std_logic_vector(to_unsigned(1, G_CACHE_SIZE));
+            -- Load both banks when a new cartridge is started.
             lo_load            <= '1';
             hi_load            <= '1';
          end if;

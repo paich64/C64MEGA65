@@ -1,23 +1,29 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use ieee.numeric_std_unsigned.all;
-
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
 -- This module reads and parses the CRT file that is loaded into the HyperRAM device.
 -- It stores decoded header information in variours tables.
-
+--
 -- This module runs entirely in the HyperRAM clock domain, and therefore the BRAM
 -- is placed outside this module.
-
+--
 -- It acts as a master towards the HyperRAM.
 -- The maximum amount of addressable HyperRAM is 22 address bits @ 16 data bits, i.e. 8 MB of memory.
 -- Not all this memory will be available to the CRT file, though.
 -- The CRT file is stored in little-endian format, i.e. even address bytes are in bits 7-0 and
 -- odd address bytes are in bits 15-8.
-
+--
 -- req_start_i   : Asserted when the entire CRT file has been loaded verbatim into HyperRAM.
 -- req_address_i : The start address in HyperRAM (in units of 16-bit words).
 -- req_length_i  : The length of the CRT file (in units of bytes).
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.numeric_std_unsigned.all;
 
 entity crt_parser is
    port (

@@ -1,15 +1,15 @@
+----------------------------------------------------------------------------------
+-- Commodore 64 for MEGA65
+--
+-- This is the testbench for the crt_parser module.
+--
+-- done by MJoergen in 2023 and licensed under GPL v3
+----------------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.numeric_std_unsigned.all;
-
--- This module reads and parses the CRT file that is loaded into the HyperRAM device.
--- It stores header information and chip contents into various tables and BRAM.
-
--- This module runs in the HyperRAM clock domain, and therefore the BRAM
--- is placed outside this module.
-
--- It acts as a master towards both the HyperRAM and the BRAM.
 
 entity tb_crt_parser is
 end entity tb_crt_parser;
