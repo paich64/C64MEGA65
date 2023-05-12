@@ -357,7 +357,7 @@ _HM_SDMOUNTED2B MOVE    R9, R10                 ; menu index
                 AND     1, R9                   ; R9 contains mount status
 
                 MOVE    R10, R8                 ; menu index
-                RSUB    _HM_SETMENU, 1          ; see comment at _HM_MOUNTED
+                RSUB    OPTM_SET, 1             ; see comment at _HM_MOUNTED
                 RBRA    _HM_SDMOUNTED7, 1       ; return to OSM
 
                 ; Everything filtered, see CMSG_BROWSENOTHING in sysdef.asm
@@ -556,7 +556,7 @@ _HM_MOUNTED     MOVE    R7, R8
                 RBRA    _HM_MOUNTED_F, !C       ; unsuccessful? fatal!
                 MOVE    R9, R8                  ; OK! set menu index
                 MOVE    1, R9                   ; set as "mounted"
-                RSUB    _HM_SETMENU, 1
+                RSUB    OPTM_SET, 1
                 RBRA    _HM_SDMOUNTED7, 1       ; redraw menu and exit
 
                 ; unmount the whole drive?
@@ -597,55 +597,10 @@ _HM_MOUNTED_F   MOVE    ERR_FATAL_INST, R8
 
 _HM_MOUNTED_1   MOVE    R9, R8                  ; menu index
                 MOVE    1, R9                   ; set as "mounted"
-                RSUB    _HM_SETMENU, 1
+                RSUB    OPTM_SET, 1
                 RBRA    _HM_START_MOUNT, 1      ; show browser and mount
 
 _HM_RET         RSUB    VD_MNT_ST_SET, 1        ; remember mount status
-                SYSCALL(leave, 1)
-                RET
-
-; helper function that executes the menu and data structure modification
-; described above in the comment near _HM_MOUNTED
-; Input:
-;   R8: Index of menu item to change
-;   R9: 0=unset / 1=set
-;
-; @TODO: Refactor this, see also this file in the develop branch of the
-; C64 core: tests/README.md (section that starts with @@@-#-#). 
-; Also to-be-checked: Is the SCR$PRINTSTRXY necessary at all (and where is it
-; actually printing to in a "below-the-fold" situation).
-_HM_SETMENU     SYSCALL(enter, 1)
-
-                MOVE    R8, R0                  ; R0: menu index
-                MOVE    R9, R1                  ; R1: mode
-
-                MOVE    OPTM_DATA, R8
-                MOVE    @R8, R8
-                ADD     OPTM_IR_STDSEL, R8
-                MOVE    @R8, R8
-                ADD     R0, R8                  ; R0 contains menu index
-                MOVE    R0, R11                 ; save menu index
-                MOVE    R1, @R8                 ; re-set single-select flag
-
-                MOVE    SPACE, R8               ; R8 = space (unset)
-                CMP     0, R1
-                RBRA    _HM_SETMENU_1, Z
-
-                MOVE    OPTM_DATA, R8           ; R8: single-select char
-                MOVE    @R8, R8
-                MOVE    OPTM_IR_SEL, R8
-                MOVE    @R8, R8
-                ADD     2, R8
-
-_HM_SETMENU_1   MOVE    OPTM_X, R9              ; R9: x-pos
-                MOVE    @R9, R9
-                ADD     1, R9                   ; x-pos on screen b/c frame
-                MOVE    OPTM_Y, R10             ; R10: y-pos
-                MOVE    @R10, R10
-                ADD     R11, R10                ; add menu index
-                ADD     1, R10                  ; y-pos on screen b/c frame
-                RSUB    SCR$PRINTSTRXY, 1
-
                 SYSCALL(leave, 1)
                 RET
 

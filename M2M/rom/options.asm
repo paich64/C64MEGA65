@@ -1045,7 +1045,7 @@ _OPTM_GK_MNT_2  MOVE    R9, R8
                 RBRA    _OPTM_GK_MNT_3, 1
 _OPTM_GK_MNT_X1 MOVE    1, R9
 
-_OPTM_GK_MNT_3  RSUB    _HM_SETMENU, 1          ; set/unset menu item
+_OPTM_GK_MNT_3  RSUB    OPTM_SET, 1             ; set/unset menu item
                                                 ; (R8=menu item, R9=value)
 
                 ; update M2M$CFM_DATA accordingly:
