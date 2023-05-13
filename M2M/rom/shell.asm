@@ -560,6 +560,10 @@ _HM_SDMOUNTED6C MOVE    R9, R8                  ; R8: menu index
                 MOVE    1, R9                   ; R9=1: set menu item
                 RSUB    OPTM_SET, 1
 
+                ; Some CRT/ROM load actions are unmounting drives, so we need
+                ; to we need to check for that and act accordingly
+                RSUB    _OPTM_GK_MNT, 1
+
                 ; 6. Redraw and show the OSM
 _HM_SDMOUNTED7  RSUB    OPTM_SHOW, 1            
                 RSUB    SCR$OSM_O_ON, 1
