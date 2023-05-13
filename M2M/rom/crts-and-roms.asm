@@ -454,6 +454,69 @@ _CRMTRY_OPTNL   SUB     1, R0                   ; next iteration
                 ; DECRB and 
                 ; RET done via _CRMN_C0 and _CRMN_C1
 
+; Check if the current load status of any manually loadable CRT/ROM is
+; different from the one we remembered.
+;
+; Returns: Carry=1 if mount status is different (and in this case we remember
+; automatically the new status), else Carry=0
+;
+; Important: This function is meant to be called repeatedly in case of
+; Carry=1 because there might be an additional CRT/ROM status that has
+; changed.
+;
+; Only valid if Carry=1:
+; R8: CRT/ROM ID of the manually loadable CRT/ROM which has a changed status
+; R9: new status of this very CRT/ROM
+CRTROM_MLST_GET INCRB
+
+                ; We can skip this function if there are no manually loadable
+                ; CRTs/ROMs at all
+                RSUB    CRTROM_ACTIVE, 1
+                RBRA    _CRTROM_MLSTGTR, !C 
+
+                ; @TODO: Skip whole function if no man. ld. CRT/ROMs
+
+                MOVE    CRTROM_MAN_NUM, R0      ; R0: amnt of man. ld CRT/ROMs
+                MOVE    @R0, R0
+                MOVE    CRTROM_MAN_LDF, R1      ; R1: array of rem. ld flgs
+                MOVE    CRTROM_MAN_DEV, R2      ; R2: dev ids man. ld CRT/ROM
+                XOR     R3, R3                  ; R3: current CRT/ROM ID
+
+_CRTROM_MLSTGT0 MOVE    M2M$RAMROM_DEV, R5      ; switch to CRT/ROM device
+                MOVE    @R2++, @R5
+                MOVE    M2M$RAMROM_4KWIN, R5
+                MOVE    CRTROM_CSR_4KWIN, @R5
+
+                MOVE    CRTROM_CSR_STATUS, R6   ; read actual status and..
+                MOVE    @R6, R7
+                CMP     CRTROM_CSR_ST_OK, R7    ; ..change R6 to 1 if loaded..
+                RBRA    _CRTROM_MLSTGT1, Z      ; ..and 0 if not
+                MOVE    0, R6
+                RBRA    _CRTROM_MLSTGT2, 1
+_CRTROM_MLSTGT1 MOVE    1, R6
+
+_CRTROM_MLSTGT2 CMP     @R1++, R6               ; status still the same?
+                RBRA    _CRTROM_MLSTGT3, !Z     ; no: status changed
+                ADD     1, R3                   ; yes: the same: iterate
+                CMP     R0, R3
+                RBRA    _CRTROM_MLSTGT0, !Z
+
+                ; If we arrive here, we have no changes, so Carry=0 and return
+                AND     0xFFFB, SR              ; clear Carry
+                RBRA    _CRTROM_MLSTGTR, 1      ; return
+
+                ; If we arrive here, then we have changes, so set Carry=1 and
+                ; save the new status and return the new status
+_CRTROM_MLSTGT3 MOVE    R3, R8                  ; R8=R3: current CRT/ROM ID
+                MOVE    R6, R9                  ; R9=R6: new status
+                MOVE    CRTROM_MAN_LDF, R1      ; remember new status
+                ADD     R3, R1
+                MOVE    R6, @R1
+                OR      0x0004, SR              ; set Carry
+
+_CRTROM_MLSTGTR DECRB
+                RET
+
 ; ----------------------------------------------------------------------------
 ; Handle manual CRT/ROM loading
 ; Input:

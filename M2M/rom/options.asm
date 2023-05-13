@@ -968,6 +968,8 @@ OPT_MENU_GETKEY INCRB
 _OPTMGK_LOOP    RSUB    HANDLE_IO, 1            ; IO handling (e.g. vdrives)
                 RSUB    VD_MNT_ST_GET, 1        ; did mount status change..
                 RSUB    _OPTM_GK_MNT, C         ; ..while OPTM is open?
+                RSUB    CRTROM_MLST_GET, 1      ; CRT/ROM ld status changed..
+                RSUB    _OPTM_GK_CRTROM, C      ; ..while OPTM is open?
                 RSUB    VD_DTY_ST_GET, 1        ; did cache status change..
                 RBRA    _OPTMGK_KEYSCAN, !C     ; ..while OPTM is open?
                 RSUB    OPTM_SHOW, 1            ; yes: redraw menu and..
@@ -1080,7 +1082,8 @@ _OPTM_GK_MNT_5  ADD     1, R0
 
                 ; a core-reset unmounts some or all drives: redraw menu to
                 ; make sure that the drives are not shown as mounted any more
-                RSUB    OPTM_SHOW, 1
+                ; (this routine is also used by _OPTM_GK_CRTROM)
+_OPTM_GK_MNT_S  RSUB    OPTM_SHOW, 1
 
                 ; re-show the currently selected item
                 MOVE    OPTM_CUR_SEL, R8
@@ -1089,6 +1092,37 @@ _OPTM_GK_MNT_5  ADD     1, R0
                 RSUB    OPTM_SELECT, 1
 
 _OPTM_GK_MNT_R  SYSCALL(leave, 1)
+                RET
+
+                ; This helper function is similar _OPTM_GK_MNT but it is
+                ; all about manually loadable CRTs/ROMs
+                ; R8: CRT/ROM ID of the manually loadable CRT/ROM which
+                ;     has a changed status
+                ; R9: new status of this very CRT/ROM
+_OPTM_GK_CRTROM SYSCALL(enter, 1)
+
+_OPTM_GK_CR_0   MOVE    R9, R0
+                RSUB    CRTROM_M_GI, 1          ; convert id into menu idx
+                RBRA    _OPTM_GK_CR_1, C        ; OK: continue
+                MOVE    ERR_FATAL_INST, R8      ; not OK: fatal
+                MOVE    ERR_FATAL_INSTB, R9
+                RBRA    FATAL, 1
+
+                ; change visual and register representation
+_OPTM_GK_CR_1   MOVE    R9, R8                  ; R8: menu index
+                MOVE    R0, R9                  ; R9: set/unset
+                RSUB    OPTM_SET, 1             ; visual representation
+                RSUB    M2M$SET_SETTING, 1      ; register representation
+
+                ; next iteration: one call of CRTROM_MLST_GET does not
+                ; capture all possible changes
+                RSUB    CRTROM_MLST_GET, 1
+                RBRA    _OPTM_GK_CR_0, C
+
+                ; redraw menu and then call SYSCALL(leave, 1) and RET
+                RBRA    _OPTM_GK_MNT_S, 1
+
+_OPTM_GK_CR_R   SYSCALL(leave, 1)
                 RET
 
 ; ----------------------------------------------------------------------------

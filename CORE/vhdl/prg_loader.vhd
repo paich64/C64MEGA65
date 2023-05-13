@@ -157,7 +157,7 @@ begin
          end case;
 
          if qnice_rst_i = '1' then
-            qnice_req_status  <= (others => '0');
+            qnice_req_status  <= C_CRT_ST_IDLE;           
             qnice_req_length  <= (others => '0');
             prg_start         <= (others => '0');
             core_reset_o      <= '0';

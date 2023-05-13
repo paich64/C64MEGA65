@@ -195,4 +195,5 @@ ERR_FATAL_INST7 .EQU 7  ; shell.asm:         _HM_SDMOUNTED3
 ERR_FATAL_INST8 .EQU 8  ; options.asm        _OPTM_CBS_I
 ERR_FATAL_INST9 .EQU 9  ; options.asm        _OPTM_CBS_I4
 ERR_FATAL_INSTA .EQU 10 ; shell.asm:         _HM_SDMOUNTED6B
+ERR_FATAL_INSTB .EQU 11 ; options.asm        _OPTM_GK_CRTROM
 

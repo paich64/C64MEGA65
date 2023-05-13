@@ -385,6 +385,7 @@ signal qnice_prg_c64ram_we          : std_logic;
 signal qnice_prg_c64ram_addr        : std_logic_vector(15 downto 0);
 signal qnice_prg_c64ram_d_to        : std_logic_vector(7 downto 0);
 signal qnice_prg_c64ram_d_frm       : std_logic_vector(7 downto 0);
+signal qnice_reset_for_prgloader    : std_logic;
 signal qnice_reset_from_prgloader   : std_logic;
 signal qnice_prg_trigger_run        : std_logic;
 
@@ -805,6 +806,18 @@ begin
          dst_data_o(1 downto 0) => hr_c64_exp_port_mode,
          dst_data_o(2)          => hr_hdmi_ff
       ); -- i_cdc_main2hr
+      
+   i_cdc_main2qnice : xpm_cdc_array_single
+      generic map (
+         WIDTH => 1
+      )
+      port map (
+         src_clk           => main_clk,
+         src_in(0)         => main_reset_core_i or main_reset_core,
+         dest_clk          => qnice_clk_i,
+         dest_out(0)       => qnice_reset_for_prgloader
+      ); -- i_cdc_main2qnice
+   
 
    i_cdc_qnice2main : xpm_cdc_array_single
       generic map (
@@ -868,7 +881,7 @@ begin
    i_prg_loader : entity work.prg_loader
       port map(
          qnice_clk_i       => qnice_clk_i,
-         qnice_rst_i       => qnice_rst_i,
+         qnice_rst_i       => qnice_rst_i or qnice_reset_for_prgloader,
          qnice_addr_i      => qnice_dev_addr_i,
          qnice_data_i      => qnice_dev_data_i,
          qnice_ce_i        => qnice_prg_qnice_ce,
