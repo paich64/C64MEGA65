@@ -456,7 +456,7 @@ _HM_SDMOUNTED5  MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 MOVE    R5, R10                 ; R10: mode: vdrive or CRT/ROM
                 RSUB    LOAD_IMAGE, 1           ; copy disk img to mount buf.
                 CMP     0, R8                   ; everything OK?
-                RBRA    _HM_SDMOUNTED6, Z       ; yes
+                RBRA    _HM_SDMOUNTED6A, Z      ; yes
 
                 ; loading the disk image did not work
                 ; none of the errors that LOAD_IMAGE returns is fatal, so we
@@ -520,13 +520,13 @@ _HM_SDMOUNTED5A RSUB    HANDLE_IO, 1            ; wait for Space to be pressed
                 RSUB    SCR$CLRINNER, 1         ; next try
                 RBRA    _HM_SDMOUNTED2, 1
 
-_HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
+_HM_SDMOUNTED6A MOVE    R9, R6                  ; R6: disk image type
                 RSUB    SCR$OSM_OFF, 1          ; hide the big window
 
                 ; Step #5: Notify MiSTer using the "SD" protocol, if we
                 ; are in virtual drive mode, otherwise skip
                 CMP     0, R5                   ; vdrive mode?
-                RBRA    _HM_SDMOUNTED7, !Z      ; no
+                RBRA    _HM_SDMOUNTED6B, !Z     ; no
                 MOVE    R7, R8                  ; yes: R8: drive number
                 MOVE    HNDL_VD_FILES, R9
                 ADD     R7, R9
@@ -545,6 +545,20 @@ _HM_SDMOUNTED6  MOVE    R9, R6                  ; R6: disk image type
                 MOVE    R7, R8
                 SYSCALL(puthex, 1)
                 SYSCALL(crlf, 1)
+                RBRA    _HM_SDMOUNTED7, 1
+
+                ; We successfully loaded a manually loadable CRT/ROM and need
+                ; to ensure that the menu items stays selected. This
+                ; situation is similar to the one described in _HM_MOUNTED_S.
+_HM_SDMOUNTED6B MOVE    R7, R8
+                RSUB    CRTROM_M_GI, 1          ; convert rom id to menu idx
+                RBRA    _HM_SDMOUNTED6C, C      ; OK: continue
+                MOVE    ERR_FATAL_INST, R8      ; Not OK: fatal
+                MOVE    ERR_FATAL_INSTA, R9
+                RBRA    FATAL, 1
+_HM_SDMOUNTED6C MOVE    R9, R8                  ; R8: menu index
+                MOVE    1, R9                   ; R9=1: set menu item
+                RSUB    OPTM_SET, 1
 
                 ; 6. Redraw and show the OSM
 _HM_SDMOUNTED7  RSUB    OPTM_SHOW, 1            
