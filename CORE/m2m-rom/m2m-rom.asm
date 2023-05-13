@@ -184,6 +184,85 @@ _PREP_LI_RET    DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
+; Core specific callback functions: Custom tasks
+; ----------------------------------------------------------------------------
+
+; PREP_START callback function:
+;
+; Called right before the core is being started. At this point, the core
+; is ready to run, settings are loaded (if the core uses settings) and the
+; core is still held in reset (if RESET_KEEP is on). So at this point in time,
+; you can execute tasks that change the run-state of the core.
+;
+; Input: None
+; Output:
+;   R8: 0=OK, else pointer to string with error message
+;   R9: 0=OK, else error code
+PREP_START      INCRB
+
+                ; Check if JiffyDOS is configured as the default Kernal but
+                ; the JiffyDOS ROMs cannot be found: In this case we switch
+                ; back to the default Kernal.
+                ;
+                ; In globals.vhd we configured the JiffyDOS ROMs to be ROM #0
+                ; and ROM #1, that means if both of them are loaded correctly,
+                ; then the elements #0 and #1 of the CRTROM_AUT_LDF array
+                ; should both be 1.
+                MOVE    C64_OSM_KERNAL_JIFFY, R8
+                RSUB    M2M$GET_SETTING, 1
+                CMP     1, R9
+                RBRA    PREP_START_R, !Z
+
+                MOVE    CRTROM_AUT_LDF, R0
+                MOVE    @R0++, R1
+                ADD     @R0, R1
+                CMP     2, R1
+                RBRA    PREP_START_R, Z
+
+                MOVE    WRN_JIFFY, R8           ; output warning on dbg cnsl
+                SYSCALL(puts, 1)
+
+                MOVE    C64_OSM_KERNAL_JIFFY, R8
+                XOR     R9, R9
+                RSUB    M2M$SET_SETTING, 1
+                MOVE    C64_OSM_KERNAL_STD, R8
+                MOVE    1, R9
+                RSUB    M2M$SET_SETTING, 1
+
+PREP_START_R    XOR     R8, R8
+                XOR     R9, R9
+
+                DECRB
+                RET
+
+; OSM_SELECTED callback function:
+;
+; Called each time the user selects something in the on-screen-menu (OSM),
+; and while the OSM is still visible. This means, that this callback function
+; is called on each press of one of the valid selection keys with the
+; exception that pressing a selection key while hovering over a submenu entry
+; or exit point does not call this function. All the functionality and
+; semantics associated with a certain menu item is already handled by the
+; framework when OSM_SELECTED is called, so you are not able to change the
+; basic semantics but you are able to add core specific additional
+; "intelligent" semantics and behaviors.
+;
+; Input:
+;   R8: selected menu group (as defined in config.vhd)
+;   R9: selected item within menu group
+;       in case of single selected items: 0=not selected, 1=selected
+;   R10: OPTM_KEY_SELECT (by default means "Return") or
+;        OPTM_KEY_SELALT (by default means "Space")
+; Output:
+;   R8: 0=OK, else pointer to string with error message
+;   R9: 0=OK, else error code
+OSM_SELECTED    INCRB
+                XOR     R8, R8
+                XOR     R9, R9
+                DECRB
+                RET
+
+; ----------------------------------------------------------------------------
 ; Core specific callback functions: Custom messages
 ; ----------------------------------------------------------------------------
 
@@ -215,6 +294,9 @@ _CUSTOM_MSG_RET DECRB
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
 
+; auto-generated file that constains the menu indexes from mega65.vhd
+#include "osm_const.asm"
+
 ; Warning: At this point we are only supporting standard D64 files
 WRN_WRONG_D64   .ASCII_P "\n\nD64 file size must be exactly 174848 bytes\n"
                 .ASCII_P "(35 tracks) or 196608 bytes (40 tracks)."
@@ -232,6 +314,12 @@ WRN_NO_D64      .ASCII_P "This core uses D64 disk images.\n\n"
                 .ASCII_P "order your collection of D64 files.\n\n"
                 .ASCII_P "Nothing to browse.\n\n"
                 .ASCII_W "Press Space to continue."
+
+; Warning: JiffyDOS is the currently active but no Jiffy Kernal is available
+; This warning is only shown in the debug console
+WRN_JIFFY       .ASCII_P "JiffyDOS is the currently active Kernal but the "
+                .ASCII_P "JiffyDOS ROMs were not loaded. Switching back to "
+                .ASCII_W "the standard Kernal.\n"
 
 ; C64 specific file extensions (need to be upper case)
 C64_IMGFILE_D64 .ASCII_W ".D64"

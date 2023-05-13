@@ -132,8 +132,19 @@ START_SHELL     MOVE    LOG_M2M, R8
 
                 ; Show welcome screen at all?
                 RSUB    RP_WELCOME, 1
-                RBRA    START_CONNECT, !C
+                RBRA    PREP_CONNECT, !C
                 RSUB    SHOW_WELCOME, 1
+
+                ; At this point, the core is ready to run, settings are loaded
+                ; (if the core uses settings) and the core is still held in
+                ; reset (if RESET_KEEP is on). So at this point in time, the
+                ; user of the framework can execute tasks that change the
+                ; run-state of the core.
+PREP_CONNECT    RSUB    PREP_START, 1
+                CMP     0, R8
+                RBRA    START_CONNECT, Z        ; R8=0: ready to start core
+                RBRA    FATAL, 1                ; else fatal and R8/R9 are set
+                                                ; by PREP_START
 
                 ; Unreset (in case the core is still in reset at this point
                 ; due to RESET_KEEP in config.vhd) and connect keyboard and

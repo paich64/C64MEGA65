@@ -81,13 +81,3 @@ Install and use JiffyDOS
 
 * Press reset (only necessary with Alpha versions of the core; the release
   version will reset automatically)
-
-Special caution when using an Alpha version of the core
--------------------------------------------------------
-
-If you switched the core to JiffyDOS and the core is not able to read the
-JiffyDOS binaries `jd-c64.bin` and `jd-c1541.bin` at a later stage, then
-the core will not start at all and the screen will stay black.
-
-In the Alpha versions of the core, this can only be resolved by deleting the
-config-file `c64/c64mega65` and copying a new one to the `/c64` folder.

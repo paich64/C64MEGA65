@@ -12,6 +12,7 @@ CORE/m2m-rom/*.def
 CORE/m2m-rom/*.lis
 CORE/m2m-rom/*.out
 CORE/m2m-rom/*.rom
+CORE/m2m-rom/osm_const.asm
 CORE/load_bitstream.sh
 CORE/make_qasm.sh
 M2M/rom/*.lis

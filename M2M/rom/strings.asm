@@ -178,6 +178,8 @@ ERR_FATAL_ROSMW .ASCII_W "Settings file: Writing failed.\n"
 ERR_FATAL_ROSMF .ASCII_P "Settings file:\n"
                 .ASCII_W "Flushing of SD card buffer failed.\n"
 ERR_FATAL_ROSMC .ASCII_W "Settings file:\nCorrupt: Illegal config value.\n"
+ERR_FATAL_TG    .ASCII_W "tools.asm: M2M$GET_SETTING: Illegal index.\n"
+ERR_FATAL_TS    .ASCII_W "tools.asm: M2M$SET_SETTING: Illegal index.\n"
 
 ERR_FATAL_INST  .ASCII_W "Instable system state.\n"
 

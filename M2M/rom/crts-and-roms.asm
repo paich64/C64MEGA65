@@ -688,6 +688,9 @@ _CRMA_5         RBRA    _CRMA_3, 1              ; next byte
 
 _CRMA_EOF       MOVE    LOG_STR_ROMPRS9, R8     ; EOF: log OK
                 SYSCALL(puts, 1)
+                MOVE    CRTROM_AUT_LDF, R8      ; remember successful loading
+                ADD     R1, R8                  ; R1: ROM counter
+                MOVE    1, @R8
 
                 ; Next ROM
 _CRMA_NEXT      MOVE    R7, SP                  ; restore stack pointer
