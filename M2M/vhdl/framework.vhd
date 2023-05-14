@@ -21,81 +21,81 @@ use xpm.vcomponents.all;
 
 entity framework is
 port (
-   CLK            : in  std_logic;                  -- 100 MHz clock
-   
+   CLK                     : in  std_logic;                  -- 100 MHz clock
+
    -- MAX10 FPGA (delivers reset)
-   max10_tx          : in std_logic;
-   max10_rx          : out std_logic;
-   max10_clkandsync  : out std_logic;
+   max10_tx                : in  std_logic;
+   max10_rx                : out std_logic;
+   max10_clkandsync        : out std_logic;
 
    -- Serial communication (rxd, txd only; rts/cts are not available)
    -- 115.200 baud, 8-N-1
-   UART_RXD       : in  std_logic;                  -- receive data
-   UART_TXD       : out std_logic;                  -- send data
+   UART_RXD                : in  std_logic;                  -- receive data
+   UART_TXD                : out std_logic;                  -- send data
 
    -- VGA
-   VGA_RED        : out std_logic_vector(7 downto 0);
-   VGA_GREEN      : out std_logic_vector(7 downto 0);
-   VGA_BLUE       : out std_logic_vector(7 downto 0);
-   VGA_HS         : out std_logic;
-   VGA_VS         : out std_logic;
+   VGA_RED                 : out std_logic_vector(7 downto 0);
+   VGA_GREEN               : out std_logic_vector(7 downto 0);
+   VGA_BLUE                : out std_logic_vector(7 downto 0);
+   VGA_HS                  : out std_logic;
+   VGA_VS                  : out std_logic;
 
    -- VDAC
-   vdac_clk       : out std_logic;
-   vdac_sync_n    : out std_logic;
-   vdac_blank_n   : out std_logic;
+   vdac_clk                : out std_logic;
+   vdac_sync_n             : out std_logic;
+   vdac_blank_n            : out std_logic;
 
    -- Digital Video (HDMI)
-   tmds_data_p    : out std_logic_vector(2 downto 0);
-   tmds_data_n    : out std_logic_vector(2 downto 0);
-   tmds_clk_p     : out std_logic;
-   tmds_clk_n     : out std_logic;
+   tmds_data_p             : out std_logic_vector(2 downto 0);
+   tmds_data_n             : out std_logic_vector(2 downto 0);
+   tmds_clk_p              : out std_logic;
+   tmds_clk_n              : out std_logic;
 
    -- MEGA65 smart keyboard controller
-   kb_io0         : out std_logic;                 -- clock to keyboard
-   kb_io1         : out std_logic;                 -- data output to keyboard
-   kb_io2         : in  std_logic;                 -- data input from keyboard
+   kb_io0                  : out std_logic;                 -- clock to keyboard
+   kb_io1                  : out std_logic;                 -- data output to keyboard
+   kb_io2                  : in  std_logic;                 -- data input from keyboard
 
    -- SD Card (internal on bottom)
-   SD_RESET       : out std_logic;
-   SD_CLK         : out std_logic;
-   SD_MOSI        : out std_logic;
-   SD_MISO        : in  std_logic;
-   SD_CD          : in  std_logic;
+   SD_RESET                : out std_logic;
+   SD_CLK                  : out std_logic;
+   SD_MOSI                 : out std_logic;
+   SD_MISO                 : in  std_logic;
+   SD_CD                   : in  std_logic;
 
    -- SD Card (external on back)
-   SD2_RESET      : out std_logic;
-   SD2_CLK        : out std_logic;
-   SD2_MOSI       : out std_logic;
-   SD2_MISO       : in  std_logic;
-   SD2_CD         : in  std_logic;
+   SD2_RESET               : out std_logic;
+   SD2_CLK                 : out std_logic;
+   SD2_MOSI                : out std_logic;
+   SD2_MISO                : in  std_logic;
+   SD2_CD                  : in  std_logic;
 
    -- 3.5mm analog audio jack
-   pwm_l          : out std_logic;
-   pwm_r          : out std_logic;
+   pwm_l                   : out std_logic;
+   pwm_r                   : out std_logic;
 
    -- Joysticks and Paddles
-   joy_1_up_n     : in  std_logic;
-   joy_1_down_n   : in  std_logic;
-   joy_1_left_n   : in  std_logic;
-   joy_1_right_n  : in  std_logic;
-   joy_1_fire_n   : in  std_logic;
+   joy_1_up_n              : in  std_logic;
+   joy_1_down_n            : in  std_logic;
+   joy_1_left_n            : in  std_logic;
+   joy_1_right_n           : in  std_logic;
+   joy_1_fire_n            : in  std_logic;
 
-   joy_2_up_n     : in  std_logic;
-   joy_2_down_n   : in  std_logic;
-   joy_2_left_n   : in  std_logic;
-   joy_2_right_n  : in  std_logic;
-   joy_2_fire_n   : in  std_logic;
-   
-   paddle         : in std_logic_vector(3 downto 0);
-   paddle_drain   : out std_logic;   
+   joy_2_up_n              : in  std_logic;
+   joy_2_down_n            : in  std_logic;
+   joy_2_left_n            : in  std_logic;
+   joy_2_right_n           : in  std_logic;
+   joy_2_fire_n            : in  std_logic;
+
+   paddle                  : in  std_logic_vector(3 downto 0);
+   paddle_drain            : out std_logic;
 
    -- Built-in HyperRAM
-   hr_d           : inout std_logic_vector(7 downto 0);    -- Data/Address
-   hr_rwds        : inout std_logic;               -- RW Data strobe
-   hr_reset       : out std_logic;                 -- Active low RESET line to HyperRAM
-   hr_clk_p       : out std_logic;
-   hr_cs0         : out std_logic;
+   hr_d                    : inout std_logic_vector(7 downto 0);    -- Data/Address
+   hr_rwds                 : inout std_logic;               -- RW Data strobe
+   hr_reset                : out std_logic;                 -- Active low RESET line to HyperRAM
+   hr_clk_p                : out std_logic;
+   hr_cs0                  : out std_logic;
 
    -- Connect to CORE
    qnice_clk_o             : out std_logic;
@@ -279,7 +279,7 @@ signal main_hdmax             : natural range 0 to 4095;
 signal main_vdmax             : natural range 0 to 4095;
 
 --- control signals from QNICE in main's clock domain
-signal main_audio_filter      : std_logic;      
+signal main_audio_filter      : std_logic;
 signal main_audio_mute        : std_logic;
 signal main_flip_joyports     : std_logic;
 
@@ -359,15 +359,15 @@ signal hdmi_osm_control_m     : std_logic_vector(255 downto 0);
 ---------------------------------------------------------------------------------------------
 
 -- Digital pipeline's signals to the HyperRAM arbiter
-signal hr_dig_write         : std_logic;
-signal hr_dig_read          : std_logic;
-signal hr_dig_address       : std_logic_vector(31 downto 0) := (others => '0');
-signal hr_dig_writedata     : std_logic_vector(15 downto 0);
-signal hr_dig_byteenable    : std_logic_vector(1 downto 0);
-signal hr_dig_burstcount    : std_logic_vector(7 downto 0);
-signal hr_dig_readdata      : std_logic_vector(15 downto 0);
-signal hr_dig_readdatavalid : std_logic;
-signal hr_dig_waitrequest   : std_logic;
+signal hr_dig_write           : std_logic;
+signal hr_dig_read            : std_logic;
+signal hr_dig_address         : std_logic_vector(31 downto 0) := (others => '0');
+signal hr_dig_writedata       : std_logic_vector(15 downto 0);
+signal hr_dig_byteenable      : std_logic_vector(1 downto 0);
+signal hr_dig_burstcount      : std_logic_vector(7 downto 0);
+signal hr_dig_readdata        : std_logic_vector(15 downto 0);
+signal hr_dig_readdatavalid   : std_logic;
+signal hr_dig_waitrequest     : std_logic;
 
 signal hr_qnice_write         : std_logic;
 signal hr_qnice_read          : std_logic;
@@ -440,8 +440,8 @@ end component audio_out;
 
 begin
 
-   hr_clk_o <= hr_clk_x1;
-   hr_rst_o <= hr_rst;
+   hr_clk_o    <= hr_clk_x1;
+   hr_rst_o    <= hr_rst;
 
    qnice_clk_o <= qnice_clk;
    qnice_rst_o <= qnice_rst;
@@ -468,7 +468,7 @@ begin
          j21ddr            => (others => '0'),
          j21out            => (others => '0')
       );
-      
+
    -- 20 ms stable time for the reset button
    i_reset_debouncer : entity work.debounce
       generic map(initial => '1', clk_freq => BOARD_CLK_SPEED, stable_time => 20)
@@ -569,7 +569,7 @@ begin
          key_num_o            => main_key_num_o,
          key_pressed_n_o      => main_key_pressed_n_o,
 
-         -- control the drive led on the MEGA65 keyboard      
+         -- control the drive led on the MEGA65 keyboard
          drive_led_i          => main_drive_led_i,
          drive_led_col_i      => main_drive_led_col_i,
 
@@ -724,7 +724,7 @@ begin
                               qnice_ramrom_data_in <= C_VD_BUFFER(to_integer(unsigned(qnice_ramrom_addr_o(3 downto 0))));
                            end if;
                      end case;
-                     
+
                   -- Simulated cartridges and ROMs
                   when C_CRTSANDROMS =>
                      if qnice_ramrom_addr_o(11 downto 0) = x"000" then
@@ -780,7 +780,7 @@ begin
                end case;
             when others => null;
          end case;
-         
+
       -----------------------------------
       -- User/core specific devices
       -----------------------------------
@@ -791,7 +791,7 @@ begin
    end process qnice_ramrom_devices;
 
    qnice_ramrom_address <= "10000" & qnice_ramrom_addr_o(26 downto 0) when qnice_ramrom_addr_o(27) = '1'
-                           else "000000000" & qnice_ramrom_addr_o(22 downto 0);
+                      else "000000000" & qnice_ramrom_addr_o(22 downto 0);
 
    i_qnice2hyperram : entity work.qnice2hyperram
       port map (
@@ -863,7 +863,7 @@ begin
          potb_x                  => qnice_pot2_x,
          potb_y                  => qnice_pot2_y
       ); -- i_mouse_paddles
-      
+
     -- We need to invert the values that we get from i_mouse_paddles
    correct_and_flip_paddles : process(all)
    begin
@@ -876,7 +876,7 @@ begin
          qnice_pot2_x_n <= x"FF" - qnice_pot1_x;
          qnice_pot2_y_n <= x"FF" - qnice_pot1_y;
          qnice_pot1_x_n <= x"FF" - qnice_pot2_x;
-         qnice_pot1_y_n <= x"FF" - qnice_pot2_y;      
+         qnice_pot1_y_n <= x"FF" - qnice_pot2_y;
       end if;
    end process correct_and_flip_paddles;
 
@@ -925,7 +925,7 @@ begin
          dest_out(530 downto 523)   => main_pot1_x_o,
          dest_out(538 downto 531)   => main_pot1_y_o,
          dest_out(546 downto 539)   => main_pot2_x_o,
-         dest_out(554 downto 547)   => main_pot2_y_o         
+         dest_out(554 downto 547)   => main_pot2_y_o
       ); -- i_qnice2main
 
    -- Clock domain crossing: core to QNICE
@@ -1119,11 +1119,11 @@ begin
          audio_rst_i              => audio_rst,
          audio_left_i             => audio_l,
          audio_right_i            => audio_r,
-         
+
          -- Configure the scandoubler: 0=off/1=on
          -- Make sure the signal is in the video_clk clock domain
          video_scandoubler_i      => main_scandoubler,
-         
+
          -- Configure composite sync: 0=off/1=on
          video_csync_i            => main_csync,
 
@@ -1365,3 +1365,4 @@ begin
       ); -- i_hdmi_flicker_free
 
 end architecture synthesis;
+

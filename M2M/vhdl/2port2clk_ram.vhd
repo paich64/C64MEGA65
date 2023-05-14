@@ -21,7 +21,7 @@ entity dualport_2clk_ram is
        LATCH_ADDR_A   : boolean := false;        -- latch address a when "do_latch_addr_a" = '1'
        LATCH_ADDR_B   : boolean := false;        -- ditto address b
        FALLING_A      : boolean := false;        -- read/write on falling edge for clock a
-       FALLING_B      : boolean := false         -- ditto clock b          
+       FALLING_B      : boolean := false         -- ditto clock b
    );
    port
    (
