@@ -68,6 +68,27 @@ Conventions for version info in `*.cor` files:
   release that this alpha release works towards and y is the version of the
   alpha release, just counting upwards.
 
+Configuration file
+------------------
+
+The FAT32 writing abilities of the M2M framework are currently limited: It
+can only change data in existing files such as disk images or configuration
+files. This means the current version of the M2M framework is not able to
+create new files on an SD card and since it is also not able to change the
+length of any file (e.g. append data), you always need to make sure that there
+is a valid `c64mega65` configuration file located in the `/c64` folder on the
+SD card.
+
+This is how you create a valid configuration file that uses default settings:
+
+```bash
+./make_config.sh c64mega65 auto
+```
+
+The size of the configuration file needs to be equal to the constant
+`OPTM_SIZE` in `CORE/vhdl/config.vhd`. The `auto` parameter extracts this
+information automatically. The script is located in `M2M/tools`.
+
 Debug mode
 ----------
 
