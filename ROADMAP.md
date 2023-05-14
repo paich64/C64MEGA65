@@ -20,7 +20,7 @@ Feature Roadmap
 
 * NTSC
 * Turbo mode for games such as Zeropaige's Super Mario Bros
-* Support two drives: 8 and 9
+* Support two simulated drives: 8 and 9
 * Offer an SD2IEC compatible IEC device that browses the SD card and that
   you can for example use to flash the EF1CR cartridge without the need of
   splitting large CRTs into multiple D64 disks using EasySplit
@@ -78,7 +78,6 @@ particular order:
   above-mentioned mechanism to execute on it:
   https://sourceforge.net/p/vice-emu/code/HEAD/tree/testprogs/testbench/ 
 * Support for R2 version of MEGA65
-* VGA retro CSync generation
 * Enhance QNICE's FAT32 stack so that it is able to create new files
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,
   when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
