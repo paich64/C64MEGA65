@@ -1,15 +1,11 @@
-@TODO: Add descriptions:
+@TODO: Redo HDMI recipe due to new menu layout
 
-* HW and SIM carts, including links to cartridge.md (which should also
-  explain the nitty/gritties of the CORE #0 and the alternatives); update
-  FAQ
-* Dual SID
-* PRG loading
-* Hardware IEC
-* Kernals and JiffyDOS
-* Since the menu structure changed (submenus): DVI might sit somewhere
-  else, so re-do the recipe
-* 15khz RGB + csync (incl. cable variants)
+@TODO: Redo demopics
+
+@TODO: Hardware cartridges: Link to @lydon's explainer video and/or to
+more details how to upgrade core #0.
+
+@TODO: Software cartridges: Link to AmokPhaze's test results.
 
 Commodore 64 for MEGA65
 =======================
@@ -18,8 +14,11 @@ Experience the [Commodore 64](https://en.wikipedia.org/wiki/Commodore_64) with
 great accuracy and sublime compatibility on your
 [MEGA65](https://mega65.org/)! If you are in a hurry or have issues,
 go to the
-[FAQ - Frequently Asked Questions](FAQ.md). Otherwise, scroll down and read
-the user's manual.
+[FAQ - Frequently Asked Questions](FAQ.md). If you are a
+[developer](doc/developer.md)
+and want to build the C64 core by yourself then head to our
+[developer documentation](doc/developer.md).
+Otherwise, scroll down and read the user's manual.
 
 ![Commodore64](doc/c64.jpg)
 
@@ -56,8 +55,9 @@ a Dual SID / Stereo SID experience.
 
 The C64 runs the original Commodore KERNAL and the C1541 runs the original
 Commodore DOS, which leads to authentic loading speeds. You will be surprised,
-how slowly the C64/C1541 were loading... :-) You can optionally install
-JiffyDOS or use fast loader cartridges to speed up loading.
+how slowly the C64/C1541 were loading... :-) You can optionally
+[install JiffyDOS](doc/jiffy.md)
+or use fast loader cartridges to speed up loading.
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
@@ -68,10 +68,11 @@ flawlessly.
 ### Video and Audio
 
 Our philosophy on the MEGA65's outputs is that VGA is the "pure" retro-output
-(and you can also switch it to 15 kHz for a true retro feeling) while HDMI is
-the "processed" modern output. So there is be no "processing" such as CRT
-emulation and other things on the VGA output, while on the HDMI output several
-algorithms are working for a very nice looking authentic image.
+(and you can also switch it to 15 kHz and composite sync for a true retro
+feeling) while HDMI is the "processed" modern output. So there is be no
+"processing" such as CRT emulation and other things on the VGA output, while
+on the HDMI output several algorithms are working for a very nice looking
+authentic image.
 
 * HDMI: The core outputs 1280×720 pixels (720p) at 50 Hz and HDMI audio at
   a sampling rate of 48 kHz by default. This is supported by a vast majority
@@ -96,7 +97,8 @@ algorithms are working for a very nice looking authentic image.
   Connect an old Scart TV (for example using
   [this](https://ultimatemister.com/product/rgb-scart-cable/)
   cable) or an old RGB-capable monitor (by soldering your own cable)
-  to MEGA65's VGA port.
+  to MEGA65's VGA port. The core supports composite sync (CSYNC) so that
+  Scart and other retro devices work flawlessly.
   
 Important: If you use VGA displays or analog retro monitors, please switch off
 "HDMI: Flicker-free" as described
@@ -116,46 +118,6 @@ Important: If you use VGA displays or analog retro monitors, please switch off
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
-
-### 512 KB RAM Expansion Unit (1750 REU)
-
-The 1750 512KB REU is as close to cycle accurate as it can go on a MEGA65.
-Remember, we are pretty constrained by the quirky HyperRAM. This means our REU
-is not perfect, but 99.9% perfect: It even runs the very picky
-[TreuLove_ForReal1750Reu.d64](http://csdb.dk/getinternalfile.php/144854/TreuLove_ForReal1750Reu.d64)
-version of Booze Design's Treu Love demo
-([see CSDB page](https://csdb.dk/release/?id=144105))
-that is supposed to only run on real hardware and also the absolutely
-awesome game
-[Sonic the Hedgehog](https://csdb.dk/release/?id=212523)
-runs like a charme on the MEGA65.
-
-Please feel free to browse
-[CSDB's REU Releases](https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6)
-and enjoy them on your MEGA65.
-
-The REU also works perfectly with GEOS: Configure a RAM drive, copy the
-programs, fonts and file you want to work with on the RAM drive and enjoy a
-10x acceleration of your GEOS workflows. Don't forget to copy the results
-of your work on a "real disk" (D64 data disk that you have mounted) before
-ending your GEOS session so that all your data is persistently saved to the
-MEGA65's SD card (see also the section
-["Writing to disk images"](#writing-to-disk-images)
-below).
-
-The REU is switched off by default. You can switch it on using the options
-menu.
-
-Compatibility advise: **Only turn on the REU for software that is
-explicitly supporting the REU.** Otherwise you might experience random
-crashes of otherwise very stable software. Explanation: The REU itself is
-99.9% compatible so you can count on it. But the majority of C64 software
-does not support the REU. Some of the software even gets unstable, if you
-have the REU activated. The reason for this effect is, that when the REU
-is activated, certain addresses in the C64 memory space that are normally
-free to be used for the software are not usable any more. If it happens
-that this software needs to work with these addresses and a REU is
-installed/activated, then the software crashes.
 
 ### Constraints and Roadmap
 
@@ -274,8 +236,8 @@ Using `.bit` files is very useful, in case you want to try out multiple cores
 or core versions quickly without going through the lengthy process of
 flashing `.cor` files.
 
-HDMI compatibility
-------------------
+HDMI compatibility @TODO: REDO RECIPE DUE TO NEW MENU LAYOUT
+------------------------------------------------------------
 
 Right now, the C64 core is not compatible with all HDMI displays. If your
 display works with the MEGA65 core but stays black when you load the C64 core,
@@ -311,28 +273,22 @@ here and there.
 
 The third press of <kbd>Return</kbd> switches from 720p to 576p.
 
-Working with disk images
-------------------------
-
-Currently, we support D64 disk images with 35 or 40 tracks (standard format,
-no error bytes). This covers 99% of all use cases. We do have support for
-additional D64 disk image variants and G64 disk images on our
-[Roadmap](ROADMAP.md).
-
-### Mounting disk images
+Working with the file browser
+-----------------------------
 
 Thanks to long filename support and alphabetically sorted file- and directory
-listings, mounting a disk image is straightforward. Press MEGA65's
+listings, using the file browseris straightforward. Press MEGA65's
 <kbd>Help</kbd> key to open the on-screen-menu while the C64 is running
-and select `8:<Mount Drive>` using the cursor keys and <kbd>Return</kbd>.
-Here is how the browser works:
+and either select `8:<Mount Drive>`, `PRG:<Load>` or `CRT:<Load>` using the
+cursor keys and <kbd>Return</kbd>. Here is how the browser works:
 
 * Navigate up/down using the <kbd>Cursor up</kbd> and
   <kbd>Cursor down</kbd> keys
 * Page up and page down using the <kbd>Cursor left</kbd> and
   <kbd>Cursor right</kbd> keys
-* <kbd>Return</kbd> mounts a disk image
-* <kbd>Run/Stop</kbd> exits the file browser without mounting
+* <kbd>Return</kbd> mounts a disk image (`*.d64`), loads a program file
+  (`*.prg`) or load cartridge image (`*.crt`)
+* <kbd>Run/Stop</kbd> exits the file browser without mounting/loading
 * Remembers the browsing history, i.e. even while you climb directory trees,
   when you mount the next image, the file selection cursor is positioned where
   you left off. This is very convenient for mounting multiple subsequent
@@ -344,16 +300,44 @@ Here is how the browser works:
 * Within the file browser you can use <kbd>F1</kbd> to manually select
   the internal SD card (bottom tray) and <kbd>F3</kbd> to select the
   external SD card (back slot).
-* An already mounted drive can be unmounted (i.e. "switch the drive off"), if
-  you select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar.
-  If you select an already mounted drive with the <kbd>Return</kbd> key
-  instead, then for the C64 this is more like switching a diskette while
-  leaving the drive on. Use the latter mechanism via <kbd>Return</kbd> when
-  a game or a demo asks you to turn the disk or to insert another disk.
 * The file browser defaults to the folder `/c64` in case this folder exists.
   Otherwise it starts at the root folder.
-* The file browser only shows files with a valid file extension.
-  Currently, we only support `.d64`.
+* The file browser only shows files with a valid file extension for the
+  mode it is currently in: Mounting disk images (`*.d64`), loading programs
+  (`*.prg`) or loading cartridges (`*.crt`).
+
+Working with disk images
+------------------------
+
+### Mounting disk images
+
+Currently, we support D64 disk images with 35 or 40 tracks (standard format,
+no error bytes). This covers 99% of all use cases. We do have support for
+additional D64 disk image variants and G64 disk images on our
+[Roadmap](ROADMAP.md).
+
+Select `8:<Mount Drive>` and use the file browser as described above to
+mount a disk image. Enter `LOAD "$",8` and then `LIST` to list the contents
+of the disk image or enter `LOAD "*",8,1` and then `RUN` to load and start
+most games.
+
+### Switching diskettes while a program is running
+
+Sometimes a game, demo or application asks you to turn the disk (disks often
+had two sides back in the days) or to insert another disk.
+
+To do this, open the menu using the <kbd>Help</kbd> key and select
+`8:<name-of-your-disk-image>` using the <kbd>Return</kbd> key. Now browse and
+select the new diskimage and confirm again with <kbd>Return</kbd>. This will
+change this disk image while leaving the drive itself on and active and
+for the C64 core this looks like switching a diskette.
+
+### Unmounting disk images
+
+An already mounted drive can be unmounted (i.e. "switch the drive off"):
+Select it in the <kbd>Help</kbd> menu using the <kbd>Space</kbd> bar. Do
+not unmount your disk image, if a program asks you to turn the disk or to
+insert another disk.
 
 ### Writing to disk images
 
@@ -382,6 +366,249 @@ Important things to know about how writing to disk images works:
   the time to settle before you turn it off or reset it or remove the
   SD card.
 * If you did not save anything, then the drive led will not turn yellow.
+
+Directly loading `*.prg` files
+------------------------------
+
+A lot of games, demos and also SID tunes are available as "one-file" releases
+in the `*.prg` file format. You do not need to create a `*.d64` disk image
+and add the programs to the disk image. Instead, you can directly copy them
+on your SD card and run them using the `PRG:<Load>` menu item.
+
+IMPORTANT: Make sure that either one of the three following things is true:
+
+* You have no hardware cartridge inserted into the MEGA65's Expansion Port and
+  have selected `Use hardware slot` in the `Expansion Port` menu.
+
+* You have no `*.crt` file loaded and have selected `Simulate cartridge` in
+  the `Expansion Port` menu.
+
+* You have selected `Simulate 1750 REU 512KB` in the the `Expansion Port`
+  menu.
+
+The reason for this is: Before the core attempts to load a program into the
+C64's memory, it resets the core. This is for your convenience so that you
+can load multiple programs in a row. But since cartriges are also started via
+a reset of the core, the three options above make sure that no cartridge is
+active.
+
+SID configuration / Dual SID / Stereo SID
+-----------------------------------------
+
+### 6581 vs. 8580
+
+The original Commodore 64 "only" had one SID. Older versions had a SID
+called `6581` and newer versions had a SID called `8580`. Both were mono,
+there was no stereo capability available. This is why by default, the C64
+for MEGA65 core starts with only one SID enabled, the `6581`.
+
+If you are an audiophile when it comes to SID music, then you always might
+want to chose the right SID for the game or demo or music release that you
+are running. The C64 core lets you select different SID versions and
+configurations in real-time while the program is running. As a rule of thumb
+you can assume that most games and demos since the year 2000 optimized their
+music and sound effects for the `8580` and most older games and demos were
+optimized for the `6581`. Beware that this is a rule of thumb and many
+exceptions exist.
+
+### Pseudo stereo using a mixed dual SID setup
+
+A dual SID setup utilizing a 6581 on the left stereo channel and an 8580 on
+the right channel (or vice-versa) creates a pleasant pseudo stereo effect for
+the C64 because each SID chip has its own unique tonal characteristics,
+producing a richer and more dynamic audio experience. This combination allows
+for a wider soundstage, resulting in an immersive listening experience that
+enhances the enjoyment of the classic C64 gaming and music content.
+
+To setup this mixed dual SID configuration - which is still mono - go to the
+SID menu and select either `L: 6581 R: 8580` or `L: 8580 R: 6581` while
+**in parallel** selecting `Same as left SID port` in the `Right SID Port`
+section.
+
+### Stereo SID
+
+True stereo SID is not widely supported on the C64. A few modern games (such
+as
+[Super Mario Bros 64 by ZeroPaige](https://csdb.dk/release/?id=185677)),
+[some demos](https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&showprpage=25&form%5Bgroup_fday1%5D=1&form%5Bgroup_fmonth1%5D=1&form%5Bgroup_fyear1%5D=1982&form%5Bgroup_fday2%5D=1&form%5Bgroup_fmonth2%5D=1&form%5Bgroup_fyear2%5D=2024&form%5Bgroup_rating_c%5D=1&form%5Bgroup_rating%5D=1&form%5Bscener_rating_c%5D=1&form%5Brelease_rday1%5D=1&form%5Brelease_rmonth1%5D=1&form%5Brelease_ryear1%5D=1982&form%5Brelease_rday2%5D=1&form%5Brelease_rmonth2%5D=1&form%5Brelease_ryear2%5D=2024&form%5Brelease_rating_c%5D=1&form%5Brelease_rating%5D=1&form%5Bevent_hday1%5D=1&form%5Bevent_hmonth1%5D=1&form%5Bevent_hyear1%5D=1982&form%5Bevent_hday2%5D=1&form%5Bevent_hmonth2%5D=1&form%5Bevent_hyear2%5D=2024&rcompo_type%5B%5D=20&showprpage=25&first=0)
+and some music disks and specialized releases
+(such as the awesome
+[Game of Thrones by Genesis Project](https://csdb.dk/release/?id=157533))
+support true stero using two SIDs. You can also browse the
+[High Voltage SID collection](https://www.hvsc.c64.org/)
+for stereo SID releases.
+
+IMPORTANT: Always configure one of the options under `Stereo SID` and
+additionally the correct `Right SID Port` in the SID menu to enjoy stereo SID
+music. What the "correct" port is depends on the software that you are
+running. If you are not sure, try `D420` first. 
+
+512 KB RAM Expansion Unit (1750 REU)
+------------------------------------
+
+Select `Simulate 1750 REU 512KB` in the `Expansion Port` menu.
+The 1750 512KB REU is as close to cycle accurate as it can go on a MEGA65.
+Remember, we are pretty constrained by the quirky HyperRAM. This means our REU
+is not perfect, but 99.9% perfect: It even runs the very picky
+[TreuLove_ForReal1750Reu.d64](http://csdb.dk/getinternalfile.php/144854/TreuLove_ForReal1750Reu.d64)
+version of Booze Design's Treu Love demo
+([see CSDB page](https://csdb.dk/release/?id=144105))
+that is supposed to only run on real hardware and also the absolutely
+awesome game
+[Sonic the Hedgehog](https://csdb.dk/release/?id=212523)
+runs like a charme on the MEGA65.
+
+Please feel free to browse
+[CSDB's REU Releases](https://csdb.dk/search/advancedresult.php?form%5Bcategory%5D=releases&rrelease_type%5B%5D=6)
+and enjoy them on your MEGA65.
+
+The REU also works perfectly with GEOS: Configure a RAM drive, copy the
+programs, fonts and file you want to work with on the RAM drive and enjoy a
+10x acceleration of your GEOS workflows. Don't forget to copy the results
+of your work on a "real disk" (D64 data disk that you have mounted) before
+ending your GEOS session so that all your data is persistently saved to the
+MEGA65's SD card (see also the section
+["Writing to disk images"](#writing-to-disk-images)
+below).
+
+The REU is switched off by default. You can switch it on using the options
+menu.
+
+Compatibility advise: **Only turn on the REU for software that is
+explicitly supporting the REU.** Otherwise you might experience random
+crashes of otherwise very stable software. Explanation: The REU itself is
+99.9% compatible so you can count on it. But the majority of C64 software
+does not support the REU. Some of the software even gets unstable, if you
+have the REU activated. The reason for this effect is, that when the REU
+is activated, certain addresses in the C64 memory space that are normally
+free to be used for the software are not usable any more. If it happens
+that this software needs to work with these addresses and a REU is
+installed/activated, then the software crashes.
+
+Hardware cartridges
+-------------------
+
+The MEGA65 sports an Expansion Port so that you can run most of your original
+retro C64 cartridges (games, freezers and other utility cartridges) as well as
+modern cartridges and flash cartridges.
+
+Working with original retro cartridges and most modern cartridges is simple:
+Make sure that your MEGA65 is configured to use the hardware port by selecting
+`Use hardware slot` in the `Expansion Port` menu. Switch-off your MEGA65,
+insert the cartridge and then switch-on the MEGA65 and the cartridge starts.
+If you press the reset button shortly ("soft-reset"), then the cartridge is
+restarted. If you press the reset button longer than 2 seconds ("hard-reset"),
+then the C64 ignores the cartridge and starts into Basic.
+
+### CORE #0 update
+
+If you received your MEGA65 before late 2023 then you very likely need to
+update your so called "CORE #0". This is the MEGA65 core that decides, which
+core is supposed to run when a cartridge is inserted. The original CORE #0
+crashed when so called "Ultimax mode" cartridges were inserted and therefore
+a lot of the games, utility cartridges and flash cartridges cannot be started
+when this old CORE #0 is installed.
+
+You have two options when you own such a MEGA65:
+
+1. [Update CORE #0 as described here](@TODO-ADD-THE-CORRECT-LINK-HERE)
+
+2. Manually boot the C64 for MEGA65 core using the <kbd>No Scroll</kbd>
+   mechanism and then insert your cartridge **while the MEGA65 is switched on
+   and while the C64 core is running** and then press the reset button.
+   While we cannot officially endorse this option - do it at your own risk - 
+   the MEGA65's hardware is way more robust than the original C64's hardware
+   was, particularly when it comes to the Expansion Port. There are certain
+   mechanisms in place that shield the inner guts of the MEGA65 from the
+   Expansion Port. A lot of MEGA65 users have used this option for a while
+   and until now, no damaged MEGA65 due to this workaround are known.
+
+### Flash cartridges, freezers and homebrew cartridges
+
+IMPORTANT: Never insert a "naked PCB" into the MEGA65's Expansion Port!
+
+As the name suggests: Flash cartridges allow you to flash certain `*.crt`
+cartridge files onto a hardware cartridge and then use them as if they would
+be "a real" cartridge. The C64 core supports a number of flash cartridges.
+You can flash some of them directly on your MEGA65. For your convenience, we
+recommend to use a large capacity IEC hardware device such as an FD-2000 or an
+[SD2IEC](https://www.ncsystems.eu/) so that you do not need to split your
+cartridges into multiple `*.d64` disk images.
+
+The C64 core also supports a number of freezers and some homebrew cartridges.
+
+Please read
+[the dedicated documentation](doc/cartridges.md)
+for flash cartridges, freezers and homebrew cartridges to learn more.
+
+Simulated cartridges
+--------------------
+
+Cartridges can be simulated by loading `*.crt` files from your SD card. Use
+the menu item `CRT:<Load>` to do so and it will automatically switch
+the core from `Use hardware slot` to `Simulate cartridge`. The core will
+automatically reset and the cartridge is started. If you are simulating
+certain utility cartridges, you can now go ahead and mount disk images or
+load programs.
+
+Simulated cartridges work great on the MEGA65. We successfully tested them
+with [a lot of](@TODO-ADD-CORRECT-LINK) games and other cartridge types.
+
+But since they are only "simulated", they can never be as glitch-free and
+accurate as hardware cartridges. We use the MEGA65's HyperRAM to store the
+data from the `*.crt` files when we simulate the cartridge. While this works
+very well in more than 99% of the cases, the constraints of the HyperRAM (for
+example its latency) can lead to undesired artefacts when playing simulated
+cartridges: We actually need to halt the CPU for a short period of time, each
+time the cartridge does a bank switch. Most of the time you won't notice due
+to smart caching mechanisms, but sometimes you might.
+
+IEC devices
+-----------
+
+The C64 for MEGA65 core supports the MEGA65's hardware IEC port so that you
+can attach real 1541 & 1581 drives as well as printers, plotters or modern
+devices such as the SD2IEC and the Ultimate-II+. You can copy from virtual
+disks (`*.d64`) to real disks and the other way around.
+
+IMPORTANT: The built-in simulated 1541 disk drive that works with `*.d64`
+disk images is always drive #8. You need to make sure that any other disk- or
+hard-drive or SD2IEC that you are connecting to the hardware IEC port has
+the device number #9, #10 or #11 - but NEVER use #8. Learn more about the
+C64's device numbers
+[here](https://www.c64-wiki.com/wiki/Device_number).
+
+You need to activate the IEC hardware port by selecting the menu item
+`IEC: Use hardware port`. Only activate it if there is no clash of drive
+numbers. As soon as it is activated, it works nicely together with the
+built-in drive #8.
+
+Commodore Kernals and JiffyDOS
+------------------------------
+
+Select the `Kernal: Standard` menu item to enter a sub-menu that lets you
+choose from multiple operating system versions that Commodore shipped back
+in the days: Besides the well-known `Standard` Kernal you can also chose the
+Kernal for the
+[Commodore 64 Games System](https://en.wikipedia.org/wiki/Commodore_64_Games_System)
+and the Kernal for the
+[Japanese Revision](http://www.zimmers.net/cbmpics/c64js.html).
+Please note that the core is being reset each time you switch the Kernal
+version.
+
+JiffyDOS is a third-party disk drive operating system upgrade for the
+C64. It significantly improves the speed and efficiency of disk-based
+operations, allowing for faster file access and loading times. Additionally,
+it offers an array of convenient commands and features for enhanced disk
+management, without sacrificing compatibility with most existing software.
+Our core supports JiffyDOS for the built-in simulated "Drive #8" as well as
+for real devices that you attach via the IEC port as long as you have JiffyDOS
+installed on those devices.
+
+Please note that JiffyDOS is commercial software and that you need to own an
+appropriate amount of licenses before you can use it on your MEGA65. Learn
+where to buy and how to install by reading our
+[dedicated JiffyDOS documentation](doc/jiffy.md).
 
 Flicker-free HDMI
 -----------------
