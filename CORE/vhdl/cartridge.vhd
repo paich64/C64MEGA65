@@ -122,7 +122,7 @@ begin
             when 7 =>
                -- PowerPlay, FunPlay
                if ioe_i = '1' and wr_en_i = '1' then
-                  bank_lo_o <= "000" & wr_data_i(0) & wr_data_i(5 downto 3);
+                  bank_lo_o <= "0" & wr_data_i(5 downto 0);
                   if wr_data_i(7 downto 6) & wr_data_i(2 downto 1) = "1011" then
                      exrom_o <= '1';
                   end if;
