@@ -69,7 +69,7 @@ flawlessly.
 
 Our philosophy on the MEGA65's outputs is that VGA is the "pure" retro-output
 (and you can also switch it to 15 kHz and composite sync for a true retro
-feeling) while HDMI is the "processed" modern output. So there is be no
+feeling) while HDMI is the "processed" modern output. So there is no
 "processing" such as CRT emulation and other things on the VGA output, while
 on the HDMI output several algorithms are working for a very nice looking
 authentic image.
@@ -183,7 +183,7 @@ machines from Trenz are R3A.
 5. If you put your disk images into a folder called `/c64`, then the core will
    display this folder on startup. Otherwise the root folder will be shown.
    If you want the core to remember the settings, make sure you read the
-   section **Config file** below.
+   section [Config file](#config-file) below.
 6. Press the <kbd>Help</kbd> key on your MEGA65 keyboard as soon as the core
    is running to mount disks and to configure the core.
    
@@ -277,7 +277,7 @@ Working with the file browser
 -----------------------------
 
 Thanks to long filename support and alphabetically sorted file- and directory
-listings, using the file browseris straightforward. Press MEGA65's
+listings, using the file browser is straightforward. Press MEGA65's
 <kbd>Help</kbd> key to open the on-screen-menu while the C64 is running
 and either select `8:<Mount Drive>`, `PRG:<Load>` or `CRT:<Load>` using the
 cursor keys and <kbd>Return</kbd>. Here is how the browser works:
@@ -383,12 +383,12 @@ IMPORTANT: Make sure that either one of the three following things is true:
 * You have no `*.crt` file loaded and have selected `Simulate cartridge` in
   the `Expansion Port` menu.
 
-* You have selected `Simulate 1750 REU 512KB` in the the `Expansion Port`
+* You have selected `Simulate 1750 REU 512KB` in the `Expansion Port`
   menu.
 
 The reason for this is: Before the core attempts to load a program into the
 C64's memory, it resets the core. This is for your convenience so that you
-can load multiple programs in a row. But since cartriges are also started via
+can load multiple programs in a row. But since cartridges are also started via
 a reset of the core, the three options above make sure that no cartridge is
 active.
 
@@ -403,7 +403,7 @@ there was no stereo capability available. This is why by default, the C64
 for MEGA65 core starts with only one SID enabled, the `6581`.
 
 If you are an audiophile when it comes to SID music, then you always might
-want to chose the right SID for the game or demo or music release that you
+want to choose the right SID for the game or demo or music release that you
 are running. The C64 core lets you select different SID versions and
 configurations in real-time while the program is running. As a rule of thumb
 you can assume that most games and demos since the year 2000 optimized their
@@ -434,7 +434,7 @@ as
 and some music disks and specialized releases
 (such as the awesome
 [Game of Thrones by Genesis Project](https://csdb.dk/release/?id=157533))
-support true stero using two SIDs. You can also browse the
+support true stereo using two SIDs. You can also browse the
 [High Voltage SID collection](https://www.hvsc.c64.org/)
 for stereo SID releases.
 
@@ -469,7 +469,7 @@ of your work on a "real disk" (D64 data disk that you have mounted) before
 ending your GEOS session so that all your data is persistently saved to the
 MEGA65's SD card (see also the section
 ["Writing to disk images"](#writing-to-disk-images)
-below).
+above).
 
 The REU is switched off by default. You can switch it on using the options
 menu.
@@ -503,9 +503,9 @@ then the C64 ignores the cartridge and starts into Basic.
 ### CORE #0 update
 
 If you received your MEGA65 before late 2023 then you very likely need to
-update your so called "CORE #0". This is the MEGA65 core that decides, which
+update your so-called "CORE #0". This is the MEGA65 core that decides, which
 core is supposed to run when a cartridge is inserted. The original CORE #0
-crashed when so called "Ultimax mode" cartridges were inserted and therefore
+crashed when so-called "Ultimax mode" cartridges were inserted and therefore
 a lot of the games, utility cartridges and flash cartridges cannot be started
 when this old CORE #0 is installed.
 
@@ -588,7 +588,7 @@ Commodore Kernals and JiffyDOS
 
 Select the `Kernal: Standard` menu item to enter a sub-menu that lets you
 choose from multiple operating system versions that Commodore shipped back
-in the days: Besides the well-known `Standard` Kernal you can also chose the
+in the days: Besides the well-known `Standard` Kernal you can also choose the
 Kernal for the
 [Commodore 64 Games System](https://en.wikipedia.org/wiki/Commodore_64_Games_System)
 and the Kernal for the

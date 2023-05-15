@@ -6,7 +6,7 @@ The advantage of JiffyDOS is that you can load files from the simulated
 hardware disk drives that you attach via the MEGA65's IEC port as long as you
 have installed the JiffyDOS ROM on those drives, too.
 
-Learn more about JiffyDOS and in the
+Learn more about JiffyDOS in the
 [C64 Wiki](https://www.c64-wiki.com/wiki/JiffyDOS).
 You will also find download links to the user's manual there.
 
