@@ -212,8 +212,8 @@ simulated PLA behaves according to the [correct logic formulas](PLA.md).
 
 On the MiSTer platform, the simulated cartridges (*.CRT) are loaded into SDRAM, and the
 C64 CPU executes code directly from there. On the MEGA65 platform, the HyperRAM is shared
-between the core and the framework (specifically the ascal.vhd VGA-to-HDMI converter).
-Due to the behaviour and requirements of the ascal.vhd, the HyperRAM can be busy for
+between the core and the framework (specifically the `ascal.vhd` VGA-to-HDMI converter).
+Due to the behaviour and requirements of the `ascal.vhd`, the HyperRAM can be busy for
 extended periods of time. This can lead to considerable latency when the core accesses
 HyperRAM, i.e. more than 500 ns, which is the half clock cycle the C64 CPU has the bus.
 Currently, the worst-case latency is around 1500 ns. In other words, it's not possible for
@@ -221,19 +221,19 @@ the C64 CPU to execute code directly from the HyperRAM, in the same way the MiST
 
 Instead, we've taken a different approach, where we read the current ROM bank into a local
 BRAM cache. In all the existing cartridge types, the switching of banks happen during a
-read or write access to $DExx or $DFxx. If such a bank switching requires updating the
+read or write access to `$DExx` or `$DFxx`. If such a bank switching requires updating the
 local BRAM cache, then the CPU is momentarily paused (using the DMA signal) while the BRAM
 is filled. The maximum data rate available from the HyperRAM is 200 MB/second. The
-`ascal.vhd` uses on average 50 % of this bandwidth.  The time it takes to fill one BRAM bank
-is therefore on average 8192/100 = 82 CPU cycles.
+`ascal.vhd` uses on average 50 % of this bandwidth.  Therefore, the time it takes to fill
+one BRAM bank is on average 8192/100 = 82 CPU cycles.
 
 Some cartridges switch banks multiple times each second (or even each frame), and
 therefore a caching mechanism has been added, so the last eight banks used are stored in
 BRAM.
 
-So, while the above is not cycle accurate, in almost all cases the extra delays caused by
-bank loading only occur during game initialization or when changing levels. In practice,
-the player does not notice.
+While the above is not completely cycle accurate, in almost all cases the extra delays
+caused by bank loading occur only during game initialization or when changing levels. In
+practice, the player does not notice.
 
 Another difference between MiSTer and our core is that the MiSTer decodes the file on the
 fly and only stores the actual ROM bank contents in HyperRAM. In our implementation we
