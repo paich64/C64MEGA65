@@ -210,7 +210,7 @@ simulated PLA behaves according to the [correct logic formulas](PLA.md).
 
 ### Simulated cartridges
 
-On the MiSTer platform, the simulated cartridges (*.CRT) are loaded into SDRAM, and the
+On the MiSTer platform, the simulated cartridges (`*.crt`) are loaded into SDRAM, and the
 C64 CPU executes code directly from there. On the MEGA65 platform, the HyperRAM is shared
 between the core and the framework (specifically the `ascal.vhd` VGA-to-HDMI converter).
 Due to the behaviour and requirements of the `ascal.vhd`, the HyperRAM can be busy for
@@ -236,6 +236,6 @@ caused by bank loading occur only during game initialization or when changing le
 practice, the player does not notice.
 
 Another difference between MiSTer and our core is that the MiSTer decodes the file on the
-fly and only stores the actual ROM bank contents in HyperRAM. In our implementation we
+fly and only stores the actual ROM bank contents in SDRAM. In our implementation we
 store the complete CRT file (including all headers) in HyperRAM.
 
