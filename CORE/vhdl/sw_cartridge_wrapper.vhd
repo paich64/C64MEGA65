@@ -40,6 +40,8 @@ port (
    main_bank_wr_o       : out std_logic;
    main_bank_lo_i       : in  std_logic_vector( 6 downto 0);
    main_bank_hi_i       : in  std_logic_vector( 6 downto 0);
+   main_ioe_bank_i      : in  std_logic_vector( 1 downto 0);
+   main_iof_bank_i      : in  std_logic_vector( 1 downto 0);
    main_bank_wait_o     : out std_logic;
    main_ram_addr_i      : in  std_logic_vector(15 downto 0);
    main_ram_data_i      : in  std_logic_vector( 7 downto 0);
@@ -142,9 +144,9 @@ architecture synthesis of sw_cartridge_wrapper is
    signal main_cache_addr_lo      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
    signal main_cache_addr_hi      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
 
---   attribute mark_debug : string;
---   attribute mark_debug of main_resp_status     : signal is "true";
---   attribute mark_debug of main_reset_core      : signal is "true";
+   attribute mark_debug : string;
+   attribute mark_debug of main_resp_status     : signal is "true";
+   attribute mark_debug of main_reset_core      : signal is "true";
 --   attribute mark_debug of qnice_rst_i          : signal is "true";
 --   attribute mark_debug of qnice_addr_i         : signal is "true";
 --   attribute mark_debug of qnice_data_i         : signal is "true";
@@ -152,30 +154,30 @@ architecture synthesis of sw_cartridge_wrapper is
 --   attribute mark_debug of qnice_we_i           : signal is "true";
 --   attribute mark_debug of qnice_data_o         : signal is "true";
 --   attribute mark_debug of qnice_wait_o         : signal is "true";
---   attribute mark_debug of main_rst_i           : signal is "true";
---   attribute mark_debug of main_reset_core_o    : signal is "true";
---   attribute mark_debug of main_loading_o       : signal is "true";
---   attribute mark_debug of main_id_o            : signal is "true";
---   attribute mark_debug of main_exrom_o         : signal is "true";
---   attribute mark_debug of main_game_o          : signal is "true";
---   attribute mark_debug of main_size_o          : signal is "true";
---   attribute mark_debug of main_bank_laddr_o    : signal is "true";
---   attribute mark_debug of main_bank_size_o     : signal is "true";
---   attribute mark_debug of main_bank_num_o      : signal is "true";
---   attribute mark_debug of main_bank_raddr_o    : signal is "true";
---   attribute mark_debug of main_bank_wr_o       : signal is "true";
---   attribute mark_debug of main_bank_lo_i       : signal is "true";
---   attribute mark_debug of main_bank_hi_i       : signal is "true";
---   attribute mark_debug of main_bank_wait_o     : signal is "true";
---   attribute mark_debug of main_ram_addr_i      : signal is "true";
---   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
---   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
---   attribute mark_debug of main_ioe_ram_data_o  : signal is "true";
---   attribute mark_debug of main_iof_ram_data_o  : signal is "true";
---   attribute mark_debug of main_ioe_we_i        : signal is "true";
---   attribute mark_debug of main_iof_we_i        : signal is "true";
---   attribute mark_debug of main_ram_addr_i      : signal is "true";
---   attribute mark_debug of main_ram_data_i      : signal is "true";
+   attribute mark_debug of main_rst_i           : signal is "true";
+   attribute mark_debug of main_reset_core_o    : signal is "true";
+   attribute mark_debug of main_loading_o       : signal is "true";
+   attribute mark_debug of main_id_o            : signal is "true";
+   attribute mark_debug of main_exrom_o         : signal is "true";
+   attribute mark_debug of main_game_o          : signal is "true";
+   attribute mark_debug of main_size_o          : signal is "true";
+   attribute mark_debug of main_bank_laddr_o    : signal is "true";
+   attribute mark_debug of main_bank_size_o     : signal is "true";
+   attribute mark_debug of main_bank_num_o      : signal is "true";
+   attribute mark_debug of main_bank_raddr_o    : signal is "true";
+   attribute mark_debug of main_bank_wr_o       : signal is "true";
+   attribute mark_debug of main_bank_lo_i       : signal is "true";
+   attribute mark_debug of main_bank_hi_i       : signal is "true";
+   attribute mark_debug of main_bank_wait_o     : signal is "true";
+   attribute mark_debug of main_ram_addr_i      : signal is "true";
+   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
+   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
+   attribute mark_debug of main_ioe_ram_data_o  : signal is "true";
+   attribute mark_debug of main_iof_ram_data_o  : signal is "true";
+   attribute mark_debug of main_ioe_we_i        : signal is "true";
+   attribute mark_debug of main_iof_we_i        : signal is "true";
+   attribute mark_debug of main_ram_addr_i      : signal is "true";
+   attribute mark_debug of main_ram_data_i      : signal is "true";
 --   attribute mark_debug of hr_rst_i             : signal is "true";
 --   attribute mark_debug of hr_write_o           : signal is "true";
 --   attribute mark_debug of hr_read_o            : signal is "true";
@@ -546,7 +548,7 @@ begin
 
    ioe_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH => 8,         -- 256 bytes
+         ADDR_WIDTH => 10,         -- 256 bytes
          DATA_WIDTH => 8,
          FALLING_A  => false,
          FALLING_B  => false
@@ -554,7 +556,7 @@ begin
       port map (
          -- C64 MiSTer core
          clock_a    => main_clk_i,
-         address_a  => main_ram_addr_i(7 downto 0),
+         address_a  => main_ioe_bank_i & main_ram_addr_i(7 downto 0),
          data_a     => main_ram_data_i,
          wren_a     => main_ioe_we_i,
          q_a        => main_ioe_ram_data_o,
@@ -568,7 +570,7 @@ begin
 
    iof_ram : entity work.dualport_2clk_ram
       generic map (
-         ADDR_WIDTH => 8,         -- 256 bytes
+         ADDR_WIDTH => 10,         -- 256 bytes
          DATA_WIDTH => 8,
          FALLING_A  => false,
          FALLING_B  => false
@@ -576,7 +578,7 @@ begin
       port map (
          -- C64 MiSTer core
          clock_a    => main_clk_i,
-         address_a  => main_ram_addr_i(7 downto 0),
+         address_a  => main_iof_bank_i & main_ram_addr_i(7 downto 0),
          data_a     => main_ram_data_i,
          wren_a     => main_iof_we_i,
          q_a        => main_iof_ram_data_o,

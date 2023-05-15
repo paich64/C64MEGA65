@@ -33,21 +33,36 @@ entity cartridge is
       -- To crt_cacher
       bank_lo_o      : out std_logic_vector( 6 downto 0);
       bank_hi_o      : out std_logic_vector( 6 downto 0);
+      ioe_bank_o     : out std_logic_vector( 1 downto 0);
+      iof_bank_o     : out std_logic_vector( 1 downto 0);
 
       -- To C64
       io_rom_o       : out std_logic;
       io_ext_o       : out std_logic;
       io_data_o      : out std_logic_vector(7 downto 0);
       exrom_o        : out std_logic;
-      game_o         : out std_logic
+      game_o         : out std_logic;
+
+      freeze_key_i   : in  std_logic;
+      mod_key_i      : in  std_logic;
+      nmi_o          : out std_logic;
+      nmi_ack_i      : in  std_logic
    );
 end entity cartridge;
 
 architecture synthesis of cartridge is
 
    signal cart_disable : std_logic;
+   signal allow_freeze : std_logic;
+   signal saved_d6     : std_logic;
    signal ioe_ena      : std_logic;
    signal iof_ena      : std_logic;
+
+   signal old_freeze   : std_logic := '0';
+   signal old_nmiack   : std_logic := '0';
+   signal freeze_req   : std_logic;
+   signal freeze_ack   : std_logic;
+   signal freeze_crt   : std_logic;
 
 --   attribute mark_debug : string;
 --   attribute mark_debug of cart_loading_i : signal is "true";
@@ -64,9 +79,24 @@ architecture synthesis of cartridge is
 --   attribute mark_debug of bank_hi_o      : signal is "true";
 --   attribute mark_debug of exrom_o        : signal is "true";
 --   attribute mark_debug of game_o         : signal is "true";
+--   attribute mark_debug of freeze_key_i   : signal is "true";
+--   attribute mark_debug of mod_key_i      : signal is "true";
+--   attribute mark_debug of nmi_o          : signal is "true";
+--   attribute mark_debug of nmi_ack_i      : signal is "true";
 --   attribute mark_debug of cart_disable   : signal is "true";
+--   attribute mark_debug of allow_freeze   : signal is "true";
+--   attribute mark_debug of saved_d6       : signal is "true";
+--   attribute mark_debug of old_freeze     : signal is "true";
+--   attribute mark_debug of old_nmiack     : signal is "true";
+--   attribute mark_debug of freeze_req     : signal is "true";
+--   attribute mark_debug of freeze_ack     : signal is "true";
+--   attribute mark_debug of freeze_crt     : signal is "true";
 
 begin
+
+   freeze_req <= not old_freeze and freeze_key_i;
+   freeze_ack <= nmi_o and not old_nmiack and nmi_ack_i;
+   freeze_crt <= freeze_ack and not mod_key_i;
 
    process (clk_i)
    begin
@@ -77,13 +107,27 @@ begin
          io_ext_o  <= '0';
          io_data_o <= X"FF";
 
+         old_freeze <= freeze_key_i;
+         if freeze_req = '1' and (allow_freeze = '1' or mod_key_i = '1' ) then
+            nmi_o <= '1';
+         end if;
+         old_nmiack <= nmi_ack_i;
+         if freeze_ack = '1' then
+            nmi_o <= '0';
+         end if;
+
          if cart_loading_i = '1' then
-            ioe_ena   <= '0';
-            iof_ena   <= '0';
-            game_o    <= '1';
-            exrom_o   <= '1';
-            bank_lo_o <= (others => '0');
-            bank_hi_o <= (others => '0');
+            ioe_ena      <= '0';
+            iof_ena      <= '0';
+            game_o       <= '1';
+            exrom_o      <= '1';
+            bank_lo_o    <= (others => '0');
+            bank_hi_o    <= (others => '0');
+            ioe_bank_o   <= (others => '0');
+            iof_bank_o   <= (others => '0');
+            nmi_o        <= '0';
+            allow_freeze <= '1';
+            saved_d6     <= '0';
          end if;
 
          case to_integer(unsigned(cart_id_i)) is
@@ -94,6 +138,44 @@ begin
                exrom_o   <= cart_exrom_i(0);
                bank_lo_o <= (others => '0');
                bank_hi_o <= (others => '0');
+
+            when 3 =>
+               -- Final Cart III - (64k 4x16k banks)
+               -- all banks @ $8000-$BFFF - switching by $DFFF
+               if cart_disable = '0' then
+                  if iof_i = '1' and wr_en_i = '1' and addr_i(7 downto 0) = X"FF" then
+                     bank_lo_o  <= "00000" & wr_data_i(1 downto 0);
+                     bank_hi_o  <= "00000" & wr_data_i(1 downto 0);
+                     ioe_bank_o <= wr_data_i(1 downto 0);
+                     iof_bank_o <= wr_data_i(1 downto 0);
+                     exrom_o    <= wr_data_i(4);
+                     game_o     <= wr_data_i(5);
+                     saved_d6   <= wr_data_i(6);
+                     if freeze_key_i = '0' and saved_d6 = '1' and wr_data_i(6) = '0' then
+                        nmi_o <= '1';
+                     end if;
+                     if wr_data_i(6) = '1' then
+                        allow_freeze <= '1';
+                     end if;
+                     cart_disable <= wr_data_i(7);
+                  end if;
+               end if;
+               if freeze_crt = '1' then
+                  cart_disable <= '0';
+                  game_o       <= '0';
+                  allow_freeze <= '0';
+               end if;
+               if cart_loading_i = '1' then
+                  game_o     <= '0';
+                  exrom_o    <= '0';
+                  cart_disable <= '0';
+                  bank_lo_o  <= (others => '0');
+                  bank_hi_o  <= (others => '0');
+                  ioe_ena    <= '1';
+                  ioe_bank_o <= "00";
+                  iof_ena    <= '1';
+                  iof_bank_o <= "00";
+               end if;
 
             when 5 =>
                -- Ocean Type 1 - (game=0, exrom=0, 128k,256k or 512k in 8k banks)

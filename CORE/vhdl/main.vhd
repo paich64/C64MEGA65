@@ -184,6 +184,8 @@ entity main is
       crt_iof_we_o           : out std_logic;
       crt_bank_lo_o          : out std_logic_vector( 6 downto 0);
       crt_bank_hi_o          : out std_logic_vector( 6 downto 0);
+      crt_ioe_bank_o         : out std_logic_vector( 1 downto 0);
+      crt_iof_bank_o         : out std_logic_vector( 1 downto 0);
       
 		-- Access custom Kernal: C64's Basic and DOS (in QNICE clock domain via c64_clk_sd_i)
       c64rom_we_i            : in std_logic;
@@ -337,6 +339,7 @@ architecture synthesis of main is
    signal crt_io_data          : std_logic_vector(7 downto 0);
    signal crt_exrom            : std_logic;
    signal crt_game             : std_logic;
+   signal crt_nmi              : std_logic;
 
    signal dbg_joybtn           : std_logic;
    signal dbg_cart_dir         : std_logic;
@@ -797,6 +800,7 @@ begin
                -- Ultimax mode and VIC accesses the bus: we need to translate the address, see comment about "The PLA Dissected" above
                crt_addr_bus_o <= "11" & c64_ram_addr_o(13 downto 0);
             end if;
+            core_nmi_n     <= not crt_nmi;
 
          when others =>
             null;
@@ -858,11 +862,17 @@ begin
          addr_i         => std_logic_vector(c64_ram_addr_o),
          bank_lo_o      => crt_bank_lo_o,
          bank_hi_o      => crt_bank_hi_o,
+         ioe_bank_o     => crt_ioe_bank_o,
+         iof_bank_o     => crt_iof_bank_o,
          io_rom_o       => crt_io_rom,
          io_ext_o       => crt_io_ext,
          io_data_o      => crt_io_data,
          exrom_o        => crt_exrom,
-         game_o         => crt_game
+         game_o         => crt_game,
+         freeze_key_i   => not restore_key_n,
+         mod_key_i      => '0',
+         nmi_o          => crt_nmi,
+         nmi_ack_i      => core_nmi_ack
       ); -- i_cartridge
 
    crt_ioe_we_o <= core_ioe and c64_ram_we;
