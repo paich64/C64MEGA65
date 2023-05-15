@@ -165,12 +165,6 @@ mechanism - switches between a "slow" core and a "fast" core. I.e. when the core
 running "slow" the FIFO filling is gradually decreasing, and when the core is running
 "fast" the FIFO filling is gradually increasing.
 
-So the "Dynamic HDMI flicker-free" works by continuously monitoring the FIFO level (i.e.
-difference between input and output scan line), and - through a simple hysteresis
-mechanism - switches between a "slow" core and a "fast" core. I.e. when the core is
-running "slow" the FIFO filling is gradually decreasing, and when the core is running
-"fast" the FIFO filling is gradually increasing.
-
 For this to work, the PLL generates two different frequencies, and a glitch-free clock
 multiplexer is subsequently used to dynamically switch between the two frequencies.
 
