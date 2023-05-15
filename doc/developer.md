@@ -130,7 +130,7 @@ leads to a core clock frequency of 0.985249 MHz. In other words, MiSTer achieves
 perfect accuracy of clock speed.
 
 Our old core (before the flicker fix) had a PLL clock frequency of 31.527778 MHz, which
-after the clock divider leads to C64 core frequency of : 0.985243 MHz. So from a practical
+after the clock divider leads to C64 core frequency of 0.985243 MHz. So from a practical
 point of view, this is still very close.
 
 ### Visual artifacts and dynamic HDMI flicker-fix
@@ -145,7 +145,7 @@ seconds.
 The "Dynamic HDMI flicker-fix" is meant to eliminate this screen tearing. This is done by
 slowing down the core by approx 0.125/50.125 = 0.25%. The goal is to have the core
 generate a frame rate of exactly 50 Hz. However, this requires a PLL frequency of
-50*63*312*32 = 31.449600 MHz, which unfortunately is not synthesizable on the Xilinx FPGA
+50\*63\*312\*32 = 31.449600 MHz, which unfortunately is not synthesizable on the Xilinx FPGA
 in the MEGA65 (due to the before-mentioned limitations of the PLL).
 
 The solution chosen is therefore to dynamically alternate the core frame rate between 50.1
