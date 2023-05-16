@@ -35,7 +35,7 @@ SRC += core_sim.vhd
 
 #CRT_FILE = Super_Mario_Bros_64_v1.2_-_Zeropaige.crt
 CRT_FILE = Final_Cartridge_III,_The_\(USA,_Europe\)_\(May_88\)_\(Program\).crt
-CRT_DIR  = /home/mfj/Downloads
+CRT_DIR  = $(HOME)/Downloads
 
 
 #DUT ?= crt_parser
@@ -48,7 +48,7 @@ SRC += $(TB).vhd
 WAVE = $(TB).ghw
 SAVE = $(TB).gtkw
 
-XPM_TOP_DIR = /home/mfj/git/PRIVATE/fransschreuder/xpm_vhdl
+XPM_TOP_DIR = ../../../../../fransschreuder/xpm_vhdl
 
 sim: $(SRC) xpm-obj08.cf
 	ghdl -i --std=08 --work=work $(SRC)
