@@ -1,6 +1,7 @@
 SRC += ../crt_parser.vhd
 SRC += ../crt_cacher.vhd
 SRC += ../crt_loader.vhd
+SRC += ../sw_cartridge_csr.vhd
 SRC += ../sw_cartridge_wrapper.vhd
 SRC += ../cartridge.vhd
 SRC += ../../../M2M/vhdl/memory/axi_fifo.vhd

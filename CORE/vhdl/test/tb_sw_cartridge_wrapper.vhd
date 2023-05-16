@@ -45,7 +45,6 @@ architecture simulation of tb_sw_cartridge_wrapper is
    signal main_bank_laddr      : std_logic_vector(15 downto 0);
    signal main_bank_size       : std_logic_vector(15 downto 0);
    signal main_bank_num        : std_logic_vector(15 downto 0);
-   signal main_bank_type       : std_logic_vector( 7 downto 0);
    signal main_bank_raddr      : std_logic_vector(24 downto 0);
    signal main_bank_wr         : std_logic;
    signal main_ram_data_to_c64 : std_logic_vector( 7 downto 0);
@@ -173,7 +172,6 @@ begin
          main_bank_laddr_o   => main_bank_laddr,
          main_bank_size_o    => main_bank_size,
          main_bank_num_o     => main_bank_num,
-         main_bank_type_o    => main_bank_type,
          main_bank_raddr_o   => main_bank_raddr,
          main_bank_wr_o      => main_bank_wr,
          main_bank_lo_i      => cart_bank_lo,
@@ -218,7 +216,10 @@ begin
          bank_hi_o      => cart_bank_hi,
          io_rom_o       => cart_io_rom,
          exrom_o        => cart_exrom,
-         game_o         => cart_game
+         game_o         => cart_game,
+         freeze_key_i   => '0',
+         mod_key_i      => '0',
+         nmi_ack_i      => '0'
       ); -- i_cartridge
 
    i_avm_rom : entity work.avm_rom
