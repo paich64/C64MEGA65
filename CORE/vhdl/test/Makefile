@@ -14,10 +14,27 @@ SRC += ../../../M2M/vhdl/qnice2hyperram.vhd
 SRC += ../../../M2M/vhdl/tdp_ram.vhd
 SRC += ../../../M2M/vhdl/2port2clk_ram.vhd
 
+SRC += ../../../../65c02/src/datapath/alu.vhd
+SRC += ../../../../65c02/src/datapath/ar.vhd
+SRC += ../../../../65c02/src/datapath/datapath.vhd
+SRC += ../../../../65c02/src/datapath/hi.vhd
+SRC += ../../../../65c02/src/datapath/lo.vhd
+SRC += ../../../../65c02/src/datapath/mr.vhd
+SRC += ../../../../65c02/src/datapath/pc.vhd
+SRC += ../../../../65c02/src/datapath/sp.vhd
+SRC += ../../../../65c02/src/datapath/sr.vhd
+SRC += ../../../../65c02/src/datapath/xr.vhd
+SRC += ../../../../65c02/src/datapath/yr.vhd
+SRC += ../../../../65c02/src/datapath/zp.vhd
+SRC += ../../../../65c02/src/control/control.vhd
+SRC += ../../../../65c02/src/control/microcode.vhd
+SRC += ../../../../65c02/src/cpu_65c02.vhd
+
 SRC += qnice_sim.vhd
 SRC += core_sim.vhd
 
-CRT_FILE = Super_Mario_Bros_64_v1.2_-_Zeropaige.crt
+#CRT_FILE = Super_Mario_Bros_64_v1.2_-_Zeropaige.crt
+CRT_FILE = Final_Cartridge_III,_The_\(USA,_Europe\)_\(May_88\)_\(Program\).crt
 CRT_DIR  = /home/mfj/Downloads
 
 

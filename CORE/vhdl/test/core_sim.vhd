@@ -44,11 +44,14 @@ end entity core_sim;
 
 architecture simulation of core_sim is
 
+   constant C_ROM_FILE_NAME : string := "../../../CORE/C64_MiSTerMEGA65/rtl/roms/std_C64.mif.bin";
+
    signal main_roml            : std_logic;
    signal main_romh            : std_logic;
    signal main_ioe             : std_logic;
    signal main_iof             : std_logic;
    signal main_ram_data_to_c64 : std_logic_vector(7 downto 0);
+   signal main_rom_readdata    : std_logic_vector(7 downto 0);
    signal main_wr_en           : std_logic;
    signal main_io_rom          : std_logic;
    signal main_exrom           : std_logic;
@@ -62,7 +65,7 @@ begin
                            main_hi_ram_data_i( 7 downto 0) when main_romh = '1' and main_ram_addr_o(0) = '0' else
                            main_ioe_ram_data_i             when main_ioe  = '1'                              else
                            main_iof_ram_data_i             when main_iof  = '1'                              else
-                           X"00";
+                           main_rom_readdata;
 
    main_ioe_we_o   <= '0';
    main_iof_we_o   <= '0';
@@ -73,11 +76,30 @@ begin
 
    -- Simplified PLA
    main_roml <= '1' when main_ram_addr_o(15 downto 13) = "100"      -- 0x8000 - 0x9FFF
+                     and main_exrom = '0'
            else '0';
    main_romh <= '1' when main_ram_addr_o(15 downto 13) = "101"      -- 0xA000 - 0xBFFF
-                      or main_ram_addr_o(15 downto 13) = "111"      -- 0xE000 - 0xFFFF
+                     and main_exrom = '0'
+                     and main_game = '0'
+           else '1' when main_ram_addr_o(15 downto 13) = "111"      -- 0xE000 - 0xFFFF
+                     and main_exrom = '1'
+                     and main_game = '0'
            else '0';
 
+
+   i_cpu_65c02 : entity work.cpu_65c02
+      port map (
+         clk_i     => main_clk_i,
+         rst_i     => main_rst_i or main_reset_core_i,
+         nmi_i     => '0',
+         irq_i     => '0',
+         addr_o    => main_ram_addr_o,
+         wr_en_o   => main_wr_en,
+         wr_data_o => main_ram_data_o,
+         rd_en_o   => open,
+         rd_data_i => main_ram_data_to_c64,
+         debug_o   => open
+      ); -- i_cpu_65c02
 
    i_cartridge : entity work.cartridge
       port map (
@@ -103,42 +125,26 @@ begin
          nmi_ack_i      => '0'
       ); -- i_cartridge
 
-   p_test : process
-
-      procedure c64_cpu_verify(addr : std_logic_vector(15 downto 0);
-                               data : std_logic_vector( 7 downto 0)) is
-      begin
-         main_ram_addr_o <= addr;
-         -- Wait 1 CPU cycle
-         for i in 31 downto 0 loop
-            wait until falling_edge(main_clk_i);
-         end loop;
-         assert main_ram_data_to_c64 = data
-            report "ERROR: C64 Reading from address " & to_hstring(addr) &
-               " returned " & to_hstring(main_ram_data_to_c64) & ", but expected " &
-               to_hstring(data)
-            severity error;
-      end procedure c64_cpu_verify;
-
-   begin
-
-      main_ram_addr_o <= (others => '0');
-      main_ram_data_o <= (others => '0');
-      main_ioe_we_o   <= '0';
-      main_iof_we_o   <= '0';
-      wait until main_rst_i = '0';
-      wait until main_reset_core_i = '0';
-      report "Core out of reset.";
-      wait for 2 us;
-
-      c64_cpu_verify(X"FFFC", X"00");
-      c64_cpu_verify(X"FFFD", X"E0");
-      wait for 100 ns;
-
-      main_running_o <= '0';
-      report "Test finished";
-      wait;
-   end process p_test;
+   i_avm_rom : entity work.avm_rom
+      generic map (
+         G_INIT_FILE    => C_ROM_FILE_NAME,
+         G_ADDRESS_SIZE => 14,
+         G_DATA_SIZE    => 8
+      )
+      port map (
+         clk_i               => not main_clk_i,
+         rst_i               => main_rst_i,
+         avm_write_i         => '0',
+         avm_read_i          => not main_wr_en,
+         avm_address_i       => main_ram_addr_o(14) & main_ram_addr_o(12 downto 0),
+         avm_writedata_i     => (others => '0'),
+         avm_byteenable_i    => (others => '1'),
+         avm_burstcount_i    => X"01",
+         avm_readdata_o      => main_rom_readdata,
+         avm_readdatavalid_o => open,
+         avm_waitrequest_o   => open,
+         length_o            => open
+      ); -- i_avm_rom
 
 end architecture simulation;
 
