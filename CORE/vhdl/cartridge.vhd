@@ -33,10 +33,10 @@ entity cartridge is
       -- To crt_cacher
       bank_lo_o      : out std_logic_vector( 6 downto 0);
       bank_hi_o      : out std_logic_vector( 6 downto 0);
-      ioe_bank_o     : out std_logic_vector( 1 downto 0);
-      iof_bank_o     : out std_logic_vector( 1 downto 0);
 
       -- To C64
+      ioe_wr_ena_o   : out std_logic;
+      iof_wr_ena_o   : out std_logic;
       io_rom_o       : out std_logic;
       io_ext_o       : out std_logic;
       io_data_o      : out std_logic_vector(7 downto 0);
@@ -123,11 +123,11 @@ begin
             exrom_o      <= '1';
             bank_lo_o    <= (others => '0');
             bank_hi_o    <= (others => '0');
-            ioe_bank_o   <= (others => '0');
-            iof_bank_o   <= (others => '0');
             nmi_o        <= '0';
             allow_freeze <= '1';
             saved_d6     <= '0';
+            ioe_wr_ena_o <= '0';
+            iof_wr_ena_o <= '0';
          end if;
 
          case to_integer(unsigned(cart_id_i)) is
@@ -146,8 +146,6 @@ begin
                   if iof_i = '1' and wr_en_i = '1' and addr_i(7 downto 0) = X"FF" then
                      bank_lo_o  <= "00000" & wr_data_i(1 downto 0);
                      bank_hi_o  <= "00000" & wr_data_i(1 downto 0);
-                     ioe_bank_o <= wr_data_i(1 downto 0);
-                     iof_bank_o <= wr_data_i(1 downto 0);
                      exrom_o    <= wr_data_i(4);
                      game_o     <= wr_data_i(5);
                      saved_d6   <= wr_data_i(6);
@@ -172,9 +170,7 @@ begin
                   bank_lo_o  <= (others => '0');
                   bank_hi_o  <= (others => '0');
                   ioe_ena    <= '1';
-                  ioe_bank_o <= "00";
                   iof_ena    <= '1';
-                  iof_bank_o <= "00";
                end if;
 
             when 5 =>
@@ -281,11 +277,12 @@ begin
                   end if;
                end if;
                if cart_loading_i = '1' then
-                  iof_ena   <= '1';
-                  game_o    <= '0';
-                  exrom_o   <= '1';
-                  bank_lo_o <= (others => '0');
-                  bank_hi_o <= (others => '0');
+                  iof_ena      <= '1';
+                  game_o       <= '0';
+                  exrom_o      <= '1';
+                  bank_lo_o    <= (others => '0');
+                  bank_hi_o    <= (others => '0');
+                  iof_wr_ena_o <= '1';
                end if;
 
             when 60 =>

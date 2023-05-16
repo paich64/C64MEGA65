@@ -184,8 +184,6 @@ entity main is
       crt_iof_we_o           : out std_logic;
       crt_bank_lo_o          : out std_logic_vector( 6 downto 0);
       crt_bank_hi_o          : out std_logic_vector( 6 downto 0);
-      crt_ioe_bank_o         : out std_logic_vector( 1 downto 0);
-      crt_iof_bank_o         : out std_logic_vector( 1 downto 0);
       
 		-- Access custom Kernal: C64's Basic and DOS (in QNICE clock domain via c64_clk_sd_i)
       c64rom_we_i            : in std_logic;
@@ -340,6 +338,8 @@ architecture synthesis of main is
    signal crt_exrom            : std_logic;
    signal crt_game             : std_logic;
    signal crt_nmi              : std_logic;
+   signal crt_ioe_wr_ena       : std_logic;
+   signal crt_iof_wr_ena       : std_logic;
 
    signal dbg_joybtn           : std_logic;
    signal dbg_cart_dir         : std_logic;
@@ -499,8 +499,13 @@ begin
                          unsigned(crt_lo_ram_data_i( 7 downto 0)) when cart_roml_n = '0' and crt_addr_bus_o(0) = '0' else
                          unsigned(crt_hi_ram_data_i(15 downto 8)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '1' else
                          unsigned(crt_hi_ram_data_i( 7 downto 0)) when cart_romh_n = '0' and crt_addr_bus_o(0) = '0' else
-                         unsigned(crt_ioe_ram_data_i)             when core_ioe = '1'                                else
-                         unsigned(crt_iof_ram_data_i);
+                         unsigned(crt_lo_ram_data_i(15 downto 8)) when core_ioe = '1'    and crt_addr_bus_o(0) = '1' and  crt_ioe_wr_ena = '0' else
+                         unsigned(crt_lo_ram_data_i( 7 downto 0)) when core_ioe = '1'    and crt_addr_bus_o(0) = '0' and  crt_ioe_wr_ena = '0' else
+                         unsigned(crt_lo_ram_data_i(15 downto 8)) when core_iof = '1'    and crt_addr_bus_o(0) = '1' and  crt_iof_wr_ena = '0' else
+                         unsigned(crt_lo_ram_data_i( 7 downto 0)) when core_iof = '1'    and crt_addr_bus_o(0) = '0' and  crt_iof_wr_ena = '0' else
+                         unsigned(crt_ioe_ram_data_i)             when core_ioe = '1'    and crt_ioe_wr_ena = '1'    else
+                         unsigned(crt_iof_ram_data_i)             when core_iof = '1'    and crt_iof_wr_ena = '1'    else
+                         X"EE";
 
       -- Standard access to the C64's RAM
       else
@@ -862,8 +867,8 @@ begin
          addr_i         => std_logic_vector(c64_ram_addr_o),
          bank_lo_o      => crt_bank_lo_o,
          bank_hi_o      => crt_bank_hi_o,
-         ioe_bank_o     => crt_ioe_bank_o,
-         iof_bank_o     => crt_iof_bank_o,
+         ioe_wr_ena_o   => crt_ioe_wr_ena,
+         iof_wr_ena_o   => crt_iof_wr_ena,
          io_rom_o       => crt_io_rom,
          io_ext_o       => crt_io_ext,
          io_data_o      => crt_io_data,
