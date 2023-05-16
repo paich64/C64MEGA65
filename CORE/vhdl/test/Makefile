@@ -8,6 +8,7 @@ SRC += ../../../M2M/vhdl/memory/axi_fifo.vhd
 SRC += ../../../M2M/vhdl/memory/avm_fifo.vhd
 SRC += ../../../M2M/vhdl/memory/avm_arbit.vhd
 SRC += ../../../M2M/vhdl/memory/avm_rom.vhd
+SRC += ../../../M2M/vhdl/memory/avm_memory.vhd
 SRC += ../../../M2M/vhdl/cdc_slow.vhd
 SRC += ../../../M2M/vhdl/cdc_stable.vhd
 SRC += ../../../M2M/vhdl/qnice2hyperram.vhd

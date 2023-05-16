@@ -52,6 +52,7 @@ architecture simulation of core_sim is
    signal main_iof             : std_logic;
    signal main_ram_data_to_c64 : std_logic_vector(7 downto 0);
    signal main_rom_readdata    : std_logic_vector(7 downto 0);
+   signal main_ram_readdata    : std_logic_vector(7 downto 0);
    signal main_wr_en           : std_logic;
    signal main_io_rom          : std_logic;
    signal main_exrom           : std_logic;
@@ -65,12 +66,12 @@ begin
                            main_hi_ram_data_i( 7 downto 0) when main_romh = '1' and main_ram_addr_o(0) = '0' else
                            main_ioe_ram_data_i             when main_ioe  = '1'                              else
                            main_iof_ram_data_i             when main_iof  = '1'                              else
-                           main_rom_readdata;
+                           main_rom_readdata               when main_ram_addr_o(15 downto 13) = "101"        else
+                           main_rom_readdata               when main_ram_addr_o(15 downto 13) = "111"        else
+                           main_ram_readdata;
 
    main_ioe_we_o   <= '0';
    main_iof_we_o   <= '0';
-   main_ram_data_o <= X"00";
-   main_wr_en      <= '0';
    main_ioe        <= '0';
    main_iof        <= '0';
 
@@ -145,6 +146,25 @@ begin
          avm_waitrequest_o   => open,
          length_o            => open
       ); -- i_avm_rom
+
+   i_avm_memory : entity work.avm_memory
+      generic map (
+         G_ADDRESS_SIZE => 16,
+         G_DATA_SIZE    => 8
+      )
+      port map (
+         clk_i               => not main_clk_i,
+         rst_i               => main_rst_i or main_reset_core_i,
+         avm_write_i         => main_wr_en,
+         avm_read_i          => not main_wr_en,
+         avm_address_i       => main_ram_addr_o,
+         avm_writedata_i     => main_ram_data_o,
+         avm_byteenable_i    => (others => '1'),
+         avm_burstcount_i    => X"01",
+         avm_readdata_o      => main_ram_readdata,
+         avm_readdatavalid_o => open,
+         avm_waitrequest_o   => open
+      ); -- i_avm_memory
 
 end architecture simulation;
 
