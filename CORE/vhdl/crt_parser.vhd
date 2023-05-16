@@ -244,6 +244,8 @@ begin
                   cart_exrom_o <= wide_readdata(R_CRT_EXROM);
                   cart_game_o  <= wide_readdata(R_CRT_GAME);
                   file_header_length_v := bswap(wide_readdata(R_CRT_FILE_HEADER_LENGTH));
+                  report "Detected cartridge ID: " &
+                     to_string(to_integer(bswap(wide_readdata(R_CRT_CARTRIDGE_TYPE))));
 
                   if end_address >= avm_address_o + file_header_length_v(22 downto 1) + X"08" then
                      -- Read 0x10 bytes from CHIP header
@@ -269,6 +271,11 @@ begin
                      cart_bank_raddr_o <= (others => '0');
                      cart_bank_raddr_o(22 downto 1) <= read_addr_v;
                      cart_bank_wr_o    <= '1';
+
+                     report "Detected CHIP " &
+                        to_string(to_integer(bswap(wide_readdata(R_CHIP_BANK_NUMBER)))) &
+                        ", addr=" & to_hstring(bswap(wide_readdata(R_CHIP_LOAD_ADDRESS))) &
+                        ", size=" & to_hstring(bswap(wide_readdata(R_CHIP_IMAGE_SIZE)));
 
                      image_size_v := bswap(wide_readdata(R_CHIP_IMAGE_SIZE));
                      if end_address = avm_address_o + X"08" + image_size_v(15 downto 1) then

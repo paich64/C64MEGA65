@@ -21,22 +21,15 @@ architecture simulation of tb_sw_cartridge_wrapper is
    -- Clock and reset
    signal qnice_clk            : std_logic := '0';
    signal qnice_rst            : std_logic := '1';
+   signal qnice_running        : std_logic := '1';
    signal main_clk             : std_logic := '0';
    signal main_rst             : std_logic := '1';
-   signal hard_rst             : std_logic := '1';
+   signal main_running         : std_logic := '1';
    signal hr_clk               : std_logic := '0';
    signal hr_rst               : std_logic := '1';
+   signal hr_running           : std_logic := '1';
 
-   -- Signals driven by tester_sim
-   signal qnice_addr           : std_logic_vector(27 downto 0);
-   signal qnice_writedata      : std_logic_vector(15 downto 0);
-   signal qnice_ce             : std_logic;
-   signal qnice_we             : std_logic;
-   signal qnice_readdata       : std_logic_vector(15 downto 0);
-   signal qnice_wait           : std_logic;
-   signal qnice_length         : natural;
-
-   -- Signals driven by sw_cartridge_wrapper
+   signal main_reset_core      : std_logic;
    signal main_loading         : std_logic;
    signal main_id              : std_logic_vector(15 downto 0);
    signal main_exrom           : std_logic_vector( 7 downto 0);
@@ -47,7 +40,6 @@ architecture simulation of tb_sw_cartridge_wrapper is
    signal main_bank_num        : std_logic_vector(15 downto 0);
    signal main_bank_raddr      : std_logic_vector(24 downto 0);
    signal main_bank_wr         : std_logic;
-   signal main_ram_data_to_c64 : std_logic_vector( 7 downto 0);
    signal main_bank_wait       : std_logic;
    signal main_ram_data        : std_logic_vector( 7 downto 0);
    signal main_ioe_we          : std_logic;
@@ -56,8 +48,17 @@ architecture simulation of tb_sw_cartridge_wrapper is
    signal main_hi_ram_data     : std_logic_vector(15 downto 0);
    signal main_ioe_ram_data    : std_logic_vector( 7 downto 0);
    signal main_iof_ram_data    : std_logic_vector( 7 downto 0);
+   signal main_ram_addr        : std_logic_vector(15 downto 0);
+   signal main_bank_lo         : std_logic_vector( 6 downto 0);
+   signal main_bank_hi         : std_logic_vector( 6 downto 0);
 
-   -- Signals driven by sw_cartridge_wrapper
+   signal qnice_addr           : std_logic_vector(27 downto 0);
+   signal qnice_writedata      : std_logic_vector(15 downto 0);
+   signal qnice_ce             : std_logic;
+   signal qnice_we             : std_logic;
+   signal qnice_readdata       : std_logic_vector(15 downto 0);
+   signal qnice_wait           : std_logic;
+
    signal hr_write             : std_logic;
    signal hr_read              : std_logic;
    signal hr_address           : std_logic_vector(31 downto 0);
@@ -67,24 +68,7 @@ architecture simulation of tb_sw_cartridge_wrapper is
    signal hr_readdata          : std_logic_vector(15 downto 0);
    signal hr_readdatavalid     : std_logic;
    signal hr_waitrequest       : std_logic;
-
-   -- Signals driven by tester_sim.vhd
-   signal tb_roml              : std_logic;
-   signal tb_romh              : std_logic;
-   signal tb_ioe               : std_logic;
-   signal tb_iof               : std_logic;
-   signal tb_mem_write         : std_logic;
-   signal tb_addr              : std_logic_vector(15 downto 0);
-   signal tb_data              : std_logic_vector( 7 downto 0);
-   signal tb_ram_addr          : std_logic_vector(15 downto 0);
-   signal tb_running           : std_logic := '1';
-
-   -- Signals driven by cartridge.v
-   signal cart_exrom           : std_logic;
-   signal cart_game            : std_logic;
-   signal cart_io_rom          : std_logic;
-   signal cart_bank_lo         : std_logic_vector( 6 downto 0);
-   signal cart_bank_hi         : std_logic_vector( 6 downto 0);
+   signal hr_length            : natural;
 
 begin
 
@@ -92,57 +76,13 @@ begin
    -- Clock and reset
    -------------------
 
-   hr_clk    <= tb_running and not hr_clk    after  5 ns;
-   qnice_clk <= tb_running and not qnice_clk after 10 ns;
-   main_clk  <= tb_running and not main_clk  after 15 ns;
+   hr_clk    <= hr_running    and not hr_clk    after  5 ns;
+   qnice_clk <= qnice_running and not qnice_clk after 10 ns;
+   main_clk  <= main_running  and not main_clk  after 15 ns;
 
    hr_rst    <= '1', '0' after 100 ns;
    qnice_rst <= '1', '0' after 100 ns;
-   hard_rst  <= '1', '0' after 100 ns;
-
-
-   main_ram_data_to_c64 <= main_lo_ram_data(15 downto 8) when tb_roml = '1' and tb_ram_addr(0) = '1' else
-                           main_lo_ram_data( 7 downto 0) when tb_roml = '1' and tb_ram_addr(0) = '0' else
-                           main_hi_ram_data(15 downto 8) when tb_romh = '1' and tb_ram_addr(0) = '1' else
-                           main_hi_ram_data( 7 downto 0) when tb_romh = '1' and tb_ram_addr(0) = '0' else
-                           main_ioe_ram_data             when tb_ioe  = '1'                          else
-                           main_iof_ram_data             when tb_iof  = '1'                          else
-                           X"00";
-
-   main_ioe_we   <= '0';
-   main_iof_we   <= '0';
-   main_ram_data <= X"00";
-
-   -----------------------------------
-   -- Instantiate main test procedure
-   -----------------------------------
-
-   i_tester_sim : entity work.tester_sim
-      port map (
-         qnice_clk_i       => qnice_clk,
-         qnice_rst_i       => qnice_rst,
-         qnice_addr_o      => qnice_addr,
-         qnice_writedata_o => qnice_writedata,
-         qnice_ce_o        => qnice_ce,
-         qnice_we_o        => qnice_we,
-         qnice_readdata_i  => qnice_readdata,
-         qnice_wait_i      => qnice_wait,
-         qnice_length_i    => qnice_length,
-         main_clk_i        => main_clk,
-         main_rst_o        => main_rst,
-         tb_loading_i      => main_loading,
-         tb_bank_wait_i    => main_bank_wait,
-         tb_ram_addr_o     => tb_ram_addr,
-         tb_ram_data_i     => main_ram_data_to_c64,
-         tb_roml_o         => tb_roml,
-         tb_romh_o         => tb_romh,
-         tb_ioe_o          => tb_ioe,
-         tb_iof_o          => tb_iof,
-         tb_mem_write_o    => tb_mem_write,
-         tb_addr_o         => tb_addr,
-         tb_data_o         => tb_data,
-         tb_running_o      => tb_running
-      ); -- i_tester_sim
+   main_rst  <= '1', '0' after 100 ns;
 
 
    -------------------
@@ -164,6 +104,7 @@ begin
          qnice_wait_o        => qnice_wait,
          main_clk_i          => main_clk,
          main_rst_i          => main_rst,
+         main_reset_core_o   => main_reset_core,
          main_loading_o      => main_loading,
          main_id_o           => main_id,
          main_exrom_o        => main_exrom,
@@ -174,10 +115,10 @@ begin
          main_bank_num_o     => main_bank_num,
          main_bank_raddr_o   => main_bank_raddr,
          main_bank_wr_o      => main_bank_wr,
-         main_bank_lo_i      => cart_bank_lo,
-         main_bank_hi_i      => cart_bank_hi,
+         main_bank_lo_i      => main_bank_lo,
+         main_bank_hi_i      => main_bank_hi,
          main_bank_wait_o    => main_bank_wait,
-         main_ram_addr_i     => tb_ram_addr,
+         main_ram_addr_i     => main_ram_addr,
          main_ram_data_i     => main_ram_data,
          main_ioe_we_i       => main_ioe_we,
          main_iof_we_i       => main_iof_we,
@@ -198,29 +139,52 @@ begin
          hr_waitrequest_i    => hr_waitrequest
       ); -- i_sw_cartridge_wrapper
 
-   i_cartridge : entity work.cartridge
+   -----------------------------------
+   -- Instantiate simulation models
+   -----------------------------------
+
+   i_qnice_sim : entity work.qnice_sim
       port map (
-         clk_i          => main_clk,
-         rst_i          => hard_rst,
-         cart_loading_i => main_loading,
-         cart_id_i      => main_id,
-         cart_exrom_i   => main_exrom,
-         cart_game_i    => main_game,
-         cart_size_i    => main_size,
-         ioe_i          => tb_ioe,
-         iof_i          => tb_iof,
-         wr_en_i        => tb_mem_write,
-         wr_data_i      => tb_data,
-         addr_i         => tb_addr,
-         bank_lo_o      => cart_bank_lo,
-         bank_hi_o      => cart_bank_hi,
-         io_rom_o       => cart_io_rom,
-         exrom_o        => cart_exrom,
-         game_o         => cart_game,
-         freeze_key_i   => '0',
-         mod_key_i      => '0',
-         nmi_ack_i      => '0'
-      ); -- i_cartridge
+         qnice_clk_i       => qnice_clk,
+         qnice_rst_i       => qnice_rst,
+         qnice_addr_o      => qnice_addr,
+         qnice_writedata_o => qnice_writedata,
+         qnice_ce_o        => qnice_ce,
+         qnice_we_o        => qnice_we,
+         qnice_readdata_i  => qnice_readdata,
+         qnice_wait_i      => qnice_wait,
+         qnice_length_i    => std_logic_vector(to_unsigned(hr_length*2, 32)),
+         qnice_running_o   => qnice_running
+      ); -- i_qnice_sim
+
+   i_core_sim : entity work.core_sim
+      port map (
+         main_clk_i          => main_clk,
+         main_rst_i          => main_rst,
+         main_reset_core_i   => main_reset_core,
+         main_loading_i      => main_loading,
+         main_id_i           => main_id,
+         main_exrom_i        => main_exrom,
+         main_game_i         => main_game,
+         main_size_i         => main_size,
+         main_bank_laddr_i   => main_bank_laddr,
+         main_bank_size_i    => main_bank_size,
+         main_bank_num_i     => main_bank_num,
+         main_bank_raddr_i   => main_bank_raddr,
+         main_bank_wr_i      => main_bank_wr,
+         main_bank_lo_o      => main_bank_lo,
+         main_bank_hi_o      => main_bank_hi,
+         main_bank_wait_i    => main_bank_wait,
+         main_ram_addr_o     => main_ram_addr,
+         main_ram_data_o     => main_ram_data,
+         main_ioe_we_o       => main_ioe_we,
+         main_iof_we_o       => main_iof_we,
+         main_lo_ram_data_i  => main_lo_ram_data,
+         main_hi_ram_data_i  => main_hi_ram_data,
+         main_ioe_ram_data_i => main_ioe_ram_data,
+         main_iof_ram_data_i => main_iof_ram_data,
+         main_running_o      => main_running
+      ); -- i_core_sim
 
    i_avm_rom : entity work.avm_rom
       generic map (
@@ -240,7 +204,7 @@ begin
          avm_readdata_o      => hr_readdata,
          avm_readdatavalid_o => hr_readdatavalid,
          avm_waitrequest_o   => hr_waitrequest,
-         length_o            => qnice_length
+         length_o            => hr_length
       ); -- i_avm_rom
 
 end architecture simulation;

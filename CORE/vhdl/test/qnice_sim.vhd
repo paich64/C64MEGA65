@@ -12,55 +12,26 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity tester_sim is
+entity qnice_sim is
    port (
       qnice_clk_i       : in  std_logic;
       qnice_rst_i       : in  std_logic;
+      -- Interface to QNICE CPU
       qnice_addr_o      : out std_logic_vector(27 downto 0);
       qnice_writedata_o : out std_logic_vector(15 downto 0);
       qnice_ce_o        : out std_logic;
       qnice_we_o        : out std_logic;
       qnice_readdata_i  : in  std_logic_vector(15 downto 0);
       qnice_wait_i      : in  std_logic;
-      qnice_length_i    : in  natural;
-
-      main_clk_i        : in  std_logic;
-      main_rst_o        : out std_logic;
-      tb_addr_o         : out std_logic_vector(15 downto 0);
-      tb_data_o         : out std_logic_vector( 7 downto 0);
-      tb_ioe_o          : out std_logic;
-      tb_iof_o          : out std_logic;
-      tb_loading_i      : in  std_logic;
-      tb_bank_wait_i    : in  std_logic;
-      tb_mem_write_o    : out std_logic;
-      tb_ram_addr_o     : out std_logic_vector(15 downto 0);
-      tb_ram_data_i     : in  std_logic_vector( 7 downto 0);
-      tb_romh_o         : out std_logic;
-      tb_roml_o         : out std_logic;
-      tb_running_o      : out std_logic := '1'
+      -- TB signals
+      qnice_length_i    : in  std_logic_vector(31 downto 0);
+      qnice_running_o   : out std_logic := '1'
    );
-end entity tester_sim;
+end entity qnice_sim;
 
-architecture simulation of tester_sim is
-
-   signal tb_length : std_logic_vector(31 downto 0);
+architecture simulation of qnice_sim is
 
 begin
-
-   tb_addr_o       <= (others => '0');
-   tb_data_o       <= (others => '0');
-   tb_ioe_o        <= '0';
-   tb_iof_o        <= '0';
-   tb_mem_write_o  <= '0';
-
-   -- Simplified PLA
-   tb_roml_o <= '1' when tb_ram_addr_o(15 downto 13) = "100"      -- 0x8000 - 0x9FFF
-           else '0';
-   tb_romh_o <= '1' when tb_ram_addr_o(15 downto 13) = "101"      -- 0xA000 - 0xBFFF
-                      or tb_ram_addr_o(15 downto 13) = "111"      -- 0xE000 - 0xFFFF
-           else '0';
-
-   tb_length <= std_logic_vector(to_unsigned(2*qnice_length_i, 32));
 
    p_test : process
 
@@ -78,8 +49,8 @@ begin
          qnice_ce_o        <= '0';
       end procedure qnice_cpu_write;
 
-      procedure qnice_cpu_verify(addr : std_logic_vector(27 downto 0);
-                                 data : std_logic_vector(15 downto 0)) is
+      procedure qnice_cpu_read(addr : std_logic_vector(27 downto 0);
+                               data : out std_logic_vector(15 downto 0)) is
       begin
          qnice_addr_o      <= addr;
          qnice_we_o        <= '0';
@@ -88,28 +59,21 @@ begin
          while qnice_wait_i = '1' loop
             wait until falling_edge(qnice_clk_i);
          end loop;
-         assert qnice_readdata_i = data
-            report "ERROR: QNICE Reading from address " & to_hstring(addr) &
-               " returned " & to_hstring(qnice_readdata_i) & ", but expected " &
-               to_hstring(data)
-            severity error;
+         data              := qnice_readdata_i;
          qnice_ce_o        <= '0';
-      end procedure qnice_cpu_verify;
+      end procedure qnice_cpu_read;
 
-      procedure c64_cpu_verify(addr : std_logic_vector(15 downto 0);
-                               data : std_logic_vector( 7 downto 0)) is
+      procedure qnice_cpu_verify(addr : std_logic_vector(27 downto 0);
+                                 data : std_logic_vector(15 downto 0)) is
+         variable read_data_v : std_logic_vector(15 downto 0);
       begin
-         tb_ram_addr_o <= addr;
-         -- Wait 1 CPU cycle
-         for i in 31 downto 0 loop
-            wait until falling_edge(main_clk_i);
-         end loop;
-         assert tb_ram_data_i = data
-            report "ERROR: C64 Reading from address " & to_hstring(addr) &
-               " returned " & to_hstring(tb_ram_data_i) & ", but expected " &
+         qnice_cpu_read(addr, read_data_v);
+         assert read_data_v = data
+            report "ERROR: QNICE Reading from address " & to_hstring(addr) &
+               " returned " & to_hstring(read_data_v) & ", but expected " &
                to_hstring(data)
             severity error;
-      end procedure c64_cpu_verify;
+      end procedure qnice_cpu_verify;
 
       constant C_CRT_STATUS    : std_logic_vector(27 downto 0) := X"FFFF000";
       constant C_CRT_FS_LO     : std_logic_vector(27 downto 0) := X"FFFF001";
@@ -133,38 +97,63 @@ begin
       constant C_STAT_READY    : std_logic_vector(15 downto 0) := X"0002"; -- Successfully parsed CRT file
       constant C_STAT_ERROR    : std_logic_vector(15 downto 0) := X"0003"; -- Error parsing CRT file
 
+      constant C_ERROR_NONE           : std_logic_vector(3 downto 0) := "0000";
+      constant C_ERROR_NO_CRT_HDR     : std_logic_vector(3 downto 0) := "0001"; -- Missing CRT header
+      constant C_ERROR_NO_CHIP_HDR    : std_logic_vector(3 downto 0) := "0010"; -- Missing CHIP header
+      constant C_ERROR_WRONG_CRT_HDR  : std_logic_vector(3 downto 0) := "0011"; -- Wrong CRT header
+      constant C_ERROR_WRONG_CHIP_HDR : std_logic_vector(3 downto 0) := "0100"; -- Wrong CHIP header
+      constant C_ERROR_TRUNCATED_CHIP : std_logic_vector(3 downto 0) := "0101"; -- Truncated CHIP
+
+      variable tmp             : std_logic_vector(15 downto 0);
+      variable tmp2            : std_logic_vector(15 downto 0);
+      variable s               : string(1 to 256);
+
    begin
 
-      tb_ram_addr_o <= (others => '0');
-      main_rst_o    <= '1';
-      qnice_ce_o    <= '0';
+      qnice_ce_o <= '0';
       wait until qnice_rst_i = '0';
       wait until falling_edge(qnice_clk_i);
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_IDLE);
 
       qnice_cpu_write(C_CRT_STATUS, C_CRT_ST_IDLE);
-      qnice_cpu_write(C_CRT_FS_LO,  tb_length(15 downto  0));
-      qnice_cpu_write(C_CRT_FS_HI,  tb_length(31 downto 16));
+      qnice_cpu_write(C_CRT_FS_LO,  qnice_length_i(15 downto  0));
+      qnice_cpu_write(C_CRT_FS_HI,  qnice_length_i(31 downto 16));
       qnice_cpu_write(C_CRT_STATUS, C_CRT_ST_OK);
       wait for 500 ns;
       wait until falling_edge(qnice_clk_i);
 
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_PARSING);
-      wait until tb_loading_i = '0';
-      wait until tb_bank_wait_i = '0';
 
-      qnice_cpu_verify(C_CRT_PARSEST, C_STAT_READY);
-      wait for 100 ns;
+      for i in 1 to 100 loop
+         qnice_cpu_read(C_CRT_PARSEST, tmp);
+         if tmp = C_STAT_READY then
+            report "Finished parsing CRT file";
+            exit;
+         end if;
+         if tmp = C_STAT_ERROR then
+            report "ERROR while parsing CRT file";
+            qnice_cpu_read(C_CRT_PARSEE1, tmp2);
+            report "CODE: " & to_hstring(tmp2);
+            for j in 0 to 255 loop
+               qnice_cpu_read(std_logic_vector(unsigned(C_CRT_ERR_START) + j), tmp2);
+               s(j+1) := character'val(to_integer(unsigned(tmp2(7 downto 0))));
+               if s(j+1) = '\' then
+                  s(j+1) := character'val(0);
+                  exit;
+               end if;
+            end loop;
+            report "STRING: " & s;
+            exit;
+         end if;
+         wait for 100 ns;
+      end loop;
 
-      main_rst_o <= '0';
-      wait for 2 us;
+      if tmp /= C_STAT_READY and tmp /= C_STAT_ERROR then
+         report "ERROR: Timeout waiting for CRT file parsing to complete";
+      end if;
 
-      c64_cpu_verify(X"FFFC", X"00");
-      c64_cpu_verify(X"FFFD", X"E0");
-      wait for 100 ns;
-
-      tb_running_o <= '0';
-      report "Test finished";
+      qnice_running_o <= '0';
+      report "QNICE finished";
       wait;
    end process p_test;
 
