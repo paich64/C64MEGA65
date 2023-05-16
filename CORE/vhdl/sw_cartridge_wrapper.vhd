@@ -497,12 +497,10 @@ begin
    -- Instantiate bank cache memory
    -------------------------------------------------------------
 
-   crt_lo_ram : entity work.dualport_2clk_ram
+   crt_lo_ram : entity work.tdp_ram
       generic map (
          ADDR_WIDTH => 12 + C_CACHE_SIZE,         -- 4 kW = 8 kB
-         DATA_WIDTH => 16,
-         FALLING_A  => false,
-         FALLING_B  => false
+         DATA_WIDTH => 16
       )
       port map (
          -- C64 MiSTer core
@@ -519,12 +517,10 @@ begin
          q_b        => open
       ); -- crt_lo_ram
 
-   crt_hi_ram : entity work.dualport_2clk_ram
+   crt_hi_ram : entity work.tdp_ram
       generic map (
          ADDR_WIDTH => 12 + C_CACHE_SIZE,         -- 4 kW = 8 kB
-         DATA_WIDTH => 16,
-         FALLING_A  => false,
-         FALLING_B  => false
+         DATA_WIDTH => 16
       )
       port map (
          -- C64 MiSTer core

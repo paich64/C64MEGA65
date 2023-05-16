@@ -50,6 +50,8 @@ architecture simulation of core_sim is
    signal main_romh            : std_logic;
    signal main_ioe             : std_logic;
    signal main_iof             : std_logic;
+   signal main_ioe_wr_ena      : std_logic;
+   signal main_iof_wr_ena      : std_logic;
    signal main_ram_data_to_c64 : std_logic_vector(7 downto 0);
    signal main_rom_readdata    : std_logic_vector(7 downto 0);
    signal main_ram_readdata    : std_logic_vector(7 downto 0);
@@ -57,6 +59,7 @@ architecture simulation of core_sim is
    signal main_io_rom          : std_logic;
    signal main_exrom           : std_logic;
    signal main_game            : std_logic;
+   signal main_ce              : std_logic := '0';
 
 begin
 
@@ -64,16 +67,21 @@ begin
                            main_lo_ram_data_i( 7 downto 0) when main_roml = '1' and main_ram_addr_o(0) = '0' else
                            main_hi_ram_data_i(15 downto 8) when main_romh = '1' and main_ram_addr_o(0) = '1' else
                            main_hi_ram_data_i( 7 downto 0) when main_romh = '1' and main_ram_addr_o(0) = '0' else
-                           main_ioe_ram_data_i             when main_ioe  = '1'                              else
-                           main_iof_ram_data_i             when main_iof  = '1'                              else
+                           main_lo_ram_data_i(15 downto 8) when main_ioe  = '1' and main_ram_addr_o(0) = '1' and main_ioe_wr_ena = '0' else
+                           main_lo_ram_data_i( 7 downto 0) when main_ioe  = '1' and main_ram_addr_o(0) = '0' and main_ioe_wr_ena = '0' else
+                           main_lo_ram_data_i(15 downto 8) when main_iof  = '1' and main_ram_addr_o(0) = '1' and main_iof_wr_ena = '0' else
+                           main_lo_ram_data_i( 7 downto 0) when main_iof  = '1' and main_ram_addr_o(0) = '0' and main_iof_wr_ena = '0' else
+                           main_ioe_ram_data_i             when main_ioe  = '1' and main_ioe_wr_ena = '1'     else
+                           main_iof_ram_data_i             when main_iof  = '1' and main_iof_wr_ena = '1'     else
                            main_rom_readdata               when main_ram_addr_o(15 downto 13) = "101"        else
                            main_rom_readdata               when main_ram_addr_o(15 downto 13) = "111"        else
+                           X"00"                           when main_ram_addr_o(15 downto 12) = "1101"       else
                            main_ram_readdata;
 
-   main_ioe_we_o   <= '0';
-   main_iof_we_o   <= '0';
-   main_ioe        <= '0';
-   main_iof        <= '0';
+   main_ioe        <= '1' when main_ram_addr_o(15 downto 8) = X"DE" else '0';
+   main_iof        <= '1' when main_ram_addr_o(15 downto 8) = X"DF" else '0';
+   main_ioe_we_o   <= main_ioe and main_wr_en;
+   main_iof_we_o   <= main_iof and main_wr_en;
 
    -- Simplified PLA
    main_roml <= '1' when main_ram_addr_o(15 downto 13) = "100"      -- 0x8000 - 0x9FFF
@@ -87,11 +95,13 @@ begin
                      and main_game = '0'
            else '0';
 
+   main_ce <= not main_ce when rising_edge(main_clk_i);
 
    i_cpu_65c02 : entity work.cpu_65c02
       port map (
          clk_i     => main_clk_i,
          rst_i     => main_rst_i or main_reset_core_i,
+         ce_i      => main_ce,
          nmi_i     => '0',
          irq_i     => '0',
          addr_o    => main_ram_addr_o,
@@ -113,6 +123,8 @@ begin
          cart_size_i    => main_size_i,
          ioe_i          => main_ioe,
          iof_i          => main_iof,
+         ioe_wr_ena_o   => main_ioe_wr_ena,
+         iof_wr_ena_o   => main_iof_wr_ena,
          wr_en_i        => main_wr_en,
          wr_data_i      => main_ram_data_o,
          addr_i         => main_ram_addr_o,
