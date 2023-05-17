@@ -542,12 +542,10 @@ begin
    -- Instantiate I/O memory
    -------------------------------------------------------------
 
-   ioe_ram : entity work.dualport_2clk_ram
+   ioe_ram : entity work.tdp_ram
       generic map (
          ADDR_WIDTH => 8,         -- 256 bytes
-         DATA_WIDTH => 8,
-         FALLING_A  => false,
-         FALLING_B  => false
+         DATA_WIDTH => 8
       )
       port map (
          -- C64 MiSTer core
@@ -564,12 +562,10 @@ begin
          q_b        => open
       ); -- ioe_ram
 
-   iof_ram : entity work.dualport_2clk_ram
+   iof_ram : entity work.tdp_ram
       generic map (
          ADDR_WIDTH => 8,         -- 256 bytes
-         DATA_WIDTH => 8,
-         FALLING_A  => false,
-         FALLING_B  => false
+         DATA_WIDTH => 8
       )
       port map (
          -- C64 MiSTer core

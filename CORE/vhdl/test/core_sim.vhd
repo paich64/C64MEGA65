@@ -101,7 +101,7 @@ begin
       port map (
          clk_i     => main_clk_i,
          rst_i     => main_rst_i or main_reset_core_i,
-         ce_i      => main_ce,
+         ce_i      => main_ce and not main_bank_wait_i,
          nmi_i     => '0',
          irq_i     => '0',
          addr_o    => main_ram_addr_o,
