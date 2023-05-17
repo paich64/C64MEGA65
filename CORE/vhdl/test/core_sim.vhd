@@ -55,6 +55,7 @@ architecture simulation of core_sim is
    signal main_ram_data_to_c64 : std_logic_vector(7 downto 0);
    signal main_rom_readdata    : std_logic_vector(7 downto 0);
    signal main_ram_readdata    : std_logic_vector(7 downto 0);
+   signal main_io_dxxx         : std_logic_vector(7 downto 0);
    signal main_wr_en           : std_logic;
    signal main_io_rom          : std_logic;
    signal main_exrom           : std_logic;
@@ -75,8 +76,11 @@ begin
                            main_iof_ram_data_i             when main_iof  = '1' and main_iof_wr_ena = '1'     else
                            main_rom_readdata               when main_ram_addr_o(15 downto 13) = "101"        else
                            main_rom_readdata               when main_ram_addr_o(15 downto 13) = "111"        else
-                           X"00"                           when main_ram_addr_o(15 downto 12) = "1101"       else
+                           main_io_dxxx                    when main_ram_addr_o(15 downto 12) = "1101"       else
                            main_ram_readdata;
+
+   main_io_dxxx <= X"FF" when main_ram_addr_o(11 downto 0) = X"C01" else
+                   X"00";
 
    main_ioe        <= '1' when main_ram_addr_o(15 downto 8) = X"DE" else '0';
    main_iof        <= '1' when main_ram_addr_o(15 downto 8) = X"DF" else '0';
