@@ -246,6 +246,9 @@ begin
                   file_header_length_v := bswap(wide_readdata(R_CRT_FILE_HEADER_LENGTH));
                   report "Detected cartridge ID: " &
                      to_string(to_integer(bswap(wide_readdata(R_CRT_CARTRIDGE_TYPE))));
+                  if file_header_length_v < X"00000040" then
+                     file_header_length_v := X"00000040";
+                  end if;
 
                   if end_address >= avm_address_o + file_header_length_v(22 downto 1) + X"08" then
                      -- Read 0x10 bytes from CHIP header

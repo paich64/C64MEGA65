@@ -35,8 +35,8 @@ entity cartridge is
       bank_hi_o      : out std_logic_vector( 6 downto 0);
 
       -- To C64
-      ioe_wr_ena_o   : out std_logic;
-      iof_wr_ena_o   : out std_logic;
+      ioe_wr_ena_o   : out std_logic; -- 1: $DExx contains RAM, 0: $DExx read mirrors $9Exx
+      iof_wr_ena_o   : out std_logic; -- 1: $DFxx contains RAM, 0: $DFxx read mirrors $9Fxx
       io_rom_o       : out std_logic;
       io_ext_o       : out std_logic;
       io_data_o      : out std_logic_vector(7 downto 0);
@@ -57,6 +57,7 @@ architecture synthesis of cartridge is
    signal saved_d6     : std_logic;
    signal ioe_ena      : std_logic;
    signal iof_ena      : std_logic;
+   signal roml_we      : std_logic; -- TBD
 
    signal old_freeze   : std_logic := '0';
    signal old_nmiack   : std_logic := '0';
@@ -138,6 +139,52 @@ begin
                exrom_o   <= cart_exrom_i(0);
                bank_lo_o <= (others => '0');
                bank_hi_o <= (others => '0');
+
+            when 1 =>
+               -- Action Replay v4+ - (32k 4x8k banks + 8K RAM)
+               -- controlled by DE00
+               if nmi_o = '1' then
+                  allow_freeze <= '0';
+               end if;
+               if cart_disable = '1' then
+                  exrom_o      <= '1';
+                  game_o       <= '1';
+                  iof_ena      <= '0';
+                  iof_wr_ena_o <= '0';
+                  roml_we      <= '0';
+                  allow_freeze <= '1';
+               else
+                  if ioe_i = '1' and wr_en_i = '1' then
+                     cart_disable <= wr_data_i(2);
+                     bank_lo_o    <= "00000" & wr_data_i(4 downto 3);
+                     bank_hi_o    <= "00000" & wr_data_i(4 downto 3);
+
+                     if wr_data_i(6) or allow_freeze then
+                        allow_freeze <= '1';
+                        game_o       <= not wr_data_i(0);
+                        exrom_o      <= wr_data_i(1);
+                        iof_wr_ena_o <= wr_data_i(5);
+                        roml_we      <= wr_data_i(5);
+                        if wr_data_i(5) then
+                           bank_lo_o <= (others => '0');
+                        end if;
+                     end if;
+                  end if;
+               end if;
+               if cart_loading_i = '1' or freeze_crt = '1' then
+                  cart_disable <= '0';
+                  exrom_o      <= '1';
+                  game_o       <= '0';
+                  roml_we      <= '0';
+                  bank_lo_o    <= (others => '0');
+                  bank_hi_o    <= (others => '0');
+                  iof_wr_ena_o <= '0';
+                  iof_ena      <= '1';
+                  if cart_loading_i = '1' then
+                     exrom_o <= '0';
+                     game_o  <= '1';
+                  end if;
+               end if;
 
             when 3 =>
                -- Final Cart III - (64k 4x16k banks)

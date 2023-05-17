@@ -34,7 +34,8 @@ SRC += qnice_sim.vhd
 SRC += core_sim.vhd
 
 #CRT_FILE = Super_Mario_Bros_64_v1.2_-_Zeropaige.crt
-CRT_FILE = Final_Cartridge_III,_The_\(USA,_Europe\)_\(May_88\)_\(Program\).crt
+#CRT_FILE = Final_Cartridge_III,_The_\(USA,_Europe\)_\(May_88\)_\(Program\).crt
+CRT_FILE = ar4.crt
 CRT_DIR  = $(HOME)/Downloads
 
 
@@ -53,7 +54,7 @@ XPM_TOP_DIR = ../../../../../fransschreuder/xpm_vhdl
 sim: $(SRC) xpm-obj08.cf
 	ghdl -i --std=08 --work=work $(SRC)
 	ghdl -m --std=08 -fexplicit $(TB)
-	ghdl -r --std=08 $(TB) $(GENERIC) --assert-level=error --wave=$(WAVE) --max-stack-alloc=2097151 --stop-time=3000us
+	ghdl -r --std=08 $(TB) $(GENERIC) --assert-level=error --wave=$(WAVE) --max-stack-alloc=2097151 --stop-time=3000us | tee output.txt
 
 xpm-obj08.cf:
 	ghdl -a --work=xpm --std=08 ${XPM_TOP_DIR}/src/xpm/xpm_VCOMP.vhd

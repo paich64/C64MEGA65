@@ -106,6 +106,7 @@ begin
 
       variable tmp             : std_logic_vector(15 downto 0);
       variable tmp2            : std_logic_vector(15 downto 0);
+      variable error_address   : std_logic_vector(31 downto 0);
       variable s               : string(1 to 256);
 
    begin
@@ -119,7 +120,7 @@ begin
       qnice_cpu_write(C_CRT_FS_LO,  qnice_length_i(15 downto  0));
       qnice_cpu_write(C_CRT_FS_HI,  qnice_length_i(31 downto 16));
       qnice_cpu_write(C_CRT_STATUS, C_CRT_ST_OK);
-      wait for 500 ns;
+      wait for 100 ns;
       wait until falling_edge(qnice_clk_i);
 
       qnice_cpu_verify(C_CRT_PARSEST, C_STAT_PARSING);
@@ -143,6 +144,9 @@ begin
                end if;
             end loop;
             report "STRING: " & s;
+            qnice_cpu_read(C_CRT_ADDR_LO, error_address(15 downto  0));
+            qnice_cpu_read(C_CRT_ADDR_HI, error_address(31 downto 16));
+            report "ADDRESS: " & to_hstring(error_address);
             exit;
          end if;
          wait for 100 ns;
