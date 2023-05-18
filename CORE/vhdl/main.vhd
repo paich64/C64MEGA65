@@ -302,6 +302,9 @@ architecture synthesis of main is
    signal cart_exrom_n         : std_logic;
    signal cart_game_n          : std_logic;
    signal data_from_cart       : unsigned(7 downto 0);
+   
+   constant C_CART_RESET_LEN   : natural := 32;
+   signal cart_reset_counter   : natural range 0 to C_CART_RESET_LEN;  
 
    -- RAM Expansion Unit (REU)
    signal reu_cfg              : std_logic_vector(1 downto 0);
@@ -439,6 +442,7 @@ architecture synthesis of main is
    attribute mark_debug of reset_hard_i           : signal is "true";
    attribute mark_debug of reset_soft_i           : signal is "true";
    attribute mark_debug of restore_key_n          : signal is "true";
+   attribute mark_debug of cart_reset_counter     : signal is "true";
 
 begin
 
@@ -464,7 +468,7 @@ begin
    hard_reset : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         if reset_soft_i or reset_hard_i then
+         if reset_soft_i = '1' or reset_hard_i = '1' or cart_reset_counter /= 0 then
             hard_rst_counter  <= hard_rst_delay;
 
             -- reset_core_n is low-active, so prevent_reset = 0 means execute reset
@@ -736,7 +740,7 @@ begin
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
 
-         cart_reset_o      <= reset_core_n;
+         cart_reset_o      <= reset_core_n when cart_reset_counter = 0 else '1';
          cart_dotclock_o   <= core_dotclk;
 
          cart_nmi_n        <= cart_nmi_i;
@@ -821,6 +825,21 @@ begin
          when others =>
             null;
       end case;
+   end process;
+   
+   -- Cartridge-specific workaround due to the fact, that R3 and R3A board do not allow cartridges to pull the reset line to low (i.e. trigger a reset)
+   handle_cartridge_triggered_resets : process (clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         -- we cannot use reset_core_n here because as soon as cart_reset_counter 
+         if reset_soft_i or reset_hard_i then
+            cart_reset_counter <= 0;  
+         elsif cart_reset_counter = 0 and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" and c64_ram_data_o = x"00" then
+            cart_reset_counter <= C_CART_RESET_LEN;
+         elsif cart_reset_counter > 0 then
+            cart_reset_counter <= cart_reset_counter - 1;
+         end if;
+      end if;
    end process;
 
    --------------------------------------------------------------------------------------------------
