@@ -305,6 +305,7 @@ architecture synthesis of main is
    
    constant C_CART_RESET_LEN   : natural := 32;
    signal cart_reset_counter   : natural range 0 to C_CART_RESET_LEN;  
+   signal cart_is_an_EF3_standard : std_logic;
 
    -- RAM Expansion Unit (REU)
    signal reu_cfg              : std_logic_vector(1 downto 0);
@@ -331,6 +332,7 @@ architecture synthesis of main is
    signal crt_nmi              : std_logic;
    signal crt_exrom            : std_logic;
    signal crt_game             : std_logic;
+
 
    signal dbg_joybtn           : std_logic;
    signal dbg_cart_dir         : std_logic;
@@ -826,6 +828,20 @@ begin
             null;
       end case;
    end process;
+
+   i_cartridge_heuristics : entity work.cartridge_heuristics
+      port map (
+         clk_main_i           => clk_main_i,
+         reset_core_n_i       => reset_core_n,
+         cart_exrom_n_i       => cart_exrom_n,
+         cart_game_n_i        => cart_game_n,
+         cart_io1_i           => cart_io1_n,
+         cart_io2_i           => cart_io2_n,
+         c64_ram_we_i         => c64_ram_we,
+         c64_ram_addr_i       => std_logic_vector(c64_ram_addr_o),
+         phi2_i               => core_phi2,
+         is_an_EF3_standard_o => cart_is_an_EF3_standard
+      ); -- i_cartridge_heuristics
    
    -- Cartridge-specific workaround due to the fact, that R3 and R3A board do not allow cartridges to pull the reset line to low (i.e. trigger a reset)
    handle_cartridge_triggered_resets : process (clk_main_i)
@@ -834,7 +850,8 @@ begin
          -- we cannot use reset_core_n here because as soon as cart_reset_counter 
          if reset_soft_i or reset_hard_i then
             cart_reset_counter <= 0;  
-         elsif cart_reset_counter = 0 and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" and c64_ram_data_o = x"00" then
+         elsif cart_reset_counter = 0 and cart_is_an_EF3_standard = '1' and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" and c64_ram_data_o = x"00" then
+
             cart_reset_counter <= C_CART_RESET_LEN;
          elsif cart_reset_counter > 0 then
             cart_reset_counter <= cart_reset_counter - 1;
