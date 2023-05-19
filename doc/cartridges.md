@@ -39,11 +39,11 @@ while the MEGA65 can simulate cartridges using `*.crt` files that you can
 store on and load from your SD card? The answer is, that a simulation is never
 as perfect as real hardware: We use the MEGA65's HyperRAM to store the data
 from the `*.crt` files when we simulate the cartridge. While this works very
-well in more than 99% of the cases, the constraints of the HyperRAM (for example
-its latency) can lead to undesired artefacts when playing simulated cartridges: We
-actually need to halt the CPU for a short period of time, each time the cartridge
-does a bank switch. Most of the time you won't notice, but as said, there can be
-unintended consequences.
+well in more than 99% of the cases, the constraints of the HyperRAM (for
+example its latency) can lead to undesired artefacts when playing simulated
+cartridges: We actually need to halt the CPU for a short period of time, each
+time the cartridge does a bank switch. Most of the time you won't notice, but
+as said, there can be unintended consequences.
 
 So for a 100% glitch-free retro experience, you might want to use real
 hardware, i.e. real Flash Cartridges.
@@ -72,7 +72,7 @@ FD-2000 or an
 device may be useful. For smaller drives EasySplit can be used to compress
 and split large cartridge images."
 
-Learn more about EasyFlash on the
+Learn more about the EasyFlash on the
 [C64 Wiki](https://www.c64-wiki.com/wiki/EasyFlash). 
 
 Using the our C64 core, your MEGA65 is able to flash EasyFlash
@@ -99,7 +99,7 @@ to find an order form. Here are some important considerations:
   change in future.)
 
 * We highly recommend that you buy fully assembled cartridges to ensure
-  that they actually work on your MEGA65.
+  that they actually work in your MEGA65.
   
 * You need a case for the cartridge. The easiest way to obtain one is to
   order it from Dani&euml;l's website together with your Easy Flash 1CR.
@@ -138,59 +138,91 @@ files into multiple `*.d64` files.
 
 #### Adjusting the case for being able to re-flash any time
 
+After you flashed the EF 1CR for the first time, the built-in flasher is gone
+and replaced by the game you flashed. If you want to re-flash at a later stage
+you need to either use a screwdriver, open the case, move the switch to the
+PROG position, close the case again, start the MEGA65 while the cartridge
+is inserted, re-flash using
+[preferably this version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/develop/doc/assets/easyprog-dm.prg),
+open the cartridge case with a screwdriver again, move the switch back to the
+BOOT position, close the case again and you are good to go. CAUTION: Do not
+fall for the temptation to not use the plastic case! See above, very first
+headline of this file.
+
+As this is obviously a onerous workflow, we recommend that you cut or drill
+some holes into the EF 1CR's case. Here are two examples from the MEGA65
+team:
+
 | Lydon's Example                  | sy2002's Example                  |
 |----------------------------------|-----------------------------------|
 | ![](assets/ef1cr-case-lydon.jpg) | ![](assets/ef1cr-case-sy2002.jpg) |
 
-
-==============================================================================
-
-Cases:
-
-TFW8-bit
-https://www.thefuturewas8bit.com/c64romcart.html
-
-Protoparts
-https://www.protoparts.at/product-category/gehaeuse/
-
-Buy original cartridges from our friends at
-
-aslödk qöldk qöldk qöldk qwöldk qwöldkqwöldk qwöldk qölwdk qölwkdqlödkqwöldkq
-kj dqlkwjd lkqdj klqwj dlqkwj dlkqj dklqwj dklqwj dlkqwjdlkqwj dklqj dqklwjd
-qwlkdj qkldjlkqwdj qkl djlkqwj dklqwj dklqwj dlkqj dklqj dklqwj dkqlj.
-
-
-
-qwdjklqw djlqkwj dlkqjd lqkwj dlkqwj dklqj dlqkwjd qklwjd wqlkjd qlkwjd lkqjw
-qwdölk qwökd öqlwk.
-
-
-
-How to use
-...incl updating core 0 or plugging in while the MEGA65 is on
-
-...warning: Through hole version vs. SMD version
-
-Important info about cases
-
-How to flash
-
-... using EasySplit and D64 disks
-
-... using an SD2IEC or other IEC devices that can hold large CRTs
-
-Technical info
+[This version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/develop/doc/assets/easyprog-dm.prg)
+is from the creator of the EF 1CR and is recommended for re-flashing the
+EF 1CR. You can also use
+[EasyProg 1.8.1 or newer](https://github.com/KimJorgensen/easyflash/releases).
 
 EasyFlash 3
-===========
+-----------
 
-TODO LIST
-=========
+The EasyFlash 3 (EF3) is quite a beast: It sports seven 1MB slots for game and
+application cartridges. Each of these slots represents a full-featured EF1
+cartridge. Additionally it can replace the internal Kernal with one of up to
+eight Kernals saved in the cartridge. The EF3 can also run freezer cartridge
+images such as Action Replay, Retro Replay, Nordic Power / Atomic Power and
+Super Snapshot 5. Learn more
+[here](http://skoe.de/easyflash/ef3intro/).
 
-Kungfu (?)
-The Final Cartridge III
-Action Replay (?)
+### Usage
+
+The EF3 works very well with the C64 core and your MEGA65: You can flash
+the EF3 using the built-in flasher (optionally also in conjunction with large
+IEC storage devices such as the
+[SD2IEC](https://www.ncsystems.eu/)) and then you can use the EF3 normally.
+You can even do advanced things as
+[updating the EF3's firmware](http://skoe.de/easyflash/ef3update/)
+even though you normally should not need to do this at all.
+
+When you start the MEGA65 with an EF3 in your Expansion Port, you will land
+in the EF3's start menu. Press the "Special" button to go to BASIC and press
+the "Menu" button (our reset your MEGA65) to return to the menu.
+
+@TODO: WIP Special Button
+
+@TODO: WIP Menu Button
+
+@TODO: WIP Kernal and Freezers
+
+### Known issue: Reset button
+
+The reset button does not work. The reason is that the MEGA65's R3 and R3A
+board's electronic cannot sense the reset signal of any cartridge inserted
+into the Expansion Port.
+
+Kung Fu Flash
+-------------
+
+WORK IN PROGRESS
+
+Utility Cartridges that are known to work
+-----------------------------------------
+
+* Action Replay
+* Epyx Fast Load
+* Final Cartridge III
+* PowerCartridge
+* Super Snapshot
+
+### Known issue: Reset button
+
+The reset button does not work. The reason is that the MEGA65's R3 and R3A
+board's electronic cannot sense the reset signal of any cartridge inserted
+into the Expansion Port.
+
 GeoRAM
+------
+
+WORK IN PROGRESS
 
 CORE #0 Notes
 -------------

@@ -305,7 +305,7 @@ architecture synthesis of main is
    
    constant C_CART_RESET_LEN   : natural := 32;
    signal cart_reset_counter   : natural range 0 to C_CART_RESET_LEN;  
-   signal cart_is_an_EF3_standard : std_logic;
+   signal cart_is_an_EF3       : std_logic;
 
    -- RAM Expansion Unit (REU)
    signal reu_cfg              : std_logic_vector(1 downto 0);
@@ -835,12 +835,12 @@ begin
          reset_core_n_i       => reset_core_n,
          cart_exrom_n_i       => cart_exrom_n,
          cart_game_n_i        => cart_game_n,
-         cart_io1_i           => cart_io1_n,
-         cart_io2_i           => cart_io2_n,
+         cart_io1_n_i         => cart_io1_n,
+         cart_io2_n_i         => cart_io2_n,
          c64_ram_we_i         => c64_ram_we,
          c64_ram_addr_i       => std_logic_vector(c64_ram_addr_o),
          phi2_i               => core_phi2,
-         is_an_EF3_standard_o => cart_is_an_EF3_standard
+         is_an_EF3_o          => cart_is_an_EF3
       ); -- i_cartridge_heuristics
    
    -- Cartridge-specific workaround due to the fact, that R3 and R3A board do not allow cartridges to pull the reset line to low (i.e. trigger a reset)
@@ -849,10 +849,19 @@ begin
       if rising_edge(clk_main_i) then
          -- we cannot use reset_core_n here because as soon as cart_reset_counter 
          if reset_soft_i or reset_hard_i then
-            cart_reset_counter <= 0;  
-         elsif cart_reset_counter = 0 and cart_is_an_EF3_standard = '1' and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" and c64_ram_data_o = x"00" then
+            cart_reset_counter <= 0;
+            
+         -- EasyFlash 3: The EF3 needs to send a reset signal to the C64 core
+         -- Learn more about the exact mechanics here: https://github.com/MJoergen/C64MEGA65/issues/60
+         -- And/or look at the EF3 source code:
+         --   What happens when "start-entry" key is pressed in the main menu: https://gitlab.com/easyflash/easyflash3-bootimage/-/blob/master/efmenu/src/efmenu.c#L361
+         --   Set the EF ROM bank and change to the given cartridge mode: https://gitlab.com/easyflash/easyflash3-bootimage/-/blob/master/efmenu/src/efmenu_asm.s#L96
+         elsif cart_reset_counter = 0 and cart_is_an_EF3 = '1' and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" then
+            -- Modes that lead to a reset: https://gitlab.com/easyflash/easyflash3-core/-/blob/master/src/ef3.vhdl#L695
+            if c64_ram_data_o = x"00" or c64_ram_data_o = x"02" or (c64_ram_data_o >= x"04" and c64_ram_data_o <= x"07") then
+               cart_reset_counter <= C_CART_RESET_LEN;
+            end if;
 
-            cart_reset_counter <= C_CART_RESET_LEN;
          elsif cart_reset_counter > 0 then
             cart_reset_counter <= cart_reset_counter - 1;
          end if;
