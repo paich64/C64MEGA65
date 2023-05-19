@@ -178,7 +178,8 @@ Super Snapshot 5. Learn more
 The EF3 works very well with the C64 core and your MEGA65: You can flash
 the EF3 using the built-in flasher (optionally also in conjunction with large
 IEC storage devices such as the
-[SD2IEC](https://www.ncsystems.eu/)) and then you can use the EF3 normally.
+[SD2IEC](https://www.ncsystems.eu/)) and then you can use the EF3 normally
+to play games and run other software from the seven 1MB standard slots.
 You can even do advanced things as
 [updating the EF3's firmware](http://skoe.de/easyflash/ef3update/)
 even though you normally should not need to do this at all.
@@ -191,7 +192,20 @@ the "Menu" button (our reset your MEGA65) to return to the menu.
 
 @TODO: WIP Menu Button
 
-@TODO: WIP Kernal and Freezers
+@TODO: Freezers
+
+### Known issue: Kernal mode is not supported
+
+We are deliberately not supporting the Kernal mode of the EF3, because in
+Kernal mode, the EF3 manipulates the address line A14, i.e. it pulls at this
+address line while the C64 core might be doing the opposite at this moment.
+The way how the MEGA65's hardware is built leads to a clash in such a
+situation which might either harm the MEGA65 or the EF3.
+
+For making sure that you're always on the safe side when using the EF3, we
+deactivated the Kernal mode. You will notice that the border of your screen
+is flickering if you try to enter the Kernal mode. This is the safe state,
+nothing bad happens here. Just press reset to try something else.
 
 ### Known issue: Reset button
 
