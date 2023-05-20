@@ -301,9 +301,7 @@ architecture synthesis of main is
    signal core_io_ext          : std_logic;
    signal core_io_data         : unsigned(7 downto 0);
    signal core_dotclk          : std_logic;
-   signal core_phi0            : std_logic;
    signal core_phi2            : std_logic;
-   signal core_phi2_d          : std_logic;
    signal core_phi2_prev       : std_logic;
    signal cartridge_bank_raddr : std_logic_vector(24 downto 0);
 
@@ -588,7 +586,7 @@ begin
          IOE         => core_ioe,         -- output. aka IO1. CPU access to 0xDExx
          IOF         => core_iof,         -- output. aka IO2. CPU access to 0xDFxx
          dotclk      => core_dotclk,      -- output
-         phi0        => core_phi0,        -- output
+         phi0        => open,             -- output
          phi2        => core_phi2,        -- output
 --         freeze_key  => open,
 --         mod_key     => open,
@@ -667,18 +665,6 @@ begin
    --    * Simulateed cartridge using data from .crt file
    --------------------------------------------------------------------------------------------------
 
-   delay_phi2 : process(clk_main_i)
-   begin
-      if rising_edge(clk_main_i) then
-         if c64_exp_port_mode_i = 0 then
-            core_phi2_d       <= core_phi2;
-            cart_phi2_o       <= core_phi2_d;
-         else
-            cart_phi2_o       <= '0';
-         end if;
-      end if;
-   end process;
-
    handle_hardware_expansion_port : process(all)
    begin
       -- C64 Expansion Port (aka Cartridge Port) control lines
@@ -705,6 +691,7 @@ begin
       cart_io2_io          <= 'Z';
       cart_ba_io           <= 'Z';
       cart_rw_io           <= 'Z';
+      cart_phi2_o          <= '0';
       cart_reset_o         <= '1';
       cart_dotclock_o      <= '0';
       cart_nmi_n           <= '1';
@@ -730,8 +717,13 @@ begin
          cart_romh_io      <= cart_romh_n;
          cart_io1_io       <= cart_io1_n;
          cart_io2_io       <= cart_io2_n;
-         cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
+         cart_phi2_o       <= core_phi2;
+         
+         -- @TODO: When implementing this, we need to perform more research. It seems that just using
+         -- the C64 cores's "cpuHasBus" signal leads to less compatibility than more. For example it
+         -- seemed, that the Kung Fu Flash is not working at all any more.
+         cart_ba_io        <= '1';         
 
          cart_reset_o      <= reset_core_n when cart_reset_counter = 0 and cart_res_flckr_ign = 0 else '1';
          cart_dotclock_o   <= core_dotclk;
@@ -821,6 +813,7 @@ begin
       end case;
    end process;
 
+   -- Detect certain hardware cartridges that need a special treatment due to unidirectional reset, irq or nmi signals
    i_cartridge_heuristics : entity work.cartridge_heuristics
       port map (
          clk_main_i           => clk_main_i,
