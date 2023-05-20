@@ -868,7 +868,7 @@ begin
             -- While we could emulate the behavior on our side of the transciever, the problem is, that the transciever and the EF3 would fight" against
             -- each other: There might be situations where the core sets A14 to zero while the EF3 sets it to one and this "fight" would lead to quite
             -- some current flowing which might damage either the MEGA65's transciever or the EF3's CPLD or other logic parts.
-            if c64_ram_data_o = x"00" or c64_ram_data_o = x"04" or c64_ram_data_o <= x"05" or c64_ram_data_o = x"07" then
+            if c64_ram_data_o = x"00" or c64_ram_data_o = x"04" or c64_ram_data_o = x"05" or c64_ram_data_o = x"07" then
                cart_reset_counter <= C_CART_RESET_LEN;
                cart_res_flckr_ign <= 2; -- avoid a short cart_reset_o after cart_reset_counter reached zero
             end if;
