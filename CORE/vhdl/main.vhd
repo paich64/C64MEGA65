@@ -289,6 +289,7 @@ architecture synthesis of main is
    signal core_phi0            : std_logic;
    signal core_phi2            : std_logic;
    signal core_phi2_d          : std_logic;
+   signal core_phi2_prev       : std_logic;
    signal cartridge_bank_raddr : std_logic_vector(24 downto 0);
 
    -- Hardware Expansion Port (aka Cartridge Port)
@@ -303,8 +304,9 @@ architecture synthesis of main is
    signal cart_game_n          : std_logic;
    signal data_from_cart       : unsigned(7 downto 0);
    
-   constant C_CART_RESET_LEN   : natural := 32;
-   signal cart_reset_counter   : natural range 0 to C_CART_RESET_LEN;
+   -- Hardware Expansion Port: Handle specifics of certain cartridges
+   constant C_EF3_RESET_LEN    : natural := 7;           -- measured in phi2 cycles
+   signal cart_reset_counter   : natural range 0 to C_EF3_RESET_LEN;
    signal cart_res_flckr_ign   : natural range 0 to 2;   -- avoid a short cart_reset_o after cart_reset_counter reached zero
    signal cart_is_an_EF3       : std_logic;
 
@@ -848,10 +850,23 @@ begin
    handle_cartridge_triggered_resets : process (clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         -- we cannot use reset_core_n here because as soon as cart_reset_counter 
+         core_phi2_prev <= core_phi2;
+      
+         -- We cannot use reset_core_n here because as soon as cart_reset_counter is > 0 reset_core_n goes low
+         -- and then cart_reset_counter would be reset back to 0 prematurely 
          if reset_soft_i or reset_hard_i then
             cart_reset_counter <= 0;
             cart_res_flckr_ign <= 0;
+            
+         -- The reset duration is measured in multiples of phi2 cycles
+         elsif cart_reset_counter > 0 and core_phi2_prev = '1' and core_phi2 = '0' then
+            cart_reset_counter <= cart_reset_counter - 1;
+         end if;
+         
+         -- Avoid the "flickering" (trailing) output of the reset to the cartridge after reset_core_n goes high again after the reset
+         if reset_core_n = '0' and cart_reset_counter = 0 and cart_res_flckr_ign /= 0 then
+            cart_res_flckr_ign <= cart_res_flckr_ign - 1;
+         end if;
             
          -------------------------------------------------------------------------------------------------
          -- EasyFlash 3
@@ -862,23 +877,16 @@ begin
          -- And/or look at the EF3 source code:
          --   What happens when "start-entry" key is pressed in the main menu: https://gitlab.com/easyflash/easyflash3-bootimage/-/blob/master/efmenu/src/efmenu.c#L361
          --   Set the EF ROM bank and change to the given cartridge mode: https://gitlab.com/easyflash/easyflash3-bootimage/-/blob/master/efmenu/src/efmenu_asm.s#L96
-         elsif cart_reset_counter = 0 and cart_is_an_EF3 = '1' and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" then
+         if cart_is_an_EF3 = '1' and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" then
             -- Modes that lead to a reset: https://gitlab.com/easyflash/easyflash3-core/-/blob/master/src/ef3.vhdl#L695
             -- We are deliberately not supporting the Kernal mode x"02" of the EF3, because in Kernal mode, the EF3 manipulates the address line A14.
             -- While we could emulate the behavior on our side of the transciever, the problem is, that the transciever and the EF3 would fight" against
             -- each other: There might be situations where the core sets A14 to zero while the EF3 sets it to one and this "fight" would lead to quite
             -- some current flowing which might damage either the MEGA65's transciever or the EF3's CPLD or other logic parts.
             if c64_ram_data_o = x"00" or c64_ram_data_o = x"04" or c64_ram_data_o = x"05" or c64_ram_data_o = x"07" then
-               cart_reset_counter <= C_CART_RESET_LEN;
+               cart_reset_counter <= C_EF3_RESET_LEN;
                cart_res_flckr_ign <= 2; -- avoid a short cart_reset_o after cart_reset_counter reached zero
             end if;
-
-         elsif cart_reset_counter > 0 then
-            cart_reset_counter <= cart_reset_counter - 1;
-         end if;
-         
-         if reset_core_n = '0' and cart_reset_counter = 0 and cart_res_flckr_ign /= 0 then
-            cart_res_flckr_ign <= cart_res_flckr_ign - 1;
          end if;
       end if;
    end process;
