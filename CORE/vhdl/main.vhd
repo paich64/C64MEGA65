@@ -279,7 +279,7 @@ architecture synthesis of main is
    signal video_ce             : std_logic_vector(1 downto 0);
 
    -- Hard reset handling
-   constant hard_rst_delay     : natural := 100_000; -- roundabout 1/30 of a second
+   constant C_HARD_RST_DELAY   : natural := 100_000; -- roundabout 1/30 of a second
    signal reset_core_n         : std_logic;
    signal hard_reset_n         : std_logic;
    signal hard_rst_counter     : natural := 0;
@@ -304,6 +304,7 @@ architecture synthesis of main is
    signal core_phi0            : std_logic;
    signal core_phi2            : std_logic;
    signal core_phi2_d          : std_logic;
+   signal core_phi2_prev       : std_logic;
    signal cartridge_bank_raddr : std_logic_vector(24 downto 0);
 
    -- Hardware Expansion Port (aka Cartridge Port)
@@ -317,6 +318,12 @@ architecture synthesis of main is
    signal cart_exrom_n         : std_logic;
    signal cart_game_n          : std_logic;
    signal data_from_cart       : unsigned(7 downto 0);
+   
+   -- Hardware Expansion Port: Handle specifics of certain cartridges
+   constant C_EF3_RESET_LEN    : natural := 7;           -- measured in phi2 cycles
+   signal cart_reset_counter   : natural range 0 to C_EF3_RESET_LEN;
+   signal cart_res_flckr_ign   : natural range 0 to 2;   -- avoid a short cart_reset_o after cart_reset_counter reached zero
+   signal cart_is_an_EF3       : std_logic;
 
    -- RAM Expansion Unit (REU)
    signal reu_cfg              : std_logic_vector(1 downto 0);
@@ -340,6 +347,7 @@ architecture synthesis of main is
    signal crt_nmi              : std_logic;
    signal crt_ioe_wr_ena       : std_logic;
    signal crt_iof_wr_ena       : std_logic;
+
 
    signal dbg_joybtn           : std_logic;
    signal dbg_cart_dir         : std_logic;
@@ -416,6 +424,7 @@ architecture synthesis of main is
    attribute mark_debug of reset_hard_i           : signal is "true";
    attribute mark_debug of reset_soft_i           : signal is "true";
    attribute mark_debug of restore_key_n          : signal is "true";
+   attribute mark_debug of cart_reset_counter     : signal is "true";
 
 begin
 
@@ -441,8 +450,8 @@ begin
    hard_reset : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         if reset_soft_i or reset_hard_i then
-            hard_rst_counter  <= hard_rst_delay;
+         if reset_soft_i = '1' or reset_hard_i = '1' or cart_reset_counter /= 0 then
+            hard_rst_counter  <= C_HARD_RST_DELAY;
 
             -- reset_core_n is low-active, so prevent_reset = 0 means execute reset
             -- but a hard reset can override
@@ -466,7 +475,7 @@ begin
    handle_cold_start : process(clk_main_i)
    begin
       if rising_edge(clk_main_i) then
-         if hard_reset_n = '0' and hard_rst_counter = hard_rst_delay and (system_cold_start = 4 or system_cold_start = 2) then
+         if hard_reset_n = '0' and hard_rst_counter = C_HARD_RST_DELAY and (system_cold_start = 4 or system_cold_start = 2) then
             system_cold_start <= system_cold_start - 1;
          elsif hard_reset_n = '1' and hard_rst_counter = 0 and (system_cold_start = 3  or system_cold_start = 1) then
             system_cold_start <= system_cold_start - 1;
@@ -724,7 +733,7 @@ begin
          cart_ba_io        <= '1';              -- @TODO
          cart_rw_io        <= not c64_ram_we;
 
-         cart_reset_o      <= reset_core_n;
+         cart_reset_o      <= reset_core_n when cart_reset_counter = 0 and cart_res_flckr_ign = 0 else '1';
          cart_dotclock_o   <= core_dotclk;
 
          cart_nmi_n        <= cart_nmi_i;
@@ -810,6 +819,65 @@ begin
          when others =>
             null;
       end case;
+   end process;
+
+   i_cartridge_heuristics : entity work.cartridge_heuristics
+      port map (
+         clk_main_i           => clk_main_i,
+         reset_core_n_i       => reset_core_n,
+         cart_exrom_n_i       => cart_exrom_n,
+         cart_game_n_i        => cart_game_n,
+         cart_io1_n_i         => cart_io1_n,
+         cart_io2_n_i         => cart_io2_n,
+         c64_ram_we_i         => c64_ram_we,
+         c64_ram_addr_i       => std_logic_vector(c64_ram_addr_o),
+         phi2_i               => core_phi2,
+         is_an_EF3_o          => cart_is_an_EF3
+      ); -- i_cartridge_heuristics
+   
+   -- Cartridge-specific workaround due to the fact, that R3 and R3A board do not allow cartridges to pull the reset line to low (i.e. trigger a reset)
+   handle_cartridge_triggered_resets : process (clk_main_i)
+   begin
+      if rising_edge(clk_main_i) then
+         core_phi2_prev <= core_phi2;
+      
+         -- We cannot use reset_core_n here because as soon as cart_reset_counter is > 0 reset_core_n goes low
+         -- and then cart_reset_counter would be reset back to 0 prematurely 
+         if reset_soft_i or reset_hard_i then
+            cart_reset_counter <= 0;
+            cart_res_flckr_ign <= 0;
+            
+         -- The reset duration is measured in multiples of phi2 cycles
+         elsif cart_reset_counter > 0 and core_phi2_prev = '1' and core_phi2 = '0' then
+            cart_reset_counter <= cart_reset_counter - 1;
+         end if;
+         
+         -- Avoid the "flickering" (trailing) output of the reset to the cartridge after reset_core_n goes high again after the reset
+         if reset_core_n = '0' and cart_reset_counter = 0 and cart_res_flckr_ign /= 0 then
+            cart_res_flckr_ign <= cart_res_flckr_ign - 1;
+         end if;
+            
+         -------------------------------------------------------------------------------------------------
+         -- EasyFlash 3
+         -------------------------------------------------------------------------------------------------
+         
+         -- The EF3 needs to send a reset signal to the C64 core
+         -- Learn more about the exact mechanics here: https://github.com/MJoergen/C64MEGA65/issues/60
+         -- And/or look at the EF3 source code:
+         --   What happens when "start-entry" key is pressed in the main menu: https://gitlab.com/easyflash/easyflash3-bootimage/-/blob/master/efmenu/src/efmenu.c#L361
+         --   Set the EF ROM bank and change to the given cartridge mode: https://gitlab.com/easyflash/easyflash3-bootimage/-/blob/master/efmenu/src/efmenu_asm.s#L96
+         if cart_is_an_EF3 = '1' and c64_ram_we = '1' and cart_io1_n = '0' and c64_ram_addr_o = x"DE0F" then
+            -- Modes that lead to a reset: https://gitlab.com/easyflash/easyflash3-core/-/blob/master/src/ef3.vhdl#L695
+            -- We are deliberately not supporting the Kernal mode x"02" of the EF3, because in Kernal mode, the EF3 manipulates the address line A14.
+            -- While we could emulate the behavior on our side of the transciever, the problem is, that the transciever and the EF3 would fight" against
+            -- each other: There might be situations where the core sets A14 to zero while the EF3 sets it to one and this "fight" would lead to quite
+            -- some current flowing which might damage either the MEGA65's transciever or the EF3's CPLD or other logic parts.
+            if c64_ram_data_o = x"00" or c64_ram_data_o = x"04" or c64_ram_data_o = x"05" or c64_ram_data_o = x"07" then
+               cart_reset_counter <= C_EF3_RESET_LEN;
+               cart_res_flckr_ign <= 2; -- avoid a short cart_reset_o after cart_reset_counter reached zero
+            end if;
+         end if;
+      end if;
    end process;
 
    --------------------------------------------------------------------------------------------------
@@ -1212,4 +1280,3 @@ begin
       ); -- i_vdrives
 
 end architecture synthesis;
-

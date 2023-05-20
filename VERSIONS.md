@@ -11,9 +11,9 @@ or by directly loading `*.prg` files.
 ## New Features
 
 * Hardware cartridges can be used in the MEGA65's Expansion Port. Most game
-  cartridges are supported, including Ultimax game cartridges and also some
-  Flash Cartridges and some more sophisticated utility cartridges are
-  supported (see [cartridge documentation](doc/cartridges.md)).
+  cartridges are supported and also many Flash Cartridges (e.g. EF1, EF3, KFF)
+  and some more sophisticated utility cartridges and freezers are supported
+  (see [cartridge documentation](doc/cartridges.md)).
 
 * Run simulated cartridges by loading `*.crt` files from your SD card. Most
   cartridge types are supported. Saving data on the cartridge is not yet
