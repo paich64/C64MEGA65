@@ -537,9 +537,9 @@ cartridges into multiple `*.d64` disk images.
 
 The C64 core also supports a number of freezers and some homebrew cartridges.
 
-Please read
+**Please read
 [the dedicated documentation](doc/cartridges.md)
-for flash cartridges, freezers and homebrew cartridges to learn more.
+for flash cartridges, freezers and homebrew cartridges to learn more.**
 
 Simulated cartridges
 --------------------

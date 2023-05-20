@@ -321,6 +321,7 @@ Utility Cartridges that are known to work
 * Action Replay
 * Epyx Fast Load
 * Final Cartridge III
+* GeoRAM
 * PowerCartridge
 * Super Snapshot
 
@@ -333,24 +334,8 @@ into the Expansion Port.
 GeoRAM
 ------
 
-WORK IN PROGRESS
+GeoRAM works. Make sure that you use a GEOS boot disk with support for GeoRAM.
+Here are two locations where you can download such boot disks:
 
-CORE #0 Notes
--------------
-
-https://builder.mega65.org/job/mega65-core/job/683-cartflash/
-
-1. Enter MEGAFLASH via NO SCROLL
-2. Press MEGA + ,
-3. Answer the questions
-4. Flash core 0
-
-Hints:
-
-* The prime number is: 386093
-* The airspeed is (all caps): 11 METRES PER SECOND
-
- bit2core:
-
- https://github.com/MEGA65/mega65-tools/releases/tag/CI-development-latest
- 
+* [commodore.software](https://commodore.software/downloads/download/690-geos-operating-system/11807-geos-2-0-georam-support)
+* [www.lyonlabs.org](https://www.lyonlabs.org/commodore/onrequest/geos/index.html)
