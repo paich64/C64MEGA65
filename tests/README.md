@@ -8,60 +8,18 @@ effort, it might be that we are not always doing it.
 Version 5 - Month Day, 2023
 ---------------------------
 
-@TODO @TODO @TODO @TODO @TODO
-
-"Change mount status while menu is closed (i.e. Smart Reset)" to "Additional Smoke Tests"
-
-Add tests that stress the new menu system.
-
-@TODO @TODO @TODO @TODO @TODO
-
-Add the PLA test
-
-Add a test for the mouse and the paddles
-
-@@@-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-@REMOVE THIS FROM THE C64 tests documentation when done. This is just an
-internal reminder for making sure that the MiSTer2MEGA65 framework release
-that accompanies the release of the C64 core is rock solid:
-
-Since the C64 core has the drive and the cartrige "above the fold" (i.e.
-above any submenu), there might be some hidden bugs in the M2M framework that
-only become visible when the drive/cartridge and other menu-modifying logic
-happens "below the fold".
-
-Therefore we need to use the M2M demo core: We need to perform some tests (and
-thought experiments) to check: Are there any situations where the menu is
-changed with direct coordinate calculations from outside of menu.asm and
-therefore without the necessary transformation from flat coordinate space to
-relative coordinate space.
-
-Important is that we spend some time (re)searching for all the places and
-situations in the code that print directly to the screen outside menu.asm vs.
-just modifying the flat data structures.
-
-In shell.asm, `_HM_SETMENU` might be a candidate that needs to be refactored.
-From an architectural clarity perspective, menu.asm should be refactored to
-encapsulate the necessary functionality so that shell.asm (and probably
-options.asm, too) can access it and therefore things like the coordinate
-transformation in `_OPTM_R_F2M` but also other semantic knowledge
-are staying protected inside menu.asm.
-@@@-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
-Add tests for Cartridges (real ones and simulated ones) and other tests regarding new features/changes
-
-Copy/Paste everything from below and re-do all tests
-
 | Status             | Test                                                 | Done by                | Date              
 |:-------------------|------------------------------------------------------|:-----------------------|:--------------------------
 | :question:         | Basic regression tests                               | :question:             | :question:
-| :question:         | SID                                                  | :question:             | :question:
 | :question:         | HDMI & VGA                                           | :question:             | :question:
+| :question:         | SID                                                  | :question:             | :question:
 | :question:         | C64 Emulator Test Suite V2.15                        | :question:             | :question:
 | :question:         | [Demos](demos.md)                                    | :question:             | :question:
 | :question:         | Writing to `*.d64` images                            | :question:             | :question:
 | :question:         | Dedicated REU tests                                  | :question:             | :question:
 | :question:         | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | :question:             | :question:
+| :question:         | PLA Test                                             | :question:             | :question:
+| :question:         | Dedicated cartridge tests                            | :question:             | :question:
 
 ### Basic regression tests
 
@@ -73,22 +31,14 @@ you have a JTAG connection and an **active serial terminal** to observe the debu
 * Filebrowser
 * Mount disk
 * Load `*.prg`
+* Stress the OSM ("unexpected" resets, opening closing "all the time" while things that change the OSM are happening in the background, etc.)
 * Play with the Expansion Port settings, start a hardware CRT and an emulated CRT (there are more detailed and dedicated cartridge tests later)
 * Flip joystick ports
 * Save configuration: Switch off/switch, check configuration
 * Save configuration: Switch the SD card while the core is running and observe how settings are not saved.
 * Save configuration: Omit the config file and use a wrong config file
-* REU: 1750 with 512KB
-* HDMI: CRT emulation
-* HDMI: Zoom-in
-* HDMI: 16:9 50 Hz
-* HDMI: 16:9 60 Hz
-* HDMI:  4:3 50 Hz
-* HDMI:  5:4 50 Hz
-* HDMI: Flicker-free
-* HDMI: DVI (no sound)
-* VGA: Retro 15Khz RGB
 * CIA: Use 8521 (C64C)
+* Kernal: Test all Kernal variants including Jiffy DOS.
 * Audio Improvements
 * About and Help
 * Close Menu
@@ -107,14 +57,6 @@ you have a JTAG connection and an **active serial terminal** to observe the debu
 * Smile to the Sky (demo): SID 8580 filters
 * Sonic the Hedgehog: REU
 * Space Lords: Support for 4 paddles
-
-### SID
-
-* Check 6581 vs 8580 detection using the [Mathematica demo](https://csdb.dk/release/?id=11611)
-* Check the 8580 filters using the [Smile to the Sky demo](https://csdb.dk/release/?id=172574)
-* Check true stereo SID using the [Game of Thrones demo](https://csdb.dk/release/?id=157533)
-* Use [Sidplay64](https://csdb.dk/release/?id=161475) and dedicated stereo SID files to
-  test the various "Right SID port" settings. 
 
 ### HDMI & VGA
 
@@ -147,6 +89,14 @@ check for each VGA mode if the **OSM completely fits on the screen**:
 
 Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
 
+### SID
+
+* Check 6581 vs 8580 detection using the [Mathematica demo](https://csdb.dk/release/?id=11611)
+* Check the 8580 filters using the [Smile to the Sky demo](https://csdb.dk/release/?id=172574)
+* Check true stereo SID using the [Game of Thrones demo](https://csdb.dk/release/?id=157533)
+* Use [Sidplay64](https://csdb.dk/release/?id=161475) and dedicated stereo SID files to
+  test the various "Right SID port" settings. 
+
 ### Writing to `*.d64` images
 
 * Work with `Disk-Write-Test.d64` and create some files and re-load them
@@ -154,7 +104,50 @@ Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
   Do this with the OSM open and also with the OSM closed. Watch if the `<Saving>` is
   being influenced by the reset attempt.
 * Katakis: High score saving/loading
-  
+
+### C64 Emulator Test Suite V2.15
+
+| Status             | Detail                                      | Done by                | Date              
+|:-------------------|---------------------------------------------|:-----------------------|:--------------------------
+| :question:         | Disc 1: Complete                            | :question:             | :question:
+| :question:         | Disc 2: From start to and incl. "Trap16"    | :question:             | :question:
+| :question:         | Disc 2: "Trap17"                            | :question:             | :question:
+| :question:         | Disc 2: "Branchwrap" to  "MMU"              | :question:             | :question:
+| :question:         | Disc 2: "CPUPort"                           | :question:             | :question:
+| :question:         | Disc 2: "CPUTiming" to  "Cntdef"            | :question:             | :question:
+| :question:         | Disc 2: "CIA1TA"                            | :question:             | :question:
+| :question:         | Disc 2: "CIA1TB"                            | :question:             | :question:
+| :question:         | Disc 2: "CIA2TA"                            | :question:             | :question:
+| :question:         | Disc 2: "CIA2TA"                            | :question:             | :question:
+| :question:         | Disc 2: "CIA2TB"                            | :question:             | :question:
+
+# Dedicated REU tests
+
+All done by AmokPhaze101 on MM/DD/23
+
+#### Demos
+
+| Status             | Demo                                        | Comment
+|:-------------------|---------------------------------------------|:---------------------------------------------------
+| :question:         | Dark Mights - Movie 32                      | 
+| :question:         | Expand by Bonzai                            | 
+| :question:         | fREUd                                       | 
+| :question:         | Globe 2016                                  | 
+| :question:         | Life will never be the same Digidemo 286K_1 | 
+| :question:         | Qi                                          | 
+| :question:         | REU demo Zelda                              | 
+| :question:         | Treu Love                                   | 
+
+#### Games
+
+| Status             | Game                                        | Comment
+|:-------------------|---------------------------------------------|:---------------------------------------------------
+| :question:         | Sonic The Hedgehog v1.2+5                   | 
+| :question:         | Creatures II +9Hi - Mystic                  | 
+| :question:         | Exterminator_1991_Audiogenic_(REU)          | 
+| :question:         | from_the_west[r]                            | 
+| :question:         | Ski_or_Die_1990_Electronic_Arts_REU         | 
+| :question:         | Walkerz +3                                  | 
 
 Version 4 - November 25, 2022
 -----------------------------
