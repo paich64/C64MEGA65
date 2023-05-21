@@ -1,13 +1,3 @@
-Development branch
-==================
-
-You are currently looking at the ROADMAP.md file in a development branch:
-
-* You need to open VERSIONS.md to find out what features are planned
-  for the next release (Version 5).
-
-* This file file shows you what is on our roadmap for *after* Version 5.
-
 Roadmap
 =======
 

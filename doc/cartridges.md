@@ -277,7 +277,7 @@ the C64 for MEGA65.
 But it is also important to mention that KFF induced glitches seem to be
 very rare: We tested very demanding games with the KFF such as "Eye of the
 Beholder", "A Pig Quest" and "Prince of Persia" and none of these games showed
-any glitches.
+any glitches. Overall, the KFF works great with the C64 for MEGA65.
 
 ### How to use
 
@@ -291,11 +291,15 @@ MEGA65 core:
 <kbd>Reset</kbd> button.**
 
 1. To enter the KFF's menu, press <kbd>MEGA65 Reset</kbd> plus
-   <kbd>KFF Menu</kbd>.
+   <kbd>KFF Menu</kbd>. From here you can flash cartriges, programs
+   or tape images to the KFF.
 
 2. To start a game, press <kbd>MEGA65 Reset</kbd> plus <kbd>KFF Special</kbd>.
 
-3. When you switch on your MEGA65 while the KFF is inserted into the Expansion
+3. After you loaded a cartridge, program or tape in step (1), you need to
+   explicitly perform step (2) - autostart does not work.
+
+4. When you switch on your MEGA65 while the KFF is inserted into the Expansion
    Port, then the system initially crashes. Don't worry, this is "normal". Now
    decide whether you want to enter the menu, then perform step (1) or if
    you want to start the game, then perform step (2).
