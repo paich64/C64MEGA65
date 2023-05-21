@@ -121,7 +121,7 @@ Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
 | :question:         | Disc 2: "CIA2TA"                            | :question:             | :question:
 | :question:         | Disc 2: "CIA2TB"                            | :question:             | :question:
 
-# Dedicated REU tests
+### Dedicated REU tests
 
 All done by AmokPhaze101 on MM/DD/23
 
