@@ -10,7 +10,6 @@ Version 5 - Month Day, 2023
 
 @TODO @TODO @TODO @TODO @TODO
 
-Add "Reset and unmount prevention while writing to disk" and
 "Change mount status while menu is closed (i.e. Smart Reset)" to "Additional Smoke Tests"
 
 Add tests that stress the new menu system.
@@ -53,6 +52,110 @@ Add tests for Cartridges (real ones and simulated ones) and other tests regardin
 
 Copy/Paste everything from below and re-do all tests
 
+| Status             | Test                                                 | Done by                | Date              
+|:-------------------|------------------------------------------------------|:-----------------------|:--------------------------
+| :question:         | Basic regression tests                               | :question:             | :question:
+| :question:         | SID                                                  | :question:             | :question:
+| :question:         | HDMI & VGA                                           | :question:             | :question:
+| :question:         | C64 Emulator Test Suite V2.15                        | :question:             | :question:
+| :question:         | [Demos](demos.md)                                    | :question:             | :question:
+| :question:         | Writing to `*.d64` images                            | :question:             | :question:
+| :question:         | Dedicated REU tests                                  | :question:             | :question:
+| :question:         | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | :question:             | :question:
+
+### Basic regression tests
+
+#### Main menu
+
+Work with the main menu and run software that allows to test the following and make sure that
+you have a JTAG connection and an **active serial terminal** to observe the debug output of the core:
+
+* Filebrowser
+* Mount disk
+* Load `*.prg`
+* Play with the Expansion Port settings, start a hardware CRT and an emulated CRT (there are more detailed and dedicated cartridge tests later)
+* Flip joystick ports
+* Save configuration: Switch off/switch, check configuration
+* Save configuration: Switch the SD card while the core is running and observe how settings are not saved.
+* Save configuration: Omit the config file and use a wrong config file
+* REU: 1750 with 512KB
+* HDMI: CRT emulation
+* HDMI: Zoom-in
+* HDMI: 16:9 50 Hz
+* HDMI: 16:9 60 Hz
+* HDMI:  4:3 50 Hz
+* HDMI:  5:4 50 Hz
+* HDMI: Flicker-free
+* HDMI: DVI (no sound)
+* VGA: Retro 15Khz RGB
+* CIA: Use 8521 (C64C)
+* Audio Improvements
+* About and Help
+* Close Menu
+
+#### Additional Smoke Tests
+
+* Try to mount disk while SD card is empty
+* Work with both SD cards (and switch back and forth in file-browser)
+* Remove external SD card while menu and file browser are not open;
+  reinsert while file browser is open
+* Work with large directory trees / game libraries
+* Eagle's Nest: Reset-tests: Short reset leads to main screen. Long reset
+  resets the whole core (not only the C64).
+* Giana Sisters: Scrolling while flicker-free is ON/OFF, joystick, latency
+* Katakis: High score saving/loading
+* Smile to the Sky (demo): SID 8580 filters
+* Sonic the Hedgehog: REU
+* Space Lords: Support for 4 paddles
+
+### SID
+
+* Check 6581 vs 8580 detection using the [Mathematica demo](https://csdb.dk/release/?id=11611)
+* Check the 8580 filters using the [Smile to the Sky demo](https://csdb.dk/release/?id=172574)
+* Check true stereo SID using the [Game of Thrones demo](https://csdb.dk/release/?id=157533)
+* Use [Sidplay64](https://csdb.dk/release/?id=161475) and dedicated stereo SID files to
+  test the various "Right SID port" settings. 
+
+### HDMI & VGA
+
+#### HDMI
+
+Test if the resolutions and frequencies are correct:
+
+```
+16:9 720p 50 Hz = 1,280 x 720 pixel
+16:9 720p 60 Hz = 1,280 x 720 pixel
+4:3  576p 50 Hz =   720 x 576 pixel
+5:4  576p 50 Hz =   720 x 576 pixel
+```
+
+Test HDMI modes:
+
+* Flicker-free: Use the [Testcase from README.md](../README.md#flicker-free-hdmi)
+* DVI (no sound)
+* CRT emulation
+* Zoom-in
+
+#### VGA
+
+Switch-off "HDMI: Flicker-free" before performing the following VGA tests and
+check for each VGA mode if the **OSM completely fits on the screen**:
+
+* Standard
+* Retro 15 kHz with HS/VS
+* Retro 15 kHz with CSYNC
+
+Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
+
+### Writing to `*.d64` images
+
+* Work with `Disk-Write-Test.d64` and create some files and re-load them
+* Try to interrupt the saving by pressing <kbd>Reset</kbd> while the yellow light is on.
+  Do this with the OSM open and also with the OSM closed. Watch if the `<Saving>` is
+  being influenced by the reset attempt.
+* Katakis: High score saving/loading
+  
+
 Version 4 - November 25, 2022
 -----------------------------
 
@@ -84,16 +187,16 @@ Work with the main menu and run software that allows to test the following:
 * Flip joystick ports
 * SID: 6581 and 8580
 * REU: 1750 with 512KB
-* HDMI : CRT emulation
-* HDMI : Zoom-in
-* HDMI : 16:9 50 Hz
-* HDMI : 16:9 60 Hz
-* HDMI :  4:3 50 Hz
-* HDMI :  5:4 50 Hz
-* HDMI : Flicker-free
-* HDMI : DVI (no sound)
-* VGA  : Retro 15Khz RGB
-* CIA  : Use 8521 (C64C)
+* HDMI: CRT emulation
+* HDMI: Zoom-in
+* HDMI: 16:9 50 Hz
+* HDMI: 16:9 60 Hz
+* HDMI:  4:3 50 Hz
+* HDMI:  5:4 50 Hz
+* HDMI: Flicker-free
+* HDMI: DVI (no sound)
+* VGA: Retro 15Khz RGB
+* CIA: Use 8521 (C64C)
 * Audio Improvements
 * About and Help
 * Close Menu
