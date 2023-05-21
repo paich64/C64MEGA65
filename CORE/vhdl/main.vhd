@@ -1139,7 +1139,7 @@ begin
    i_iec_drive : entity work.iec_drive
       generic map (
          PARPORT        => 0,                -- Parallel C1541 port for faster (~20x) loading time using DolphinDOS
-         DUALROM        => 0,
+         DUALROM        => 1,                -- Two switchable ROMs: Standard DOS and JiffyDOS
          DRIVES         => G_VDNUM
       )
       port map (
@@ -1183,8 +1183,8 @@ begin
          par_data_i     => iec_par_data_i,
          par_data_o     => iec_par_data_o,
 
-         -- Access custom rom (DOS)
-         rom_std_i      => not c64_rom_i(0) and not c64_rom_i(1), -- 1=use the factory default ROM
+         -- Access custom rom (DOS): All in QNICE clock domain but rom_std_i is in main clock domain
+         rom_std_i      => c64_rom_i(0) or c64_rom_i(1), -- 1=use the factory default ROM
          rom_addr_i     => c1541rom_addr_i,
          rom_data_i     => c1541rom_data_i,
          rom_wr_i       => c1541rom_we_i,
