@@ -39,7 +39,6 @@ Feature Roadmap
 * More sophisticated scalers and scandoublers 
 * Simulate the blending of colours when ALM and DCM are used
   as described here: https://github.com/MiSTer-devel/C64_MiSTer/issues/104
-  This should lead to demos like "Mathematica by Reflex" not to flicker any more.
 * Support typing the first letter(s) of files to quickly jump to files
   and folders within the filebrowser: https://github.com/MJoergen/C64MEGA65/issues/14
 
