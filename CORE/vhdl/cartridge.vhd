@@ -207,6 +207,7 @@ begin
                end if;
                if freeze_crt = '1' then
                   cart_disable <= '0';
+                  exrom_o      <= '1';
                   game_o       <= '0';
                   allow_freeze <= '0';
                end if;
