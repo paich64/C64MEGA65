@@ -2,8 +2,9 @@ Roadmap
 =======
 
 We are planning to improve this core steadily. The MiSTer core offers some
-more features than our current Release of the port. Here is a list of features
-(in no particular order) that we are planning to deliver at a later stage:
+more features than our current release of the "C64 for MEGA65". Here is a
+list of features (in no particular order) that we are planning to deliver
+at a later stage:
 
 Feature Roadmap
 ---------------
@@ -28,7 +29,7 @@ Feature Roadmap
 * You can use the Amiga mouse as a C64 mouse
 * Support autoswap via `*.lst` files
 * Support the creation of empty disk images
-* Supoprt the creation of empty config files and the migration of the config
+* Support the creation of empty config files and the migration of the config
   file from an older version to a newer version
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * Utilize full 16:9 screen real estate for file- and directory browsing and
@@ -50,7 +51,7 @@ robustness, performance, and stability of the whole system, we will need
 to implement certain technical improvements in the "backend", again in no
 particular order:
 
-* Research MiSTer's SID improvments from November 16 (and newer)
+* Research MiSTer's SID improvements from November 16 (and newer)
 * Maximize compatibility of C1541 by implementing MiSTer's raw GCR mode
   which exclusively uses GCR internally (c1541_direct_gcr.sv instead of
   c1541_gcr.sv). `*.D64` images are converted to/from GCR when reading/writing
@@ -71,6 +72,7 @@ particular order:
 * Enhance QNICE's FAT32 stack so that it is able to create new files
 * Fix visible tearing in Bromance demo (vertical scroll effect), but only,
   when HDMI Zoom is ON: https://csdb.dk/release/?id=205526
-* Update to newer ascal version (wait until MiSTer does the same upstream)
+* Research if an update to the newest ASCAL version makes sense and if so
+  so the update (wait until MiSTer does the same upstream)
 * Re-do QNICE's SD Card controller: Go from SPI to native
 * Hardware debugger (single-step the CPU via the on-screen-menu)
