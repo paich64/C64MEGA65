@@ -1,7 +1,7 @@
 Roadmap
 =======
 
-We are planning to improve this core steadily. The MiSTer core offers many
+We are planning to improve this core steadily. The MiSTer core offers some
 more features than our current Release of the port. Here is a list of features
 (in no particular order) that we are planning to deliver at a later stage:
 
@@ -20,8 +20,9 @@ Feature Roadmap
 * Improved C1541 compatibility due to real internal GCR handling of `*.d64`
   images instead of simulated handling leads to games like "Seven Cities of
   Gold" being able to format/create their non-standard game disks. Also highly
-  sophisticated bit nibblers (@TODO example!) are working now
-  * Existing C1541 disk images (`*.d64`) can now be formatted
+  sophisticated bit nibblers such as the one offered in some freezer cartridges
+  will work as soon as we have implemented this.
+* Existing C1541 disk images (`*.d64`) can now be formatted
 * Support `*.d64` images with error maps (filesizes 175,531 and 197,376)
 * Simulated tape drive using `*.t64` tape images
 * You can use the Amiga mouse as a C64 mouse
@@ -29,8 +30,6 @@ Feature Roadmap
 * Support the creation of empty disk images
 * Supoprt the creation of empty config files and the migration of the config
   file from an older version to a newer version
-* Ability to "enter" image files (`*.d64`, etc.), browse them and select
-  files for direct loading
 * Parallel C1541 port for faster (~20x) loading time using DolphinDOS
 * Utilize full 16:9 screen real estate for file- and directory browsing and
   core configuration on HDMI while saving screen real estate on 4:3 VGA
@@ -39,6 +38,7 @@ Feature Roadmap
 * More sophisticated scalers and scandoublers 
 * Simulate the blending of colours when ALM and DCM are used
   as described here: https://github.com/MiSTer-devel/C64_MiSTer/issues/104
+  This should lead to demos like "Mathematica by Reflex" not to flicker any more.
 * Support typing the first letter(s) of files to quickly jump to files
   and folders within the filebrowser: https://github.com/MJoergen/C64MEGA65/issues/14
 
