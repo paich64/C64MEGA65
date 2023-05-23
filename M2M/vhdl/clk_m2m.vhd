@@ -41,7 +41,9 @@ entity clk_m2m is
       hdmi_rst_o      : out std_logic;   -- HDMI's reset, synchronized
 
       audio_clk_o     : out std_logic;   -- Audio's 30 MHz clock
-      audio_rst_o     : out std_logic    -- Audio's reset, synchronized
+      audio_rst_o     : out std_logic;   -- Audio's reset, synchronized
+
+      sys_pps_o       : out std_logic    -- One pulse per second (in sys_clk domain)
    );
 end entity clk_m2m;
 
@@ -65,6 +67,8 @@ signal sys_clk_9975_bg    : std_logic;
 signal qnice_locked       : std_logic;
 signal hdmi_720p_locked   : std_logic;
 signal hdmi_576p_locked   : std_logic;
+
+signal sys_counter        : natural range 0 to 99_999_999;
 
 begin
 
@@ -291,7 +295,7 @@ begin
          O => audio_clk_o
       );
 
-   tmds_clk_bufgmux : BUFGMUX
+   tmds_clk_bufgmux : BUFGMUX_CTRL
       port map (
          S  => hdmi_clk_sel_i,
          I0 => tmds_720p_clk_mmcm,
@@ -299,7 +303,7 @@ begin
          O => tmds_clk_o
       );
 
-   hdmi_clk_bufgmux : BUFGMUX
+   hdmi_clk_bufgmux : BUFGMUX_CTRL
       port map (
          S  => hdmi_clk_sel_i,
          I0 => hdmi_720p_clk_mmcm,
@@ -361,6 +365,19 @@ begin
          dest_arst => hdmi_rst_o        -- 1-bit output: src_rst synchronized to the destination clock domain.
                                        -- This output is registered.
       );
+
+   p_sys_pps : process (sys_clk_i)
+   begin
+      if rising_edge(sys_clk_i) then
+         if sys_counter < 99_999_999 then
+            sys_counter <= sys_counter + 1;
+            sys_pps_o   <= '0';
+         else
+            sys_counter <= 0;
+            sys_pps_o   <= '1';
+         end if;
+      end if;
+   end process p_sys_pps;
 
 end architecture rtl;
 

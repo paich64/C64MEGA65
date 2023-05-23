@@ -42,25 +42,16 @@ set_multicycle_path -from [get_cells -include_replicated {{M2M/i_framework/QNICE
 # Timing between the two system clocks, ascal.vhd, audio, HDMI and HyperRAM is asynchronous.
 set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks hdmi_720p_clk]
 set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks hdmi_720p_clk]
-set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks hdmi_576p_clk]
-set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks hdmi_576p_clk]
 set_false_path -from [get_clocks hr_clk_x1]       -to [get_clocks main_clk]
 set_false_path   -to [get_clocks hr_clk_x1]     -from [get_clocks main_clk]
 set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks main_clk]
 set_false_path   -to [get_clocks hdmi_720p_clk] -from [get_clocks main_clk]
-set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks main_clk]
-set_false_path   -to [get_clocks hdmi_576p_clk] -from [get_clocks main_clk]
 set_false_path -from [get_clocks qnice_clk]       -to [get_clocks hdmi_720p_clk]
-set_false_path -from [get_clocks qnice_clk]       -to [get_clocks hdmi_576p_clk]
+set_false_path -from [get_clocks qnice_clk]       -to [get_clocks tmds_720p_clk]
 
-set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks hdmi_576p_clk]
-set_false_path   -to [get_clocks hdmi_720p_clk] -from [get_clocks hdmi_576p_clk]
-set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks tmds_720p_clk]
-set_false_path -from [get_clocks hdmi_720p_clk]   -to [get_clocks tmds_576p_clk]
-set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks tmds_720p_clk]
-set_false_path -from [get_clocks hdmi_576p_clk]   -to [get_clocks tmds_576p_clk]
-
-set_false_path -from [get_clocks main_clk]        -to [get_clocks audio_clk]
+## Assume the HDMI output is 720p, which is the fastest clock.
+## No need to do timing analysis on the slower HDMI clocks as well.
+set_case_analysis 0 [get_nets M2M/i_framework/i_clk_m2m/hdmi_clk_sel_i]
 
 ## CDC in IEC drives, handled manually in the source code
 set_false_path -from [get_pins -hier id1_reg[*]/C]
@@ -105,7 +96,7 @@ resize_pblock pblock_sdcard -add {SLICE_X67Y178:SLICE_X98Y193}
 
 # Place phase-shifted VGA output registers near the actual output buffers
 create_pblock pblock_vga
-add_cells_to_pblock pblock_vga [get_cells [list M2M/i_framework/i_analog_pipeline/VGA_OUT_PHASE_SHIFTED.*]]
+add_cells_to_pblock pblock_vga [get_cells [list M2M/i_framework/i_av_pipeline/i_analog_pipeline/VGA_OUT_PHASE_SHIFTED.*]]
 resize_pblock pblock_vga -add SLICE_X0Y75:SLICE_X5Y99
 
 ################################

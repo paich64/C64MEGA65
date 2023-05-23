@@ -81,7 +81,6 @@ entity main is
       -- Video output
       video_ce_o             : out std_logic;
       video_ce_ovl_o         : out std_logic;
-      video_retro15kHz_o     : out std_logic;
       video_red_o            : out std_logic_vector(7 downto 0);
       video_green_o          : out std_logic_vector(7 downto 0);
       video_blue_o           : out std_logic_vector(7 downto 0);
@@ -968,7 +967,6 @@ begin
    video_red_o        <= std_logic_vector(vga_red);
    video_green_o      <= std_logic_vector(vga_green);
    video_blue_o       <= std_logic_vector(vga_blue);
-   video_retro15kHz_o <= video_retro15kHz_i;
    video_ce_o         <= '1' when video_ce = 0 else '0';
    video_ce_ovl_o     <= '1' when video_retro15kHz_i = '0' else not video_ce(0);
 

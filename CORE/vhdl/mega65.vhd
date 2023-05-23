@@ -50,6 +50,7 @@ port (
    qnice_ascal_mode_o       : out std_logic_vector(1 downto 0);
    qnice_ascal_polyphase_o  : out std_logic;
    qnice_ascal_triplebuf_o  : out std_logic;
+   qnice_retro15kHz_o       : out std_logic;
 
    -- Flip joystick ports
    qnice_flip_joyports_o    : out std_logic;
@@ -88,16 +89,17 @@ port (
    main_qnice_gp_reg_i      : in  std_logic_vector(255 downto 0);
 
    -- Video output
-   main_video_ce_o          : out std_logic;
-   main_video_ce_ovl_o      : out std_logic;
-   main_video_retro15kHz_o  : out std_logic;
-   main_video_red_o         : out std_logic_vector(7 downto 0);
-   main_video_green_o       : out std_logic_vector(7 downto 0);
-   main_video_blue_o        : out std_logic_vector(7 downto 0);
-   main_video_vs_o          : out std_logic;
-   main_video_hs_o          : out std_logic;
-   main_video_hblank_o      : out std_logic;
-   main_video_vblank_o      : out std_logic;
+   video_clk_o              : out std_logic;
+   video_rst_o              : out std_logic;
+   video_ce_o               : out std_logic;
+   video_ce_ovl_o           : out std_logic;
+   video_red_o              : out std_logic_vector(7 downto 0);
+   video_green_o            : out std_logic_vector(7 downto 0);
+   video_blue_o             : out std_logic_vector(7 downto 0);
+   video_vs_o               : out std_logic;
+   video_hs_o               : out std_logic;
+   video_hblank_o           : out std_logic;
+   video_vblank_o           : out std_logic;
 
    -- Audio output (Signed PCM)
    main_audio_left_o        : out signed(15 downto 0);
@@ -195,12 +197,6 @@ port (
 end entity MEGA65_Core;
 
 architecture synthesis of MEGA65_Core is
-
----------------------------------------------------------------------------------------------
--- Clocks and active high reset signals for each clock domain
----------------------------------------------------------------------------------------------
-
-signal main_clk                   : std_logic;               -- Core main clock
 
 ---------------------------------------------------------------------------------------------
 -- main_clk (MiSTer core's clock)
@@ -407,12 +403,13 @@ begin
 
          core_speed_i      => core_speed,      -- 0=PAL/original C64, 1=PAL/HDMI flicker-free, 2=NTSC
 
-         main_clk_o        => main_clk,        -- core's clock
+         main_clk_o        => main_clk_o,      -- core's clock
          main_rst_o        => main_rst_o       -- core's reset, synchronized
       ); -- clk_gen
 
-   -- share core's clock with the framework
-   main_clk_o <= main_clk;
+   -- Video clock is the same as core clock
+   video_clk_o <= main_clk_o;
+   video_rst_o <= main_rst_o;
 
    ---------------------------------------------------------------------------------------------
    -- Global switches for the core
@@ -481,7 +478,7 @@ begin
          G_VDNUM                => C_VDNUM
       )
       port map (
-         clk_main_i             => main_clk,
+         clk_main_i             => main_clk_o,
          reset_soft_i           => main_reset_core_i or main_reset_core,
          reset_hard_i           => main_reset_m2m_i or main_reset_from_prgloader,
          pause_i                => main_pause_core_i,
@@ -539,16 +536,15 @@ begin
 
          -- Video output
          -- This is PAL 720x576 @ 50 Hz (pixel clock 27 MHz), but synchronized to main_clk (54 MHz).
-         video_ce_o             => main_video_ce_o,
-         video_ce_ovl_o         => main_video_ce_ovl_o,
-         video_retro15kHz_o     => main_video_retro15kHz_o,
-         video_red_o            => main_video_red_o,
-         video_green_o          => main_video_green_o,
-         video_blue_o           => main_video_blue_o,
-         video_vs_o             => main_video_vs_o,
-         video_hs_o             => main_video_hs_o,
-         video_hblank_o         => main_video_hblank_o,
-         video_vblank_o         => main_video_vblank_o,
+         video_ce_o             => video_ce_o,
+         video_ce_ovl_o         => video_ce_ovl_o,
+         video_red_o            => video_red_o,
+         video_green_o          => video_green_o,
+         video_blue_o           => video_blue_o,
+         video_vs_o             => video_vs_o,
+         video_hs_o             => video_hs_o,
+         video_hblank_o         => video_hblank_o,
+         video_vblank_o         => video_vblank_o,
 
          -- Audio output (PCM format, signed values)
          audio_left_o           => main_audio_left_o,
@@ -687,6 +683,7 @@ begin
    qnice_audio_mute_o         <= '0';                                         -- audio is not muted
    qnice_audio_filter_o       <= qnice_osm_control_i(C_MENU_IMPROVE_AUDIO);   -- 0 = raw audio, 1 = use filters from globals.vhd
    qnice_zoom_crop_o          <= qnice_osm_control_i(C_MENU_HDMI_ZOOM);       -- 0 = no zoom/crop
+   qnice_retro15kHz_o         <= qnice_osm_control_i(C_MENU_VGA_15KHZHSVS) or qnice_osm_control_i(C_MENU_VGA_15KHZCS);
 
    -- ascal filters that are applied while processing the input
    -- 00 : Nearest Neighbour
@@ -799,7 +796,7 @@ begin
          G_DATA_SIZE => 3
       )
       port map (
-         src_clk_i              => main_clk,
+         src_clk_i              => main_clk_o,
          src_data_i(1 downto 0) => std_logic_vector(to_unsigned(c64_exp_port_mode, 2)),
          src_data_i(2)          => main_osm_control_i(C_MENU_HDMI_FF),
          dst_clk_i              => hr_clk_i,
@@ -812,7 +809,7 @@ begin
          WIDTH => 1
       )
       port map (
-         src_clk           => main_clk,
+         src_clk           => main_clk_o,
          src_in(0)         => main_reset_core_i or main_reset_core,
          dest_clk          => qnice_clk_i,
          dest_out(0)       => qnice_reset_for_prgloader
@@ -827,7 +824,7 @@ begin
          src_clk           => qnice_clk_i,
          src_in(0)         => qnice_reset_from_prgloader,
          src_in(1)         => qnice_prg_trigger_run,
-         dest_clk          => main_clk,
+         dest_clk          => main_clk_o,
          dest_out(0)       => main_reset_from_prgloader,
          dest_out(1)       => main_prg_trigger_run
       ); -- i_cdc_qnice2main
@@ -844,7 +841,7 @@ begin
       )
       port map (
          -- C64 MiSTer core
-         clock_a           => main_clk,
+         clock_a           => main_clk_o,
          address_a         => std_logic_vector(main_ram_addr),
          data_a            => std_logic_vector(main_ram_data_from_c64),
          wren_a            => main_ram_we,
@@ -912,7 +909,7 @@ begin
       qnice_we_i           => qnice_crt_qnice_we,
       qnice_data_o         => qnice_crt_qnice_data,
       qnice_wait_o         => qnice_crt_qnice_wait,
-      main_clk_i           => main_clk,
+      main_clk_i           => main_clk_o,
       main_rst_i           => main_reset_m2m_i,
       main_reset_core_o    => main_reset_core,
       main_loading_o       => main_crt_loading,
@@ -963,7 +960,7 @@ begin
          G_BASE_ADDRESS => X"0020_0000"  -- 2MW
       )
       port map (
-         clk_i               => main_clk,
+         clk_i               => main_clk_o,
          rst_i               => main_reset_core_i,
          reu_ext_cycle_i     => main_ext_cycle,
          reu_ext_cycle_o     => main_reu_cycle,
@@ -990,7 +987,7 @@ begin
          G_DATA_SIZE    => 16
       )
       port map (
-         clk_i                 => main_clk,
+         clk_i                 => main_clk_o,
          rst_i                 => main_reset_core_i,
          s_avm_waitrequest_o   => main_map_waitrequest,
          s_avm_write_i         => main_map_write,
@@ -1021,7 +1018,7 @@ begin
          G_DATA_SIZE    => 16
       )
       port map (
-         s_clk_i               => main_clk,
+         s_clk_i               => main_clk_o,
          s_rst_i               => main_reset_m2m_i,
          s_avm_waitrequest_o   => main_avm_reu_waitrequest,
          s_avm_write_i         => main_avm_reu_write,
