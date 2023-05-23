@@ -4,6 +4,9 @@ example mover.sh)
 @TODO: Add some FAQs around starting the C64 core while a cartridge is
 inserted. Problems such as this here can arise:
 
+@TODO: Add CSync details / rewrite monitor section
+
+
 https://discord.com/channels/719326990221574164/794775503818588200/1084814386083930195
 
 Solutions range from putting the C64 core into Slot 1 to hitting keys
@@ -249,7 +252,19 @@ are correct.
 sure you activate the feature using the menu item "IEC: Use hardware port"
 if you want to use.
 
-## 11) How many files in a folder can the file browser handle?
+## 11) Certain games or demos won't load while others load
+
+If you are loading from a large storage device such as the SD2IEC, try the
+internal simulated 1541 drive.
+
+Some games or demos don't like additional devices at the IEC port other than
+one drive #8. Try if switching off "IEC: Use hardware port" helps.
+
+In case you are using JiffyDOS you could also try going back to the standard
+Kernal. If you have other fast loaders activated using simulated or real
+freezer cartridges, try switching them off.
+
+## 12) How many files in a folder can the file browser handle?
 
 The file browser can handle about 25,000 characters. If we assume an average
 length of a filename (including the file extension) of 40 characters then this
@@ -263,7 +278,7 @@ plus you will have a folder called `0` where all the files that start with
 digits are. Don't forget to go to the folder `m` and remove `mover.sh`.
 
 
-## 12) Which features are on the roadmap?
+## 13) Which features are on the roadmap?
 
 [Here](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md) is the
 roadmap for the upcoming Version 5.
@@ -272,14 +287,14 @@ And
 [here](https://github.com/MJoergen/C64MEGA65/blob/develop/ROADMAP.md)
 is the roadmap for "later than Version 5".
 
-## 13) Where can I post and discuss my feature request?
+## 14) Where can I post and discuss my feature request?
 
 The
 [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
 channel on the MEGA65 discord is the right place to post and
 discuss feature requests.
 
-## 14) Are there cores other than the C64 available or in development?
+## 15) Are there cores other than the C64 available or in development?
 
 Yes. Please visit this website, it contains a list of MEGA65 cores that
 will be constantly updated:

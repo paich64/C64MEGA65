@@ -108,7 +108,7 @@ constant C_HMAP_CRT              : std_logic_vector(15 downto 0) := x"0200";    
 -- Otherwise make sure that you wire C_VD_DEVICE in the qnice_ramrom_devices process and that you
 -- have as many appropriately sized RAM buffers for disk images as you have drives
 type vd_buf_array is array(natural range <>) of std_logic_vector;
-constant C_VDNUM              : natural := 1;                                          -- amount of virtual drives; if more than 3: also adjust VDRIVES_MAX in M2M/rom/shell_vars.asm, maximum is 15
+constant C_VDNUM              : natural := 1;                                          -- amount of virtual drives, maximum is 15
 constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := C_DEV_C64_VDRIVES;    -- device number of vdrives.vhd device
 constant C_VD_BUFFER          : vd_buf_array := (  C_DEV_C64_MOUNT,
                                                    x"EEEE");                           -- Always finish the array using x"EEEE"
@@ -141,7 +141,7 @@ constant C_CRTROMTYPE_OPTIONAL   : std_logic_vector(15 downto 0) := x"0004";
 --       else it is a 4k window in HyperRAM or in SDRAM
 -- In case we are loading to a QNICE device, then the control and status register is located at the 4k window 0xFFFF.
 -- @TODO: See @TODO for more details about the control and status register
-constant C_CRTROMS_MAN_NUM       : natural := 2;                                       -- Amount of manually loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROMS_MAN_NUM       : natural := 2;                                       -- Amount of manually loadable ROMs and carts, maximum is 16
 constant C_CRTROMS_MAN           : crtrom_buf_array := ( C_CRTROMTYPE_DEVICE, C_DEV_C64_PRG,
                                                          C_CRTROMTYPE_DEVICE, C_DEV_C64_CRT,
                                                          x"EEEE");                     -- Always finish the array using x"EEEE"
@@ -171,7 +171,7 @@ constant JIFFY_DOS_C64_START     : std_logic_vector(15 downto 0) := x"0000";
 constant JIFFY_DOS_C1541_START   : std_logic_vector(15 downto 0) := std_logic_vector(to_unsigned(JIFFY_DOS_C64'length, 16));
 
 -- M2M framework constants
-constant C_CRTROMS_AUTO_NUM      : natural := 2;                                       -- Amount of automatically loadable ROMs and carts, if more than 3: also adjust CRTROM_MAN_MAX in M2M/rom/shell_vars.asm, Needs to be in sync with config.vhd. Maximum is 16
+constant C_CRTROMS_AUTO_NUM      : natural := 2;                                       -- Amount of automatically loadable ROMs and carts, maximum is 16
 constant C_CRTROMS_AUTO_NAMES    : string  := JIFFY_DOS_C64 & JIFFY_DOS_C1541;     
 constant C_CRTROMS_AUTO          : crtrom_buf_array := ( C_CRTROMTYPE_DEVICE, C_DEV_C64_KERNAL_C64,   C_CRTROMTYPE_OPTIONAL, JIFFY_DOS_C64_START,
                                                          C_CRTROMTYPE_DEVICE, C_DEV_C64_KERNAL_C1541, C_CRTROMTYPE_OPTIONAL, JIFFY_DOS_C1541_START,
