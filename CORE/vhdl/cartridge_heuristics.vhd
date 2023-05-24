@@ -61,9 +61,6 @@ architecture synthesis of cartridge_heuristics is
    -- This is a gereric down-counter to handle timeouts while waiting for some event.
    signal counter : natural range 0 to 200*32; -- Multiply by 32, because the main clock is 32 MHz.
 
-   attribute mark_debug : string;
-   attribute mark_debug of state_ef3 : signal is "true";
-
 begin
 
    p_EasyFlash_3 : process (clk_main_i)

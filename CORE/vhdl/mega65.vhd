@@ -421,10 +421,10 @@ begin
    c64_ntsc          <= '0'; -- @TODO: For now, we hardcode PAL mode
 
    -- Select C64's ROM: 0=Custom, 1=Standard, 2=GS, 3=Japan
-   c64_rom <= "01" when main_osm_control_i(C_MENU_KERNAL_STD)     else
+   c64_rom <= "00" when main_osm_control_i(C_MENU_KERNAL_JIFFY)   else
               "10" when main_osm_control_i(C_MENU_KERNAL_GS)      else
               "11" when main_osm_control_i(C_MENU_KERNAL_JAPAN)   else
-              "00";
+              "01";   -- Use standard ROM as default
 
    -- Switch between two clock rates for the CORE, corresponding to frame rates that
    -- closely "embrace" the output rate of exactly 50 Hz (determined by the HDMI resolution).
