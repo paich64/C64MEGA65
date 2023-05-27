@@ -235,7 +235,7 @@ PREP_START_R    XOR     R8, R8
                 DECRB
                 RET
 
-; OSM_SELECTED callback function:
+; OSM_SEL_POST callback function:
 ;
 ; Called each time the user selects something in the on-screen-menu (OSM),
 ; and while the OSM is still visible. This means, that this callback function
@@ -256,7 +256,27 @@ PREP_START_R    XOR     R8, R8
 ; Output:
 ;   R8: 0=OK, else pointer to string with error message
 ;   R9: 0=OK, else error code
-OSM_SELECTED    INCRB
+OSM_SEL_POST    INCRB
+
+                ; auto-reset if the user changes the kernal mode
+                CMP     C64_OPTM_G_KERNAL_MODES, R8
+                RBRA    _OSM_SEL_POST_R, !Z
+                MOVE    M2M$CSR, R0             ; control and status register
+                OR      M2M$CSR_RESET, @R0      ; reset the core
+                AND     M2M$CSR_UN_RESET, @R0   ; un-reset the core
+
+_OSM_SEL_POST_R XOR     R8, R8
+                XOR     R9, R9
+
+                DECRB
+                RET
+
+; OSM_SEL_PRE callback function:
+;
+; Identical to the OSM_SEL_POST callback function (see above) but it is being
+; called before the functionality and semantics associated with a certain
+; menu item has been handled by the framework.
+OSM_SEL_PRE     INCRB
                 XOR     R8, R8
                 XOR     R9, R9
                 DECRB

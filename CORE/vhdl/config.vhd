@@ -319,7 +319,7 @@ constant SEL_OPTM_CRTROM      : std_logic_vector(15 downto 0) := x"0311";
 constant SEL_OPTM_CRTROM_STR  : std_logic_vector(15 downto 0) := x"0312";
 
 -- !!! DO NOT TOUCH !!! Configuration constants for OPTM_GROUPS (shell.asm and menu.asm expect them to be like this)
-constant OPTM_G_TEXT       : integer := 0;                 -- text that cannot be selected
+constant OPTM_G_TEXT       : integer := 16#00000#;         -- text that cannot be selected
 constant OPTM_G_CLOSE      : integer := 16#000FF#;         -- menu items that closes menu
 constant OPTM_G_STDSEL     : integer := 16#00100#;         -- item within a group that is selected by default
 constant OPTM_G_LINE       : integer := 16#00200#;         -- draw a line at this position

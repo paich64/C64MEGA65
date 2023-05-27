@@ -902,6 +902,12 @@ _OPTM_RUN_13    ADD     1, R10                  ; increase absolute pos
 
 _OPTM_RUN_14    MOVE    R6, R8                  ; R8: return selected group
                                                 ; R9: return sel. item in grp
+                INCRB                           ; if we reach this code and..
+                MOVE    R8, R0                  ; ..it is a single-select..
+                AND     OPTM_SINGLESEL, R0      ; ..item then it is an active
+                RBRA    _OPTM_RUN_15, Z         ; ..item and therefore we set
+                MOVE    1, R9                   ; ..R9 to 1
+_OPTM_RUN_15    DECRB                
                 MOVE    R11, R10                ; R10: selection key
                 MOVE    OPTM_CLBK_SEL, R7       ; call callback
                 RSUB    _OPTM_CALL, 1
