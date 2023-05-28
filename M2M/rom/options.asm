@@ -1145,7 +1145,7 @@ _OPTM_GK_CR_R   SYSCALL(leave, 1)
 ; QNICE M2M$CFM_DATA register each time something changes.
 ; ----------------------------------------------------------------------------
 
-OPTM_CB_SEL     INCRB
+OPTM_CB_SEL     SYSCALL(enter, 1)
 
                 ; Remember selected menu group as Context Data so that the
                 ; user of the framework can implement specialized behaviors
@@ -1162,6 +1162,7 @@ OPTM_CB_SEL     INCRB
 
                 ; OSM_SEL_PRE: CORE/m2m-rom/m2m-rom.asm callback function
                 MOVE    R8, R0
+                AND     0x00FF, R8              ; remove flags
                 MOVE    R9, R1
                 RSUB    OSM_SEL_PRE, 1
                 CMP     0, R8
@@ -1260,6 +1261,7 @@ _OPTMCB_RET     DECRB
 
                 ; OSM_SEL_POST: CORE/m2m-rom/m2m-rom.asm callback function
                 MOVE    R2, R8
+                AND     0x00FF, R8              ; remove flags            
                 MOVE    R3, R9
                 RSUB    OSM_SEL_POST, 1
                 CMP     0, R8
@@ -1269,9 +1271,8 @@ _OPTMCB_RET     DECRB
 _OPTMC_END      MOVE    SF_CONTEXT_DATA, R1
                 MOVE    R0, @R1                 ; restore context
 
-                DECRB
+                SYSCALL(leave, 1)
                 RET
-
 
 ; ----------------------------------------------------------------------------
 ; Callback function that is called during the drawing of the menu (OPTM_SHOW)
