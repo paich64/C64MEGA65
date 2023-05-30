@@ -142,8 +142,6 @@ architecture synthesis of m2m is
 
 signal main_clk    : std_logic;
 signal main_rst    : std_logic;
-signal video_clk   : std_logic;
-signal video_rst   : std_logic;
 signal reset_m2m_n : std_logic;
 signal qnice_clk   : std_logic;
 signal qnice_rst   : std_logic;
@@ -177,6 +175,8 @@ signal main_audio_l           : signed(15 downto 0);
 signal main_audio_r           : signed(15 downto 0);
 
 -- Video output from Core
+signal video_clk              : std_logic;
+signal video_rst              : std_logic;
 signal video_ce               : std_logic;
 signal video_ce_ovl           : std_logic;
 signal video_red              : std_logic_vector(7 downto 0);
