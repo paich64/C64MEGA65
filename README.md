@@ -1,7 +1,5 @@
 @TODO: Redo HDMI recipe due to new menu layout
 
-@TODO: Redo demopics
-
 @TODO: Hardware cartridges: Link to @lydon's explainer video and/or to
 more details how to upgrade core #0.
 
