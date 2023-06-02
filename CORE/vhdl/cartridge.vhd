@@ -65,34 +65,6 @@ architecture synthesis of cartridge is
    signal freeze_ack   : std_logic;
    signal freeze_crt   : std_logic;
 
---   attribute mark_debug : string;
---   attribute mark_debug of cart_loading_i : signal is "true";
---   attribute mark_debug of cart_id_i      : signal is "true";
---   attribute mark_debug of cart_exrom_i   : signal is "true";
---   attribute mark_debug of cart_game_i    : signal is "true";
---   attribute mark_debug of cart_size_i    : signal is "true";
---   attribute mark_debug of ioe_i          : signal is "true";
---   attribute mark_debug of iof_i          : signal is "true";
---   attribute mark_debug of wr_en_i        : signal is "true";
---   attribute mark_debug of wr_data_i      : signal is "true";
---   attribute mark_debug of addr_i         : signal is "true";
---   attribute mark_debug of bank_lo_o      : signal is "true";
---   attribute mark_debug of bank_hi_o      : signal is "true";
---   attribute mark_debug of exrom_o        : signal is "true";
---   attribute mark_debug of game_o         : signal is "true";
---   attribute mark_debug of freeze_key_i   : signal is "true";
---   attribute mark_debug of mod_key_i      : signal is "true";
---   attribute mark_debug of nmi_o          : signal is "true";
---   attribute mark_debug of nmi_ack_i      : signal is "true";
---   attribute mark_debug of cart_disable   : signal is "true";
---   attribute mark_debug of allow_freeze   : signal is "true";
---   attribute mark_debug of saved_d6       : signal is "true";
---   attribute mark_debug of old_freeze     : signal is "true";
---   attribute mark_debug of old_nmiack     : signal is "true";
---   attribute mark_debug of freeze_req     : signal is "true";
---   attribute mark_debug of freeze_ack     : signal is "true";
---   attribute mark_debug of freeze_crt     : signal is "true";
-
 begin
 
    freeze_req <= not old_freeze and freeze_key_i;

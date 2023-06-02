@@ -142,50 +142,6 @@ architecture synthesis of sw_cartridge_wrapper is
    signal main_cache_addr_lo      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
    signal main_cache_addr_hi      : std_logic_vector(C_CACHE_SIZE-1 downto 0);
 
---   attribute mark_debug : string;
---   attribute mark_debug of main_resp_status     : signal is "true";
---   attribute mark_debug of main_reset_core      : signal is "true";
---   attribute mark_debug of qnice_rst_i          : signal is "true";
---   attribute mark_debug of qnice_addr_i         : signal is "true";
---   attribute mark_debug of qnice_data_i         : signal is "true";
---   attribute mark_debug of qnice_ce_i           : signal is "true";
---   attribute mark_debug of qnice_we_i           : signal is "true";
---   attribute mark_debug of qnice_data_o         : signal is "true";
---   attribute mark_debug of qnice_wait_o         : signal is "true";
---   attribute mark_debug of main_rst_i           : signal is "true";
---   attribute mark_debug of main_reset_core_o    : signal is "true";
---   attribute mark_debug of main_loading_o       : signal is "true";
---   attribute mark_debug of main_id_o            : signal is "true";
---   attribute mark_debug of main_exrom_o         : signal is "true";
---   attribute mark_debug of main_game_o          : signal is "true";
---   attribute mark_debug of main_size_o          : signal is "true";
---   attribute mark_debug of main_bank_laddr_o    : signal is "true";
---   attribute mark_debug of main_bank_size_o     : signal is "true";
---   attribute mark_debug of main_bank_num_o      : signal is "true";
---   attribute mark_debug of main_bank_raddr_o    : signal is "true";
---   attribute mark_debug of main_bank_wr_o       : signal is "true";
---   attribute mark_debug of main_bank_lo_i       : signal is "true";
---   attribute mark_debug of main_bank_hi_i       : signal is "true";
---   attribute mark_debug of main_bank_wait_o     : signal is "true";
---   attribute mark_debug of main_ram_addr_i      : signal is "true";
---   attribute mark_debug of main_lo_ram_data_o   : signal is "true";
---   attribute mark_debug of main_hi_ram_data_o   : signal is "true";
---   attribute mark_debug of main_ioe_ram_data_o  : signal is "true";
---   attribute mark_debug of main_iof_ram_data_o  : signal is "true";
---   attribute mark_debug of main_ioe_we_i        : signal is "true";
---   attribute mark_debug of main_iof_we_i        : signal is "true";
---   attribute mark_debug of main_ram_data_i      : signal is "true";
---   attribute mark_debug of hr_rst_i             : signal is "true";
---   attribute mark_debug of hr_write_o           : signal is "true";
---   attribute mark_debug of hr_read_o            : signal is "true";
---   attribute mark_debug of hr_address_o         : signal is "true";
---   attribute mark_debug of hr_writedata_o       : signal is "true";
---   attribute mark_debug of hr_byteenable_o      : signal is "true";
---   attribute mark_debug of hr_burstcount_o      : signal is "true";
---   attribute mark_debug of hr_readdata_i        : signal is "true";
---   attribute mark_debug of hr_readdatavalid_i   : signal is "true";
---   attribute mark_debug of hr_waitrequest_i     : signal is "true";
-
 begin
 
    ---------------------------------------------------

@@ -379,50 +379,6 @@ architecture synthesis of main is
       );
    end component reu;
 
-   attribute mark_debug : string;
-   attribute mark_debug of c64_ram_addr_o         : signal is "true";
-   attribute mark_debug of c64_ram_ce             : signal is "true";
-   attribute mark_debug of c64_ram_data_i         : signal is "true";
-   attribute mark_debug of c64_ram_data_o         : signal is "true";
-   attribute mark_debug of c64_ram_data           : signal is "true";
-   attribute mark_debug of c64_ram_we             : signal is "true";
-   attribute mark_debug of cartridge_bank_laddr_i : signal is "true";
-   attribute mark_debug of cartridge_bank_num_i   : signal is "true";
-   attribute mark_debug of cartridge_bank_raddr_i : signal is "true";
-   attribute mark_debug of cartridge_bank_size_i  : signal is "true";
-   attribute mark_debug of cartridge_bank_wr_i    : signal is "true";
-   attribute mark_debug of cartridge_exrom_i      : signal is "true";
-   attribute mark_debug of cartridge_game_i       : signal is "true";
-   attribute mark_debug of cartridge_id_i         : signal is "true";
-   attribute mark_debug of cartridge_loading_i    : signal is "true";
-   attribute mark_debug of core_dma               : signal is "true";
-   attribute mark_debug of core_exrom_n           : signal is "true";
-   attribute mark_debug of core_game_n            : signal is "true";
-   attribute mark_debug of core_ioe               : signal is "true";
-   attribute mark_debug of core_iof               : signal is "true";
-   attribute mark_debug of core_nmi_ack           : signal is "true";
-   attribute mark_debug of core_romh              : signal is "true";
-   attribute mark_debug of core_roml              : signal is "true";
-   attribute mark_debug of core_umax_romh         : signal is "true";
-   attribute mark_debug of crt_addr_bus_o         : signal is "true";
-   attribute mark_debug of crt_bank_hi_o          : signal is "true";
-   attribute mark_debug of crt_bank_lo_o          : signal is "true";
-   attribute mark_debug of crt_bank_wait_i        : signal is "true";
-   attribute mark_debug of crt_exrom              : signal is "true";
-   attribute mark_debug of crt_game               : signal is "true";
-   attribute mark_debug of crt_hi_ram_data_i      : signal is "true";
-   attribute mark_debug of crt_ioe_ram_data_i     : signal is "true";
-   attribute mark_debug of crt_ioe_we_o           : signal is "true";
-   attribute mark_debug of crt_iof_ram_data_i     : signal is "true";
-   attribute mark_debug of crt_iof_we_o           : signal is "true";
-   attribute mark_debug of crt_lo_ram_data_i      : signal is "true";
-   attribute mark_debug of ext_cycle_o            : signal is "true";
-   attribute mark_debug of reset_core_n           : signal is "true";
-   attribute mark_debug of reset_hard_i           : signal is "true";
-   attribute mark_debug of reset_soft_i           : signal is "true";
-   attribute mark_debug of restore_key_n          : signal is "true";
-   attribute mark_debug of cart_reset_counter     : signal is "true";
-
 begin
 
    -- @TODO DEBUG/DELIT

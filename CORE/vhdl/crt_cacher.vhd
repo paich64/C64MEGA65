@@ -95,42 +95,6 @@ architecture synthesis of crt_cacher is
    signal next_cache_addr_lo : std_logic_vector(G_CACHE_SIZE-1 downto 0);
    signal next_cache_addr_hi : std_logic_vector(G_CACHE_SIZE-1 downto 0);
 
---   attribute mark_debug : string;
---   attribute mark_debug of cart_valid_i        : signal is "true";
---   attribute mark_debug of cart_bank_laddr_i   : signal is "true";
---   attribute mark_debug of cart_bank_size_i    : signal is "true";
---   attribute mark_debug of cart_bank_num_i     : signal is "true";
---   attribute mark_debug of cart_bank_raddr_i   : signal is "true";
---   attribute mark_debug of cart_bank_wr_i      : signal is "true";
---   attribute mark_debug of bank_lo_i           : signal is "true";
---   attribute mark_debug of bank_hi_i           : signal is "true";
---   attribute mark_debug of bank_wait_o         : signal is "true";
---   attribute mark_debug of cache_addr_lo_o     : signal is "true";
---   attribute mark_debug of cache_addr_hi_o     : signal is "true";
---   attribute mark_debug of avm_write_o         : signal is "true";
---   attribute mark_debug of avm_read_o          : signal is "true";
---   attribute mark_debug of avm_address_o       : signal is "true";
---   attribute mark_debug of avm_writedata_o     : signal is "true";
---   attribute mark_debug of avm_byteenable_o    : signal is "true";
---   attribute mark_debug of avm_burstcount_o    : signal is "true";
---   attribute mark_debug of avm_readdata_i      : signal is "true";
---   attribute mark_debug of avm_readdatavalid_i : signal is "true";
---   attribute mark_debug of avm_waitrequest_i   : signal is "true";
---   attribute mark_debug of bram_address_o      : signal is "true";
---   attribute mark_debug of bram_data_o         : signal is "true";
---   attribute mark_debug of bram_lo_wren_o      : signal is "true";
---   attribute mark_debug of bram_hi_wren_o      : signal is "true";
---   attribute mark_debug of state               : signal is "true";
---   attribute mark_debug of hi_load             : signal is "true";
---   attribute mark_debug of hi_load_done        : signal is "true";
---   attribute mark_debug of lo_load             : signal is "true";
---   attribute mark_debug of lo_load_done        : signal is "true";
---   attribute mark_debug of restart             : signal is "true";
---   attribute mark_debug of next_cache_addr_lo  : signal is "true";
---   attribute mark_debug of next_cache_addr_hi  : signal is "true";
---   attribute mark_debug of cache_ram_lo        : signal is "true";
---   attribute mark_debug of cache_ram_hi        : signal is "true";
-
 begin
 
    bank_wait_o <= '1' when state = READ_HI_ST
