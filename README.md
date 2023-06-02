@@ -153,7 +153,7 @@ Some demo pictures
 |:-----------------------------------------:|:----------------------------------------:|:--------------------------------------:| 
 | *Core Menu*                               | *Disk mounting / file browser*           | *Giana Sisters*                        |
 | ![c64-4](doc/demopics/c64mega65-4.jpg)    | ![c64-5](doc/demopics/c64mega65-5.jpg)   | ![c64-6](doc/demopics/c64mega65-6.jpg) | 
-| *Neon/Triad*                              | *Memento Mori/Genesis Project*           | *Relentless*                           |
+| *Censor Design & Oxyron: Comaland*        | *Robot Jet Action*                       | *A Pig Quest*                          |
 
 Clarification: These screenshots are just for illustration purposes.
 This repository does not contain any copyrighted material.
