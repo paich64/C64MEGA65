@@ -27,6 +27,7 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A18  | 04/29/23 | 4f91c48 | More stability for hardware cartridges: Delayed PHI2 signal by 63ns. PowerCartridge now works and EasyFlash 3 can be flashed (but does not run any games, yet). Simulated cartridges: Support for modern Ocean type 1B cartridges such as SoulForce (fixes https://github.com/MJoergen/C64MEGA65/issues/20)
 | WIP-V5-A19  | 05/02/23 | bc3218b | Ability to switch Kernal versions: Standard, C64 Games System, Japanese Revision and JiffyDOS
 | WIP-V5-A20  | 05/07/23 | dbc7143 | Fixed bug in FAT32 library that lead to an Settings file: Seek failed." error under certain circumstances. Plus other smaller bugs und features.
-| WIP-A5-A21  | 05/08/23 | 18f8a0b | Eye of the Beholder is glitchfree now in CRT simulation: Heavily improved caching mechanisms for `*.crt` files
-| WIP-A5-A22  | 05/10/23 | ce5c8c2 | Support for composite sync (CSYNC) via the MEGA65's VGA port
-| WIP-A5-A23  | 05/10/23 | e1c696d | Dedicated test build for AmokPhaze101's 2-day intensive `*.crt` testing session that contains all the latest refactorings and bugfixes
+| WIP-V5-A21  | 05/08/23 | 18f8a0b | Eye of the Beholder is glitchfree now in CRT simulation: Heavily improved caching mechanisms for `*.crt` files
+| WIP-V5-A22  | 05/10/23 | ce5c8c2 | Support for composite sync (CSYNC) via the MEGA65's VGA port
+| WIP-V5-A23  | 05/10/23 | e1c696d | Dedicated test build for AmokPhaze101's 2-day intensive `*.crt` testing session that contains all the latest refactorings and bugfixes
+| WIP-V5-B1   | 06/02/23 | 584972c | Beta 1: Feature complete and to our knowledge bug-free with the exception of the issues that are tagged with "V6 or later" on GitHub
