@@ -324,7 +324,8 @@ Utility Cartridges that are known to work
 
 * Action Replay
 * Epyx Fast Load
-* Final Cartridge III
+* Final Cartridge III (with the caveat that the machine language Monitor
+  does not return to the program/game correctly)
 * GeoRAM
 * PowerCartridge
 * Super Snapshot
