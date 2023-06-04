@@ -11,15 +11,16 @@ Version 5 - Month Day, 2023
 | Status             | Test                                                 | Done by                | Date              
 |:-------------------|------------------------------------------------------|:-----------------------|:--------------------------
 | :question:         | Basic regression tests                               | :question:             | :question:
-| :question:         | HDMI & VGA                                           | :question:             | :question:
-| :question:         | SID                                                  | :question:             | :question:
+| :white_check_mark: | HDMI & VGA                                           | AmokPhaze101           | 6/3/23
+| :white_check_mark: | SID                                                  | AmokPhaze101           | 6/3/23
 | :question:         | C64 Emulator Test Suite V2.15                        | :question:             | :question:
 | :question:         | [Demos](demos.md)                                    | :question:             | :question:
 | :question:         | Writing to `*.d64` images                            | :question:             | :question:
-| :question:         | Dedicated REU tests                                  | :question:             | :question:
 | :question:         | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | :question:             | :question:
 | :question:         | PLA Test                                             | :question:             | :question:
-| :question:         | Dedicated cartridge tests                            | :question:             | :question:
+| :white_check_mark: | Dedicated REU tests                                  | AmokPhaze101           | 6/3/23
+| :question:         | Dedicated hardware cartridge tests                   | :question:             | :question:
+| :question:         | Dedicated simulated cartridge tests                  | :question:             | :question:
 
 ### Basic regression tests
 
@@ -123,31 +124,60 @@ Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
 
 ### Dedicated REU tests
 
-All done by AmokPhaze101 on MM/DD/23
+All done by AmokPhaze101 on 6/3/23
 
 #### Demos
 
 | Status             | Demo                                        | Comment
-|:-------------------|---------------------------------------------|:---------------------------------------------------
-| :question:         | Dark Mights - Movie 32                      | 
-| :question:         | Expand by Bonzai                            | 
-| :question:         | fREUd                                       | 
-| :question:         | Globe 2016                                  | 
-| :question:         | Life will never be the same Digidemo 286K_1 | 
-| :question:         | Qi                                          | 
-| :question:         | REU demo Zelda                              | 
-| :question:         | Treu Love                                   | 
+|:-------------------|---------------------------------------------|----------------------------------------------------
+| :white_check_mark: | Dark Mights - Movie 32                      | [CSDB](https://csdb.dk/release/?id=5903)
+| :white_check_mark: | Expand by Bonzai                            | [CSDB](https://csdb.dk/release/?id=192886)
+| :white_check_mark: | fREUd                                       | [CSDB](https://csdb.dk/release/?id=149560)
+| :white_check_mark: | Frontier                                    | [CSDB](https://csdb.dk/release/?id=120458)
+| :white_check_mark: | Globe 2016                                  | [CSDB](https://csdb.dk/release/?id=152053) Takes a few minutes to be fully rendered
+| :white_check_mark: | Life will never be the same Digidemo 286K_1 | [CSDB](https://csdb.dk/release/?id=3736)
+| :white_check_mark: | Qi                                          | [CSDB](https://csdb.dk/release/?id=139711)
+| :white_check_mark: | REU demo Zelda                              | [CSDB](https://csdb.dk/release/?id=68189)
+| :white_check_mark: | Treu Love                                   | [CSDB](https://csdb.dk/release/?id=144105) Ensure to use this file: `TreuLove_ForReal1750Reu.d64`
 
 #### Games
 
 | Status             | Game                                        | Comment
-|:-------------------|---------------------------------------------|:---------------------------------------------------
-| :question:         | Sonic The Hedgehog v1.2+5                   | 
-| :question:         | Creatures II +9Hi - Mystic                  | 
-| :question:         | Exterminator_1991_Audiogenic_(REU)          | 
-| :question:         | from_the_west[r]                            | 
-| :question:         | Ski_or_Die_1990_Electronic_Arts_REU         | 
-| :question:         | Walkerz +3                                  | 
+|:-------------------|---------------------------------------------|----------------------------------------------------
+| :white_check_mark: | Sonic The Hedgehog v1.2+5                   | [CSDB](https://csdb.dk/release/?id=212617]
+| :white_check_mark: | Creatures II +9Hi - Mystic                  | [CSDB](https://csdb.dk/release/?id=41884]
+| :white_check_mark: | Exterminator_1991_Audiogenic_(REU)          | [CSDB](https://csdb.dk/release/?id=168549]
+| :white_check_mark: | From the West                               | [CSDB](https://csdb.dk/release/?id=185613]
+| :white_check_mark: | Ski_or_Die_1990_Electronic_Arts_REU         | [CSDB](https://csdb.dk/release/?id=161436] Takes ages to load but it's ok
+| :white_check_mark: | Walkerz +3                                  | [CSDB](https://csdb.dk/release/?id=43006]
+
+### Dedicated hardware cartridge tests
+
+All done by @TODO:NAME on @TODO:DATE
+
+| Status             | Test                                                                                                            | Comment
+|:-------------------|-----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------
+| :question:         | Test a bunch of original old game cartridges                                                                    | Tested Last Ninja Remix, Super Games, Wizard of Wor
+| :question:         | Test an old Ultimax game                                                                                        | Tested Pinball Spectacular
+| :question:         | Test a bunch of new game cartridges                                                                             | Tested Muddy Racers, Sam's Journey, Soul Force, The Curse of Rabenstein
+| :question:         | Final Cartridge III                                                                                             |
+| :question:         | Action Replay Professional 6.0                                                                                  |
+| :question:         | Power Cartridge                                                                                                 |
+| :question:         | Flash the EasyFlash **1CR** with a small (<64k) and large (>512k) game and playtest these games                 |
+| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                   |
+| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                   |
+| :question:         | EasyFlash **3**: Test all freezers that the EF3 supports as described in [cartridges.md](../doc/cartridges.md)  |
+| :question:         | Kung Fu Flash using the workaround described in [cartridges.md](../doc/cartridges.md)                           |
+| :question:         | Work with GEOS and GeoRAM                                                                                       |
+
+### Dedicated simulated cartridge tests
+
+All done by @TODO:NAME on @TODO:DATE
+
+| Status             | Game                              | CRT file type | Comment
+|:-------------------|-----------------------------------|:--------------|------------------------------------------------
+| :question:         |                                   |               |
+
 
 Version 4 - November 25, 2022
 -----------------------------
