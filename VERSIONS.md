@@ -45,6 +45,9 @@ or by directly loading `*.prg` files.
   page and to the very last item when you press cursor right one (more) time
   while you are on the last page.
 
+* A long reset is now visualized: The drive led is glowing blue as long as the
+  user keeps the reset button pressed during a long reset.
+
 ## Improved C64 and C1541 Accuracy & Compatibility
 
 * Improved the 6510 CPU's interrupt dispatching which results in more demos

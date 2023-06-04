@@ -30,4 +30,5 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A21  | 05/08/23 | 18f8a0b | Eye of the Beholder is glitchfree now in CRT simulation: Heavily improved caching mechanisms for `*.crt` files
 | WIP-V5-A22  | 05/10/23 | ce5c8c2 | Support for composite sync (CSYNC) via the MEGA65's VGA port
 | WIP-V5-A23  | 05/10/23 | e1c696d | Dedicated test build for AmokPhaze101's 2-day intensive `*.crt` testing session that contains all the latest refactorings and bugfixes
-| WIP-V5-B1   | 06/02/23 | 584972c | Beta 1: Feature complete and to our knowledge bug-free with the exception of the issues that are tagged with "V6 or later" on GitHub
+| WIP-V5-B1   | 06/02/23 | 584972c | Feature complete and to our knowledge bug-free with the exception of the issues that are tagged with "V6 or later" on GitHub
+| WIP-V5-B2   | 06/04/23 |         | Visualize long reset by turning the MEGA65's drive led blue

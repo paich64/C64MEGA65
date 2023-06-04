@@ -43,7 +43,6 @@ port (
                                                              -- HDMI 1280x720 @ 60 Hz resolution = mode 1,
                                                              -- PAL 576p in 4:3 and 5:4 are modes 2 and 3
    qnice_scandoubler_o      : out std_logic;                 -- 0 = no scandoubler, 1 = scandoubler
-   qnice_csync_o            : out std_logic;                 -- 0 = normal HS/VS, 1 = Composite Sync
    qnice_audio_mute_o       : out std_logic;
    qnice_audio_filter_o     : out std_logic;
    qnice_zoom_crop_o        : out std_logic;
@@ -51,6 +50,7 @@ port (
    qnice_ascal_polyphase_o  : out std_logic;
    qnice_ascal_triplebuf_o  : out std_logic;
    qnice_retro15kHz_o       : out std_logic;
+   qnice_csync_o            : out std_logic;                 -- 0 = normal HS/VS, 1 = Composite Sync 
 
    -- Flip joystick ports
    qnice_flip_joyports_o    : out std_logic;
@@ -105,9 +105,11 @@ port (
    main_audio_left_o        : out signed(15 downto 0);
    main_audio_right_o       : out signed(15 downto 0);
 
-   -- M2M Keyboard interface (incl. drive led)
+   -- M2M Keyboard interface (incl. power led and drive led)
    main_kb_key_num_i        : in  integer range 0 to 79;     -- cycles through all MEGA65 keys
    main_kb_key_pressed_n_i  : in  std_logic;                 -- low active: debounced feedback: is kb_key_num_i pressed right now?
+   main_power_led_o         : out std_logic;
+   main_power_led_col_o     : out std_logic_vector(23 downto 0);
    main_drive_led_o         : out std_logic;
    main_drive_led_col_o     : out std_logic_vector(23 downto 0);
 
@@ -473,8 +475,9 @@ begin
    ---------------------------------------------------------------------------------------------
 
    -- MEGA65's power led: By default, it is on and glows green when the MEGA65 is powered on.
+   -- We switch it to blue when a long reset is detected and as long as the user keeps pressing the preset button
    main_power_led_o     <= '1';
-   main_power_led_col_o <= x"00FF00";  -- 24-bit RGB value for the led
+   main_power_led_col_o <= x"0000FF" when main_reset_m2m_i else x"00FF00";
 
    -- main.vhd contains the actual MiSTer core
    i_main : entity work.main
@@ -673,8 +676,6 @@ begin
                          2 when qnice_osm_control_i(C_MENU_HDMI_4_3_50)  = '1' else
                          1 when qnice_osm_control_i(C_MENU_HDMI_16_9_60) = '1' else
                          0;
-                         
-   qnice_csync_o <= qnice_osm_control_i(C_MENU_VGA_15KHZCS);                  -- Composite sync (CSYNC)
 
    -- Use On-Screen-Menu selections to configure several audio and video settings
    -- Video and audio mode control
@@ -688,6 +689,7 @@ begin
    qnice_audio_filter_o       <= qnice_osm_control_i(C_MENU_IMPROVE_AUDIO);   -- 0 = raw audio, 1 = use filters from globals.vhd
    qnice_zoom_crop_o          <= qnice_osm_control_i(C_MENU_HDMI_ZOOM);       -- 0 = no zoom/crop
    qnice_retro15kHz_o         <= qnice_osm_control_i(C_MENU_VGA_15KHZHSVS) or qnice_osm_control_i(C_MENU_VGA_15KHZCS);
+   qnice_csync_o              <= qnice_osm_control_i(C_MENU_VGA_15KHZCS);     -- Composite sync (CSYNC)
 
    -- ascal filters that are applied while processing the input
    -- 00 : Nearest Neighbour

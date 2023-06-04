@@ -78,6 +78,3 @@ Install and use JiffyDOS
 * Start the core with the updated SD card
 
 * Select "JiffyDOS" in the "Kernal" submenu of the core's menu
-
-* Press reset (only necessary with Alpha versions of the core; the release
-  version will reset automatically)
