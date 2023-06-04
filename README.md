@@ -39,8 +39,8 @@ drive (you can mount `*.d64`) images. It supports the following hardware
 ports of the MEGA65:
 
 * Joystick port for joysticks, mice and paddles
-* Expansion port for C64 cartridges: Games, Freezers, Fast loader
-  cartridges, GeoRAM, Multi-Function Flash Cartridges, etc.
+* Expansion port for C64 cartridges: Games, freezers, fast loader
+  cartridges, GeoRAM, multi-function flash cartridges, etc.
 * IEC port so that you can attach real 1541 & 1581 drives as well as
   printers, plotters or modern devices such as the SD2IEC and the
   Ultimate-II+
@@ -232,8 +232,8 @@ Using `.bit` files is very useful, in case you want to try out multiple cores
 or core versions quickly without going through the lengthy process of
 flashing `.cor` files.
 
-HDMI compatibility @TODO: REDO RECIPE DUE TO NEW MENU LAYOUT
-------------------------------------------------------------
+HDMI compatibility
+------------------
 
 Right now, the C64 core is not compatible with all HDMI displays. If your
 display works with the MEGA65 core but stays black when you load the C64 core,
