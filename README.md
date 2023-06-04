@@ -1,5 +1,3 @@
-@TODO: Redo HDMI recipe due to new menu layout
-
 @TODO: Hardware cartridges: Link to @lydon's explainer video and/or to
 more details how to upgrade core #0.
 
@@ -42,7 +40,7 @@ ports of the MEGA65:
 
 * Joystick port for joysticks, mice and paddles
 * Expansion port for C64 cartridges: Games, Freezers, Fast loader
-  cartridges, REUs, Multi-Function Flash Cartridges, etc.
+  cartridges, GeoRAM, Multi-Function Flash Cartridges, etc.
 * IEC port so that you can attach real 1541 & 1581 drives as well as
   printers, plotters or modern devices such as the SD2IEC and the
   Ultimate-II+
@@ -245,14 +243,16 @@ then try this (while the display is black):
 2. Press the <kbd>Help</kbd> key.
 3. Press six times (6x) the <kbd>Up</kbd> cursor key.
 4. Press <kbd>Return</kbd>.
-5. Wait a few seconds.
-6. If this does not solve the issue, continue:
-7. Press four more times (4x) the <kbd>Up</kbd> cursor key.
-8. Press <kbd>Return</kbd>.
-9. Wait a few seconds.
-10. If this does not solve the issue, continue:
-11. Press one time (1x) the <kbd>Down</kbd> cursor key.
-12. Press <kbd>Return</kbd>.
+5. Press five times (5x) the <kbd>Down</kbd> cursor key.
+6. Press <kbd>Return</kbd>.
+7. Wait a few seconds.
+8. If this does not solve the issue, continue:
+9. Press four more times (4x) the <kbd>Up</kbd> cursor key.
+10. Press <kbd>Return</kbd>.
+11. Wait a few seconds.
+12. If this does not solve the issue, continue:
+13. Press one time (1x) the <kbd>Down</kbd> cursor key.
+14. Press <kbd>Return</kbd>.
 
 ### Explanation: DVI mode, 60 Hz mode, 576p
 
