@@ -31,4 +31,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-A22  | 05/10/23 | ce5c8c2 | Support for composite sync (CSYNC) via the MEGA65's VGA port
 | WIP-V5-A23  | 05/10/23 | e1c696d | Dedicated test build for AmokPhaze101's 2-day intensive `*.crt` testing session that contains all the latest refactorings and bugfixes
 | WIP-V5-B1   | 06/02/23 | 584972c | Feature complete and to our knowledge bug-free with the exception of the issues that are tagged with "V6 or later" on GitHub
-| WIP-V5-B2   | 06/04/23 |         | Visualize long reset by turning the MEGA65's drive led blue
+| WIP-V5-B2   | 06/04/23 | 6b299b4 | Visualize long reset by turning the MEGA65's drive led blue
