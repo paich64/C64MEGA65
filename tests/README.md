@@ -144,31 +144,33 @@ All done by AmokPhaze101 on 6/3/23
 
 | Status             | Game                                        | Comment
 |:-------------------|---------------------------------------------|----------------------------------------------------
-| :white_check_mark: | Sonic The Hedgehog v1.2+5                   | [CSDB](https://csdb.dk/release/?id=212617]
-| :white_check_mark: | Creatures II +9Hi - Mystic                  | [CSDB](https://csdb.dk/release/?id=41884]
-| :white_check_mark: | Exterminator_1991_Audiogenic_(REU)          | [CSDB](https://csdb.dk/release/?id=168549]
-| :white_check_mark: | From the West                               | [CSDB](https://csdb.dk/release/?id=185613]
-| :white_check_mark: | Ski_or_Die_1990_Electronic_Arts_REU         | [CSDB](https://csdb.dk/release/?id=161436] Takes ages to load but it's ok
-| :white_check_mark: | Walkerz +3                                  | [CSDB](https://csdb.dk/release/?id=43006]
+| :white_check_mark: | Sonic The Hedgehog v1.2+5                   | [CSDB](https://csdb.dk/release/?id=212617)
+| :white_check_mark: | Creatures II +9Hi - Mystic                  | [CSDB](https://csdb.dk/release/?id=41884)
+| :white_check_mark: | Exterminator_1991_Audiogenic_(REU)          | [CSDB](https://csdb.dk/release/?id=168549)
+| :white_check_mark: | From the West                               | [CSDB](https://csdb.dk/release/?id=185613)
+| :white_check_mark: | Ski_or_Die_1990_Electronic_Arts_REU         | [CSDB](https://csdb.dk/release/?id=161436) Takes ages to load but it's ok
+| :white_check_mark: | Walkerz +3                                  | [CSDB](https://csdb.dk/release/?id=43006)
 
 ### Dedicated hardware cartridge tests
 
 All done by @TODO:NAME on @TODO:DATE
 
-| Status             | Test                                                                                                            | Comment
-|:-------------------|-----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------
-| :question:         | Test a bunch of original old game cartridges                                                                    | Tested Last Ninja Remix, Super Games, Wizard of Wor
-| :question:         | Test an old Ultimax game                                                                                        | Tested Pinball Spectacular
-| :question:         | Test a bunch of new game cartridges                                                                             | Tested Muddy Racers, Sam's Journey, Soul Force, The Curse of Rabenstein
-| :question:         | Final Cartridge III                                                                                             |
-| :question:         | Action Replay Professional 6.0                                                                                  |
-| :question:         | Power Cartridge                                                                                                 |
-| :question:         | Flash the EasyFlash **1CR** with a small (<64k) and large (>512k) game and playtest these games                 |
-| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                   |
-| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                   |
-| :question:         | EasyFlash **3**: Test all freezers that the EF3 supports as described in [cartridges.md](../doc/cartridges.md)  |
-| :question:         | Kung Fu Flash using the workaround described in [cartridges.md](../doc/cartridges.md)                           |
-| :question:         | Work with GEOS and GeoRAM                                                                                       |
+| Status             | Test                                                                                                                        | Comment
+|:-------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------
+| :question:         | Using a correct core #0: Test if we can directly boot to a hardware cartridge                                               |
+| :question:         | Using a correct core #0: Test if the hardware cartridge is ignored in case simulated REU or simulated cartridge is selected |
+| :question:         | Test a bunch of original old game cartridges                                                                                | Tested Last Ninja Remix, Super Games, Wizard of Wor
+| :question:         | Test an old Ultimax game                                                                                                    | Tested Pinball Spectacular
+| :question:         | Test a bunch of new game cartridges                                                                                         | Tested Muddy Racers, Sam's Journey, Soul Force, The Curse of Rabenstein
+| :question:         | Final Cartridge III                                                                                                         |
+| :question:         | Action Replay Professional 6.0                                                                                              |
+| :question:         | Power Cartridge                                                                                                             |
+| :question:         | Flash the EasyFlash **1CR** with a small (<64k) and large (>512k) game and playtest these games                             |
+| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                               |
+| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                               |
+| :question:         | EasyFlash **3**: Test all freezers that the EF3 supports as described in [cartridges.md](../doc/cartridges.md)              |
+| :question:         | Kung Fu Flash using the workaround described in [cartridges.md](../doc/cartridges.md)                                       |
+| :question:         | Work with GEOS and GeoRAM                                                                                                   |
 
 ### Dedicated simulated cartridge tests
 
