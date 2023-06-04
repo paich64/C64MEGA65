@@ -32,6 +32,7 @@ you have a JTAG connection and an **active serial terminal** to observe the debu
 * Filebrowser
 * Mount disk
 * Load `*.prg`
+* Short reset vs. long reset: Test drive led's behavior
 * Stress the OSM ("unexpected" resets, opening closing "all the time" while things that change the OSM are happening in the background, etc.)
 * Play with the Expansion Port settings, start a hardware CRT and an emulated CRT (there are more detailed and dedicated cartridge tests later)
 * Flip joystick ports
