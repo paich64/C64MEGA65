@@ -99,7 +99,7 @@ Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
 * Use [Sidplay64](https://csdb.dk/release/?id=161475) and dedicated stereo SID files to
   test the various "Right SID port" settings: `D420.d64` and `D500.d64`
 
-The folder [sidtests](sidtests) in this repo contains all these files.
+The folder [sidtests](sidtests) in this repo contains all the test files including `D420.d64` and `D500.d64`.
 
 ### Writing to `*.d64` images
 
