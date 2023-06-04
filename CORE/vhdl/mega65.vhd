@@ -472,6 +472,10 @@ begin
    -- main_clk (C64 MiSTer Core clock)
    ---------------------------------------------------------------------------------------------
 
+   -- MEGA65's power led: By default, it is on and glows green when the MEGA65 is powered on.
+   main_power_led_o     <= '1';
+   main_power_led_col_o <= x"00FF00";  -- 24-bit RGB value for the led
+
    -- main.vhd contains the actual MiSTer core
    i_main : entity work.main
       generic map (
