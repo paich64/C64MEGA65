@@ -97,7 +97,9 @@ Make sure that the Retro 15 kHz tests are performed on real analog retro CRTs.
 * Check the 8580 filters using the [Smile to the Sky demo](https://csdb.dk/release/?id=172574)
 * Check true stereo SID using the [Game of Thrones demo](https://csdb.dk/release/?id=157533)
 * Use [Sidplay64](https://csdb.dk/release/?id=161475) and dedicated stereo SID files to
-  test the various "Right SID port" settings. 
+  test the various "Right SID port" settings: `D420.d64` and `D500.d64`
+
+The folder [sidtests](sidtests) in this repo contains all these files.
 
 ### Writing to `*.d64` images
 
