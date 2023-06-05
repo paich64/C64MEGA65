@@ -364,7 +364,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal writ
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 84;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 98;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -469,6 +469,21 @@ constant OPTM_ITEMS        : string :=
    "\n"                         &
    " Back to main menu\n"       &
    
+   " OSM: %s\n"                 &  -- OSM submenu
+   " OSM scaling\n"             &
+   "\n"                         &
+   " 100%\n"                    &
+   " 89%\n"                     &
+   " 80%\n"                     &
+   " 73%\n"                     &
+   " 67%\n"                     &
+   " 62%\n"                     &
+   " 57%\n"                     &
+   " 53%\n"                     &
+   " 50%\n"                     &
+   "\n"                         &
+   " Back to main menu\n"       &
+   
    "\n"                         &
    " About & Help\n"            &
    "\n"                         &
@@ -492,7 +507,8 @@ constant OPTM_G_HDMI_DVI      : integer := 15;
 constant OPTM_G_CRT_EMULATION : integer := 16;
 constant OPTM_G_HDMI_ZOOM     : integer := 17;
 constant OPTM_G_VGA_MODES     : integer := 18;
-constant OPTM_G_ABOUT_HELP    : integer := 19;
+constant OPTM_G_OSM_MODE      : integer := 19;
+constant OPTM_G_ABOUT_HELP    : integer := 20;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
@@ -581,6 +597,21 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_VGA_MODES,
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
+
+                                             OPTM_G_SUBMENU,                        -- OSM:
+                                             OPTM_G_HEADLINE,                       -- OSM scaling
+                                             OPTM_G_LINE,
+                                             OPTM_G_OSM_MODE      + OPTM_G_STDSEL,  -- Standard
+                                             OPTM_G_OSM_MODE,                       -- 6%
+                                             OPTM_G_OSM_MODE,                       -- 13%
+                                             OPTM_G_OSM_MODE,                       -- 19%
+                                             OPTM_G_OSM_MODE,                       -- 25%
+                                             OPTM_G_OSM_MODE,                       -- 31%
+                                             OPTM_G_OSM_MODE,                       -- 38%
+                                             OPTM_G_OSM_MODE,                       -- 44%
+                                             OPTM_G_OSM_MODE,                       -- 50%
+                                             OPTM_G_LINE,
+                                             OPTM_G_CLOSE         + OPTM_G_SUBMENU, -- Back to main menu
 
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,

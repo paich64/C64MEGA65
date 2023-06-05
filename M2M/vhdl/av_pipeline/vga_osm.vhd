@@ -19,27 +19,28 @@ use ieee.numeric_std_unsigned.all;
 
 entity vga_osm is
    generic  (
-      G_VGA_DX             : natural;
-      G_VGA_DY             : natural;
-      G_FONT_FILE          : string;
-      G_FONT_DX            : natural;
-      G_FONT_DY            : natural
+      G_VGA_DX              : natural;
+      G_VGA_DY              : natural;
+      G_FONT_FILE           : string;
+      G_FONT_DX             : natural;
+      G_FONT_DY             : natural
    );
    port (
-      clk_i                : in  std_logic;
+      clk_i                 : in  std_logic;
 
-      vga_col_i            : in  integer range 0 to 2047;
-      vga_row_i            : in  integer range 0 to 2047;
+      vga_col_i             : in  integer range 0 to 2047;
+      vga_row_i             : in  integer range 0 to 2047;
 
-      vga_osm_cfg_enable_i : in  std_logic;
-      vga_osm_cfg_xy_i     : in  std_logic_vector(15 downto 0);
-      vga_osm_cfg_dxdy_i   : in  std_logic_vector(15 downto 0);
-      vga_osm_vram_addr_o  : out std_logic_vector(15 downto 0);
-      vga_osm_vram_data_i  : in  std_logic_vector(7 downto 0);
-      vga_osm_vram_attr_i  : in  std_logic_vector(7 downto 0);
+      vga_osm_cfg_scaling_i : in  integer range 0 to 8;
+      vga_osm_cfg_enable_i  : in  std_logic;
+      vga_osm_cfg_xy_i      : in  std_logic_vector(15 downto 0);
+      vga_osm_cfg_dxdy_i    : in  std_logic_vector(15 downto 0);
+      vga_osm_vram_addr_o   : out std_logic_vector(15 downto 0);
+      vga_osm_vram_data_i   : in  std_logic_vector(7 downto 0);
+      vga_osm_vram_attr_i   : in  std_logic_vector(7 downto 0);
 
-      vga_osm_on_o         : out std_logic;
-      vga_osm_rgb_o        : out std_logic_vector(23 downto 0)
+      vga_osm_on_o          : out std_logic;
+      vga_osm_rgb_o         : out std_logic_vector(23 downto 0)
    );
 end vga_osm;
 
@@ -92,8 +93,11 @@ begin
       stage0.vga_osm_y2 <= vga_osm_y + to_integer(vga_osm_cfg_dxdy_i(7 downto 0));
    end process calc_boundaries;
 
-   vga_col <= vga_col_i + vga_col_i/8;
-   vga_row <= vga_row_i + vga_row_i/8;
+   -- This part implements the fractional scaling
+   vga_col <= vga_col_i +
+              (vga_osm_cfg_scaling_i * (vga_col_i - to_integer(vga_osm_cfg_dxdy_i(15 downto 8)) / 2)) / 8;
+   vga_row <= vga_row_i +
+              (vga_osm_cfg_scaling_i * (vga_row_i - to_integer(vga_osm_cfg_dxdy_i( 7 downto 0)) / 2)) / 8;
 
 
    -----------
