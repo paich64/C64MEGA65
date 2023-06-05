@@ -214,7 +214,8 @@ selected freezer cartridge.
 
 The following freezers are working. Download their binaries from
 [rr.pokefinder.org](https://rr.pokefinder.org/) as these binaries are known
-to work:
+to work. **Always make sure that you flash the `*.bin`
+version of the freezer:**
 
 * [Action Replay](https://rr.pokefinder.org/wiki/Category:Action_Replay)
 * [Nordic Power / Atomic Power](https://rr.pokefinder.org/wiki/Nordic_Power)
@@ -225,8 +226,7 @@ The
 is not working, yet.
 
 Use the built in flasher that you can start with <kbd>P</kbd> from the EF3
-menu to flash freezers. **Always make sure that you flash the `*.bin`
-version of the freezer.**
+menu to flash freezers.
 
 ### Known issue: The buttons do not work as expected
 
