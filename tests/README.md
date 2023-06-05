@@ -259,9 +259,8 @@ Complete" and Disc 2 "everything works but the below-mentioned exceptions" as
 | :white_check_mark: | Disc 2: "CPUTiming" to  "Cntdef"            | sy2002                 | 11/19/22
 | :x:                | Disc 2: "CIA1TA"                            | sy2002                 | 11/19/22
 | :x:                | Disc 2: "CIA1TB"                            | sy2002                 | 11/19/22
-| :x:                | Disc 2: "CIA2TA"                            | sy2002                 | 11/19/22
-| :x:                | Disc 2: "CIA2TA"                            | sy2002                 | 11/19/22
-| :x:                | Disc 2: "CIA2TB"                            | sy2002                 | 11/19/22
+| :x:                | Disc 3: "CIA2TA"                            | sy2002                 | 11/19/22
+| :x:                | Disc 3: "CIA2TB"                            | sy2002                 | 11/19/22
 
 ### Dedicated REU tests
 
