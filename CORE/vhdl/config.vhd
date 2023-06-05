@@ -372,7 +372,7 @@ constant OPTM_SIZE         : natural := 98;  -- amount of items including empty 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
 constant OPTM_DX           : natural := 25;
-constant OPTM_DY           : natural := 30;
+constant OPTM_DY           : natural := 31;
 
 -- !!! DO NOT TOUCH THE TYPE DEFINITION IN THE NEXT LINE AND CONTINUE YOUR CONFIGURATION ONE LINE LATER                                              
 type OPTM_GTYPE is array (0 to OPTM_SIZE - 1) of integer range 0 to 2**OPTM_GTC - 1;
@@ -470,7 +470,7 @@ constant OPTM_ITEMS        : string :=
    " Back to main menu\n"       &
    
    " OSM: %s\n"                 &  -- OSM submenu
-   " OSM scaling\n"             &
+   " OSM Scaling\n"             &
    "\n"                         &
    " 100%\n"                    &
    " 89%\n"                     &
