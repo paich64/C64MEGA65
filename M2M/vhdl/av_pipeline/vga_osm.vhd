@@ -63,6 +63,9 @@ architecture synthesis of vga_osm is
       vga_osm_rgb       : std_logic_vector(23 downto 0);
    end record stage_t;
 
+   signal vga_col       : integer range 0 to 2047;
+   signal vga_row       : integer range 0 to 2047;
+
    signal stage0 : stage_t;
    signal stage1 : stage_t;
    signal stage2 : stage_t;
@@ -89,6 +92,9 @@ begin
       stage0.vga_osm_y2 <= vga_osm_y + to_integer(vga_osm_cfg_dxdy_i(7 downto 0));
    end process calc_boundaries;
 
+   vga_col <= vga_col_i + vga_col_i/8;
+   vga_row <= vga_row_i + vga_row_i/8;
+
 
    -----------
    -- Stage 1
@@ -98,10 +104,10 @@ begin
    begin
       if rising_edge(clk_i) then
          stage1 <= stage0;
-         stage1.vga_x_div_16 <= vga_col_i / G_FONT_DX;
-         stage1.vga_y_div_16 <= vga_row_i / G_FONT_DY;
-         stage1.vga_x_mod_16 <= vga_col_i mod G_FONT_DX;
-         stage1.vga_y_mod_16 <= vga_row_i mod G_FONT_DY;
+         stage1.vga_x_div_16 <= vga_col / G_FONT_DX;
+         stage1.vga_y_div_16 <= vga_row / G_FONT_DY;
+         stage1.vga_x_mod_16 <= vga_col mod G_FONT_DX;
+         stage1.vga_y_mod_16 <= vga_row mod G_FONT_DY;
       end if;
    end process p_stage1;
 
