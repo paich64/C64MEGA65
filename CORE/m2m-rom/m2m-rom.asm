@@ -396,9 +396,9 @@ OPTM_G_MOUNT_CRT .EQU    5
 ; The On-Screen-Menu uses the heap for several data structures. This heap
 ; is located before the main system heap in memory.
 ; You need to deduct MENU_HEAP_SIZE from the actual heap size below.
-; Example: If your HEAP_SIZE would be 29696, then you write 29696-1600=28096
+; Example: If your HEAP_SIZE would be 29696, then you write 29696-1792=27904
 ; instead, but when doing the sanity check calculations, you use 29696
-MENU_HEAP_SIZE  .EQU 1600
+MENU_HEAP_SIZE  .EQU 1792
 
 #ifndef RELEASE
 
@@ -406,14 +406,14 @@ MENU_HEAP_SIZE  .EQU 1600
 ; this needs to be the last variable before the monitor variables as it is
 ; only defined as "BLOCK 1" to avoid a large amount of null-values in
 ; the ROM file
-HEAP_SIZE       .EQU 5568                       ; 7168 - 1600 = 5568
+HEAP_SIZE       .EQU 5376                       ; 7168 - 1792 = 5376
 HEAP            .BLOCK 1
 
 ; in RELEASE mode: 28k of heap which leads to a better user experience when
 ; it comes to folders with a lot of files
 #else
 
-HEAP_SIZE       .EQU 28096                      ; 29696 - 1600 = 28096
+HEAP_SIZE       .EQU 27904                      ; 29696 - 1792 = 27904
 HEAP            .BLOCK 1
  
 ; The monitor variables use 22 words, round to 32 for being safe and subtract

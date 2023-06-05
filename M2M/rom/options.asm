@@ -189,7 +189,9 @@ _HLP_HEAP1_OK   MOVE    MENU_HEAP_SIZE, R8
 
                 ; If we land here, we have a heap size problem or a bug.
                 ; See above at ERR_FATAL_HEAP1.
-                MOVE    ERR_FATAL_HEAP2, R8     ; R9 contains the overrun
+                MOVE    R10, R9                 ; R9 contains overrun
+                SUB     @R8, R9
+                MOVE    ERR_FATAL_HEAP2, R8
                 RSUB    FATAL, 1 
 
                 ; run the menu
