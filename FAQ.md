@@ -80,6 +80,11 @@ Most SD card problems can be resolved by considering these possible causes:
 
 6. If (1) to (5) do not help: Use another card
 
+If you have a `Error code: 2704` in conjunction with an SD card error then
+[this](https://discord.com/channels/719326990221574164/794775503818588200/1114834752281772043)
+post on Discord might be interesting for you. But the bottom line is also in
+this case: Step (5) or step (6) will solve the issue.
+
 ### Formatting SD cards on a Mac
 
 * Mac OS' GUI tools try to be "smart". Do not use them, as you cannot

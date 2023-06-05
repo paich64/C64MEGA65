@@ -10,10 +10,11 @@ Version 5 - Month Day, 2023
 
 | Status             | Test                                                 | Done by                | Date              
 |:-------------------|------------------------------------------------------|:-----------------------|:--------------------------
-| :question:         | Basic regression tests                               | :question:             | :question:
+| :white_check_mark: | Basic regression tests: Main menu                    | AmokPhaze101           | 6/4/23
+| :question:         | Basic regression tests: Additional Smoke Tests       | :question:             | :question:
 | :white_check_mark: | HDMI & VGA                                           | AmokPhaze101           | 6/3/23
 | :white_check_mark: | SID                                                  | AmokPhaze101           | 6/3/23
-| :question:         | C64 Emulator Test Suite V2.15                        | :question:             | :question:
+| :white_check_mark: | C64 Emulator Test Suite V2.15                        | AmokPhaze101           | 6/4/23
 | :question:         | [Demos](demos.md)                                    | :question:             | :question:
 | :question:         | Writing to `*.d64` images                            | :question:             | :question:
 | :question:         | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | :question:             | :question:
@@ -54,10 +55,7 @@ you have a JTAG connection and an **active serial terminal** to observe the debu
 * Work with large directory trees / game libraries
 * Eagle's Nest: Reset-tests: Short reset leads to main screen. Long reset
   resets the whole core (not only the C64).
-* Giana Sisters: Scrolling while flicker-free is ON/OFF, joystick, latency
-* Katakis: High score saving/loading
-* Smile to the Sky (demo): SID 8580 filters
-* Sonic the Hedgehog: REU
+* Giana Sisters: Joystick and latency
 * Space Lords: Support for 4 paddles
 
 ### HDMI & VGA
@@ -111,19 +109,20 @@ The folder [sidtests](sidtests) in this repo contains all the test files includi
 
 ### C64 Emulator Test Suite V2.15
 
+Identical to Version 4 - so we consider this as a success.
+
 | Status             | Detail                                      | Done by                | Date              
 |:-------------------|---------------------------------------------|:-----------------------|:--------------------------
-| :question:         | Disc 1: Complete                            | :question:             | :question:
-| :question:         | Disc 2: From start to and incl. "Trap16"    | :question:             | :question:
-| :question:         | Disc 2: "Trap17"                            | :question:             | :question:
-| :question:         | Disc 2: "Branchwrap" to  "MMU"              | :question:             | :question:
-| :question:         | Disc 2: "CPUPort"                           | :question:             | :question:
-| :question:         | Disc 2: "CPUTiming" to  "Cntdef"            | :question:             | :question:
-| :question:         | Disc 2: "CIA1TA"                            | :question:             | :question:
-| :question:         | Disc 2: "CIA1TB"                            | :question:             | :question:
-| :question:         | Disc 2: "CIA2TA"                            | :question:             | :question:
-| :question:         | Disc 2: "CIA2TA"                            | :question:             | :question:
-| :question:         | Disc 2: "CIA2TB"                            | :question:             | :question:
+| :white_check_mark: | Disc 1: Complete                            | AmokPhaze101           | 06/04/23
+| :white_check_mark: | Disc 2: From start to and incl. "Trap16"    | AmokPhaze101           | 06/04/23
+| :x:                | Disc 2: "Trap17"                            | AmokPhaze101           | 06/04/23
+| :white_check_mark: | Disc 2: "Branchwrap" to  "MMU"              | AmokPhaze101           | 06/04/23
+| :x:                | Disc 2: "CPUPort"                           | AmokPhaze101           | 06/04/23
+| :white_check_mark: | Disc 2: "CPUTiming" to  "Cntdef"            | AmokPhaze101           | 06/04/23
+| :x:                | Disc 2: "CIA1TA"                            | AmokPhaze101           | 06/04/23
+| :x:                | Disc 2: "CIA1TB"                            | AmokPhaze101           | 06/04/23
+| :x:                | Disc 3: "CIA2TA"                            | AmokPhaze101           | 06/04/23
+| :x:                | Disc 3: "CIA2TB"                            | AmokPhaze101           | 06/04/23
 
 ### Dedicated REU tests
 
@@ -135,7 +134,7 @@ All done by AmokPhaze101 on 6/3/23
 |:-------------------|---------------------------------------------|----------------------------------------------------
 | :white_check_mark: | Dark Mights - Movie 32                      | [CSDB](https://csdb.dk/release/?id=5903)
 | :white_check_mark: | Expand by Bonzai                            | [CSDB](https://csdb.dk/release/?id=192886)
-| :white_check_mark: | fREUd                                       | [CSDB](https://csdb.dk/release/?id=149560)
+| :x:                | fREUd                                       | [CSDB](https://csdb.dk/release/?id=149560) In the part with boucing balls all the backgrounds are screwed up. Same issue on MiSTer C64_20221117.rbf. Perfectly runs on real Commodore C64 with Ultimate Cartridge.
 | :white_check_mark: | Frontier                                    | [CSDB](https://csdb.dk/release/?id=120458)
 | :white_check_mark: | Globe 2016                                  | [CSDB](https://csdb.dk/release/?id=152053) Takes a few minutes to be fully rendered
 | :white_check_mark: | Life will never be the same Digidemo 286K_1 | [CSDB](https://csdb.dk/release/?id=3736)
