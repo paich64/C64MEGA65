@@ -164,6 +164,7 @@ All done by @TODO:NAME on @TODO:DATE
 | :question:         | Test a bunch of original old game cartridges                                                                                | Tested Last Ninja Remix, Super Games, Wizard of Wor
 | :question:         | Test an old Ultimax game                                                                                                    | Tested Pinball Spectacular
 | :question:         | Test a bunch of new game cartridges                                                                                         | Tested Muddy Racers, Sam's Journey, Soul Force, The Curse of Rabenstein
+| :question:         | Save game and load game to/from the original Sam's Journey cartridge                                                        |
 | :question:         | Final Cartridge III                                                                                                         |
 | :question:         | Action Replay Professional 6.0                                                                                              |
 | :question:         | Power Cartridge                                                                                                             |
