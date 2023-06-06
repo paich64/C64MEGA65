@@ -94,10 +94,22 @@ begin
    end process calc_boundaries;
 
    -- This part implements the fractional scaling
-   vga_col <= vga_col_i +
-              (vga_osm_cfg_scaling_i * (vga_col_i - to_integer(vga_osm_cfg_dxdy_i(15 downto 8)) / 2)) / 8;
-   vga_row <= vga_row_i +
-              (vga_osm_cfg_scaling_i * (vga_row_i - to_integer(vga_osm_cfg_dxdy_i( 7 downto 0)) / 2)) / 8;
+   -- It also makes sure there is no overflow.
+   process (all)
+   begin
+      -- Default is no scaling.
+      vga_col <= vga_col_i;
+      vga_row <= vga_row_i;
+
+      if vga_col_i < G_VGA_DX then
+         vga_col <= vga_col_i +
+                    (vga_osm_cfg_scaling_i * (vga_col_i - to_integer(vga_osm_cfg_dxdy_i(15 downto 8)) * G_FONT_DX / 2)) / 8;
+      end if;
+      if vga_row_i < G_VGA_DY then
+         vga_row <= vga_row_i +
+                    (vga_osm_cfg_scaling_i * (vga_row_i - to_integer(vga_osm_cfg_dxdy_i( 7 downto 0)) * G_FONT_DY / 2)) / 8;
+      end if;
+   end process;
 
 
    -----------

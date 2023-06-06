@@ -258,8 +258,8 @@ begin
       if tmp(i) = '1' then
          return i;
       end if;
-      return tmp'length;
    end loop;
+   return tmp'length;
 end function first_nonzero_bit;
 
 begin
