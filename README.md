@@ -1,3 +1,8 @@
+@TODO: Make a dedicated retrotubes.md and describe cables, devices and CSync
+there
+
+@TODO: Describe OSM down-scaling
+
 @TODO: Hardware cartridges: Link to @lydon's explainer video and/or to
 more details how to upgrade core #0.
 

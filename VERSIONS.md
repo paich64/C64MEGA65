@@ -40,6 +40,9 @@ or by directly loading `*.prg` files.
 
 * More clearly arranged menu system using submenus.
 
+* Possibility to scale-down the On-Screen-Menu (OSM). Use-case: Compensate
+  for large overscans of certain retro Cathode Ray Tubes.
+
 * File browser's page up/down (cursor left/right) now jumps to the very first
   item when you press cursor left one (more) time while you are on the first
   page and to the very last item when you press cursor right one (more) time
