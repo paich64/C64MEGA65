@@ -75,6 +75,8 @@ architecture synthesis of vga_osm is
    signal stage2_vga_osm_font_addr : std_logic_vector(11 downto 0);
    signal stage3_vga_osm_font_data : std_logic_vector(15 downto 0);
 
+   signal vga_osm_cfg_scaling_d : integer range 0 to 8;
+
 begin
 
    -----------
@@ -119,6 +121,7 @@ begin
    p_stage1 : process (clk_i)
    begin
       if rising_edge(clk_i) then
+         vga_osm_cfg_scaling_d <= vga_osm_cfg_scaling_i;
          stage1 <= stage0;
          stage1.vga_x_div_16 <= vga_col / G_FONT_DX;
          stage1.vga_y_div_16 <= vga_row / G_FONT_DY;
