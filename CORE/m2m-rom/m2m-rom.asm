@@ -378,6 +378,9 @@ D64_STDSIZE_H   .DW     0x0002, 0x0003
 OPTM_G_LOAD_PRG  .EQU    3
 OPTM_G_MOUNT_CRT .EQU    5
 
+; This needs to be the last thing before the "Variables" sections starts
+END_OF_ROM      .DW 0
+
 ; ----------------------------------------------------------------------------
 ; Variables: Need to be located in RAM
 ; ----------------------------------------------------------------------------
@@ -396,9 +399,9 @@ OPTM_G_MOUNT_CRT .EQU    5
 ; The On-Screen-Menu uses the heap for several data structures. This heap
 ; is located before the main system heap in memory.
 ; You need to deduct MENU_HEAP_SIZE from the actual heap size below.
-; Example: If your HEAP_SIZE would be 29696, then you write 29696-1536=28160
-; instead, but when doing the sanity check calculations, you use 29696
-MENU_HEAP_SIZE  .EQU 1536
+; Example: If your HEAP_SIZE would be 30208, then you write 30208-1664=28544
+; instead, but when doing the sanity check calculations, you use 30208
+MENU_HEAP_SIZE  .EQU 1664
 
 #ifndef RELEASE
 
@@ -406,24 +409,24 @@ MENU_HEAP_SIZE  .EQU 1536
 ; this needs to be the last variable before the monitor variables as it is
 ; only defined as "BLOCK 1" to avoid a large amount of null-values in
 ; the ROM file
-HEAP_SIZE       .EQU 5632                       ; 7168 - 1536 = 5632
+HEAP_SIZE       .EQU 5504                       ; 7168 - 1664 = 5504
 HEAP            .BLOCK 1
 
 ; in RELEASE mode: 28k of heap which leads to a better user experience when
 ; it comes to folders with a lot of files
 #else
 
-HEAP_SIZE       .EQU 28160                      ; 29696 - 1536 = 28160
+HEAP_SIZE       .EQU 28544                      ; 30208 - 1664 = 28544
 HEAP            .BLOCK 1
  
 ; The monitor variables use 22 words, round to 32 for being safe and subtract
 ; it from FF00 because this is at the moment the highest address that we
 ; can use as RAM: 0xFEE0
-; The stack starts at 0xFEE0 (search var VAR$STACK_START in osm_rom.lis to
+; The stack starts at 0xFEE0 (search var VAR$STACK_START in m2m-rom.lis to
 ; calculate the address). To see, if there is enough room for the stack
-; given the HEAP_SIZE do this calculation: Add 29696 words to HEAP which
-; is currently 0x81E5 and subtract the result from 0xFEE0. This yields
-; currently a stack size of 2299, which is more than 1.5k words, and therefore
+; given the HEAP_SIZE do this calculation: Add 30208 words to HEAP which
+; is currently 0x81E6 and subtract the result from 0xFEE0. This yields
+; currently a stack size of 1786, which is more than 1.5k words, and therefore
 ; sufficient for this program.
 
                 .ORG    0xFEE0                  ; @TODO: automate calculation

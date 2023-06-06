@@ -42,6 +42,7 @@ port (
    qnice_video_mode_o       : out natural range 0 to 3;      -- HDMI 1280x720 @ 50 Hz resolution = mode 0,
                                                              -- HDMI 1280x720 @ 60 Hz resolution = mode 1,
                                                              -- PAL 576p in 4:3 and 5:4 are modes 2 and 3
+   qnice_osm_cfg_scaling_o  : out std_logic_vector(8 downto 0);
    qnice_scandoubler_o      : out std_logic;                 -- 0 = no scandoubler, 1 = scandoubler
    qnice_audio_mute_o       : out std_logic;
    qnice_audio_filter_o     : out std_logic;
@@ -156,13 +157,13 @@ port (
    iec_reset_n_o            : out std_logic;
    iec_atn_n_o              : out std_logic;
    iec_clk_en_o             : out std_logic;
-   iec_clk_n_i              : in std_logic;
+   iec_clk_n_i              : in  std_logic;
    iec_clk_n_o              : out std_logic;
    iec_data_en_o            : out std_logic;
-   iec_data_n_i             : in std_logic;
+   iec_data_n_i             : in  std_logic;
    iec_data_n_o             : out std_logic;
    iec_srq_en_o             : out std_logic;
-   iec_srq_n_i              : in std_logic;
+   iec_srq_n_i              : in  std_logic;
    iec_srq_n_o              : out std_logic;
 
    -- C64 Expansion Port (aka Cartridge Port) control lines
@@ -344,6 +345,7 @@ constant C_MENU_HDMI_ZOOM     : natural := 68;
 constant C_MENU_VGA_STD       : natural := 72;
 constant C_MENU_VGA_15KHZHSVS : natural := 76;
 constant C_MENU_VGA_15KHZCS   : natural := 77;
+subtype C_MENU_OSM_SCALING is natural range 91 downto 83;
 
 -- RAMs for the C64
 signal qnice_c64_ram_we             : std_logic;
@@ -690,6 +692,7 @@ begin
    qnice_zoom_crop_o          <= qnice_osm_control_i(C_MENU_HDMI_ZOOM);       -- 0 = no zoom/crop
    qnice_retro15kHz_o         <= qnice_osm_control_i(C_MENU_VGA_15KHZHSVS) or qnice_osm_control_i(C_MENU_VGA_15KHZCS);
    qnice_csync_o              <= qnice_osm_control_i(C_MENU_VGA_15KHZCS);     -- Composite sync (CSYNC)
+   qnice_osm_cfg_scaling_o    <= qnice_osm_control_i(C_MENU_OSM_SCALING);
 
    -- ascal filters that are applied while processing the input
    -- 00 : Nearest Neighbour
