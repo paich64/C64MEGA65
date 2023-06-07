@@ -1532,10 +1532,21 @@ _OPTM_CBS_VD    MOVE    R1, R8
                 RSUB    VD_DRVNO, 1
                 RBRA    _OPTM_CBS_CTRM, !C
 
+                ; Check if the amount of VDRIVES that are configured in
+                ; globals.vhd is large enough to accomodate the current VDRIVE
+                MOVE    R8, R0
+                ADD     1, R0
+                MOVE    VDRIVES_NUM, R3
+                CMP     R0, @R3
+                RBRA    _OPTM_CBS_0, !N
+                MOVE    R8, R9
+                MOVE    ERR_F_MENUDRV, R8
+                RSUB    FATAL, 1
+
                 ; the position of the string for each virtual drive number
                 ; equals virtual drive number times @SCR$OSM_O_DX, because
                 ; each string will be smaller than the width of the menu
-                MOVE    SCR$OSM_O_DX, R9
+_OPTM_CBS_0     MOVE    SCR$OSM_O_DX, R9
                 MOVE    @R9, R9
                 SYSCALL(mulu, 1)                ; R10: result lo word of mulu
                 MOVE    OPTM_HEAP, R0           ; R0: string pointer
@@ -1600,7 +1611,7 @@ _OPTM_CBS_1     MOVE    VD_CACHE_DIRTY, R9
                 ADD     R0, R8
                 MOVE    2, @R8                  ; we use "2" instead of "1"
 
-                RBRA    _OPTM_CBS_RET, 1            
+                RBRA    _OPTM_CBS_RET, 1        ; case done; skip other cases
 
                 ; Case #2b: Show name of disk image
                 ; the replacement string was placed at R0 by HANDLE_MOUNTING
@@ -1657,6 +1668,8 @@ _OPTM_CBS_4     MOVE    SCR$OSM_O_DX, R8        ; set "%s is replaced" flag
                 SUB     1, R8
                 ADD     R0, R8
                 MOVE    1, @R8
+
+                RBRA    _OPTM_CBS_RET, 1        ; case done; skip other cases
 
                 ; ------------------------------------------------------------
                 ; Case (b-2): CRTs/ROMs
