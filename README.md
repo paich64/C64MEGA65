@@ -3,9 +3,6 @@ there
 
 @TODO: Describe OSM down-scaling
 
-@TODO: Hardware cartridges: Link to @lydon's explainer video and/or to
-more details how to upgrade core #0.
-
 Commodore 64 for MEGA65
 =======================
 
@@ -512,7 +509,7 @@ when this old CORE #0 is installed.
 
 You have two options when you own such a MEGA65:
 
-1. [Update CORE #0 as described here](@TODO-ADD-THE-CORRECT-LINK-HERE)
+1. [Update CORE #0 as described here](https://mega65.atlassian.net/l/cp/1fkp5zvQ)
 
 2. Manually boot the C64 for MEGA65 core using the <kbd>No Scroll</kbd>
    mechanism and then insert your cartridge **while the MEGA65 is switched on
