@@ -6,8 +6,6 @@ there
 @TODO: Hardware cartridges: Link to @lydon's explainer video and/or to
 more details how to upgrade core #0.
 
-@TODO: Software cartridges: Link to AmokPhaze's test results.
-
 Commodore 64 for MEGA65
 =======================
 
@@ -555,7 +553,9 @@ certain utility cartridges, you can now go ahead and mount disk images or
 load programs.
 
 Simulated cartridges work great on the MEGA65. We successfully tested them
-with [a lot of](@TODO-ADD-CORRECT-LINK) games and other cartridge types.
+with [commercial games](tests/commercial_carts.md)
+and made sure that we also tested 
+[different cartridge types](tests/README.md#dedicated-simulated-cartridge-tests).
 
 But since they are only "simulated", they can never be as glitch-free and
 accurate as hardware cartridges. We use the MEGA65's HyperRAM to store the

@@ -21,7 +21,7 @@ Version 5 - Month Day, 2023
 | :question:         | PLA Test                                             | :question:             | :question:
 | :white_check_mark: | Dedicated REU tests                                  | AmokPhaze101           | 6/3/23
 | :question:         | Dedicated hardware cartridge tests                   | :question:             | :question:
-| :question:         | Dedicated simulated cartridge tests                  | :question:             | :question:
+| :white_check_mark: | Dedicated simulated cartridge tests                  | AmokPhaze101           | 6/7/23
 
 ### Basic regression tests
 
@@ -177,12 +177,53 @@ All done by @TODO:NAME on @TODO:DATE
 
 ### Dedicated simulated cartridge tests
 
-All done by @TODO:NAME on @TODO:DATE
+All done by AmokPhaze101 on 6/7/23
 
-| Status             | Game                              | CRT file type | Comment
-|:-------------------|-----------------------------------|:--------------|------------------------------------------------
-| :question:         |                                   |               |
+| Status             | Comment              | Game Name                                                                     | Cartridge Type                        
+|:-------------------|:---------------------|:------------------------------------------------------------------------------|:-------------------------------------------
+| :white_check_mark: |                      | Beamrider                                                                     | 0 - generic cartridge                  
+| :white_check_mark: |                      | Centipede                                                                     | 0 - generic cartridge                  
+| :white_check_mark: |                      | Gridrunner                                                                    | 0 - generic cartridge                  
+| :white_check_mark: |                      | Gyruss                                                                        | 0 - generic cartridge                  
+| :white_check_mark: |                      | Pac-Man                                                                       | 0 - generic cartridge                  
+| :x:                | Planned for v6       | Action Replay v4.2 Professional                                               | 1 - Action Replay                      
+| :x:                | Planned for v6       | Action Replay v5.0 Professional                                               | 1 - Action Replay                      
+| :x:                | Planned for v6       | Action Replay v6.0 Professional                                               | 1 - Action Replay                      
+| :x:                | Planned for v6       | Black Box V4                                                                  | 3 - Final Cartridge III                
+| :x:                | Planned for v6       | Black Box V8                                                                  | 3 - Final Cartridge III                
+| :x:                | Planned for v6       | Final Cartridge III                                                           | 3 - Final Cartridge III                
+| :white_check_mark: |                      | Kung Fu Master                                                                | 5 - Ocean type 1                       
+| :white_check_mark: |                      | Ghostbusters                                                                  | 5 - Ocean type 1                       
+| :white_check_mark: |                      | Batman The Movie                                                              | 5 - Ocean type 1                       
+| :white_check_mark: |                      | Robocop 2                                                                     | 5 - Ocean type 1                       
+| :white_check_mark: |                      | Soul Force                                                                    | 5 - Ocean type 1                       
+| :white_check_mark: |                      | Codemasters - Fast Food, Pro Skateboard, Pro Tennis                           | 7 - Fun Play, Power Play               
+| :white_check_mark: |                      | Microprose  - Soccer, Rick Dangerous & Stunt Car Racer                        | 7 - Fun Play, Power Play               
+| :white_check_mark: |                      | Colossus Chess, International Football & Silicon Syborgs                      | 8 - Super Games                        
+| :white_check_mark: |                      | Vegetables Deluxe                                                             | 8 - Super Games                        
+| :white_check_mark: |                      | Fiendish Freddy's Big Top o' Fun, Flimbo’s Quest, Klax & International Soccer | 15 - C64 Game System, System 3         
+| :white_check_mark: |                      | Last Ninja Remix                                                              | 15 - C64 Game System, System 3         
+| :white_check_mark: |                      | Myth - History in the Making                                                  | 15 - C64 Game System, System 3         
+| :white_check_mark: |                      | After the War                                                                 | 17 - Dinamic                           
+| :white_check_mark: |                      | Astro Marine Corps                                                            | 17 - Dinamic                           
+| :white_check_mark: |                      | Narco Police                                                                  | 17 - Dinamic                           
+| :white_check_mark: |                      | L'Abbaye Des Morts                                                            | 19 - Magic Desk, Domark, HES Australia 
+| :white_check_mark: |                      | Archon II - Adept                                                             | 19 - Magic Desk, Domark, HES Australia 
+| :white_check_mark: |                      | Arkanoid - Revenge of Doh                                                     | 19 - Magic Desk, Domark, HES Australia 
+| :white_check_mark: |                      | Park Patrol                                                                   | 19 - Magic Desk, Domark, HES Australia 
+| :white_check_mark: |                      | Super Bread Box                                                               | 19 - Magic Desk, Domark, HES Australia 
+| :white_check_mark: |                      | A Pig Quest                                                                   | 32 - EasyFlash                         
+| :white_check_mark: |                      | Bruce Lee II                                                                  | 32 - EasyFlash                         
+| :white_check_mark: |                      | Monstro Giganto                                                               | 32 - EasyFlash                         
+| :white_check_mark: |                      | Muddy Racer                                                                   | 32 - EasyFlash                         
+| :white_check_mark: |                      | ZetaWing                                                                      | 32 - EasyFlash                         
+| :white_check_mark: |                      | Freaky Fish DX                                                                | 60 - GMod2                             
+| :white_check_mark: |                      | Metal Warrior Ultra                                                           | 60 - GMod2                             
+| :white_check_mark: |                      | Outrage                                                                       | 60 - GMod2                             
+| :white_check_mark: |                      | Polar Bear                                                                    | 60 - GMod2                             
+| :white_check_mark: |                      | Sam's Journey                                                                 | 60 - GMod2                             
 
+Additional tests of [commercial cartridge releases](commercial_carts.md) have been performed by AmokPhaze101 in May 2023.
 
 Version 4 - November 25, 2022
 -----------------------------
