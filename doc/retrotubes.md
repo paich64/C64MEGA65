@@ -47,3 +47,24 @@ damage to the monitor.
 A second LCD monitor will be useful for making the necessary adjustments to the configuration.
 
 ![core-config](assets/bnc-example.jpg)
+
+## SCART and DB9 RGB
+
+Connecting the MEGA65 running the C64 for MEGA65 core to retro tubes such as Commodore and Philips RGB monitors is more straight forward than on professional monitors.
+Make sure you are configuring the C64 core as described above: **VGA: 15 kHz with CSYNC**.
+
+### SCART
+
+For connecting your MEGA65 to a Commodore 1084S or Philips CM8833 monitor with a SCART input you can use a MiSTer VGA to SCART cable like this one:
+
+![VGA-to-SCART](assets/vga-to-scart.jpg)
+
+See here for where to purchase and availability: https://www.retrorgb.com/beware-of-mister-scart-cables.html
+
+### DB9 RGB
+
+For the later Commodore monitors such as the 1084S-P1 or Philips CM8833 Mark II, these have a DB9 RGB input as pictured below:
+
+![DB9-example](assets/db9-rgb-input.jpg)
+
+Use the following VGA to DB9 RGB cable which can be found easily on eBay: https://www.ebay.com.au/itm/115728666823?mkcid=16&mkevt=1&mkrid=705-154756-20017-0&ssspo=VdRmcP3PRmW&sssrc=2047675&ssuid=_M7sYODUQqq&var=415792281593&widget_ver=artemis&media=COPY
