@@ -67,4 +67,4 @@ For the later Commodore monitors such as the 1084S-P1 or Philips CM8833 Mark II,
 
 ![DB9-example](assets/db9-rgb-input.jpg)
 
-Use the following VGA to DB9 RGB cable which can be found easily on eBay: https://www.ebay.com.au/itm/115728666823?mkcid=16&mkevt=1&mkrid=705-154756-20017-0&ssspo=VdRmcP3PRmW&sssrc=2047675&ssuid=_M7sYODUQqq&var=415792281593&widget_ver=artemis&media=COPY
+Use the following VGA to DB9 RGB cable which can be found [on eBay (example from Australia, adjust to your country)](https://www.ebay.com.au/itm/115728666823?mkcid=16&mkevt=1&mkrid=705-154756-20017-0&ssspo=VdRmcP3PRmW&sssrc=2047675&ssuid=_M7sYODUQqq&var=415792281593&widget_ver=artemis&media=COPY).
