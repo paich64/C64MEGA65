@@ -1,8 +1,3 @@
-@TODO: Make a dedicated retrotubes.md and describe cables, devices and CSync
-there
-
-@TODO: Describe OSM down-scaling
-
 Commodore 64 for MEGA65
 =======================
 
@@ -90,11 +85,10 @@ authentic image.
   experience silky smooth scrolling without any flickering and tearing.
 
 * Retro 15 kHz RGB over VGA: This is for the ultimate retro experience:
-  Connect an old Scart TV (for example using
-  [this](https://ultimatemister.com/product/rgb-scart-cable/)
-  cable) or an old RGB-capable monitor (by soldering your own cable)
-  to MEGA65's VGA port. The core supports composite sync (CSYNC) so that
-  Scart and other retro devices work flawlessly.
+  Connect an old SCART TV or an old RGB-capable monitor to MEGA65's VGA port.
+  The core supports composite sync (CSYNC) so that SCART and other retro
+  devices work flawlessly. Learn more in the dedicated documentation
+  about [using analog retro cathode ray tubes](doc/retrotubes.md).
   
 Important: If you use VGA displays or analog retro monitors, please switch off
 "HDMI: Flicker-free" as described
@@ -114,6 +108,8 @@ Important: If you use VGA displays or analog retro monitors, please switch off
   the C64's output and zoom in, so that the 16:9 screen real-estate is
   better utilized and you have a larger picture. Great for games.
 * Audio processing: Optionally improve the raw audio output of the system
+* Scale-down the OSM to accomodate the overscan of some analog retro
+  cathode ray tubes
 
 ### Constraints and Roadmap
 
