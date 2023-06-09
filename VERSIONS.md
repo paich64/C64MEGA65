@@ -4,7 +4,7 @@ Version 5 - XXXXXXXX XX, 2023
 Hardware support release: Insert hardware cartridges into the MEGA65's
 Expansion Port or simulate cartridges via `*.crt` files. Connect IEC devices
 such as drives and printers and enjoy Stereo SID sound. For an authentic
-retro feeling, feed a composite video signal into your monitor or use the
+retro feeling, feed a 15 kHz CSYNC video signal into your monitor or use the
 MiSTer VGA to RGB SCART cable to connect an old TV. Load faster using JiffyDOS
 or by directly loading `*.prg` files.
 

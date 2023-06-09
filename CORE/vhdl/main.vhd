@@ -345,10 +345,6 @@ architecture synthesis of main is
    signal crt_ioe_wr_ena       : std_logic;
    signal crt_iof_wr_ena       : std_logic;
 
-
-   signal dbg_joybtn           : std_logic;
-   signal dbg_cart_dir         : std_logic;
-
    -- Verilog file from MiSTer core
    component reu
       port (
@@ -380,11 +376,6 @@ architecture synthesis of main is
    end component reu;
 
 begin
-
-   -- @TODO DEBUG/DELIT
-   dbg_joybtn     <= joy_2_fire_n_i;
-   dbg_cart_dir   <= cart_data_dir_o;
-
    -- prevent data corruption by not allowing a soft reset to happen while the cache is still dirty
    prevent_reset <= '0' when unsigned(cache_dirty) = 0 else '1';
 

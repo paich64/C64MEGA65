@@ -94,62 +94,65 @@ constant SCR_WELCOME : string :=
    "   F3: Switch to external SD card\n" & 
 
    "\n\n Press Space to continue.";
-   
+
 constant HELP_1 : string :=
 
    "\n Commodore 64 for MEGA65 Version 5\n\n" &
    
    " MiSTer port 2023 by MJoergen & sy2002\n" &   
-   " Powered by MiSTer2MEGA65\n\n\n" &
+   " Powered by MiSTer2MEGA65\n\n" &
       
-   " Turn your MEGA65 into a PAL C64 with a\n" &
-   " C1541 drive and a pair of joysticks.\n" &
-   " No frills. The C64/C1541 run the original\n" &
-   " Commodore Kernal and DOS.\n\n" & 
+   " Quickstart:\n\n" &
+
+   " * Create a /c64 folder on your SD card &\n" &
+   "   place your D64, CRT and PRG files there\n" &
+   " * You can work with long file names and\n" &
+   "   with arbitrary sub-folders\n" &
+   " * Both SD card slots are supported. Back\n" &
+   "   slot takes precedence over bottom slot\n" &   
+   " * Copy the c64mega65 config file to your\n" &
+   "   /c64 folder so that your menu settings\n" &
+   "   are being saved\n" &
+   " * If you use any analog display device\n" &
+   "   via the VGA port, disable HDMI:\n" &
+   "   Flicker-free to avoid glitches\n" &
+   " * If you use HDMI, then absolutely make\n" &
+   "   sure that you enable HDMI: Flicker-free\n" &
+   "   and that you run the core at 50 Hz\n" &
+   " * To use hardware cartridges, you need to\n" &
+   "   have a MEGA65 core #0 from at least mid\n" &
+   "   2023; so you might need to upgrade\n\n" &
+ 
+   " Cursor right to learn more.       (1 of 3)\n" &
+   " Press Space to close the help screen.";
    
-   " When browsing disk images:\n\n" &
+constant HELP_2 : string :=
+
+   "\n Commodore 64 for MEGA65 Version 5\n\n" &
+
+   " When browsing the menu:\n\n" &
+   
+   " Help:               Open/close menu\n" &
+   " Run/Stop:           Leave sub-menu\n" &
+   " Settings are saved when closing the menu\n\n" &
+   
+   " When browsing for D64, CRT and PRG:\n\n" &
    
    " Cursor up/down:     File up/down\n" &
    " Cursor left/right:  Page up/down\n" &
    " Run/Stop:           Cancel browsing\n" &
-   " F1:                 Internal SD card\n" &
-   " F3:                 External SD card\n" &
+   " F1:                 Bottom SD card\n" &
+   " F3:                 Back SD card\n" &
    " Enter:              Mount drive\n" &
-   " Space:              Unmount drive\n" &
-   " Help:               Close menu\n\n" &
-
-   " If you create a ""/c64"" folder on your\n" &
-   " SD card, then by default the file browser\n" &
-   " will start there.\n\n" &
+   "                     Load CRT or PRG\n" &
+   " Space:              Unmount drive\n\n" &
    
-   " Cursor right to learn more.       (1 of 3)\n" &
-   " Press Space to close the help screen.";
-
-constant HELP_2 : string :=
-
-   "\n Commodore 64 for MEGA65 Version 5\n\n" &
+   " System reset:\n\n" &
    
-   " Post-processing:\n\n" &
-   
-   " Visual post-processing only works on the\n" &
-   " HDMI output. On the VGA output, the core\n" &
-   " outputs a pure C64 4:3 PAL signal.\n\n" &
-
-   " We recommend to always use the CRT\n" &
-   " emulation. The way the CRT upscaling is\n" &
-   " done leads to a much better picture with\n" &
-   " little to no Moire effects. And it just\n" &
-   " looks awesome.\n\n" &
-   
-   " The Audio improvements work on the analog\n" &
-   " 3.5mm audio as well as via HDMI audio.\n" &
-   " They fix the SID DC offset and reduce\n" &
-   " treble for a more authentic listening\n" &
-   " experience. Recommended.\n\n" &
-
-   " The Zoom-in feature is mainly meant for\n" &
-   " playing games that do not use the C64's\n" &
-   " border. It looks best on a 16:9 screen.\n\n\n\n" &
+   " Press the reset button shortly to just\n" &         
+   " reset the C64 core and press the button\n" &
+   " longer than 1.5s to reset the MEGA65.\n" &
+   " A short reset also restarts cartridges.\n\n" & 
    
    " Crsr left: Prev  Crsr right: Next (2 of 3)\n" &
    " Press Space to close the help screen.";
@@ -158,28 +161,29 @@ constant HELP_3 : string :=
 
    "\n Commodore 64 for MEGA65 Version 5\n\n" &
    
-   " Flicker-free experience on HDMI:\n\n" &
-     
-   " 1. Make sure your HDMI display supports\n" &
-   "    a 50Hz mode: 720p or 576p\n\n" &   
-   "    Some displays out there that display\n" &
-   "    50Hz as 60Hz. This leads to jerky\n" &
-   "    movements (e.g. while scrolling).\n\n" &
+   " SID:\n\n" &
+
+   " * For older productions choose 6581 and\n" &
+   "   for newer productions choose 8580.\n" &
+   " * Stick to Mono SID unless you know what\n" &
+   "   you are doing.\n" &
+   " * ""Pseudo-stereo"" is an exception to\n" &
+   "   this. Enable it by choosing ""Same as\n" &
+   "   left SID port"" in the configuration for\n" &
+   "   the right SID port and by choosing\n" &
+   "   different SID models for the left and\n" &
+   "   right speaker.\n\n" &
    
-   " 2. Switch on ""HDMI: Flicker-free""\n\n" &
+   " IEC:\n\n" &
    
-   " The ""HDMI: Flicker-free"" mode reduces\n" &
-   " the speed of the whole system by a tiny\n" &
-   " amount: 0.25%. You probably will never\n" &
-   " notice. In case you encounter extremely\n" &
-   " rare compatibility issues: Turn off the\n" &
-   " option and try again.\n\n" &
-     
-   " System reset:\n\n" &
+   " Never run an external device that has the\n" &
+   " drive id #8. Always use #9 or higher.\n\n" &
    
-   " Press the reset button shortly to just\n" &         
-   " reset the C64 core and press the button\n" &
-   " longer than 1.5s to reset the MEGA65.\n\n" &
+   " Writing to disk images:\n\n" &
+   
+   " Wait until the drive led is done turning\n" &
+   " from green to yellow back and forth and\n" &
+   " is off again before unmount, reset or OFF.\n\n" &
    
    " Cursor left to go back.           (3 of 3)\n" &
    " Press Space to close the help screen.";

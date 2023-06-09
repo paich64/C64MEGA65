@@ -26,7 +26,7 @@ port (
    RESET_M2M_N              : in  std_logic;                 -- Debounced system reset in system clock domain
 
    -- Share clock and reset with the framework
-   main_clk_o               : out std_logic;                 -- CORE's 54 MHz clock
+   main_clk_o               : out std_logic;                 -- CORE's clock
    main_rst_o               : out std_logic;                 -- CORE's reset, synchronized
 
    --------------------------------------------------------------------------------------------------------
