@@ -56,8 +56,10 @@ The following command assumes that you are in a folder that contains the
 following two files: `JiffyDOS_C64_6.01.bin` and `basic.901226-01.bin`.
 
 ```cmd
-copy /b basic.901226-01.bin +JiffyDOS_C64_6.01.bin jd-c64.bin
+copy /b basic.901226-01.bin+JiffyDOS_C64_6.01.bin jd-c64.bin
 ```
+
+Hint: Do not omit the `/b` (for binary) in the copy command above.
 
 ### C1541 DOS ROM: `jd-c1541.bin`
 
