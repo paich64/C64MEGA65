@@ -33,3 +33,4 @@ can be checked in the "About & Help" menu of the core.
 | WIP-V5-B1   | 06/02/23 | 584972c | Feature complete and to our knowledge bug-free with the exception of the issues that are tagged with "V6 or later" on GitHub
 | WIP-V5-B2   | 06/04/23 | 6b299b4 | Visualize long reset by turning the MEGA65's drive led blue
 | WIP-V5-B3   | 06/06/23 | 197d9de | Add supoprt for OSM fractional scaling
+| WIP-V5-B4   | 06/10/23 | ff71e71 | Release candidate for Version 5
