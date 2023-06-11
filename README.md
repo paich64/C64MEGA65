@@ -546,7 +546,7 @@ certain utility cartridges, you can now go ahead and mount disk images or
 load programs.
 
 Simulated cartridges work great on the MEGA65. We successfully tested them
-with [commercial games](tests/commercial_carts.md)
+with [a lot of games](tests/carts.md)
 and made sure that we also tested 
 [different cartridge types](tests/README.md#dedicated-simulated-cartridge-tests).
 
