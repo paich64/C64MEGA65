@@ -26,6 +26,7 @@ Feature Roadmap
 * Existing C1541 disk images (`*.d64`) can now be formatted
 * Support `*.d64` images with error maps (filesizes 175,531 and 197,376)
 * Simulated tape drive using `*.t64` tape images
+* Sync on Green (RGsB) retro output mode via VGA
 * You can use the Amiga mouse as a C64 mouse
 * Support autoswap via `*.lst` files
 * Support the creation of empty disk images
