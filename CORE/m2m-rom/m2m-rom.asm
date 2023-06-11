@@ -101,11 +101,14 @@ _FFILES_DOFLT   MOVE    1, R8                   ; no: filter it
 _FFILES_1       CMP     CTX_LOAD_ROM, R10
                 RBRA    _FFILES_RET_0, !Z       ; do not filter in other CTXs
 
-                CMP     OPTM_G_LOAD_PRG, R11    ; menu item "PRG:<Load>"
+                ; menu item "PRG:<Load>"
+                CMP     C64_OPTM_G_LOAD_PRG, R11
                 RBRA    _FFILES_2, !Z
                 MOVE    C64_PRGFILE, R9
                 RBRA    _FFILES_3, 1
-_FFILES_2       CMP     OPTM_G_MOUNT_CRT, R11   ; menu item "CRT:<Load>"
+
+                ; menu item "CRT:<Load>"
+_FFILES_2       CMP     C64_OPTM_G_MOUNT_CRT, R11
                 RBRA    _FFILES_RET_0, !Z
                 MOVE    C64_CRTFILE, R9
 
@@ -373,10 +376,6 @@ C64_IMGTYPE_D81 .EQU    0x0002  ; 1581: D81
 D64_VARIANT_CNT .EQU    2
 D64_STDSIZE_L   .DW     0xAB00, 0x0000
 D64_STDSIZE_H   .DW     0x0002, 0x0003
-
-; Menu group/item ids (see config.vhd)
-OPTM_G_LOAD_PRG  .EQU    3
-OPTM_G_MOUNT_CRT .EQU    5
 
 ; This needs to be the last thing before the "Variables" sections starts
 END_OF_ROM      .DW 0
