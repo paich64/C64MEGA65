@@ -220,7 +220,7 @@ All done by AmokPhaze101 on 6/7/23
 | :white_check_mark: | Polar Bear                                                                    | 60 - GMod2                                 |
 | :white_check_mark: | Sam's Journey                                                                 | 60 - GMod2                                 |
 
-Additional tests of [commercial cartridge releases](carts.md) have been performed by AmokPhaze101 in May 2023.
+Additional tests of [cartridge releases](carts.md) have been performed by AmokPhaze101 in May 2023.
 
 Version 4 - November 25, 2022
 -----------------------------
