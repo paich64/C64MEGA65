@@ -28,7 +28,7 @@ By following these instructions, you will ensure the proper connection of the RG
 
 Connect the opposite end of the cable to the MEGA65's VGA port.
 
-![vga-mega65](vga-connect.jpg)
+![vga-mega65](assets/vga-connect.jpg)
 
 ### Configuring the C64 for MEGA65 core
 
