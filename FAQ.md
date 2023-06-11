@@ -1,3 +1,5 @@
+@TODO: Formatting disk images
+
 @TODO: Adjust links (from develop branch to master, where necessarry, for
 example mover.sh)
 
