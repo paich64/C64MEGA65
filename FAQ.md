@@ -1,22 +1,9 @@
 @TODO: Formatting disk images
 
-@TODO: Adjust links (from develop branch to master, where necessarry, for
-example mover.sh)
+@TODO: Adjust links (from develop branch to master)
 
 @TODO: Add some FAQs around starting the C64 core while a cartridge is
 inserted. Problems such as this here can arise:
-
-@TODO: Add CSync details / rewrite monitor section
-
-
-https://discord.com/channels/719326990221574164/794775503818588200/1084814386083930195
-
-Solutions range from putting the C64 core into Slot 1 to hitting keys
-"blindly" (need to research if he meant NOSCROLL+SLOT# or really blindly in
-the invisibly menu) to pressing NOSCROLL+SLOT#. Others?
-
-Also link to a description (README.md?) what module types are supported
-at all.
 
 @TODO: EF1CR and other cartridges: They need to sit in a plastic shell
 (show photo), you must not insert just a PCB into the MEGA65 because you will
@@ -176,46 +163,23 @@ that you can save your game states or your work in GEOS.
 
 2. Switch-off "HDMI: Flicker-free" and learn more about the issue
    that the flicker-free mode sometimes creates on VGA systems
-   [here](https://github.com/MJoergen/C64MEGA65#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
+   [here](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga)
 
 3. If your monitor supports it, try to use the retro "15 kHz RGB" mode
 
 ## 7) My retro monitor does not work with the core
 
-Right now, the core only supports three different video outputs:
+### Analog devices
 
-* HDMI connector: 1280×720 pixels (720p) at 50 Hz
-* VGA connector: 720x576 pixels (576p) at 50.125 Hz (PAL): 31 kHz horizontal sync frequency
-* VGA connector: 720x288 pixels at 50.125 Hz (PAL): 15 kHz horizontal sync frequency
+There is a [dedicated documentation](doc/retrotubes.md) that explains you how to
+connect retro displays with cathode ray tubes to the MEGA65 using the Commodore 64
+for MEGA65 core.
 
-If you are using any of the VGA modes, switch off "HDMI: Flicker-free" as described
-above in question (6).
+### LCD or TFT devices
 
-Please be aware that even if you switch on the retro "15 kHz RGB" mode, the pinout
-of the VGA connector does not change: Pin 13 still delivers HSYNC and pin 14
-still delivers VSYNC. See this
-[Wikipedia article on VGA](https://en.wikipedia.org/wiki/VGA_connector)
-for details. If you are using simple adaptors from the MEGA65's VGA out to your
-retro monitor then you might experience strange effects on the retro monitor.
-The reason is that the C64 core is currently not yet able to generate a
-[CSYNC signal](https://en.wikipedia.org/wiki/Component_video_sync),
-which is what many retro monitors need (instead of HSYNC and VSYNC).
-
-Maybe there are some active converters (other than "just adaptor cables") that
-are able to deliver the correct signals for certain retro monitors. Right now
-this is unkown terrain for me, so please contact me and share your findings
-and I will publish them.
-
-Generating a CSYNC signal is on the roadmap, you will find it under the headline
-"VGA retro CSync generation" under
-["Technical Roadmap"](https://github.com/MJoergen/C64MEGA65/blob/master/ROADMAP.md#technical-roadmap).
-
-Additionally, Paul Gardner-Stephen is working on an expansion board that (when done)
-you will be able to stick into your MEGA65 and then you will have native composite output.
-Learn more about the progress on Paul's blog, foe example 
-[here](https://c65gs.blogspot.com/2023/01/working-on-composite-video-output-for.html)
-and
-[here](https://c65gs.blogspot.com/2023/01/adding-colour-to-mega65s-composite.html).
+Make sure that you have 
+[switched-off HDMI: Flicker-free](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga)
+when using retro monitors via the MEGA65's VGA out.
 
 ## 8) My mouse does not work
 
