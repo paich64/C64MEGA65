@@ -58,7 +58,7 @@ A second LCD monitor will be useful for making the necessary adjustments to the 
 ## SCART and DB9 RGB
 
 Connecting the MEGA65 running the C64 for MEGA65 core to retro tubes such as Commodore and Philips RGB monitors is more straight forward than on professional monitors.
-Make sure you are configuring the C64 core as described above: **VGA: 15 kHz with CSYNC**.
+Make sure you are configuring the C64 core as described above: [VGA: 15 kHz with CSYNC](#configuring-the-c64-for-mega65-core)
 
 ### SCART
 
