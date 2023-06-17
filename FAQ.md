@@ -56,18 +56,23 @@ Most SD card problems can be resolved by considering these possible causes:
 
 2. Is your card formatted as something other than `FAT32`?
 
+   Error `EE12` means "No or illegal partition table entry found (e.g. no FAT32 partition)".
+   Some operating systems, for example MacOS format 8GB SD cards with FAT16 instead of FAT32.
+
    Stick to `FAT32`. Don't use any improved or more modern version of
    file-system. On Windows and Linux it is normally quite
    straightforward to format an SD card as `FAT32`. If you are on a
    Mac, scroll down and read "Formatting SD cards on a Mac".
 
-3. Is your card larger than 32GB?
+3. Is your card larger than 32GB? The core cannot handle SD cards larger than 32 GB.
 
 4. Are you using a cheap no-name card?
 
 5. Please try to re-format your card and then copy everything on the card from scratch
 
-6. If (1) to (5) do not help: Use another card
+6. If (1) to (5) do not help: Use another card: There is empiric evidence suggesting
+   that SanDisk and Verbatim SD cards work better than others as long as they are
+   not larger than 32GB and as long as they are `FAT32` formatted.
 
 If you have a `Error code: 2704` in conjunction with an SD card error then
 [this](https://discord.com/channels/719326990221574164/794775503818588200/1114834752281772043)
@@ -91,14 +96,25 @@ this case: Step (5) or step (6) will solve the issue.
 
 ## 3) How compatible is the C64 core?
 
-It is very compatible. Not yet as good as Vice but from Version 4 on, the
+It is very compatible. Not yet as good as Vice but the
 core runs hundreds of
-[demanding demos flawlessly](https://github.com/MJoergen/C64MEGA65/blob/master/tests/demos.md),
+[demanding demos flawlessly](tests/demos.md),
 plays thousands of games without a single glitch, including games that need
 a REU such as
 [Sonic the Hedgehog](https://csdb.dk/release/?id=212523)
 and the core offers disk writing abilities for the simulated 1541, so
-that you can save your game states or your work in GEOS.
+that you can save your game states or your work in GEOS. The core also
+let's you use original Commodore
+[hardware cartridges](README.md#hardware-cartridges) pluggeed into the MEGA65
+expansion port,
+[simulate cartridges using CRT files](README.md#simulated-cartridges) and
+[use retro Commodore peripherals](README.md#iec-devices)
+by plugging them into the MEGA65's IEC port. You can even
+[work with retro 15 kHz cathode ray tube monitors](doc/retrotubes.md).
+
+### You cannot format disk images (`*.d64`) yet 
+
+
 
 ## 4) My game or demo crashes
 
