@@ -1,4 +1,3 @@
-@TODO: Formatting disk images
 
 @TODO: Adjust links (from develop branch to master)
 
@@ -52,7 +51,7 @@ known to work
 
 Most SD card problems can be resolved by considering these possible causes:
 
-1. Are you having an [HDMI back powering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
+1. Are you having an [HDMI back powering problem](FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
 2. Is your card formatted as something other than `FAT32`?
 
@@ -112,26 +111,33 @@ expansion port,
 by plugging them into the MEGA65's IEC port. You can even
 [work with retro 15 kHz cathode ray tube monitors](doc/retrotubes.md).
 
-### You cannot format disk images (`*.d64`) yet 
+## 4) I cannot format a disk image (`*.d64`)
 
+Indeed, the core is not yet able to format disks. We do have this topic on our
+[roadmap](ROADMAP.md). What we suggest is that you use tools like the awesome
+[DirMaster](https://style64.org/dirmaster) to create a bunch of formatted, empty
+`*.d64` disk images and then use these disk images with your C64 for MEGA65 core.
 
+## 5) My game or demo crashes
 
-## 4) My game or demo crashes
-
-* Are you having an [HDMI back powering problem](https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
+* Are you having an [HDMI back powering problem](FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
 * Make sure you are using the newest version of the core. Right now this is
-  [Version 4](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
+  [Version 5](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
   The only officially supported place to get cores is the
   [MEGA65 FileHost](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241),
-  so make sure you downloaded your copy there.
-  Also double-check by pressing <kbd>Help</kbd> and then choosing the menu
-  item "About & Help" that you are really running Version 4.
+  so make sure you downloaded your copy there. Do not use any Alpha or Beta versions
+  any more. Also double-check by pressing <kbd>Help</kbd> and then choosing the menu
+  item "About & Help" that you are really running Version 5.
 
 * If the game or demo is not designed for the REU, you absolutely need to
   switch-off the REU before running the game or demo. Learn more about this
   important fact
-  [here](https://github.com/MJoergen/C64MEGA65#512-kb-ram-expansion-unit-1750-reu).
+  [here](README.md#512-kb-ram-expansion-unit-1750-reu).
+  
+* If you use [JiffyDOS](doc/jiffy.md) or any other fastloader (for example
+  by using a freezer cartridge): Switch everything back to the C64'
+  [standard Kernal](README.md#commodore-kernals-and-jiffydos).
 
 * Many modern games and demos are mainly tested on the C64C, so try to run the
   game or demo using the setting "CIA: Use 8521 (C64C)".
@@ -141,15 +147,6 @@ by plugging them into the MEGA65's IEC port. You can even
   Flicker-free ON (at least when you're on HDMI). Learn more
   [here](https://github.com/MJoergen/C64MEGA65#compatibility).
 
-* Use an experimental core. The version
-  [Alpha 7 for Version 5](https://discord.com/channels/719326990221574164/794775503818588200/1064498334515068958)
-  is supposed to run more demos and more games than the Version 4. But since
-  this is an Alpha-Version, it is only "supposed" to do that and not enough
-  testing has been performed, yet. You need a Discord login for being able
-  to access the download link for Alpha 7. If you don't have one yet: Get one.
-  It is free and it enables you to enjoy the friendly and welcoming MEGA65
-  community.
-
 * [Create an issue](https://github.com/MJoergen/C64MEGA65/issues/new/choose)
   here on the official C64MEGA65 GitHub repository or post your problem in the
   [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
@@ -157,19 +154,15 @@ by plugging them into the MEGA65's IEC port. You can even
 
 ## 5) No image or no sound via HDMI
 
-1. Try everything that is described
-   [here](https://github.com/MJoergen/C64MEGA65#hdmi-compatibility).
+1. Make sure you are running [Version 5](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241)
+   of the core.
 
-2. If (1) does not work, try the experimental core
-   [Alpha 7 for Version 5](https://discord.com/channels/719326990221574164/794775503818588200/1064498334515068958).
-   This experimental core fixes some commom HDMI issues.
-   You need a Discord login for being able to access the download link for
-   Alpha 7. If you don't have one yet: Get one. It is free and it enables you
-   to enjoy the friendly and welcoming MEGA65 community.
+2. Try everything that is described
+   [here](https://github.com/MJoergen/C64MEGA65#hdmi-compatibility).
 
 3. [Create an issue](https://github.com/MJoergen/C64MEGA65/issues/new/choose)
    here on the official C64MEGA65 GitHub repository or post your problem in the
-   [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
+   [#c64-core](https://discord.com/channels/719326990221574164/794775503818588200)
    channel on Discord.
 
 ## 6) The VGA output looks strange or flickers or I lose VGA sync
