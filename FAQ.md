@@ -100,7 +100,8 @@ Indeed, the core is not yet able to format disks. We do have this topic on our
 
 ## 5) The screen goes black when I choose JiffyDOS
 
-JiffyDOS is commercial software.
+JiffyDOS is commercial software. The C64 core does not come with
+a preinstalled copy of JiffyDOS.
 [Learn here](doc/jiffy.md)
 where to buy and how to install it.
 
