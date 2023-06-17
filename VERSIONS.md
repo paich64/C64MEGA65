@@ -1,5 +1,5 @@
-Version 5 - XXXXXXXX XX, 2023
-=============================
+Version 5 - June 23, 2023
+=========================
 
 Hardware support release: Insert hardware cartridges into the MEGA65's
 Expansion Port or simulate cartridges via `*.crt` files. Connect IEC devices
