@@ -1,23 +1,3 @@
-
-@TODO: Adjust links (from develop branch to master)
-
-@TODO: Add some FAQs around starting the C64 core while a cartridge is
-inserted. Problems such as this here can arise:
-
-@TODO: EF1CR and other cartridges: They need to sit in a plastic shell
-(show photo), you must not insert just a PCB into the MEGA65 because you will
-never be able to do it well enough so that it works realiably.
-
-https://discord.com/channels/719326990221574164/794775503818588200/1098518494213058692
-
-@TODO: We need an EF1CR documentation MD in the doc folder and we need to
-describe also the "don't dos" there including some info from Daniel.
-
-I did not see it for a long time. But just in case the strange "sometimes the
-screen is black directly after startup" does not go away: Talk about pressing
-the reset button briefly to get it started.
-
-
 # FAQ - Frequently Asked Questions
 
 ## 1) My MEGA65 or the C64 core is behaving somehow weirdly
@@ -105,7 +85,7 @@ and the core offers disk writing abilities for the simulated 1541, so
 that you can save your game states or your work in GEOS. The core also
 let's you use original Commodore
 [hardware cartridges](README.md#hardware-cartridges) pluggeed into the MEGA65
-expansion port,
+Expansion Port,
 [simulate cartridges using CRT files](README.md#simulated-cartridges) and
 [use retro Commodore peripherals](README.md#iec-devices)
 by plugging them into the MEGA65's IEC port. You can even
@@ -118,7 +98,13 @@ Indeed, the core is not yet able to format disks. We do have this topic on our
 [DirMaster](https://style64.org/dirmaster) to create a bunch of formatted, empty
 `*.d64` disk images and then use these disk images with your C64 for MEGA65 core.
 
-## 5) My game or demo crashes
+## 5) The screen goes black when I choose JiffyDOS
+
+JiffyDOS is commercial software.
+[Learn here](doc/jiffy.md)
+where to buy and how to install it.
+
+## 6) My game or demo crashes
 
 * Are you having an [HDMI back powering problem](FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
@@ -145,14 +131,20 @@ Indeed, the core is not yet able to format disks. We do have this topic on our
 * Try to run with deactivated "HDMI: Flicker-free", but don't forget to
   reactivate this afterwards, because your experience is 10x better with
   Flicker-free ON (at least when you're on HDMI). Learn more
-  [here](https://github.com/MJoergen/C64MEGA65#compatibility).
+  [here](README.md#flicker-free-hdmi).
+
+* If you are loading from a large storage device such as the SD2IEC, try
+  the simulated 1541 drive using a `*.d64` disk image instead.
+
+* Some games or demos don't like additional devices at the IEC port other than
+  one drive #8. Try if switching off "IEC: Use hardware port" helps.
 
 * [Create an issue](https://github.com/MJoergen/C64MEGA65/issues/new/choose)
   here on the official C64MEGA65 GitHub repository or post your problem in the
-  [#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
+  [#c64-core](https://discord.com/channels/719326990221574164/794775503818588200)
   channel on Discord.
 
-## 5) No image or no sound via HDMI
+## 7) No image or no sound via HDMI
 
 1. Make sure you are running [Version 5](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241)
    of the core.
@@ -165,7 +157,7 @@ Indeed, the core is not yet able to format disks. We do have this topic on our
    [#c64-core](https://discord.com/channels/719326990221574164/794775503818588200)
    channel on Discord.
 
-## 6) The VGA output looks strange or flickers or I lose VGA sync
+## 8) The VGA output looks strange or flickers or I lose VGA sync
 
 1. Always try the "auto-adjust" (or similarly named feature) of your screen
    first. This resolves 90% of all issues.
@@ -174,9 +166,9 @@ Indeed, the core is not yet able to format disks. We do have this topic on our
    that the flicker-free mode sometimes creates on VGA systems
    [here](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga)
 
-3. If your monitor supports it, try to use the retro "15 kHz RGB" mode
+3. If your monitor supports it, try to use the [retro "15 kHz RGB" mode](doc/retrotube.md)
 
-## 7) My retro monitor does not work with the core
+## 9) My retro monitor does not work with the core
 
 ### Analog devices
 
@@ -190,7 +182,7 @@ Make sure that you have
 [switched-off HDMI: Flicker-free](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga)
 when using retro monitors via the MEGA65's VGA out.
 
-## 8) My mouse does not work
+## 10) My mouse does not work
 
 Make sure that you use either a real C64 mouse or
 [MouSTer](https://retrohax.net/shop/modulesandparts/mouster/).
@@ -205,19 +197,46 @@ Caution: AMIGA mice look pretty much like C64 mice but the C64 core does not
 support AMIGA mice, yet. The MEGA65 core does support AMIGA mice and this
 feature is on our roadmap.
 
-## 9) Can I use cartridges?
+## 11) Can I use cartridges?
 
-Yes, from Version 5 on, the core supports both real hardware cartridges that
-you can insert into the MEGA65's Expansion Port and simulated cartridges that
-you can load as `*.crt` files from your SD card. Make sure that you read
-[@TODO section ABC](@TODO)
-of the user's manual. The core is able to run more than 99% of all game
+Yes, from
+[Version 5](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241)
+on, the core supports both real
+[hardware cartridges](README.md#hardware-cartridges) that
+you can insert into the MEGA65's Expansion Port and
+[simulated cartridges](README.md#simulated-cartridges)
+that you can load as `*.crt` files from your SD card.
+
+The core is able to run more than 99% of all game
 cartridges. If want to use certain sophisticated cartridges other than games,
 make sure that you checkout
-[this document](https://github.com/MJoergen/C64MEGA65/blob/develop/doc/cartridges.md)
+[this document](doc/cartridges.md)
 dedicated to certain featured hardware cartridges.
 
-## 10) Can I use IEC devices?
+## 12) My hardware cartridge does not work
+
+First of all, always make sure that you insert a cartridge that is
+[housed in a proper case](doc/cartridges.md#cartridge-cases) and never
+insert a barebone PCB into the MEGA65's Expansion Port.
+
+Other than that, it is very likely that you need a so called "CORE #0 update"
+or that you need to use a slightly scary, yet kind-of save workaround.
+
+To check if this is the case: Press the <kbd>Help</kbd> key while you
+experience the "not working" situation. If the
+[well-known C64 for MEGA65 menu](doc/demopics/c64mega65-1.jpg)
+is not being shown after you pressed <kbd>Help</kbd> then instead of the
+dedicated C64 core, the standard MEGA65 core is currently running which
+is the reason why your hardware cartridge is not working.
+
+Here is why: The core in slot #0 (which is the MEGA65 core) decides, which
+core needs to be started if a hardware cartridge is inserted into the MEGA65's
+Expansion Port. The old version that most of the MEGA65 have installed is
+buggy and needs to be updated.
+
+[Learn how to update or how to use a workaround here](README.md#core-0-update).
+
+## 13) Can I use IEC devices?
 
 Yes, from Version 5 on, you can connect floppy drives (such as the original
 1541 and 1581), hard disks, printers, plotters or modern devices such as the
@@ -232,19 +251,7 @@ are correct.
 sure you activate the feature using the menu item "IEC: Use hardware port"
 if you want to use.
 
-## 11) Certain games or demos won't load while others load
-
-If you are loading from a large storage device such as the SD2IEC, try the
-internal simulated 1541 drive.
-
-Some games or demos don't like additional devices at the IEC port other than
-one drive #8. Try if switching off "IEC: Use hardware port" helps.
-
-In case you are using JiffyDOS you could also try going back to the standard
-Kernal. If you have other fast loaders activated using simulated or real
-freezer cartridges, try switching them off.
-
-## 12) How many files in a folder can the file browser handle?
+## 14) How many files in a folder can the file browser handle?
 
 The file browser can handle about 25,000 characters. If we assume an average
 length of a filename (including the file extension) of 40 characters then this
@@ -257,24 +264,41 @@ have a directory structure `a .. z` and the files are moved there by name,
 plus you will have a folder called `0` where all the files that start with
 digits are. Don't forget to go to the folder `m` and remove `mover.sh`.
 
+## 15) The core is not remembering my settings
 
-## 13) Which features are on the roadmap?
+Make sure that you have a `/c64` folder on your SD card and make sure that
+you copy the `c64mega65` file that came with the
+[ZIP file that contains Version 5](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241)
+to this very folder.
 
-[Here](https://github.com/MJoergen/C64MEGA65/blob/develop/VERSIONS.md) is the
-roadmap for the upcoming Version 5.
+When going from an older version of the C64 core to a newer version
+(for example from Version 4 to Version 5) you always need to overwrite your
+old `c64mega65` file by the new one that came with the
+[ZIP file](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
 
-And
-[here](https://github.com/MJoergen/C64MEGA65/blob/develop/ROADMAP.md)
-is the roadmap for "later than Version 5".
+Important: Even if you have a `c64/c64mega65` file on your SD card: The core will
+not save any settings in case you switched between SD cards during a certain session.
+Next time you power-on the core, it will resume saving the settings until you switch
+between SD cards for the next time.
+[Learn more details here](README.md#config-file).
 
-## 14) Where can I post and discuss my feature request?
+Currently, we cannot automate this manual chore and need to ask users to copy the
+`c64mega65` file.
+[Track our efforts](https://github.com/MJoergen/C64MEGA65/issues/16) to change
+this by following
+[this GitHub issue](https://github.com/MJoergen/C64MEGA65/issues/16).
 
-The
-[#other-cores](https://discord.com/channels/719326990221574164/794775503818588200)
-channel on the MEGA65 discord is the right place to post and
-discuss feature requests.
+## 16) Which features are on the roadmap?
 
-## 15) Are there cores other than the C64 available or in development?
+[Here](ROADMAP.md) is the roadmap for future versions.
+
+## 17) Where can I post and discuss my feature request?
+
+[Engage with us on GitHub](https://github.com/MJoergen/C64MEGA65/issues) or in the
+[#c64-core](https://discord.com/channels/719326990221574164/794775503818588200) channel
+on Discord to discuss feature requests and the future of the C64 for MEGA65 core.
+
+## 18) Are there cores other than the C64 available or in development?
 
 Yes. Please visit this website, it contains a list of MEGA65 cores that
 will be constantly updated:
@@ -285,3 +309,20 @@ If you are interested in making your own core or in porting cores from other
 projects such as MiSTer: The website is also sharing additional information
 about how to get started with doing this and about the
 [MiSTer2MEGA65 framework](https://github.com/sy2002/MiSTer2MEGA65).
+
+## 19) I am a total newby and want to learn FPGA development and making or porting cores
+
+If you own a MEGA65, then
+[this short article](https://files.mega65.org?ar=898d573b-d30d-4438-8893-09455bd16400)
+is a smooth start to FPGA development. It uses some of the tutorials of the
+[MiSTer2MEGA65 framework](https://github.com/sy2002/MiSTer2MEGA65)
+and some resources from the web to get you started.
+
+Moreover, the
+[#learn-fpga-dev](https://discord.com/channels/719326990221574164/1057791653517209601)
+channel on Discord is a great place to meet likeminded people and to ask questions.
+
+[Download and read](https://github.com/sy2002/MiSTer2MEGA65/blob/develop/doc/wiki/assets/FPGAs_VHDL_First_Steps_v2p3.pdf)
+Helen DeBlumont's beginner "FPGAs with VHDL: First Steps" or go deep by working through the textbook
+[The Designer's Guide to VHDL](https://picture.iczhiku.com/resource/eetop/sYiEyoAUyiEkPBBb.pdf)
+by Peter J. Ashenden.
