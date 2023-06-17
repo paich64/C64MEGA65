@@ -42,7 +42,7 @@ The C64 for MEGA65 core needs two files, each of them needs to be exactly
 
 #### Example for the macOS and Linux terminal
 
-The following commands assume that you are a folder that is empty with the
+The following commands assume that you are in a folder that is empty with the
 exception of one file that is called `JiffyDOS_C64_6.01.bin`.
 
 ```bash
