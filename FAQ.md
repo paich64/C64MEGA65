@@ -5,7 +5,8 @@
 **The "HDMI back powering problem" is the root of all evil!**
 
 The evil things that can happen range from display problems over SD card
-problems to issues around the system's overall stability.
+problems (such as problems mounting the SD card, reading from the SD card)
+to issues around the system's overall stability.
 
 If your MEGA65 is connected to any HDMI device: Never switch-on this device
 before you have successfully switched-on your MEGA65. Or to put it the other
@@ -124,15 +125,19 @@ where to buy and how to install it.
   
 * If you use [JiffyDOS](doc/jiffy.md) or any other fastloader (for example
   by using a freezer cartridge): Switch everything back to the C64'
-  [standard Kernal](README.md#commodore-kernals-and-jiffydos).
-
-* Many modern games and demos are mainly tested on the C64C, so try to run the
-  game or demo using the setting "CIA: Use 8521 (C64C)".
+  [standard Kernal](README.md#commodore-kernals-and-jiffydos) and try
+  this very game or demo again.
 
 * Try to run with deactivated "HDMI: Flicker-free", but don't forget to
   reactivate this afterwards, because your experience is 10x better with
   Flicker-free ON (at least when you're on HDMI). Learn more
   [here](README.md#flicker-free-hdmi).
+  
+* If you are using real 1541 hardware via the IEC port, please also read
+  the [section about IEC devices below](FAQ.md#13-can-i-use-iec-devices).
+  
+* Many modern games and demos are mainly tested on the C64C, so try to run the
+  game or demo using the setting "CIA: Use 8521 (C64C)".  
 
 * If you are loading from a large storage device such as the SD2IEC, try
   the simulated 1541 drive using a `*.d64` disk image instead.
@@ -209,19 +214,14 @@ you can insert into the MEGA65's Expansion Port and
 that you can load as `*.crt` files from your SD card.
 
 The core is able to run more than 99% of all game
-cartridges. If want to use certain sophisticated cartridges other than games,
-make sure that you checkout
-[this document](doc/cartridges.md)
-dedicated to certain featured hardware cartridges.
+cartridges.
 
-## 12) My hardware cartridge does not work
+### Only very few cartridges are working
 
-First of all, always make sure that you insert a cartridge that is
-[housed in a proper case](doc/cartridges.md#cartridge-cases) and never
-insert a barebone PCB into the MEGA65's Expansion Port.
-
-Other than that, it is very likely that you need a so called "CORE #0 update"
-or that you need to use a slightly scary, yet kind-of save workaround.
+If only some original retro catrdiges are working but the vast majority
+of modern cartridges are not working then it is very likely that you need
+a so called "CORE #0 update" or that you need to use a slightly scary,
+yet kind-of save workaround.
 
 To check if this is the case: Press the <kbd>Help</kbd> key while you
 experience the "not working" situation. If the
@@ -237,7 +237,36 @@ buggy and needs to be updated.
 
 [Learn how to update or how to use a workaround here](README.md#core-0-update).
 
-## 13) Can I use IEC devices?
+### My hardware freezer or flash cartridge does not work
+
+The core does support certain sophisticated hardware cartridges such
+as the Action Replay, EasyFlash 1CR, EasyFlash 3, Epyx Fast Load,
+Final Cartridge III, Kung Fu Flash, PowerCartridge and Super Snapshot.
+But they are not all created equal and you sometimes need to apply
+work-arounds to make them work.
+
+Make sure you read the
+[decidcated hardware cartridge documentation](doc/cartridges.md)
+to learn more and **exactly** follow the instructions there.
+
+### A certain simulated freezer (`*.crt`) does not work
+
+While Version 5 - the most recent version of the core - does support
+quite a bunch of **hardware** freezer and flash cartridges very well,
+support for **simulated** (`*.crt`) freezer cartridges is still in
+its infancy.
+
+[This is a list of known issues](https://github.com/MJoergen/C64MEGA65/issues?q=is%3Aissue+is%3Aopen+simcrt)
+when it comes to **simulated** (`*.crt`) freezer cartridges.
+
+### "Homebrew" cartridges: Never insert a barebone PCB
+
+First of all, always make sure that you insert a cartridge that is
+[housed in a proper case](doc/cartridges.md#cartridge-cases) and never
+insert a barebone PCB into the MEGA65's Expansion Port.
+
+
+### 13) Can I use IEC devices?
 
 Yes, from Version 5 on, you can connect floppy drives (such as the original
 1541 and 1581), hard disks, printers, plotters or modern devices such as the
@@ -315,7 +344,9 @@ this by following
 
 ## 16) Which features are on the roadmap?
 
-[Here](ROADMAP.md) is the roadmap for future versions.
+[Here](ROADMAP.md) is the roadmap for future versions. Additionally, there are also 
+[feature requests](https://github.com/MJoergen/C64MEGA65/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement)
+that we might consider for future releases.
 
 ## 17) Where can I post and discuss my feature request?
 
