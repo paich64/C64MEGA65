@@ -341,19 +341,27 @@ Currently, we cannot automate this manual chore and need to ask users to copy th
 this by following
 [this GitHub issue](https://github.com/MJoergen/C64MEGA65/issues/16).
 
-## 16) Which features are on the roadmap?
+## 16) Hard-reset aka long reset is not always working
+
+Sometimes, the hard-reset aka long reset is not resetting the machine at all
+- OR - it is not properly resetting the machine leading to the problem that
+the subsequently started application might not work as intended.
+
+Workaround: Power-cycle the MEGA65 but avoid the "HDMI back powering problem".
+
+## 17) Which features are on the roadmap?
 
 [Here](ROADMAP.md) is the roadmap for future versions. Additionally, there are also 
 [feature requests](https://github.com/MJoergen/C64MEGA65/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement)
 that we might consider for future releases.
 
-## 17) Where can I post and discuss my feature request?
+## 18) Where can I post and discuss my feature request?
 
 [Engage with us on GitHub](https://github.com/MJoergen/C64MEGA65/issues) or in the
 [#c64-core](https://discord.com/channels/719326990221574164/794775503818588200) channel
 on Discord to discuss feature requests and the future of the C64 for MEGA65 core.
 
-## 18) Are there cores other than the C64 available or in development?
+## 19) Are there cores other than the C64 available or in development?
 
 Yes. Please visit this website, it contains a list of MEGA65 cores that
 will be constantly updated:
@@ -365,7 +373,7 @@ projects such as MiSTer: The website is also sharing additional information
 about how to get started with doing this and about the
 [MiSTer2MEGA65 framework](https://github.com/sy2002/MiSTer2MEGA65).
 
-## 19) I am a total newby and want to learn FPGA development and making or porting cores
+## 20) I am a total newby and want to learn FPGA development and making or porting cores
 
 If you own a MEGA65, then
 [this short article](https://files.mega65.org?ar=898d573b-d30d-4438-8893-09455bd16400)
