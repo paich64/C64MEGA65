@@ -7,7 +7,7 @@ on your MEGA65!
 This core is based on the MiSTer Commodore 64 core which itself is based on
 the work of many others.
 
-MJoergen and sy2002 ported the core to the MEGA65 in 2022.
+MJoergen and sy2002 ported the core to the MEGA65 in 2022 and 2023.
 
 With our Release 5, we are striving for a **retro C64 PAL experience**:
 The core turns your MEGA65 into a Commodore 64 with a C1541 drive (you can
@@ -26,8 +26,8 @@ a Dual SID / Stereo SID experience.
 
 The C64 runs the original Commodore KERNAL and the C1541 runs the original
 Commodore DOS, which leads to authentic loading speeds. You will be surprised,
-how slowly the C64/C1541 were loading... :-) You can optionally JiffyDOS or
-use fast loader cartridges to speed up loading.
+how slowly the C64/C1541 were loading... :-) You can optionally use JiffyDOS
+or use fast loader cartridges to speed up loading.
 
 And you will be amazed by the 99.9% compatibility that this core has when it
 comes to games, demos and other demanding C64 software. Some demos are even
@@ -36,7 +36,8 @@ a fast loader cartridge while connecting a genuine 1541 via IEC are working
 flawlessly.
 
 IMPORTANT: Right now we are only supporting MEGA65 R3, R3A and newer. R2
-machines are not supported, yet. This might change in future.
+machines or machines newer than R3A are not supported, yet. This might change
+in future.
 
 Watch this YouTube video to learn how to install the core:
 https://youtu.be/6ZcUFY77o3A
