@@ -8,20 +8,20 @@ effort, it might be that we are not always doing it.
 Version 5 - Month Day, 2023
 ---------------------------
 
-| Status             | Test                                                 | Done by                | Date              
-|:-------------------|------------------------------------------------------|:-----------------------|:--------------------------
-| :white_check_mark: | Basic regression tests: Main menu                    | AmokPhaze101           | 6/4/23
-| :question:         | Basic regression tests: Additional Smoke Tests       | :question:             | :question:
-| :white_check_mark: | HDMI & VGA                                           | AmokPhaze101           | 6/3/23
-| :white_check_mark: | SID                                                  | AmokPhaze101           | 6/3/23
-| :white_check_mark: | C64 Emulator Test Suite V2.15                        | AmokPhaze101           | 6/4/23
-| :question:         | [Demos](demos.md)                                    | :question:             | :question:
-| :question:         | Writing to `*.d64` images                            | :question:             | :question:
-| :question:         | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | :question:             | :question:
-| :question:         | PLA Test                                             | :question:             | :question:
-| :white_check_mark: | Dedicated REU tests                                  | AmokPhaze101           | 6/3/23
-| :question:         | Dedicated hardware cartridge tests                   | :question:             | :question:
-| :white_check_mark: | Dedicated simulated cartridge tests                  | AmokPhaze101           | 6/7/23
+| Status                 | Test                                                 | Done by                | Date              
+|:-----------------------|------------------------------------------------------|:-----------------------|:--------------------------
+| :white_check_mark:     | Basic regression tests: Main menu                    | AmokPhaze101           | 6/4/23
+| :large_orange_diamond: | Basic regression tests: Additional Smoke Tests       | sy2002                 | 6/19/23
+| :white_check_mark:     | HDMI & VGA                                           | AmokPhaze101           | 6/3/23
+| :white_check_mark:     | SID                                                  | AmokPhaze101           | 6/3/23
+| :white_check_mark:     | C64 Emulator Test Suite V2.15                        | AmokPhaze101           | 6/4/23
+| :question:             | [Demos](demos.md)                                    | :question:             | :question:
+| :white_check_mark:     | Writing to `*.d64` images                            | sy2002                 | 6/19/23
+| :white_check_mark:     | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | sy2002                 | 6/19/23
+| :white_check_mark:     | PLA Test                                             | sy2002                 | 6/19/23
+| :white_check_mark:     | Dedicated REU tests                                  | AmokPhaze101           | 6/3/23
+| :white_check_mark:     | Dedicated hardware cartridge tests                   | sy2002                 | 6/19/23
+| :white_check_mark:     | Dedicated simulated cartridge tests                  | AmokPhaze101           | 6/7/23
 
 ### Basic regression tests
 
@@ -57,6 +57,10 @@ you have a JTAG connection and an **active serial terminal** to observe the debu
   resets the whole core (not only the C64).
 * Giana Sisters: Joystick and latency
 * Space Lords: Support for 4 paddles
+
+##### Regression
+
+:large_orange_diamond: Long reset does not reset Eagle's Nest any more
 
 ### HDMI & VGA
 
@@ -155,25 +159,24 @@ All done by AmokPhaze101 on 6/3/23
 
 ### Dedicated hardware cartridge tests
 
-All done by @TODO:NAME on @TODO:DATE
+All done by sy2002 on 6/19/23
 
 | Status             | Test                                                                                                                        | Comment
 |:-------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------
-| :question:         | Using a correct core #0: Test if we can directly boot to a hardware cartridge                                               |
-| :question:         | Using a correct core #0: Test if the hardware cartridge is ignored in case simulated REU or simulated cartridge is selected |
-| :question:         | Test a bunch of original old game cartridges                                                                                | Tested Last Ninja Remix, Super Games, Wizard of Wor
-| :question:         | Test an old Ultimax game                                                                                                    | Tested Pinball Spectacular
-| :question:         | Test a bunch of new game cartridges                                                                                         | Tested Muddy Racers, Sam's Journey, Soul Force, The Curse of Rabenstein
-| :question:         | Save game and load game to/from the original Sam's Journey cartridge                                                        |
-| :question:         | Final Cartridge III                                                                                                         |
-| :question:         | Action Replay Professional 6.0                                                                                              |
-| :question:         | Power Cartridge                                                                                                             |
-| :question:         | Flash the EasyFlash **1CR** with a small (<64k) and large (>512k) game and playtest these games                             |
-| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                               |
-| :question:         | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                               |
-| :question:         | EasyFlash **3**: Test all freezers that the EF3 supports as described in [cartridges.md](../doc/cartridges.md)              |
-| :question:         | Kung Fu Flash using the workaround described in [cartridges.md](../doc/cartridges.md)                                       |
-| :question:         | Work with GEOS and GeoRAM                                                                                                   |
+| :white_check_mark: | Using a correct core #0: Test if we can directly boot to a hardware cartridge                                               |
+| :white_check_mark: | Using a correct core #0: Test if the hardware cartridge is ignored in case simulated REU or simulated cartridge is selected |
+| :white_check_mark: | Test a bunch of original old game cartridges                                                                                | Tested Last Ninja Remix, Super Games, Wizard of Wor
+| :white_check_mark: | Test an old Ultimax game                                                                                                    | Tested Pinball Spectacular
+| :white_check_mark: | Test a bunch of new game cartridges                                                                                         | Tested Muddy Racers, Sam's Journey, Soul Force, The Curse of Rabenstein, Wormhole
+| :white_check_mark: | Save game and load game to/from the original Sam's Journey cartridge                                                        |
+| :white_check_mark: | Final Cartridge III                                                                                                         | [Works with workarounds](../doc/cartridges.md#final-cartridge-iii)
+| :white_check_mark: | Action Replay Professional 6.0                                                                                              |
+| :white_check_mark: | Power Cartridge                                                                                                             |
+| :white_check_mark: | Flash the EasyFlash **1CR** with a small (<64k) and large (>512k) game and playtest these games                             |
+| :white_check_mark: | Flash the EasyFlash **3** with a small (<64k) and large (>512k) game and playtest these games                               |
+| :white_check_mark: | EasyFlash **3**: Test all freezers that the EF3 supports as described in [cartridges.md](../doc/cartridges.md)              |
+| :white_check_mark: | Kung Fu Flash using the workaround described in [cartridges.md](../doc/cartridges.md)                                       |
+| :white_check_mark: | Work with GEOS and GeoRAM                                                                                                   |
 
 ### Dedicated simulated cartridge tests
 
