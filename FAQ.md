@@ -261,10 +261,9 @@ when it comes to **simulated** (`*.crt`) freezer cartridges.
 
 ### "Homebrew" cartridges: Never insert a barebone PCB
 
-First of all, always make sure that you insert a cartridge that is
+Always make sure that you insert a cartridge that is
 [housed in a proper case](doc/cartridges.md#cartridge-cases) and never
 insert a barebone PCB into the MEGA65's Expansion Port.
-
 
 ### 13) Can I use IEC devices?
 
