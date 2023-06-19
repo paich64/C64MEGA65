@@ -108,7 +108,7 @@ where to buy and how to install it.
 
 ## 6) My game or demo crashes
 
-* Are you having an [HDMI back powering problem](FAQ.md#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
+* Are you having an [HDMI back powering problem](#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly)?
 
 * Make sure you are using the newest version of the core. Right now this is
   [Version 5](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241).
@@ -122,7 +122,14 @@ where to buy and how to install it.
   switch-off the REU before running the game or demo. Learn more about this
   important fact
   [here](README.md#512-kb-ram-expansion-unit-1750-reu).
-  
+
+* Power-cycle your MEGA65 (while making sure that you are not running into any
+  [HDMI back powering problem](#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly))
+  and try again: The
+  [reset is not perfect](#16-hard-reset-aka-long-reset-is-not-always-working)
+  and sometimes "stuff" remains in memory or in registers that prevents games
+  or demos from starting.
+
 * If you use [JiffyDOS](doc/jiffy.md) or any other fastloader (for example
   by using a freezer cartridge): Switch everything back to the C64's
   [standard Kernal](README.md#commodore-kernals-and-jiffydos) and try
