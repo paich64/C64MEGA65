@@ -579,6 +579,10 @@ You need to activate the IEC hardware port by selecting the menu item
 numbers. As soon as it is activated, it works nicely together with the
 built-in drive #8.
 
+Also be aware, that when using a real C1541 drive,
+for some games you need to
+[switch-off "HDMI: Flicker-free](#switch-off-when-loading-certain-games-via-real-1541-hardware).
+
 Commodore Kernals and JiffyDOS
 ------------------------------
 
