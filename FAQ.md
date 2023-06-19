@@ -350,9 +350,9 @@ this by following
 
 ## 16) Hard-reset aka long reset is not always working
 
-Sometimes, the hard-reset aka long reset is not resetting the machine at all
-- OR - it is not properly resetting the machine leading to the problem that
-the subsequently started application might not work as intended.
+Sometimes, the hard-reset aka long reset is not resetting the machine at all - OR -
+it is not properly resetting the machine leading to the problem that the subsequently
+started application might not work as intended.
 
 Workaround: Power-cycle the MEGA65 but avoid the "HDMI back powering problem".
 
