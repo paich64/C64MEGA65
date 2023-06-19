@@ -324,8 +324,7 @@ Utility Cartridges that are known to work
 
 * Action Replay
 * Epyx Fast Load
-* Final Cartridge III (with the caveat that the machine language Monitor
-  does not return to the program/game correctly)
+* [Final Cartridge III (with workarounds)]()
 * GeoRAM
 * PowerCartridge
 * Super Snapshot
@@ -335,6 +334,10 @@ Utility Cartridges that are known to work
 The reset button does not work. The reason is that the MEGA65's R3 and R3A
 board's electronic cannot sense the reset signal of any cartridge inserted
 into the Expansion Port.
+
+### Final Cartridge III
+
+
 
 GeoRAM
 ------
