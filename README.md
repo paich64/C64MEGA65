@@ -639,6 +639,11 @@ test-case for you to experience the difference by yourself:
    there at Giana Sisters but at everything that scrolls and/or moves a lot of
    things on the screen.
 
+Summary: Modern HDMI displays can only display signals with screen refresh rates
+of 50 Hz, 60 Hz and other "even" frequencies. The C64 on the other hand
+outputs a very "odd" screen refresh rate that is closer to 50.125 Hz. This will
+lead to undesired jerky screen movements every approximately 8 seconds.
+
 ### Compatibility
 
 We are slowing down the whole system (not only the C64, but also the SID,
@@ -650,6 +655,18 @@ But the advantage of this 0.25% slowdown is a clean 50 Hz signal for your
 HDMI display. We believe that this is the most compatible way of providing
 a flicker-free experience on HDMI.
 
+If you experience issues, then you can switch the core back to 100% system
+speed. The menu item for doing so is called "HDMI: Flicker-free". You can
+switch this ON and OFF in real-time without the need to re-load the program
+that you are currently running.
+
+Our tests have shown, that the vast majority of software works like a charm
+and the value of having a completely smooth and flicker free experience on
+HDMI seems therefore larger than slight compatibility issues. This is why
+this feature is activated by default.
+
+### Switch-off when using retro analog display devices
+
 While this works great on digital HDMI displays, there is a disadvantage on
 some analog VGA monitors: The 0.25% slowdown leads to a slightly off VGA
 signal timing which might lead to
@@ -657,13 +674,24 @@ signal timing which might lead to
 This is why you should disable "HDMI: Flicker-free" when working with an
 analog monitor such as VGA or such as Retro 15 kHz RGB.
 
-If you experience issues, then you can switch the core back to 100% system
-speed. The menu item for doing so is called "HDMI: Flicker-free". 
+### Switch-off when loading certain games via real 1541 hardware
 
-Our tests have shown, that the vast majority of software works like a charm
-and the value of having a completely smooth and flicker free experience on
-HDMI seems therefore larger than slight compatibility issues. This is why
-this feature is activated by default.
+The 0.25% slowdown is not a problem when you use the core with emulated
+1541 hardware (i.e. using `*.d64` disk images) because in this case the
+C64's CPU and the 1541's CPU are slowed down in parallel.
+
+In contrast to that: If you use a real 1541 or other drive, then in some
+rare situations (for example games from Rainbow Arts which use a picky own
+fastloader) you will run into compatibility problems such as crashing games.
+
+If you encounter incompatibilities when you load via real devices
+connected to the IEC port, then switch-off "HDMI: Flicker-free" mode.
+
+But in this case we would advise you heavily to also use an analog
+retro monitor, because with "HDMI: Flicker-free" OFF, the output on HDMI
+will be slightly jerky due to the misalignment of the C64's retro
+output frequency and the frequencies that modern HDMI monitors are
+actually able to display.
 
 Hard-reset vs soft-reset
 ------------------------
