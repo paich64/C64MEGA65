@@ -324,20 +324,41 @@ Utility Cartridges that are known to work
 
 * Action Replay
 * Epyx Fast Load
-* [Final Cartridge III (with workarounds)]()
+* [Final Cartridge III (with workarounds)](#final-cartridge-iii)
 * GeoRAM
 * PowerCartridge
 * Super Snapshot
 
-### Known issue: Reset button
+### Final Cartridge III
+
+When you insert a Final Cartridge III into the MEGA65's Expansion Port and
+switch-on the machine (while avoiding the
+[HDMI back powering problem](#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly))
+then you will encounter one of two situations instead of beeing greeted
+with the FCIII's main menu:
+
+* You will land in BASIC
+* You will see a "blue screen", i.e. the standard C64 background and frame
+  color but without anything readable or garbage on it
+
+To start the Final Cartridge you need to perform the following three workaround
+steps one or multiple times in a row:
+
+1. Press the <kbd>Reset</kbd> button of the FCIII
+2. Wait one second
+3. Press the <kbd>Reset</kbd> button of the MEGA65
+
+As soon as the FCIII started properly, mostly everything works fine, including
+the fast loader and the <kbd>Freezer</kbd> button (at least most of the time).
+But not everything within the freezer menu works as intended. For example when
+exiting the machine language monitor with `x`, the C64 does not continue
+where it left off.
+
+### Known issue with all utility cartridges: Reset button
 
 The reset button does not work. The reason is that the MEGA65's R3 and R3A
 board's electronic cannot sense the reset signal of any cartridge inserted
 into the Expansion Port.
-
-### Final Cartridge III
-
-
 
 GeoRAM
 ------
