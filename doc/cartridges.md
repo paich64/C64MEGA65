@@ -332,10 +332,8 @@ Utility Cartridges that are known to work
 ### Final Cartridge III
 
 When you insert a Final Cartridge III into the MEGA65's Expansion Port and
-switch-on the machine (while avoiding the
-[HDMI back powering problem](#1-my-mega65-or-the-c64-core-is-behaving-somehow-weirdly))
-then you will encounter one of two situations instead of beeing greeted
-with the FCIII's main menu:
+switch-on the machine then you will encounter one of two situations instead
+of beeing greeted with the FCIII's main menu:
 
 * You will land in BASIC
 * You will see a "blue screen", i.e. the standard C64 background and frame
