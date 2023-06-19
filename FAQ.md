@@ -216,7 +216,7 @@ that you can load as `*.crt` files from your SD card.
 The core is able to run more than 99% of all game
 cartridges.
 
-### Only very few cartridges are working
+### If only very few cartridges are working, you need to update CORE #0
 
 If only some original retro catrdiges are working but the vast majority
 of modern cartridges are not working then it is very likely that you need
@@ -226,7 +226,7 @@ yet kind-of save workaround.
 To check if this is the case: Press the <kbd>Help</kbd> key while you
 experience the "not working" situation. If the
 [well-known C64 for MEGA65 menu](doc/demopics/c64mega65-1.jpg)
-is not being shown after you pressed <kbd>Help</kbd> then instead of the
+is not being shown after you pressed <kbd>Help</kbd>, then instead of the
 dedicated C64 core, the standard MEGA65 core is currently running which
 is the reason why your hardware cartridge is not working.
 
