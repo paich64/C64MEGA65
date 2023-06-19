@@ -244,13 +244,37 @@ Yes, from Version 5 on, you can connect floppy drives (such as the original
 SD2IEC and the Ultimate-II+ to your MEGA65. All CBM-Bus/IEEE-488 bus/IEC Bus
 compliant devices are supposed to work.
 
-Caution: Avoid device number conflicts! The core uses device number #8 for
-the built-in simulated 1541 that can mount `*.d64` files. So you need to
-ensure that no other drive uses #8 and that all the device numbers you use
-are correct.
+### Avoid device number conflicts
+
+The core uses device number #8 for the built-in simulated 1541 that can
+mount `*.d64` files. So you need to ensure that no other drive uses #8 and
+that all the device numbers you use are correct.
 [Learn more here](https://www.c64-wiki.com/wiki/Device_number) and make
 sure you activate the feature using the menu item "IEC: Use hardware port"
 if you want to use.
+
+### Switch-off HDMI: Flicker-free
+
+The "HDMI: Flicker-free" mode
+[very slightly changes the timing of the C64](README.md#flicker-free-hdmi).
+While this is not a problem most of the time, it does lead to timing problems
+with certain games (for example Rainbow Arts games on original 5 1/4"
+disks) that are loaded via real 1541 floppys connected via the IEC port
+to the MEGA65. Just to make sure that there are no misunderstandings: 
+We are talking about real 1541 hardware here. Loading games via `*.d64`
+disk images is **not** affected by "HDMI: Flicker-free" and also loading
+games via an SD2IEC connected to the IEC port of the MEGA65 is also
+not affected.
+
+If you encounter incompatibilities when you load via real devices
+connected to the IEC port, then switch-off "HDMI: Flicker-free" mode.
+
+But in this case we would advise you heavily to also use an analog
+retro monitor, because with "HDMI: Flicker-free" OFF, the output on HDMI
+will be slightly jerky due to the misalignment of the C64's retro
+output frequency and the frequencies that modern HDMI monitors are
+actually able to display.
+[Learn more here](README.md#flicker-free-hdmi).
 
 ## 14) How many files in a folder can the file browser handle?
 
