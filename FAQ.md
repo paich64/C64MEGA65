@@ -124,7 +124,7 @@ where to buy and how to install it.
   [here](README.md#512-kb-ram-expansion-unit-1750-reu).
   
 * If you use [JiffyDOS](doc/jiffy.md) or any other fastloader (for example
-  by using a freezer cartridge): Switch everything back to the C64'
+  by using a freezer cartridge): Switch everything back to the C64's
   [standard Kernal](README.md#commodore-kernals-and-jiffydos) and try
   this very game or demo again.
 
@@ -170,7 +170,7 @@ where to buy and how to install it.
 
 2. Switch-off "HDMI: Flicker-free" and learn more about the issue
    that the flicker-free mode sometimes creates on VGA systems
-   [here](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga)
+   [here](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
 
 3. If your monitor supports it, try to use the [retro "15 kHz RGB" mode](doc/retrotube.md)
 
