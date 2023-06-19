@@ -85,7 +85,7 @@ a REU such as
 and the core offers disk writing abilities for the simulated 1541, so
 that you can save your game states or your work in GEOS. The core also
 let's you use original Commodore
-[hardware cartridges](README.md#hardware-cartridges) pluggeed into the MEGA65
+[hardware cartridges](README.md#hardware-cartridges) plugged into the MEGA65
 Expansion Port,
 [simulate cartridges using CRT files](README.md#simulated-cartridges) and
 [use retro Commodore peripherals](README.md#iec-devices)
@@ -102,7 +102,7 @@ Indeed, the core is not yet able to format disks. We do have this topic on our
 ## 5) The screen goes black when I choose JiffyDOS
 
 JiffyDOS is commercial software. The C64 core does not come with
-a preinstalled copy of JiffyDOS.
+a pre-installed copy of JiffyDOS.
 [Learn here](doc/jiffy.md)
 where to buy and how to install it.
 
@@ -218,7 +218,7 @@ cartridges.
 
 ### If only very few cartridges are working, you need to update CORE #0
 
-If only some original retro catrdiges are working but the vast majority
+If only some original retro cartridges are working but the vast majority
 of modern cartridges are not working then it is very likely that you need
 a so called "CORE #0 update" or that you need to use a slightly scary,
 yet kind-of save workaround.
@@ -246,7 +246,7 @@ But they are not all created equal and you sometimes need to apply
 work-arounds to make them work.
 
 Make sure you read the
-[decidcated hardware cartridge documentation](doc/cartridges.md)
+[dedicated hardware cartridge documentation](doc/cartridges.md)
 to learn more and **exactly** follow the instructions there.
 
 ### A certain simulated freezer (`*.crt`) does not work
