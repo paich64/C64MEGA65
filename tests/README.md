@@ -5,8 +5,8 @@ Before releasing a new version we strive to run all regression tests described
 here. Since running through all the [demos](demos.md) takes some serious
 effort, it might be that we are not always doing it.
 
-Version 5 - Month Day, 2023
----------------------------
+Version 5 - June 23, 2023
+-------------------------
 
 | Status                 | Test                                                 | Done by                | Date              
 |:-----------------------|------------------------------------------------------|:-----------------------|:--------------------------
@@ -15,7 +15,7 @@ Version 5 - Month Day, 2023
 | :white_check_mark:     | HDMI & VGA                                           | AmokPhaze101           | 6/3/23
 | :white_check_mark:     | SID                                                  | AmokPhaze101           | 6/3/23
 | :white_check_mark:     | C64 Emulator Test Suite V2.15                        | AmokPhaze101           | 6/4/23
-| :question:             | [Demos](demos.md)                                    | :question:             | :question:
+| :white_check_mark:     | [Demos](demos.md)                                    | AmokPhaze101           | 6/19/23
 | :white_check_mark:     | Writing to `*.d64` images                            | sy2002                 | 6/19/23
 | :white_check_mark:     | GEOS: REU (sim), GeoRAM (HW), mouse, disk write test | sy2002                 | 6/19/23
 | :white_check_mark:     | PLA Test                                             | sy2002                 | 6/19/23
