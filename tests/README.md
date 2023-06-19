@@ -11,7 +11,7 @@ Version 5 - Month Day, 2023
 | Status                 | Test                                                 | Done by                | Date              
 |:-----------------------|------------------------------------------------------|:-----------------------|:--------------------------
 | :white_check_mark:     | Basic regression tests: Main menu                    | AmokPhaze101           | 6/4/23
-| :large_orange_diamond: | Basic regression tests: Additional Smoke Tests       | sy2002                 | 6/19/23
+| :bangbang:             | Basic regression tests: Additional Smoke Tests       | sy2002                 | 6/19/23
 | :white_check_mark:     | HDMI & VGA                                           | AmokPhaze101           | 6/3/23
 | :white_check_mark:     | SID                                                  | AmokPhaze101           | 6/3/23
 | :white_check_mark:     | C64 Emulator Test Suite V2.15                        | AmokPhaze101           | 6/4/23
@@ -60,7 +60,7 @@ you have a JTAG connection and an **active serial terminal** to observe the debu
 
 ##### Regression
 
-:large_orange_diamond: Long reset does not reset Eagle's Nest any more
+:bangbang: Long reset does not reset Eagle's Nest any more: [GitHub issue #79](https://github.com/MJoergen/C64MEGA65/issues/79)
 
 ### HDMI & VGA
 
