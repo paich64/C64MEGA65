@@ -1,7 +1,7 @@
 [submodule "QNICE"]
-	path = QNICE
+	path = M2M/QNICE
 	url = https://github.com/sy2002/QNICE-FPGA
 [submodule "C64_MiSTerMEGA65"]
-	path = C64_MiSTerMEGA65
+	path = CORE/C64_MiSTerMEGA65
 	url = https://github.com/MJoergen/C64_MiSTerMEGA65
     branch = develop

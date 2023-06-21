@@ -1,0 +1,38 @@
+Modules list:
+-------------
+platest.o:
+    CODE              Offs=000000  Size=000928  Align=00001  Fill=0000
+    BASICSTUB         Offs=000000  Size=00000E  Align=00001  Fill=0000
+    SRAMCODE          Offs=000000  Size=00007E  Align=00001  Fill=0000
+
+
+Segment list:
+-------------
+Name                   Start     End    Size  Align
+----------------------------------------------------
+BASICSTUB             0007FF  00080C  00000E  00001
+CODE                  000900  001227  000928  00001
+SRAMCODE              00DF00  00DF7D  00007E  00001
+
+
+Exports list by name:
+---------------------
+__SRAMCODE_LOAD__         001228 RLA    __SRAMCODE_RUN__          00DF00 RLA    
+__SRAMCODE_SIZE__         00007E REA    
+
+
+Exports list by value:
+----------------------
+__SRAMCODE_SIZE__         00007E REA    __SRAMCODE_LOAD__         001228 RLA    
+__SRAMCODE_RUN__          00DF00 RLA    
+
+
+Imports list:
+-------------
+__SRAMCODE_LOAD__ ([linker generated]):
+    platest.o                 platest.s:3
+__SRAMCODE_RUN__ ([linker generated]):
+    platest.o                 platest.s:3
+__SRAMCODE_SIZE__ ([linker generated]):
+    platest.o                 platest.s:3
+

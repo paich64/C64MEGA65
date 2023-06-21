@@ -8,10 +8,10 @@
 ; the user of the M2M framework to decide. If the Shell is not used, then the
 ; respective overhead is being avoided.
 ;
-; done by sy2002 in 2021 and licensed under GPL v3
+; done by sy2002 in 2022 and licensed under GPL v3
 ; ****************************************************************************
 
-#include "../../QNICE/dist_kit/sysdef.asm"
+#include "../../M2M/QNICE/dist_kit/sysdef.asm"
 #include "sysdef.asm"
 
 ; ----------------------------------------------------------------------------
@@ -24,16 +24,16 @@
 ; include QNICE Monitor for SYSCALL "operating system" functions
 #include "monitor/qmon_m2m.asm"
 #include "monitor/io_library_m2m.asm"
-#include "../../QNICE/monitor/string_library.asm"
-#include "../../QNICE/monitor/mem_library.asm"
-#include "../../QNICE/monitor/debug_library.asm"
-#include "../../QNICE/monitor/misc_library.asm"
-#include "../../QNICE/monitor/uart_library.asm"
-#include "../../QNICE/monitor/usb_keyboard_library.asm"
-#include "../../QNICE/monitor/vga_library.asm"
-#include "../../QNICE/monitor/math_library.asm"
-#include "../../QNICE/monitor/sd_library.asm"
-#include "../../QNICE/monitor/fat32_library.asm"
+#include "../../M2M/QNICE/monitor/string_library.asm"
+#include "../../M2M/QNICE/monitor/mem_library.asm"
+#include "../../M2M/QNICE/monitor/debug_library.asm"
+#include "../../M2M/QNICE/monitor/misc_library.asm"
+#include "../../M2M/QNICE/monitor/uart_library.asm"
+#include "../../M2M/QNICE/monitor/usb_keyboard_library.asm"
+#include "../../M2M/QNICE/monitor/vga_library.asm"
+#include "../../M2M/QNICE/monitor/math_library.asm"
+#include "../../M2M/QNICE/monitor/sd_library.asm"
+#include "../../M2M/QNICE/monitor/fat32_library.asm"
 
 QMON$LAST_ADDR  HALT
 
@@ -51,7 +51,7 @@ INIT_FIRMWARE   AND     0x00FF, SR              ; activate register bank 0
 
 #else
 
-#include "../../QNICE/dist_kit/monitor.def"
+#include "../../M2M/QNICE/dist_kit/monitor.def"
 
                 .ORG    0x8000                  ; start in RAM
                 RBRA    START_FIRMWARE, 1

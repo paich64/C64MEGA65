@@ -1,5 +1,113 @@
-Version 4 - November, 25, 2022
-==============================
+Version 5 - June 23, 2023
+=========================
+
+Hardware support release: Insert hardware cartridges into the MEGA65's
+Expansion Port or simulate cartridges via `*.crt` files. Connect IEC devices
+such as drives and printers and enjoy Stereo SID sound. For an authentic
+retro feeling, feed a 15 kHz CSYNC video signal into your monitor or use the
+MiSTer VGA to RGB SCART cable to connect an old TV. Load faster using JiffyDOS
+or by directly loading `*.prg` files.
+
+## New Features
+
+* Hardware cartridges can be used in the MEGA65's Expansion Port. Most game
+  cartridges are supported and also many Flash Cartridges (e.g. EF1, EF3, KFF)
+  and some more sophisticated utility cartridges and freezers are supported
+  (see [cartridge documentation](doc/cartridges.md)).
+
+* Run simulated cartridges by loading `*.crt` files from your SD card. Most
+  cartridge types are supported. Saving data on the cartridge is not yet
+  supported.
+
+* Ability to directly load `*.prg` files.
+
+* Ability to switch Kernal versions: Standard, C64 Games System, Japanese
+  Revision and [JiffyDOS](doc/jiffy.md).
+
+* Stereo SID support: You can choose from multiple real dual SID combinations
+  and enjoy stereo SID tunes and demos. And you can also use "pseudo stereo"
+  by running the two different SID models 6581 and 8050 at the same (one left
+  and one right) while they play the same mono tune.
+
+* Hardware IEC port: Attach real 1541 & 1581 drives as well as printers,
+  plotters or modern devices such as the SD2IEC and the Ultimate-II+.
+
+* Support for three VGA output modes: Standard VGA, 15 kHz retro RGB output
+  with either horizontal & vertical sync signals or with a composite sync
+  (CSYNC) signal. The latter one allows you for example to connect the MEGA65
+  to an old SCART TV using the [MiSTer VGA to RGB SCART cable](https://ultimatemister.com/product/rgb-scart-cable/)
+  or to connect it to an old monitor using a standard VGA to BNC cable.
+
+* More clearly arranged menu system using submenus.
+
+* Possibility to scale-down the On-Screen-Menu (OSM). Use-case: Compensate
+  for large overscans of certain retro Cathode Ray Tubes.
+
+* File browser's page up/down (cursor left/right) now jumps to the very first
+  item when you press cursor left one (more) time while you are on the first
+  page and to the very last item when you press cursor right one (more) time
+  while you are on the last page.
+
+* A long reset is now visualized: The power led is glowing blue as long as the
+  user keeps the reset button pressed during a long reset.
+
+## Improved C64 and C1541 Accuracy & Compatibility
+
+* Improved the 6510 CPU's interrupt dispatching which results in more demos
+  working flawlessly (for example "All Hallows' Eve", this fixes
+  https://github.com/MJoergen/C64MEGA65/issues/9).
+
+* Improved accuracy of the frequency ratio between the C64's CPU and the C1541
+  floppy's CPU which results in more demos working flawlessly (for example
+  "Unbounded" by Demotion and "Ice Cream Castle" by Crest). It also fixes an
+  issue with the diskmag "Input 64"
+  (https://github.com/MJoergen/C64MEGA65/issues/2).
+
+* Merge MiSTer upstream fixes to improve simulation accuracy and compatibility
+  with real hardware:
+  - CIA: Disk parport: Ignore inputs on pins configured as output
+    (MiSTer commit 4da804c, fix by sorgelig)
+  - CIA: Fix timer reset values: Game "Arctic Shipwreck" works now and
+    therefore this fixes https://github.com/MiSTer-devel/C64_MiSTer/issues/107
+    (MiSTer commit 7eca7e3, fix by gyurco)
+  - VIC: Change xscroll and turbo latch time
+    (MiSTer commit f3a137b, fix by sorgelig)
+
+## Improved HDMI Compatibility
+
+* Works with more HDMI monitors, frame grabbers, HDMI switches, etc.
+  The core was not compliant to section 4.2.7 of the HDMI specification
+  version 1.4b: It did not assert the +5V power signal. Now it does
+  assert the +5 power signal via the FPGA pin `ct_hpd`.
+
+* Fully dynamic flicker-free HDMI, which reduces our output latency on
+  HDMI to less than 1ms and also eliminates the artifact, that moved from
+  the top to the bottom of the screen every once in a while.
+
+## Bugfixes
+
+* Fixed a bug in the REU simulation that affected some owners of the newest
+  MEGA65 batches who have a so called "Revision D HyperRAM". One effect of the
+  bug was that these users were not able to play Sonic the Hedgehog.
+
+* Fixed the possibility of corrupting currently mounted D64 images: If the
+  user changed menu settings while the core was writing to a D64 disk image
+  (yellow MEGA65 drive led), then there was the possibility that this very D64
+  disk image would be corrupted.
+
+## Under the Hood
+
+* Updated to Vivado 2022.2 which will result in higher quality bitstreams.
+
+* Migrated to the newest version of the MiSTer2MEGA65 framework. The C64
+  core will benefit from an easier and faster workflow when it comes to
+  migrating new framework features to the core.
+
+* Now using glitch-free clock multiplexers: The user can switch the
+  "HDMI: Flicker-free" mode ON/OFF without the system performing a reset.
+
+Version 4 - November 25, 2022
+=============================
 
 Productivity release: Write support for the virtual C1541 and a 512 KB RAM
 Expansion Unit (1750 REU) are the main features: Save your high-scores and
@@ -58,7 +166,7 @@ play the fantastic Sonic the Hedgehog for REU.
     in the font. Instead, a space (empty character, " ") was printed, for
     example the file name "C64+" was shown as "C64 ".
 
-  - Directories where not aways being sorted in proper alphabetical order and
+  - Directories where not always being sorted in proper alphabetical order and
     ascending numbers.
 
   - While browsing directories with a large amount of subdirectories (e.g.
@@ -88,14 +196,14 @@ play the fantastic Sonic the Hedgehog for REU.
   the issue in an experimental core that you can download here on GitHub:
   https://github.com/MJoergen/C64MEGA65/issues/2
 
-Version 3 - June, 27 2022
+Version 3 - June 27, 2022
 =========================
 
 This version is mainly a bugfix & compatibility release that is meant to
 heavily increase the C64 compatibility of the core. It also adds support
 for Paddles.
 
-## New feature
+## New Feature
 
 * Support for Paddles added: Connect compatible paddles to the joystick ports.
 
@@ -111,14 +219,14 @@ for Paddles.
   Bomberman C64, that support a Multiplayer Joystick Interface
   (https://www.c64-wiki.com/wiki/Multiplayer_Interface), to work. Reason is,
   that due to the low-active nature of the User Port these games detected
-  "ghost activites" on the (not existent) joystick connected via User Port.
+  "ghost activities" on the (not existent) joystick connected via User Port.
 
 * Zero Page register $01 has the correct default value $37 now. It had the
   wrong value $C7 due to two bugs that have been fixed:
   (a) The Cassette Port's s SENSE and READ input are low active.
   (b) The wrapper code that turns the 6502 into a 6510 contained a bug.
 
-Version 2 - June, 18 2022
+Version 2 - June 18, 2022
 =========================
 
 This version is mainly a bugfix & stability release: The focus was not to add
@@ -142,7 +250,7 @@ with more MEGA65 machines than version 1 did. We also added a DVI option
   Choosing "HDMI: DVI (no sound)" in the On-Screen-Menu will activate it and
   thus stop sending sound packages within the HDMI data stream.
 
-Version 1 - April, 26 2022
+Version 1 - April 26, 2022
 ==========================
 
 Experience the Commodore 64 with great accuracy and sublime compatibility

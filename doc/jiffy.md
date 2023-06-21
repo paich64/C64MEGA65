@@ -6,7 +6,7 @@ The advantage of JiffyDOS is that you can load files from the simulated
 hardware disk drives that you attach via the MEGA65's IEC port as long as you
 have installed the JiffyDOS ROM on those drives, too.
 
-Learn more about JiffyDOS and in the
+Learn more about JiffyDOS in the
 [C64 Wiki](https://www.c64-wiki.com/wiki/JiffyDOS).
 You will also find download links to the user's manual there.
 
@@ -42,7 +42,7 @@ The C64 for MEGA65 core needs two files, each of them needs to be exactly
 
 #### Example for the macOS and Linux terminal
 
-The following commands assume that you are a folder that is empty with the
+The following commands assume that you are in a folder that is empty with the
 exception of one file that is called `JiffyDOS_C64_6.01.bin`.
 
 ```bash
@@ -56,15 +56,15 @@ The following command assumes that you are in a folder that contains the
 following two files: `JiffyDOS_C64_6.01.bin` and `basic.901226-01.bin`.
 
 ```cmd
-copy /b basic.901226-01.bin +JiffyDOS_C64_6.01.bin jd-c64.bin
+copy /b basic.901226-01.bin+JiffyDOS_C64_6.01.bin jd-c64.bin
 ```
+
+Hint: Do not omit the `/b` (for binary) in the copy command above.
 
 ### C1541 DOS ROM: `jd-c1541.bin`
 
 The JiffyDOS download package contains two `*.bin` files. Take the one that
 is exactly `16 kB = 16,384 bytes` in size and rename it to `jd-c1541.bin`.
-
-/basic.901226-01.bin
 
 Install and use JiffyDOS
 ------------------------
@@ -80,16 +80,3 @@ Install and use JiffyDOS
 * Start the core with the updated SD card
 
 * Select "JiffyDOS" in the "Kernal" submenu of the core's menu
-
-* Press reset (only necessary with Alpha versions of the core; the release
-  version will reset automatically)
-
-Special caution when using an Alpha version of the core
--------------------------------------------------------
-
-If you switched the core to JiffyDOS and the core is not able to read the
-JiffyDOS binaries `jd-c64.bin` and `jd-c1541.bin` at a later stage, then
-the core will not start at all and the screen will stay black.
-
-In the Alpha versions of the core, this can only be resolved by deleting the
-config-file `c64/c64mega65` and copying a new one to the `/c64` folder.
