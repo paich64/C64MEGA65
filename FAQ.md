@@ -318,7 +318,7 @@ length of a filename (including the file extension) of 40 characters then this
 means 25,000 / 40 = 625 files.
 
 You might find
-[this bash script](https://github.com/MJoergen/C64MEGA65/tree/develop/M2M/tools/mover.sh)
+[this bash script](https://github.com/MJoergen/C64MEGA65/blob/master/M2M/tools/mover.sh)
 helpful. You can run it inside a folder with a lot of files and afterwards you
 have a directory structure `a .. z` and the files are moved there by name,
 plus you will have a folder called `0` where all the files that start with
@@ -392,7 +392,7 @@ Moreover, the
 [#learn-fpga-dev](https://discord.com/channels/719326990221574164/1057791653517209601)
 channel on Discord is a great place to meet likeminded people and to ask questions.
 
-[Download and read](https://github.com/sy2002/MiSTer2MEGA65/blob/develop/doc/wiki/assets/FPGAs_VHDL_First_Steps_v2p3.pdf)
+[Download and read](https://github.com/sy2002/MiSTer2MEGA65/blob/master/doc/wiki/assets/FPGAs_VHDL_First_Steps_v2p3.pdf)
 Helen DeBlumont's beginner "FPGAs with VHDL: First Steps" or go deep by working through the textbook
 [The Designer's Guide to VHDL](https://picture.iczhiku.com/resource/eetop/sYiEyoAUyiEkPBBb.pdf)
 by Peter J. Ashenden.

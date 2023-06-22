@@ -143,7 +143,7 @@ and replaced by the game you flashed. If you want to re-flash at a later stage
 you need to either use a screwdriver, open the case, move the switch to the
 PROG position, close the case again, start the MEGA65 while the cartridge
 is inserted, re-flash using
-[preferably this version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/develop/doc/assets/easyprog-dm.prg),
+[preferably this version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/master/doc/assets/easyprog-dm.prg),
 open the cartridge case with a screwdriver again, move the switch back to the
 BOOT position, close the case again and you are good to go. CAUTION: Do not
 fall for the temptation to not use the plastic case! See above, very first
@@ -157,7 +157,7 @@ team:
 |----------------------------------|-----------------------------------|
 | ![](assets/ef1cr-case-lydon.jpg) | ![](assets/ef1cr-case-sy2002.jpg) |
 
-[This version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/develop/doc/assets/easyprog-dm.prg)
+[This version of EasyProg](https://github.com/MJoergen/C64MEGA65/raw/master/doc/assets/easyprog-dm.prg)
 is from the creator of the EF 1CR and is recommended for re-flashing the
 EF 1CR. You can also use
 [EasyProg 1.8.1 or newer](https://github.com/KimJorgensen/easyflash/releases).

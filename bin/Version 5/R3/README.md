@@ -53,13 +53,13 @@ is from mid 2023. Follow this instructions to upgrade:
 https://mega65.atlassian.net/l/cp/1fkp5zvQ
 
 Learn more including how to install by reading the manual:
-https://github.com/MJoergen/C64MEGA65/blob/develop/README.md
+https://github.com/MJoergen/C64MEGA65/blob/master/README.md
 
 Frequently asked questions:
-https://github.com/MJoergen/C64MEGA65/blob/develop/FAQ.md
+https://github.com/MJoergen/C64MEGA65/blob/master/FAQ.md
 
 Learn more about constraints and the roadmap:
-https://github.com/MJoergen/C64MEGA65/blob/develop/ROADMAP.md
+https://github.com/MJoergen/C64MEGA65/blob/master/ROADMAP.md
 
 See who contributed to make this great MEGA65 core:
-https://github.com/MJoergen/C64MEGA65/blob/develop/AUTHORS
+https://github.com/MJoergen/C64MEGA65/blob/master/AUTHORS
