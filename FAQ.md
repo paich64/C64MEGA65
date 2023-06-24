@@ -179,7 +179,7 @@ where to buy and how to install it.
    that the flicker-free mode sometimes creates on VGA systems
    [here](README.md#important-advice-for-users-of-analog-vga-and-retro-15-khz-rgb-over-vga).
 
-3. If your monitor supports it, try to use the [retro "15 kHz RGB" mode](doc/retrotube.md)
+3. If your monitor supports it, try to use the [retro "15 kHz RGB" mode](doc/retrotubes.md)
 
 ## 9) My retro monitor does not work with the core
 
