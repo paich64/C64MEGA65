@@ -237,7 +237,7 @@ then try this (while the display is black):
 
 1. Boot the C64 core and wait a few seconds.
 2. Press the <kbd>Help</kbd> key.
-3. Press six times (6x) the <kbd>Up</kbd> cursor key.
+3. Press seven times (7x) the <kbd>Up</kbd> cursor key.
 4. Press <kbd>Return</kbd>.
 5. Press five times (5x) the <kbd>Down</kbd> cursor key.
 6. Press <kbd>Return</kbd>.
