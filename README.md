@@ -183,7 +183,7 @@ machines from Trenz are R3A.
 
 If you want the core to remember the settings you made in the on-screen-menu,
 then make sure that you copy the
-[config file](https://github.com/MJoergen/C64MEGA65/raw/V4/bin/Version%204/R3/c64mega65)
+[config file](https://github.com/MJoergen/C64MEGA65/raw/V5/bin/Version%205/R3/c64mega65)
 into a folder called `/c64`. This `/c64` folder needs to be located in the
 root folder of the SD card that is active when you boot the core. The config
 file is called `c64mega65` and is located in the ZIP file that you downloaded
