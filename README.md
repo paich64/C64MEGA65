@@ -160,7 +160,7 @@ supporting older R2 machines. If you are not sure what MEGA65 version you have
 then you very probably have an R3, R3A or newer: The Devkits are R3 and the
 machines from Trenz are R3A.
 
-1. [Download](https://github.com/MJoergen/C64MEGA65/releases/download/V5/C64MEGA65-V5.zip)
+1. [Download](https://files.mega65.org?id=896a012f-59e4-456c-b91f-7e989b958241)
    the ZIP file that contains the bitstream and the core file and unpack it.
 2. Copy the `.cor` file on an SD card that has been formatted using the
    MEGA65's built-in formatting tool. If you want to be on the safe side, just
